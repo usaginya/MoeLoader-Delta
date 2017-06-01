@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2ACAD63F-D621-49AF-A99B-2F1AD419B9D3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SitePack</RootNamespace>
+    <AssemblyName>SitePack</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\MoeLoader\bin\Debug\SitePacks\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\MoeLoader\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="HtmlAgilityPack, Version=1.4.0.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="SiteDanbooru.cs" />
+    <Compile Include="SiteMiniTokyo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SiteBooru.cs" />
+    <Compile Include="SiteEshuu.cs" />
+    <Compile Include="SiteLargeBooru.cs" />
+    <Compile Include="SiteMjvArt.cs" />
+    <Compile Include="SitePixiv.cs" />
+    <Compile Include="SiteProvider.cs" />
+    <Compile Include="SiteSankaku.cs" />
+    <Compile Include="SiteWCosplay.cs" />
+    <Compile Include="SiteZeroChan.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
+      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
+      <Name>MoeSite</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="image\behoimi.ico" />
+    <EmbeddedResource Include="image\donmai.ico" />
+    <EmbeddedResource Include="image\e-shu.ico" />
+    <EmbeddedResource Include="image\gelbooru.ico" />
+    <EmbeddedResource Include="image\konachan.ico" />
+    <EmbeddedResource Include="image\mjv-art.ico" />
+    <EmbeddedResource Include="image\pixiv.ico" />
+    <EmbeddedResource Include="image\safebooru.ico" />
+    <EmbeddedResource Include="image\worldcosplay.ico" />
+    <EmbeddedResource Include="image\yande.ico" />
+    <EmbeddedResource Include="image\zerochan.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="image\minitokyo.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="image\chan.sku.ico" />
+    <EmbeddedResource Include="image\idol.sku.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
