@@ -421,6 +421,7 @@ namespace MoeLoader
                 }
                 catch (Exception ex)
                 {
+                    FileListIndex++;
                     Dispatcher.Invoke(new Action(delegate
                     {
                         pbSingleTxt.Text = nowDLfile.Name + ":" + ex.Message;
