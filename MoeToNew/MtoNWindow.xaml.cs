@@ -94,7 +94,6 @@ namespace MoeLoader
         /// </summary>
         private void BindUIEvent()
         {
-            Closed += new EventHandler(AppExitEvent);
             btnY.Click += new RoutedEventHandler(UpdateMoeLoader);
             btnN.Click += new RoutedEventHandler(NotUpdate);
         }
@@ -331,10 +330,11 @@ namespace MoeLoader
                             catch { }
                             #endregion
 
-                            FileListIndex++;
-
                             Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
                             Thread.Sleep(666);
+
+                            //处理下一个文件
+                            DownloadFile(FileListCount, ++FileListIndex);
                             break;
 
                         default:
@@ -391,7 +391,7 @@ namespace MoeLoader
                                     try
                                     {
                                         DateTime now = DateTime.Now;
-                                        if ((now - last).TotalSeconds > 0.5)
+                                        if ((now - last).TotalSeconds > 0.2)
                                         {
                                             speed = downed / (now - last).TotalSeconds;
                                             downed = 0;
@@ -472,15 +472,6 @@ namespace MoeLoader
             {
                 pbSingleSpeed.Text = "(" + speedstr + "/s";
             }));
-        }
-
-        /// <summary>
-        /// 更新窗口关闭事件
-        /// </summary>
-        private void AppExitEvent(object sender, EventArgs e)
-        {
-            haveUpdate = false;
-            UpdateEnd();
         }
 
         /// <summary>
