@@ -536,7 +536,7 @@ namespace MoeLoaderDelta
             if (path.Length + file.Length > 258 && file.Contains("<!<"))
             {
                 string last = file.Substring(file.LastIndexOf("<!<"));
-                file = file.Substring(0, 258 - last.Length - path.Length) + last;
+                file = file.Substring(0, 258 - last.Length - path.Length - last.Length) + last;
             }
             file = file.Replace("<!<", "");
             return ReplaceInvalidPathChars(file);
