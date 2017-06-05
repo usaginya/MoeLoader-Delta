@@ -7,11 +7,11 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MoeLoaderDelta Δ")]
-[assembly: AssemblyDescription("MoeLoaderDelta Δ")]
+[assembly: AssemblyTitle("MoeLoader Δ")]
+[assembly: AssemblyDescription("MoeLoader Δ")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("esonic, Moekai")]
-[assembly: AssemblyProduct("MoeLoaderDelta Δ")]
+[assembly: AssemblyProduct("MoeLoader Δ")]
 [assembly: AssemblyCopyright("Copyright© esonic 2013, Moekai 2016-2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
