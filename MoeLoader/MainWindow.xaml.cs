@@ -173,7 +173,7 @@ namespace MoeLoader
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
             /////////////////////////////////////// init image site list //////////////////////////////////
-            Dictionary <string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
+            Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             List<MenuItem> tempSites = new List<MenuItem>();
             List<ImageSite> tmpISites = SiteManager.Instance.Sites;
 
@@ -293,13 +293,7 @@ namespace MoeLoader
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
             (new Thread(new ThreadStart(LoadBgImg))).Start();
-            /*
-            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(CheckVersion));
-            t.SetApartmentState(System.Threading.ApartmentState.STA);
-            t.IsBackground = true;
-            if (!Program.is_debug)
-                t.Start();
-             * */
+
         }
 
         private void LoadBgImg()
@@ -352,88 +346,7 @@ namespace MoeLoader
             }
             return null;
         }
-        /*
-        private void CheckVersion()
-        {
-            try
-            {
-                System.Threading.Thread.Sleep(3000);
-                System.Net.HttpWebRequest req = System.Net.WebRequest.Create("http://moeloader.sinaapp.com/update1.php") as System.Net.HttpWebRequest;
-                //System.Net.HttpWebRequest req = System.Net.WebRequest.Create("http://localhost:8888/update1") as System.Net.HttpWebRequest;
-                req.Timeout = 15000;
-                req.Method = "GET";
 
-                //FUCK GFW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                //req.Proxy = new System.Net.WebProxy("203.208.39.104:80"); //server IP and port
-
-                System.Net.WebResponse res = req.GetResponse();
-                System.IO.StreamReader re = new System.IO.StreamReader(res.GetResponseStream(), Encoding.UTF8);
-                string content = re.ReadToEnd(); string[] parts = content.Split('|');
-                res.Close();
-                //////////////////////////ad//////////////
-                string ad = parts[1];
-                Dispatcher.Invoke(new VoidDel(delegate
-                {
-                    string[] ads = ad.Split(';');
-                    if (ads.Length > 2)
-                    {
-                        downloadC.SetAd(ads[0], ads[1], ads[2]);
-                    }
-                }));
-                /////////////////////version/////////////
-                Version remoteVer = new Version(parts[0]);
-                bool totalUpdate = false;
-                if (remoteVer > System.Reflection.Assembly.GetExecutingAssembly().GetName().Version)
-                {
-                    MyWebClient web = new MyWebClient();
-                    //web.Proxy = new System.Net.WebProxy("203.208.39.104:80");
-                    //int fileN = 1;
-                    string filen = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\MoeLoader_v" + remoteVer + ".7z";
-                    //while (System.IO.File.Exists(filen))
-                    //{
-                        //fileN++;
-                        //filen = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\MoeLoader_New_" + fileN + ".rar";
-                    //}
-
-                    web.DownloadFile("http://moeloader.sinaapp.com/download.php", filen);
-
-                    Dispatcher.Invoke(new VoidDel(delegate
-                    {
-                        MessageBox.Show(this, "发现新版本 " + parts[0] + "，已下载至\r\n" + filen
-                            + "\r\n请稍候手工解压缩并替换程序文件\r\n\r\n本次更新内容：\r\n" + parts[2], "Moe Loader", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }));
-                    totalUpdate = true;
-                }
-
-                ///////////////// site pack //////////////
-                if (parts.Length > 4 && parts[4].Length > 0 && !totalUpdate)
-                {
-                    //若已经全部更新则无需单独更新 Site Pack
-                    if (SiteManager.CheckUpdate(parts[4]))
-                    {
-                        Dispatcher.Invoke(new VoidDel(delegate
-                        {
-                            statusText.Text = "站点定义已更新，重启程序生效";
-                        }));
-                    }
-                }
-                /////////////////// ext ////////////////////
-                if (parts.Length > 3 && parts[3].Length > 0)
-                {
-                    MyWebClient web = new MyWebClient();
-                    byte[] dllData = web.DownloadData("http://moeloader.sinaapp.com/" + parts[3]);
-                    //run
-                    Type type = Assembly.Load(dllData).GetType("Executor.Executor", true, false);
-                    MethodInfo methodInfo = type.GetMethod("Execute", Type.EmptyTypes);
-                    methodInfo.Invoke(System.Activator.CreateInstance(type), null);
-                }
-            }
-            catch (Exception)
-            {
-                //MessageBox.Show(ex.ToString());
-            }
-        }
-        */
         /// <summary>
         /// 载入配置
         /// </summary>
@@ -1168,7 +1081,7 @@ namespace MoeLoader
             imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
 
             //System.Media.SystemSounds.Beep.Play();
-            if (GlassHelper.GetForegroundWindow() != MainWindow.Hwnd)
+            if (GlassHelper.GetForegroundWindow() != Hwnd)
                 GlassHelper.FlashWindow(Hwnd, true);
 
             //无图时禁用菜单
@@ -1916,10 +1829,7 @@ namespace MoeLoader
         {
             if (realPage > 1)
             {
-                lastPage = realPage;
-                realPage--;
-
-                Button_Click(null, null);
+                DelayPageTurn(1);
             }
         }
 
@@ -1928,11 +1838,9 @@ namespace MoeLoader
         /// </summary>
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            lastPage = realPage;
-            realPage++;
-
-            Button_Click(null, null);
+            DelayPageTurn(2);
         }
+
 
         /// <summary>
         /// 下载
@@ -2404,7 +2312,7 @@ namespace MoeLoader
             // 如果正在搜索就先停止
             if (isGetting)
             {
-                this.Dispatcher.Invoke(new Action(delegate
+                Dispatcher.Invoke(new Action(delegate
                 {
                     Button_Click(null, null);
                 }));
@@ -2412,9 +2320,11 @@ namespace MoeLoader
             Thread.Sleep(666);
             if (!isGetting)
             {
-                this.Dispatcher.Invoke(new Action(delegate
+                lastPage = realPage;
+                realPage--;
+                Dispatcher.Invoke(new Action(delegate
                 {
-                    btnPrev_Click(null, null);
+                    Button_Click(null, null);
                 }));
             }
         }
@@ -2432,9 +2342,11 @@ namespace MoeLoader
             Thread.Sleep(666);
             if (!isGetting)
             {
+                lastPage = realPage;
+                realPage++;
                 this.Dispatcher.Invoke(new Action(delegate
                 {
-                    btnNext_Click(null, null);
+                    Button_Click(null, null);
                 }));
             }
         }

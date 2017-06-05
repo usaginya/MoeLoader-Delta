@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Xml;
 using HtmlAgilityPack;
 using MoeLoader;
 
 namespace SitePack
 {
-    public class SiteEshuu : MoeLoader.AbstractImageSite
+    public class SiteEshuu : AbstractImageSite
     {
         public override string SiteUrl { get { return "http://e-shuushuu.net"; } }
         public override string SiteName

@@ -6,7 +6,7 @@ using MoeLoader;
 
 namespace SitePack
 {
-    public class SiteMjvArt : MoeLoader.AbstractImageSite
+    public class SiteMjvArt : AbstractImageSite
     {
         public override string SiteUrl { get { return "https://anime-pictures.net"; } }
         public override string SiteName { get { return "anime-pictures.net"; } }

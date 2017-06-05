@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Xml;
-using HtmlAgilityPack;
 using MoeLoader;
 
 namespace SitePack
 {
-    public class SiteWCosplay : MoeLoader.AbstractImageSite
+    public class SiteWCosplay : AbstractImageSite
     {
         public override string SiteUrl { get { return "https://worldcosplay.net"; } }
         public override string SiteName { get { return "worldcosplay.net"; } }

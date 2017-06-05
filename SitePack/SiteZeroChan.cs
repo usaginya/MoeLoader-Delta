@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Xml;
 using HtmlAgilityPack;
 using MoeLoader;
 
 namespace SitePack
 {
-    public class SiteZeroChan : MoeLoader.AbstractImageSite
+    public class SiteZeroChan : AbstractImageSite
     {
         public override string SiteUrl { get { return "http://www.zerochan.net"; } }
         public override string SiteName

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Reflection;
 
 namespace MoeLoader
 {
@@ -40,8 +41,9 @@ namespace MoeLoader
         /// </summary>
         private static void RecoveryConfig()
         {
-            if (!File.Exists(necessaryDll))
-                File.WriteAllBytes(necessaryDll, Properties.Resources.HtmlTextBlockDLL);
+            string runpath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\";
+            if (!File.Exists(runpath + necessaryDll))
+                File.WriteAllBytes(runpath + necessaryDll, Properties.Resources.HtmlTextBlockDLL);
         }
     }
 }

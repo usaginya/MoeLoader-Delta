@@ -1,15 +1,17 @@
-﻿using System;
+﻿using MoeLoader;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+
 
 namespace SitePack
 {
     /// <summary>
     /// Booru系站点
     /// </summary>
-    public class SiteBooru : MoeLoader.AbstractImageSite
+    public class SiteBooru : AbstractImageSite
     {
         //缩略图大小
         //private const int SWIDTH = 150;
@@ -30,9 +32,9 @@ namespace SitePack
         protected string shortType;
         protected string referer;
         protected bool needMinus;
-        protected MoeLoader.BooruProcessor.SourceType srcType;
+        protected BooruProcessor.SourceType srcType;
 
-        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, string referer, bool needMinus, MoeLoader.BooruProcessor.SourceType srcType)
+        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, string referer, bool needMinus, BooruProcessor.SourceType srcType)
         {
             this.siteName = siteName;
             this.siteUrl = siteUrl;
@@ -79,7 +81,7 @@ namespace SitePack
                 url = url.Substring(0, url.Length - 6);
             }
 
-            MoeLoader.MyWebClient web = new MoeLoader.MyWebClient();
+            MyWebClient web = new MyWebClient();
             web.Proxy = proxy;
 
             web.Encoding = Encoding.UTF8;
@@ -89,18 +91,18 @@ namespace SitePack
             return pageString;
         }
 
-        public override List<MoeLoader.Img> GetImages(string pageString, System.Net.IWebProxy proxy)
+        public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
         {
-            MoeLoader.BooruProcessor nowSession = new MoeLoader.BooruProcessor(srcType);
+            BooruProcessor nowSession = new BooruProcessor(srcType);
             return nowSession.ProcessPage(siteUrl, pageString);
         }
 
-        public override List<MoeLoader.TagItem> GetTags(string word, System.Net.IWebProxy proxy)
+        public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
         {
-            List<MoeLoader.TagItem> re = new List<MoeLoader.TagItem>();
+            List<TagItem> re = new List<TagItem>();
 
             string url = string.Format(tagUrl, 8, word);
-            MoeLoader.MyWebClient web = new MoeLoader.MyWebClient();
+            MyWebClient web = new MyWebClient();
             web.Timeout = 8;
             web.Proxy = proxy;
             web.Encoding = Encoding.UTF8;
@@ -128,7 +130,7 @@ namespace SitePack
                 string name = tag.GetAttribute("name");
                 string count = tag.GetAttribute("count");
 
-                re.Add(new MoeLoader.TagItem() { Name = name, Count = count });
+                re.Add(new TagItem() { Name = name, Count = count });
             }
 
             return re;

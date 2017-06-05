@@ -73,6 +73,7 @@ namespace SitePack
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
 
+        private static bool isLogin = false;
         private static string cookie = "";
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
@@ -297,7 +298,7 @@ namespace SitePack
                 {
                     //706×1000
                     i.Width = int.Parse(dimension.Substring(0, dimension.IndexOf('×')));
-                    i.Height = int.Parse(System.Text.RegularExpressions.Regex.Match(dimension.Substring(dimension.IndexOf('×') + 1), @"\d+").Value);
+                    i.Height = int.Parse(Regex.Match(dimension.Substring(dimension.IndexOf('×') + 1), @"\d+").Value);
                 }
                 catch { }
                 try
@@ -341,13 +342,24 @@ namespace SitePack
 
         private void Login(System.Net.IWebProxy proxy)
         {
-            HtmlDocument hdoc = new HtmlDocument();
-            SessionClient Sweb = new SessionClient();
+            //防止二次登录造成Cookie错误
+            if (isLogin)
+            {
+                while (!cookie.Contains("pixiv"))
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+                return;
+            }
 
             if (!cookie.Contains("pixiv"))
             {
                 try
                 {
+                    isLogin = true;
+                    HtmlDocument hdoc = new HtmlDocument();
+                    SessionClient Sweb = new SessionClient();
+
                     cookie = "";
                     string data = "";
                     string post_key = "";
@@ -361,7 +373,10 @@ namespace SitePack
                         throw new Exception("自动登录失败");
 
                     //请求2 POST取登录Cookie
-                    data = "pixiv_id=" + user[index] + "&password=" + pass[index] + "&captcha=&g_recaptcha_response=&post_key=" + post_key + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
+                    data = "pixiv_id=" + user[index]
+                        + "&password=" + pass[index]
+                        + "&captcha=&g_recaptcha_response=&post_key=" + post_key
+                        + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
                     data = Sweb.Post("https://accounts.pixiv.net/api/login?lang=zh", data, proxy, Encoding.GetEncoding("UTF-8"));
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
@@ -369,15 +384,17 @@ namespace SitePack
                         throw new Exception("自动登录失败");
                     else
                         cookie = "pixiv;" + cookie;
-
                 }
                 catch (Exception e)
                 {
                     throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
                 }
+                finally
+                {
+                    isLogin = false;
+                }
             }
         }
-
 
     }
 }

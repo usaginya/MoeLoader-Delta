@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using HtmlAgilityPack;
 using MoeLoader;
@@ -10,7 +9,7 @@ namespace SitePack
     /// <summary>
     /// danbooru.donmai.us, Thanks to Realanan
     /// </summary>
-    class SiteDanbooru : MoeLoader.AbstractImageSite
+    class SiteDanbooru : AbstractImageSite
     {
         public override string SiteUrl { get { return "https://danbooru.donmai.us"; } }
         //http://donmai.us/post?page={0}&limit={1}&tags={2}

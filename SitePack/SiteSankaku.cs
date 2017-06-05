@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml;
-using HtmlAgilityPack;
 using MoeLoader;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
 namespace SitePack
@@ -19,6 +16,7 @@ namespace SitePack
         private string[] pass = { "hdy123456", "moe2017" };
         private string sitePrefix, tempuser, temppass, tempappkey, ua;
         private static string cookie = "";
+        private static bool isLogin = false;
 
         public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
         public override string SiteName { get { return sitePrefix + ".sankakucomplex.com"; } }
@@ -151,10 +149,21 @@ namespace SitePack
         {
             string subdomain = sitePrefix.Substring(0, 1) + "api";
 
+            //防止二次登录造成Cookie错误
+            if (isLogin)
+            {
+                while (!cookie.Contains(subdomain + ".sankaku"))
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+                return;
+            }
+
             if (!cookie.Contains(subdomain + ".sankaku"))
             {
                 try
                 {
+                    isLogin = true;
                     cookie = "";
                     int index = rand.Next(0, user.Length);
                     tempuser = user[index];
@@ -179,6 +188,10 @@ namespace SitePack
                 catch (Exception e)
                 {
                     throw new Exception("自动登录失败: " + e.Message);
+                }
+                finally
+                {
+                    isLogin = false;
                 }
             }
         }

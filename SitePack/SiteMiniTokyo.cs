@@ -8,7 +8,7 @@ using MoeLoader;
 
 namespace SitePack
 {
-    public class SiteMiniTokyo : MoeLoader.AbstractImageSite
+    public class SiteMiniTokyo : AbstractImageSite
     {
         public override string SiteUrl { get { return "http://www.minitokyo.net"; } }
         public override string SiteName

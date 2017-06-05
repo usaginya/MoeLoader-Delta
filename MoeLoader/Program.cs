@@ -119,7 +119,8 @@ namespace MoeLoader
         /// </summary>
         private static void RecoveryConfig()
         {
-            string appCfg = Assembly.GetEntryAssembly().GetName().Name + ".exe.config";
+            string appCfg = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+                + "\\" + Assembly.GetEntryAssembly().GetName().Name + ".exe.config";
 
             if (!File.Exists(appCfg))
             {
