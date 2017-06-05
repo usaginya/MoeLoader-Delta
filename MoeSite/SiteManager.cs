@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
@@ -42,30 +42,6 @@ namespace MoeLoader
             }
         }
 
-        /// <summary>
-        /// 检查站点定义是否有更新
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        /*
-        public static bool CheckUpdate(string version)
-        {
-            try
-            {
-                Version remoteVer = new Version(version);
-                //bool needUpdate = false;
-                string curPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                if (remoteVer > System.Reflection.Assembly.LoadFile(curPath + "\\SitePack.dll").GetName().Version)
-                {
-                    MyWebClient web = new MyWebClient();
-                    web.DownloadFile("http://moeloader.sinaapp.com/sitepack.php", curPath + "\\SitePack.dll.new");
-                    return true;
-                }
-            }
-            catch { }
-            return false;
-        }
-        */
         /// <summary>
         /// 站点定义管理者
         /// </summary>

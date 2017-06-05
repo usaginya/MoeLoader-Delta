@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 图片详细信息获取代理

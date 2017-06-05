@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     class Program
     {

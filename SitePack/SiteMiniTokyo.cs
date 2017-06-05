@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using HtmlAgilityPack;
-using MoeLoader;
+using MoeLoaderDelta;
 
 namespace SitePack
 {

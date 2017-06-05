@@ -4,7 +4,7 @@ using System.Text;
 using System.Net;
 using System.IO;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 带session的HttpWeb连接

@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>MoeLoader.Program</StartupObject>
+    <StartupObject>MoeLoaderDelta.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>mlup.ico</ApplicationIcon>

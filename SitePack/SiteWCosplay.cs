@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using MoeLoader;
+using MoeLoaderDelta;
 
 namespace SitePack
 {

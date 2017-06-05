@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 带有超时的WebClient

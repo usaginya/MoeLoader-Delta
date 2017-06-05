@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 抽象图片站点

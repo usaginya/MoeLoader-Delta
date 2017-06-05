@@ -1,8 +1,8 @@
 ﻿<Application
-    x:Class="MoeLoader.App"
+    x:Class="MoeLoaderDelta.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:MoeLoader"
+    xmlns:local="clr-namespace:MoeLoaderDelta"
     StartupUri="MtoNWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// App.xaml 的交互逻辑

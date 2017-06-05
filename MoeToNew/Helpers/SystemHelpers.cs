@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MoeLoader.Helpers
+namespace MoeLoaderDelta.Helpers
 {
     class SystemHelpers
     {

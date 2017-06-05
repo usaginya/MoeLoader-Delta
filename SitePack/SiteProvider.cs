@@ -1,4 +1,4 @@
-﻿using MoeLoader;
+﻿using MoeLoaderDelta;
 using System.Collections.Generic;
 
 namespace SitePack

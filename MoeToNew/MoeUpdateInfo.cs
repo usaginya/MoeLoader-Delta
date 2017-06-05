@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 更新信息

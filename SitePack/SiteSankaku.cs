@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MoeLoader;
+using MoeLoaderDelta;
 using System.Net;
 using System.Web.Script.Serialization;
 

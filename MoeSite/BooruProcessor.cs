@@ -5,7 +5,7 @@ using System.Xml;
 using System.Linq;
 using System.Web.Script.Serialization;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点

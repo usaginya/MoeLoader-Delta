@@ -1,4 +1,4 @@
-﻿using MoeLoader.Helpers;
+﻿using MoeLoaderDelta.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Documents;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
 
     /// <summary>
@@ -230,13 +230,13 @@ namespace MoeLoader
         }
 
         /// <summary>
-        /// 运行MoeLoader
+        /// 运行MoeLoaderDelta
         /// </summary>
         private void RunMoeLoader(string arg)
         {
             try
             {
-                Process.Start("MoeLoader.exe", arg);
+                Process.Start("MoeLoaderDelta.exe", arg);
             }
             catch { }
         }
@@ -246,11 +246,11 @@ namespace MoeLoader
         }
 
         /// <summary>
-        /// 结束MoeLoader
+        /// 结束MoeLoaderDelta
         /// </summary>
         private void KillMoeLoader()
         {
-            SystemHelpers.KillProcess("MoeLoader");
+            SystemHelpers.KillProcess("MoeLoaderDelta");
         }
 
         /// <summary>

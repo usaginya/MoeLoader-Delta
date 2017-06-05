@@ -1,0 +1,237 @@
+﻿<UserControl
+    x:Class="MoeLoaderDelta.SearchControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="UserControl"
+    d:DesignHeight="25"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Storyboard x:Key="searching">
+            <DoubleAnimationUsingKeyFrames
+                BeginTime="00:00:00"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="path"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)">
+                <SplineDoubleKeyFrame KeyTime="00:00:00.6000000" Value="360" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Style x:Key="MyComboBox" TargetType="{x:Type ComboBox}">
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBox}">
+                        <Grid>
+                            <!--  The ToggleButton is databound to the ComboBox itself to toggle IsDropDownOpen  -->
+                            <ToggleButton
+                                x:Name="ToggleButton"
+                                Grid.Column="2"
+                                ClickMode="Press"
+                                Focusable="false"
+                                IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                Template="{DynamicResource ComboBoxToggleButton}" />
+                            <ContentPresenter
+                                x:Name="ContentSite"
+                                Margin="3,3,23,3"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                IsHitTestVisible="False"
+                                Visibility="Hidden" />
+
+                            <!--  The TextBox must be named PART_EditableTextBox or ComboBox will not recognize it  -->
+                            <TextBox
+                                x:Name="PART_EditableTextBox"
+                                Margin="3,3,23,3"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                Focusable="True"
+                                Foreground="#AAAAAA"
+                                GotFocus="PART_EditableTextBox_GotFocus"
+                                IsReadOnly="{TemplateBinding IsReadOnly}"
+                                LostFocus="PART_EditableTextBox_LostFocus_1"
+                                Style="{x:Null}"
+                                Tag="输入想要搜索的图片关键字"
+                                Template="{DynamicResource ComboBoxTextBox}"
+                                Text="输入想要搜索的图片关键字"
+                                TextChanged="PART_EditableTextBox_TextChanged"
+                                Visibility="Visible" />
+
+                            <!--  The Popup shows the list of items in the ComboBox. IsOpen is databound to IsDropDownOpen which is toggled via the ComboBoxToggleButton  -->
+                            <Popup
+                                x:Name="Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{TemplateBinding IsDropDownOpen}"
+                                Placement="Bottom"
+                                PopupAnimation="Scroll">
+                                <Grid
+                                    x:Name="DropDown"
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                    Focusable="False"
+                                    SnapsToDevicePixels="True">
+                                    <Border
+                                        x:Name="DropDownBorder"
+                                        Background="{DynamicResource WindowBackgroundBrush}"
+                                        BorderBrush="{DynamicResource SolidBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="0"
+                                        Focusable="False" />
+                                    <ScrollViewer
+                                        x:Name="PopupScroll"
+                                        Margin="4,6,4,6"
+                                        CanContentScroll="True"
+                                        Focusable="False"
+                                        HorizontalScrollBarVisibility="Auto"
+                                        PanningMode="Both"
+                                        SnapsToDevicePixels="True"
+                                        VerticalScrollBarVisibility="Auto">
+
+                                        <!--  The StackPanel is used to display the children by setting IsItemsHost to be True  -->
+                                        <StackPanel
+                                            Focusable="False"
+                                            IsItemsHost="True"
+                                            KeyboardNavigation.DirectionalNavigation="Contained" />
+
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <!--  This forces the DropDown to have a minimum size if it is empty  -->
+                            <Trigger Property="HasItems" Value="false">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource DisabledForegroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsGrouping" Value="true">
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
+                            </Trigger>
+                            <Trigger SourceName="Popup" Property="AllowsTransparency" Value="true">
+                                <Setter TargetName="DropDownBorder" Property="CornerRadius" Value="0" />
+                                <Setter TargetName="DropDownBorder" Property="Margin" Value="0,2,0,0" />
+                            </Trigger>
+                            <Trigger Property="IsEditable" Value="true">
+                                <Setter Property="IsTabStop" Value="false" />
+                                <!--<Setter Property="Visibility" Value="Visible" TargetName="PART_EditableTextBox"/>-->
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ComboBoxItemStyle1" TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+            <Setter Property="Padding" Value="3,0,3,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="IsEnabled" Value="{Binding Path=Enabled}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                        <Border
+                            x:Name="Bd"
+                            MinHeight="20"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="true">
+                            <Grid>
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Path=Color}"
+                                    Text="{Binding Path=Name}"
+                                    TextWrapping="NoWrap" />
+                                <StackPanel
+                                    MinWidth="90"
+                                    Margin="0,0,5,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Visibility="{Binding Path=Visiable}">
+                                    <TextBlock
+                                        Foreground="#FFA5A5A5"
+                                        Text="图片数量 "
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        Foreground="#FF5151FF"
+                                        Text="{Binding Path=Count}"
+                                        TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="true">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid x:Name="LayoutRoot">
+        <ComboBox
+            x:Name="txtSearch"
+            DropDownOpened="txtSearch_DropDownOpened"
+            IsEditable="False"
+            IsReadOnly="False"
+            IsTextSearchEnabled="False"
+            ItemContainerStyle="{DynamicResource ComboBoxItemStyle1}"
+            PreviewKeyDown="PART_EditableTextBox_KeyDown"
+            SelectionChanged="txtSearch_SelectionChanged"
+            StaysOpenOnEdit="True"
+            Style="{StaticResource MyComboBox}"
+            ToolTip="点击Delete键可删除选中的已搜索词" />
+        <Path
+            x:Name="path"
+            Width="20"
+            Height="20"
+            Margin="0,0,1,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Fill="{x:Null}"
+            Opacity="0.54"
+            RenderTransformOrigin="0.5,0.5"
+            Stretch="Fill"
+            StrokeThickness="4"
+            Visibility="Hidden">
+            <Path.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                    <SkewTransform AngleX="0" AngleY="0" />
+                    <RotateTransform Angle="0" />
+                    <TranslateTransform X="0" Y="0" />
+                </TransformGroup>
+            </Path.RenderTransform>
+            <Path.Stroke>
+                <LinearGradientBrush StartPoint="0.718,0.354" EndPoint="0.602,1.024">
+                    <GradientStop Offset="0" Color="#FF00A7FF" />
+                    <GradientStop Offset="1" />
+                </LinearGradientBrush>
+            </Path.Stroke>
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure IsClosed="False" StartPoint="17,30.5">
+                        <PolyBezierSegment IsSmoothJoin="True" Points="9.5441559,30.5 3.5,24.455844 3.5,17 3.5,9.5441559 9.5441559,3.5 17,3.5 24.455844,3.5 30.5,9.5441559 30.5,17" />
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+    </Grid>
+</UserControl>

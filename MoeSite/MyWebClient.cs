@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading;
 using System.Text;
 
-namespace MoeLoader
+namespace MoeLoaderDelta
 {
     /*
     //public class Calculagraph

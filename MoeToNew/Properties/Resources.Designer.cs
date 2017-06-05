@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MoeLoader.Properties {
+namespace MoeLoaderDelta.Properties {
     using System;
     
     
