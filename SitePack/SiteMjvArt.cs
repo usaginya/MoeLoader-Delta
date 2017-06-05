@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
+using System.Text.RegularExpressions;
 
 namespace SitePack
 {
@@ -79,11 +80,11 @@ namespace SitePack
                 string detailUrl = anode.Attributes["href"].Value;
                 //eg. Anime picture 2000x3246 withblack hair,brown eyes
                 string title = anode.Attributes["title"].Value;
-                string previewUrl = anode.SelectSingleNode("img").Attributes["src"].Value;
+                string previewUrl = anode.SelectSingleNode("picture/source/img").Attributes["src"].Value;
 
                 //extract id from detail url
-                string id = System.Text.RegularExpressions.Regex.Match(detailUrl.Substring(detailUrl.LastIndexOf('/') + 1), @"\d+").Value;
-                int index = System.Text.RegularExpressions.Regex.Match(title, @"\d+").Index;
+                string id = Regex.Match(detailUrl.Substring(detailUrl.LastIndexOf('/') + 1), @"\d+").Value;
+                int index = Regex.Match(title, @"\d+").Index;
 
                 string dimension = title.Substring(index);
                 string tags = "";
@@ -194,7 +195,7 @@ namespace SitePack
                 //retrieve img node
                 HtmlNode node = doc.DocumentNode.SelectSingleNode("//div[@id='big_preview_cont']").SelectSingleNode("a");
                 string fileUrl = node.Attributes["href"].Value;
-                string sampleUrl = node.SelectSingleNode("img").Attributes["src"].Value;
+                string sampleUrl = node.SelectSingleNode("picture/source/img").Attributes["src"].Value;
                 i.Tags = doc.DocumentNode.SelectSingleNode("//meta[@name='description']").Attributes["content"].Value;
                 i.Tags = i.Tags.Replace('\n', ' ').Replace("\t", "");
                 i.Desc = i.Tags;

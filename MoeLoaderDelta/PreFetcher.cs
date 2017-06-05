@@ -112,7 +112,7 @@ namespace MoeLoaderDelta
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);
 
                     //预加载缩略图
-                    foreach (System.Net.HttpWebRequest req1 in imgReqs)
+                    foreach (HttpWebRequest req1 in imgReqs)
                     {
                         if (req1 != null) req1.Abort();
                     }
@@ -123,14 +123,14 @@ namespace MoeLoaderDelta
                     int cacheCount = CachedImgCount < imgs.Count ? CachedImgCount : imgs.Count;
                     for (int i = 0; i < cacheCount; i++)
                     {
-                        System.Net.HttpWebRequest req = System.Net.WebRequest.Create(imgs[i].PreviewUrl) as System.Net.HttpWebRequest;
+                        HttpWebRequest req = WebRequest.Create(imgs[i].PreviewUrl) as HttpWebRequest;
                         imgReqs.Add(req);
                         req.Proxy = MainWindow.WebProxy;
 
                         req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                         req.Referer = site.Referer;
 
-                        System.Net.WebResponse res = req.GetResponse();
+                        WebResponse res = req.GetResponse();
                         System.IO.Stream str = res.GetResponseStream();
 
                         if (!preFetchedImg.ContainsKey(imgs[i].PreviewUrl))
