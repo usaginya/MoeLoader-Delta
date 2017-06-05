@@ -360,7 +360,7 @@ namespace MoeLoaderDelta
                 try
                 {
                     string[] lines = File.ReadAllLines(configFile);
-                    downloadC.NumOnce = Int32.Parse(lines[0]);
+                    downloadC.NumOnce = int.Parse(lines[0]);
 
                     if (lines[1] != "." && Directory.Exists(lines[1]))
                         DownloadControl.SaveLocation = lines[1];

@@ -226,8 +226,8 @@ namespace MoeLoaderDelta
                     if (path.Length > 248)
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
-                        downloadItems[downloadItems.Count - numLeft].Size = "路径过长";
-                        WriteErrText(url + ": 路径过长");
+                        downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
+                        WriteErrText(url + ": 路径太长");
                         j--;
                     }
 
@@ -533,7 +533,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string ReplaceInvalidPathChars(string file, string path, int any)
         {
-            if (file.Length > 258 && file.Contains("<!<"))
+            if (path.Length + file.Length > 258 && file.Contains("<!<"))
             {
                 string last = file.Substring(file.LastIndexOf("<!<"));
                 file = file.Substring(0, 258 - last.Length - path.Length) + last;

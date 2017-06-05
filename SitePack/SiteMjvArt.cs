@@ -90,8 +90,8 @@ namespace SitePack
                 string tags = "";
                 //if (title.IndexOf(' ', index) > -1)
                 //{
-                    //dimension = title.Substring(index, title.IndexOf(' ', index) - index);
-                    //tags = title.Substring(title.IndexOf(' ', index) + 1);
+                //dimension = title.Substring(index, title.IndexOf(' ', index) - index);
+                //tags = title.Substring(title.IndexOf(' ', index) + 1);
                 //}
 
                 Img img = GenerateImg(detailUrl, previewUrl, dimension, tags.Trim(), id);
@@ -136,7 +136,7 @@ namespace SitePack
                 if (tag["t"].ToString().Trim().Length > 0)
                     re.Add(new TagItem() { Name = tag["t"].ToString().Trim().Replace("<b>", "").Replace("</b>", ""), Count = "N/A" });
             }
-          
+
             return re;
         }
 
@@ -154,8 +154,8 @@ namespace SitePack
             catch { }
 
             //convert relative url to absolute
-                detailUrl = FormattedImgUrl(SiteUrl, detailUrl);
-                preview_url = FormattedImgUrl(SiteUrl, preview_url);
+            detailUrl = FormattedImgUrl(SiteUrl, detailUrl);
+            preview_url = FormattedImgUrl(SiteUrl, preview_url);
 
             Img img = new Img()
             {
@@ -192,21 +192,46 @@ namespace SitePack
 
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(page);
+                //retrieve rating node
+                HtmlNode ratnode = doc.DocumentNode.SelectSingleNode("//span[@id='rating']");
+                try
+                {
+                    i.Score = int.Parse(ratnode.SelectSingleNode("//*[@id='score_n']").InnerText);
+                }
+                catch { }
+
+                i.OriginalUrl = FormattedImgUrl(SiteUrl, ratnode.SelectSingleNode("a").Attributes["href"].Value);
+
                 //retrieve img node
-                HtmlNode node = doc.DocumentNode.SelectSingleNode("//div[@id='big_preview_cont']").SelectSingleNode("a");
-                string fileUrl = node.Attributes["href"].Value;
-                string sampleUrl = node.SelectSingleNode("picture/source/img").Attributes["src"].Value;
-                i.Tags = doc.DocumentNode.SelectSingleNode("//meta[@name='description']").Attributes["content"].Value;
-                i.Tags = i.Tags.Replace('\n', ' ').Replace("\t", "");
+                HtmlNode imgnode = doc.DocumentNode.SelectSingleNode("//div[@id='big_preview_cont']");
+                string jpgUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a").Attributes["href"].Value);
+                string sampleUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a/picture/source/img").Attributes["src"].Value);
+
+                i.Tags = imgnode.SelectSingleNode("a/picture/source/img").Attributes["alt"].Value;
+                StringBuilder sb = new StringBuilder(i.Tags);
+                sb.Replace("\n", " ");
+                sb.Replace("\t", " ");
+                Regex rx = new Regex("Anime.*with");
+                if (rx.IsMatch(sb.ToString()))
+                    i.Tags = rx.Replace(sb.ToString(), "").Trim();
+
+                try
+                {
+                    i.Author = doc.DocumentNode.SelectSingleNode("//div[@id='cont']/div[2]/div[1]/div[1]/a/span").InnerText;
+                }
+                catch
+                {
+                    try
+                    {
+                        i.Author = doc.DocumentNode.SelectSingleNode("//div[@id='cont']/div[2]/div[1]/a[1]").InnerText;
+                    }
+                    catch { }
+                }
+
                 i.Desc = i.Tags;
-
-                fileUrl = FormattedImgUrl(SiteUrl, fileUrl);
-                sampleUrl = FormattedImgUrl(SiteUrl, sampleUrl);
-
                 i.Date = date;
                 i.FileSize = fileSize;
-                i.JpegUrl = fileUrl;
-                i.OriginalUrl = fileUrl;
+                i.JpegUrl = jpgUrl;
                 i.SampleUrl = sampleUrl;
             });
 
