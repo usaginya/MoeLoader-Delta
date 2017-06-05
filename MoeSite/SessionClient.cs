@@ -20,8 +20,8 @@ namespace MoeLoaderDelta
         /// </summary>
         public CookieContainer CookieContainer
         {
-            get { return SessionClient.m_Cookie; }
-            set { SessionClient.m_Cookie = value; }
+            get { return m_Cookie; }
+            set { m_Cookie = value; }
         }
 
         /*
@@ -89,7 +89,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Get Response 取回响应 Please use Close()
+        /// Get Response 取回响应, Please use Close()
         /// </summary>
         /// <param name="url">网址</param>
         /// <param name="proxy">代理</param>
@@ -115,6 +115,17 @@ namespace MoeLoaderDelta
             }
             catch { }
             return reponse;
+        }
+        /// <summary>
+        /// Get Response 取回响应 Timeout 60000ms, Please use Close()
+        /// </summary>
+        /// <param name="url">网址</param>
+        /// <param name="proxy">代理</param>
+        /// <param name="referer">来源</param>
+        /// <returns>WebResponse</returns>
+        public WebResponse GetWebResponse(string url, IWebProxy proxy, string referer)
+        {
+            return GetWebResponse(url, proxy, 60000, 60000, referer);
         }
 
         //########################################################################################

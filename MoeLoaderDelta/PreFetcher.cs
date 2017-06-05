@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Media.Imaging;
-using System.Text;
+using System.Net;
 using System.Threading;
+using System.Windows.Media;
 
 namespace MoeLoaderDelta
 {
@@ -58,14 +58,14 @@ namespace MoeLoaderDelta
         }
 
         //预加载的缩略图
-        private Dictionary<string, System.Windows.Media.ImageSource> preFetchedImg = new Dictionary<string, System.Windows.Media.ImageSource>(CachedImgCount);
+        private Dictionary<string, ImageSource> preFetchedImg = new Dictionary<string, ImageSource>(CachedImgCount);
 
         /// <summary>
         /// 预加载的缩略图
         /// </summary>
         /// <param name="url">缩略图url</param>
         /// <returns>缩略图，或者 null 若未加载</returns>
-        public System.Windows.Media.ImageSource PreFetchedImg(string url)
+        public ImageSource PreFetchedImg(string url)
         {
             if (preFetchedImg.ContainsKey(url))
                 return preFetchedImg[url];
@@ -73,7 +73,7 @@ namespace MoeLoaderDelta
         }
 
         //private System.Net.HttpWebRequest req;
-        private List<System.Net.HttpWebRequest> imgReqs = new List<System.Net.HttpWebRequest>(CachedImgCount);
+        private List<HttpWebRequest> imgReqs = new List<HttpWebRequest>(CachedImgCount);
 
         /// <summary>
         /// 反馈图片列表预加载完成事件,用于判断是否有下一页
@@ -94,6 +94,8 @@ namespace MoeLoaderDelta
             {
                 try
                 {
+                    //延迟预加载,避免登录冲突
+                    Thread.Sleep(2333);
                     preFetchedPage = site.GetPageString(page, count, word, MainWindow.WebProxy);
                     prePage = page;
                     preCount = count;
@@ -103,10 +105,8 @@ namespace MoeLoaderDelta
 
                     //获得所有图片列表后反馈得到的数量
                     PreListLoaded(imgs.Count, null);
-                    if(imgs.Count<1)
-                    {
-
-                    }
+                    if (imgs.Count < 1)
+                        return;
 
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);

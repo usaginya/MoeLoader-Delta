@@ -51,7 +51,7 @@ namespace SitePack
         /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            string url, pageString = "";
+            string url = "", pageString = "";
             if (sitePrefix == "chan")
             {
                 ua = "SCChannelApp/2.3 (Android; black)";
@@ -60,7 +60,7 @@ namespace SitePack
                 url = "https://capi.sankakucomplex.com/post/index.json?login=" + tempuser + "&password_hash="
                     + temppass + "&appkey=" + tempappkey + "&page=" + page + "&limit=" + count;
             }
-            else //sitePrefix == idol
+            else if (sitePrefix == "idol")
             {
                 ua = "SCChannelApp/2.3 (Android; idol)";
                 Login(proxy);

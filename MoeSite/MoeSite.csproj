@@ -8,7 +8,7 @@
     <ProjectGuid>{D25819AA-59F6-4193-9071-F638F85FFCCF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MoeLoader</RootNamespace>
+    <RootNamespace>MoeLoaderDelta</RootNamespace>
     <AssemblyName>MoeSite</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -19,7 +19,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\MoeLoader\bin\Debug\</OutputPath>
+    <OutputPath>..\MoeLoaderDelta\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

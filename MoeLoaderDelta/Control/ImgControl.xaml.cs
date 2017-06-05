@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -27,7 +28,8 @@ namespace MoeLoaderDelta
         private bool imgLoaded = false;
         private bool isChecked = false;
 
-        private System.Net.HttpWebRequest req;
+        private SessionClient Sweb = new SessionClient();
+        private HttpWebRequest req;
 
         /// <summary>
         /// 构造函数
@@ -49,7 +51,7 @@ namespace MoeLoaderDelta
 
             //try
             //{
-                //string s = .Substring(img.Score.IndexOf(' '), img.Score.Length - img.Score.IndexOf(' '));
+            //string s = .Substring(img.Score.IndexOf(' '), img.Score.Length - img.Score.IndexOf(' '));
             //score.Text = img.Score.ToString();
             //}
             //catch { }
@@ -58,7 +60,7 @@ namespace MoeLoaderDelta
             {
                 brdScr.Visibility = System.Windows.Visibility.Hidden;
             }*/
-            
+
             //chk.Text = img.Dimension;
 
             //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.Fant);
@@ -139,13 +141,15 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(img.PreviewUrl);
+                    req = (HttpWebRequest)WebRequest.Create(img.PreviewUrl);
                     req.Proxy = MainWindow.WebProxy;
 
                     req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                    if (needReferer != null)
+                    if (!string.IsNullOrWhiteSpace(needReferer))
                         //req.Referer = img.PreUrl.Substring(0, img.PreUrl.IndexOf('/', 7) + 1);
                         req.Referer = needReferer;
+
+                    req.CookieContainer = Sweb.CookieContainer;
 
                     //异步下载开始
                     req.BeginGetResponse(new AsyncCallback(RespCallback), req);
@@ -204,7 +208,7 @@ namespace MoeLoaderDelta
                 System.Net.WebResponse res = ((System.Net.HttpWebRequest)(req.AsyncState)).EndGetResponse(req);
                 System.IO.Stream str = res.GetResponseStream();
 
-                Dispatcher.BeginInvoke(new VoidDel(delegate()
+                Dispatcher.BeginInvoke(new VoidDel(delegate ()
                 {
                     //BitmapFrame bmpFrame = BitmapDecoder.Create(str, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
 
@@ -216,7 +220,7 @@ namespace MoeLoaderDelta
             catch (Exception ex)
             {
                 Program.Log(ex, "Download preview failed");
-                Dispatcher.Invoke(new UIdelegate(delegate(object sender) { StopLoadImg(); }), "");
+                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { StopLoadImg(); }), "");
             }
         }
 
@@ -361,20 +365,20 @@ namespace MoeLoaderDelta
 
         //private void preB_MouseEnter(object sender, MouseEventArgs e)
         //{
-            //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.Fant);
-            //preB.Width = preview.ActualWidth + 20;
-            //preB.Height = preview.ActualHeight + 20;
-            //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseEnter1") as System.Windows.Media.Animation.Storyboard;
-            //sb.Begin();
+        //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.Fant);
+        //preB.Width = preview.ActualWidth + 20;
+        //preB.Height = preview.ActualHeight + 20;
+        //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseEnter1") as System.Windows.Media.Animation.Storyboard;
+        //sb.Begin();
         //}
 
         //private void preB_MouseLeave(object sender, MouseEventArgs e)
         //{
-            //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.NearestNeighbor);
-            //preB.Width = preview.ActualWidth + 20;
-            //preB.Height = preview.ActualHeight + 20;
-            //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseLeave1") as System.Windows.Media.Animation.Storyboard;
-            //sb.Begin();
+        //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.NearestNeighbor);
+        //preB.Width = preview.ActualWidth + 20;
+        //preB.Height = preview.ActualHeight + 20;
+        //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseLeave1") as System.Windows.Media.Animation.Storyboard;
+        //sb.Begin();
         //}
 
         //private void Storyboard_Completed(object sender, EventArgs e)
@@ -456,7 +460,7 @@ namespace MoeLoaderDelta
             //tag
             try
             {
-                Clipboard.SetText(img.Desc.Replace("\r\n",""));
+                Clipboard.SetText(img.Desc.Replace("\r\n", ""));
             }
             catch (Exception) { }
         }
