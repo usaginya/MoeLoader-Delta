@@ -55,6 +55,7 @@ namespace MoeLoaderDelta
             {
                 Assembly asm = Assembly.GetExecutingAssembly();
                 programName = ((AssemblyTitleAttribute)Attribute.GetCustomAttribute(asm, typeof(AssemblyTitleAttribute))).Title;
+                return programName;
             }
         }
 
