@@ -294,8 +294,6 @@
   <PropertyGroup>
     <PostBuildEvent>md $(TargetDir)lib
 xcopy /r /y /e /s /h /d $(SolutionDir)lib $(TargetDir)lib
-md $(TargetDir)SitePacks
-move $(TargetDir)SitePack.dll $(TargetDir)SitePacks\SitePack.dll
 move $(SolutionDir)MoeToNew\bin\Release\MoeToNew.exe $(ProjectDir)bin\Release\MoeToNew.exe
 del /f /s /q $(TargetDir)*.pdb
 del /f /s /q $(TargetDir)lib\HtmlTextBlock.dll
