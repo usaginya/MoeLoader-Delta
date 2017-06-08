@@ -16,7 +16,7 @@ GitHub: https://github.com/usaginya/MoeLoader-Delta
 
 MoeLoader Δ 预览：http://usaginya.lofter.com/post/1d56d69b_d6b14fd
 
-MoeLoader Δ 下载更新程序：https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe
+[下载 MoeLoader Δ 更新\安装 程序](https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe)
 
 
 
