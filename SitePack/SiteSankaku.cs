@@ -20,16 +20,10 @@ namespace SitePack
 
         public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
         public override string SiteName { get { return sitePrefix + ".sankakucomplex.com"; } }
-        public override string ShortName { get { if (sitePrefix == "chan") return "chan.sku"; else return "idol.sku"; } }
+        public override string ShortName { get { return (sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku"); } }
         public override string ShortType { get { return ""; } }
-        public override bool IsSupportScore
-        {
-            get { return false; }
-        }
-        public override bool IsSupportCount //fixed 20
-        {
-            get { return true; }
-        }
+        public override bool IsSupportScore { get { return false; } }
+        public override bool IsSupportCount { get { return true; } }
         public override string Referer { get { return "https://" + sitePrefix + ".sankakucomplex.com/post/show/12345"; } }
         public override string SubReferer { get { return ShortName + ",sankakucomplex"; } }
 
@@ -42,7 +36,7 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 取页面源码 来自官方安卓APP处理方式
+        /// 取页面源码 来自官方APP处理方式
         /// </summary>
         /// <param name="page"></param>
         /// <param name="count"></param>

@@ -81,6 +81,7 @@ namespace SitePack
             sites.Add(new SiteWCosplay());
 
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week));

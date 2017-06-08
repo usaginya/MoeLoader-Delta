@@ -201,7 +201,7 @@ namespace MoeLoaderDelta
                 //替换有可能干扰分析的 [ ] "
                 //item = item.Replace('[', '1').Replace(']', '1').Replace("\\\"", "");
                 //JSONObject obj = JSONConvert.DeserializeObject(item);
-                Dictionary<string, object> obj = (new System.Web.Script.Serialization.JavaScriptSerializer()).DeserializeObject(item) as Dictionary<string, object>;
+                Dictionary<string, object> obj = (new JavaScriptSerializer()).DeserializeObject(item) as Dictionary<string, object>;
 
                 string sample = "";
                 if (obj.ContainsKey("sample_url"))
@@ -387,14 +387,15 @@ namespace MoeLoaderDelta
                 host = url.Substring(0, url.IndexOf('/', 8));
 
                 //图片ID
-                id = obj["id"].ToString();
+                if (obj["id"] != null)
+                    id = obj["id"].ToString();
 
                 //投稿者
-                if (obj.ContainsKey("author"))
+                if (obj.ContainsKey("author") && obj["author"] != null)
                     author = obj["author"].ToString();
 
                 //图片来源
-                if (obj.ContainsKey("source"))
+                if (obj.ContainsKey("source") && obj["source"] != null)
                     source = obj["source"].ToString();
 
                 //原图宽高 width height
@@ -408,13 +409,13 @@ namespace MoeLoaderDelta
                 //文件大小
                 try
                 {
-                    if (obj.ContainsKey("file_size"))
+                    if (obj.ContainsKey("file_size") && obj["file_size"] != null)
                         file_size = int.Parse(obj["file_size"].ToString());
                 }
                 catch { }
 
                 //上传时间
-                if (obj.ContainsKey("created_at"))
+                if (obj.ContainsKey("created_at") && obj["created_at"] != null)
                 {
                     if (sub == "sku")
                     {
@@ -429,7 +430,7 @@ namespace MoeLoaderDelta
                 }
 
                 //评级和评分
-                if (obj.ContainsKey("rating"))
+                if (obj.ContainsKey("rating") && obj["rating"] != null)
                 {
                     score = "Safe ";
                     if (obj["rating"].ToString() == "e")
@@ -442,27 +443,27 @@ namespace MoeLoaderDelta
                 }
 
                 //缩略图
-                if (obj.ContainsKey("sample_url"))
-                    sample =  FormattedImgUrl(host, obj["sample_url"].ToString());
+                if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
+                    sample = FormattedImgUrl(host, obj["sample_url"].ToString());
 
                 //预览图
-                if (obj.ContainsKey("preview_url"))
+                if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
                     preview_url = FormattedImgUrl(host, obj["preview_url"].ToString());
 
                 //原图
 
-                if (obj.ContainsKey("file_url"))
+                if (obj.ContainsKey("file_url") && obj["file_url"] != null)
                 {
                     file_url = FormattedImgUrl(host, obj["file_url"].ToString());
                     jpeg_url = file_url;
                 }
 
                 //JPG
-                if (obj.ContainsKey("jpeg_url"))
+                if (obj.ContainsKey("jpeg_url") && obj["jpeg_url"] != null)
                     jpeg_url = FormattedImgUrl(host, obj["jpeg_url"].ToString());
 
                 //标签
-                if (obj.ContainsKey("tags"))
+                if (obj.ContainsKey("tags") && obj["tags"] != null)
                 {
                     if (sub == "sku")
                     {

@@ -165,12 +165,12 @@ namespace MoeLoaderDelta
                         continue;
                     if (DataHelpers.GetMD5Hash(localFile) == upfile.MD5 || DataHelpers.GetMD5Hash(updateTmpPath + "\\" + localFile) == upfile.MD5)
                         continue;
-                    UpdateFilesInfo += "+ " + upfile.Name + " - Ver " + upfile.Ver + "  (" + upfile.MD5 + ")[br]";
+                    UpdateFilesInfo += "+ " + localFile + " - Ver " + upfile.Ver + "  (" + upfile.MD5 + ")[br]";
                     UpdateFiles.Add(upfile);
                 }
                 else if (upfile.State == "del" && File.Exists(localFile))
                 {
-                    UpdateFilesInfo += "- " + upfile.Name + "[br]";
+                    UpdateFilesInfo += "- " + localFile + "[br]";
                     UpdateFiles.Add(upfile);
                 }
             }

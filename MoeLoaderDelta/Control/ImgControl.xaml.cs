@@ -205,7 +205,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                System.Net.WebResponse res = ((System.Net.HttpWebRequest)(req.AsyncState)).EndGetResponse(req);
+                WebResponse res = ((HttpWebRequest)(req.AsyncState)).EndGetResponse(req);
                 System.IO.Stream str = res.GetResponseStream();
 
                 Dispatcher.BeginInvoke(new VoidDel(delegate ()

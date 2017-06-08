@@ -5,13 +5,15 @@ using System.Text;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Text.RegularExpressions;
+using System.Web.Script.Serialization;
+using System.Net;
 
 namespace SitePack
 {
     public class SitePixiv : AbstractImageSite
     {
-        //标签, 作者id, 日榜, 周榜, 月榜
-        public enum PixivSrcType { Tag, Author, Day, Week, Month, }
+        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -26,7 +28,9 @@ namespace SitePack
                     return "www.pixiv.net [Week]";
                 else if (srcType == PixivSrcType.Month)
                     return "www.pixiv.net [Month]";
-                else return "www.pixiv.net [Tag]";
+                else if (srcType == PixivSrcType.TagFull)
+                    return "www.pixiv.net [TagFull]";
+                return "www.pixiv.net [Tag]";
             }
         }
         public override string ToolTip
@@ -34,14 +38,16 @@ namespace SitePack
             get
             {
                 if (srcType == PixivSrcType.Author)
-                    return "作者搜索";
+                    return "搜索作者";
                 else if (srcType == PixivSrcType.Day)
                     return "本日排行";
                 else if (srcType == PixivSrcType.Week)
                     return "本周排行";
                 else if (srcType == PixivSrcType.Month)
                     return "本月排行";
-                else return "最新作品 & 标签搜索";
+                else if (srcType == PixivSrcType.TagFull)
+                    return "搜索完整标签";
+                return "最新作品 & 搜索标签";
             }
         }
         public override string ShortType
@@ -49,14 +55,16 @@ namespace SitePack
             get
             {
                 if (srcType == PixivSrcType.Author)
-                    return " [U]";
+                    return "[U]";
                 else if (srcType == PixivSrcType.Day)
-                    return " [D]";
+                    return "[D]";
                 else if (srcType == PixivSrcType.Week)
-                    return " [W]";
+                    return "[W]";
                 else if (srcType == PixivSrcType.Month)
-                    return " [M]";
-                else return " [T]";
+                    return "[M]";
+                else if (srcType == PixivSrcType.TagFull)
+                    return "[TF]";
+                return "[T]";
             }
         }
         public override string ShortName { get { return "pixiv"; } }
@@ -68,7 +76,7 @@ namespace SitePack
         public override bool IsSupportRes { get { return false; } }
         //public override bool IsSupportPreview { get { return true; } }
         //public override bool IsSupportTag { get { if (srcType == PixivSrcType.Author) return true; else return false; } }
-        public override bool IsSupportTag { get { return false; } }
+        public override bool IsSupportTag { get { return true; } }
 
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
@@ -89,7 +97,7 @@ namespace SitePack
             this.srcType = srcType;
         }
 
-        public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             Login(proxy);
@@ -105,7 +113,9 @@ namespace SitePack
             if (keyWord.Length > 0)
             {
                 //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2
-                url = SiteUrl + "/search.php?s_mode=s_tag&word=" + keyWord + "&order=date_d&p=" + page;
+                url = SiteUrl + "/search.php?s_mode=s_tag"
+                    + (srcType == PixivSrcType.TagFull ? "_full" : "")
+                + "&word=" + keyWord + "&order=date_d&p=" + page;
             }
             if (srcType == PixivSrcType.Author)
             {
@@ -136,7 +146,7 @@ namespace SitePack
             return pageString;
         }
 
-        public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
+        public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
             List<Img> imgs = new List<Img>();
 
@@ -145,7 +155,7 @@ namespace SitePack
 
             //retrieve all elements via xpath
             HtmlNodeCollection nodes = null;
-            if (srcType == PixivSrcType.Tag)
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
                 nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items autopagerize_page_element']").SelectNodes("li");
                 //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
@@ -205,6 +215,42 @@ namespace SitePack
             return imgs;
         }
 
+        public override List<TagItem> GetTags(string word, IWebProxy proxy)
+        {
+            List<TagItem> re = new List<TagItem>();
+
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            {
+
+                Login(proxy);
+                Dictionary<string, object> tags = new Dictionary<string, object>();
+                Dictionary<string, object> tag = new Dictionary<string, object>();
+
+                string url = string.Format(SiteUrl + "/rpc/cps.php?keyword={0}", word);
+                MyWebClient web = new MyWebClient();
+                web.Timeout = 8;
+                web.Proxy = proxy;
+                web.Encoding = Encoding.UTF8;
+                web.Headers["Cookie"] = cookie;
+                web.Headers["Referer"] = referer;
+                web.Headers.Add("X-Requested-With", "XMLHttpRequest");
+
+                string json = web.DownloadString(url);
+
+                object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
+
+                tags = (new JavaScriptSerializer()).DeserializeObject(json) as Dictionary<string, object>;
+                if (tags.ContainsKey("candidates"))
+                {
+                    foreach (object obj in tags["candidates"] as object[])
+                    {
+                        tag = obj as Dictionary<string, object>;
+                        re.Add(new TagItem() { Name = tag["tag_name"].ToString() });
+                    }
+                }
+            }
+            return re;
+        }
         // DO NOT SUPPORT TAG HINT
         //public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
         //{
@@ -340,7 +386,7 @@ namespace SitePack
             return img;
         }
 
-        private void Login(System.Net.IWebProxy proxy)
+        private void Login(IWebProxy proxy)
         {
             //防止二次登录造成Cookie错误
             if (isLogin)

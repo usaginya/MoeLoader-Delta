@@ -27,12 +27,12 @@ namespace SitePack
             get
             {
                 if (type == 1)
-                    return "标签搜索";
+                    return "搜索标签";
                 else if (type == 2)
-                    return "来源搜索";
+                    return "搜索来源";
                 else if (type == 3)
-                    return "画师搜索";
-                else return "角色搜索";
+                    return "搜索画师";
+                else return "搜索角色";
             }
         }
         public override string ShortName { get { return "e-shu"; } }
@@ -41,12 +41,12 @@ namespace SitePack
             get
             {
                 if (type == 1)
-                    return " [T]";
+                    return "[T]";
                 else if (type == 2)
-                    return " [S]";
+                    return "[S]";
                 else if (type == 3)
-                    return " [A]";
-                else return " [C]";
+                    return "[A]";
+                else return "[C]";
             }
         }
 

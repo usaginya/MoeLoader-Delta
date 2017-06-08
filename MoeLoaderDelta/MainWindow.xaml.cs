@@ -188,10 +188,16 @@ namespace MoeLoaderDelta
                 }
                 else
                 {
-                    int space = site.SiteName.IndexOf(' ');
-                    if (space > 0)
-                        menuItem = new MenuItem() { Header = site.SiteName.Substring(0, space) };
-                    else menuItem = new MenuItem() { Header = site.SiteName };
+                    int space = site.SiteName.IndexOf('[');
+
+                    menuItem = new MenuItem()
+                    {
+                        Header = (
+                        space > 0
+                        ? site.SiteName.Substring(0, space)
+                        : site.SiteName
+                        )
+                    };
 
                     menuItem.Style = (Style)Resources["SimpleMenuItem"];
                     dicSites.Add(site.ShortName, menuItem);
@@ -252,9 +258,12 @@ namespace MoeLoaderDelta
 
         void menuItem_Click(object sender, RoutedEventArgs e)
         {
+            if (SiteManager.Instance.Sites.Count < 1)
+                return;
+
             MenuItem item = sender as MenuItem;
             comboBoxIndex = (int)(item.DataContext);
-            siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
+            siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
             if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount)
@@ -352,7 +361,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void LoadConfig()
         {
-            string configFile = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\Moe_config.ini";
+            string configFile = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Moe_config.ini";
 
             //读取配置文件
             if (File.Exists(configFile))
@@ -502,8 +511,11 @@ namespace MoeLoaderDelta
                             {
                                 //向前兼容
                                 if (i - 3 >= SiteManager.Instance.Sites.Count) break;
-                                viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
-                                viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
+                                else if (SiteManager.Instance.Sites.Count > 0)
+                                {
+                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
+                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
+                                }
                             }
                         }
                     }
@@ -541,50 +553,69 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 更改翻页按钮状态
         /// </summary>
+        /// <param name="btnid">0上一页, 1下一页</param>
+        private void UpdatePreNextEnable(int btnid)
+        {
+            switch (btnid)
+            {
+                case 0:
+                    btnPrev.IsEnabled = realPage > 1;
+                    btnPrev.Visibility = (realPage > 1 ? Visibility.Visible : Visibility.Hidden);
+                    break;
+                case 1:
+                    btnNext.IsEnabled = HaveNextPage;
+                    btnNext.Visibility = (HaveNextPage ? Visibility.Visible : Visibility.Hidden);
+                    break;
+            }
+            PlayPreNextAnimation(btnid);
+        }
+        /// <summary>
+        /// 更改上一页按钮状态
+        /// </summary>
         private void UpdatePreNextEnable()
         {
-            if (realPage > 1)
-            {
-                btnPrev.IsEnabled = true;
-                btnPrev.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                btnPrev.IsEnabled = false;
-                btnPrev.Visibility = Visibility.Hidden;
-            }
-
-            if (HaveNextPage)
-            {
-                btnNext.IsEnabled = true;
-                btnNext.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                btnNext.IsEnabled = false;
-                btnNext.Visibility = Visibility.Hidden;
-            }
-
+            UpdatePreNextEnable(0);
         }
 
         /// <summary>
         /// 翻页按钮动画
         /// </summary>
+        /// <param name="btnid">0 上一页, 1下一页</param>
+        private void PlayPreNextAnimation(int btnid)
+        {
+            Thickness mrg = (scrList.ComputedVerticalScrollBarVisibility == Visibility.Collapsed) ? new Thickness(0) : new Thickness(0, 0, 15, 0);
+            ThicknessAnimation btna = new ThicknessAnimation();
+            btna.To = mrg;
+            btna.Duration = TimeSpan.FromMilliseconds(666);
+            switch (btnid)
+            {
+               
+                case 0:
+                    {
+                        Storyboard sb = FindResource("sbShowPageBtnPrev") as Storyboard;
+                        Storyboard.SetTargetProperty(btna, new PropertyPath("(Button.Margin)"));
+                        Storyboard.SetTarget(btna, btnPrev);
+                        sb.Children.Add(btna);
+                        sb.Begin();
+                        break;
+                    }
+                case 1:
+                    {
+                        Storyboard sb = (Storyboard)FindResource("sbShowPageBtnNext");
+                        Storyboard.SetTargetProperty(btna, new PropertyPath("(Button.Margin)"));
+                        Storyboard.SetTarget(btna, btnNext);
+                        sb.Children.Add(btna);
+                        sb.Begin();
+                        break;
+                    }
+            }
+        }
+        /// <summary>
+        /// 上一页按钮动画
+        /// </summary>
         private void PlayPreNextAnimation()
         {
-            Storyboard sb = (Storyboard)FindResource("sbShowPageBtn");
-            Thickness mrg = (scrList.ComputedVerticalScrollBarVisibility == Visibility.Collapsed) ? new Thickness(0) : new Thickness(0, 0, 15, 0);
-            ThicknessAnimation preta = new ThicknessAnimation();
-            ThicknessAnimation nexta = new ThicknessAnimation();
-            preta.To = nexta.To = mrg;
-            preta.Duration = nexta.Duration = TimeSpan.FromMilliseconds(666);
-            Storyboard.SetTarget(preta, btnPrev);
-            Storyboard.SetTarget(nexta, btnNext);
-            Storyboard.SetTargetProperty(preta, new PropertyPath("(Button.Margin)"));
-            Storyboard.SetTargetProperty(nexta, new PropertyPath("(Button.Margin)"));
-            sb.Children.Add(preta);
-            sb.Children.Add(nexta);
-            sb.Begin();
+            PlayPreNextAnimation(0);
         }
 
         /// <summary>
@@ -795,9 +826,14 @@ namespace MoeLoaderDelta
                 unloaded.RemoveFirst();
             }
 
-            //加载完第一张图时重设缩略图大小
+            //加载完第一张图时
             if (loaded.Count < 2)
+            {
+                //显示上一页按钮
+                UpdatePreNextEnable();
+                //重设缩略图大小
                 itmSmallPre_Click(null, null);
+            }
         }
 
         /// <summary>
@@ -811,13 +847,20 @@ namespace MoeLoaderDelta
                 new Action(
                     delegate
                     {
+                        //防止多次设置按钮状态
                         bool tmphave = HaveNextPage;
                         HaveNextPage = (int)sender > 0;
 
                         if (HaveNextPage && !tmphave && IsLoaded)
                         {
-                            UpdatePreNextEnable();
-                            PlayPreNextAnimation();
+                            //等滚动条
+                            for (int i = 0; i < 3; i++)
+                            {
+                                if (scrList.ComputedVerticalScrollBarVisibility == Visibility.Visible)
+                                    break;
+                                Thread.Sleep(999);
+                            }
+                            UpdatePreNextEnable(1);
                         }
                     }));
         }
@@ -829,6 +872,10 @@ namespace MoeLoaderDelta
         /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (SiteManager.Instance.Sites.Count < 1)
+                return;
+
+            //获取
             if (!isGetting)
             {
                 if (!naviMoved)
@@ -844,8 +891,10 @@ namespace MoeLoaderDelta
                 btnGet.ToolTip = "停止搜索";
                 imgGet.Source = new BitmapImage(new Uri("/Images/stop.png", UriKind.Relative));
 
+                //隐藏翻页按钮
                 btnPrev.IsEnabled = btnNext.IsEnabled = false;
                 btnPrev.Visibility = btnNext.Visibility = Visibility.Hidden;
+
                 if (sender != null)
                 {
                     //记录上一次选择，用于当缩略图尚未加载就停止时恢复
@@ -867,7 +916,7 @@ namespace MoeLoaderDelta
 
                 //nowSelectedIndex = comboBoxIndex;
 
-                statusText.Text = "与服务器通信，请稍候...";
+                statusText.Text = "与伺服器通迅，请稍候...";
 
                 if (searchControl.Text.Length != 0)
                 {
@@ -947,12 +996,11 @@ namespace MoeLoaderDelta
                     siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                     realPage = lastPage;
 
-                    //尝试预加载
+                    //尝试加载下一页
                     StartPreLoad();
 
-                    //显示翻页按钮
+                    //显示上一页按钮
                     UpdatePreNextEnable();
-                    PlayPreNextAnimation();
 
                     isGetting = false;
                     txtGet.Text = "搜索";
@@ -1059,8 +1107,6 @@ namespace MoeLoaderDelta
         void DocumentCompleted()
         {
             logo.Stop();
-            UpdatePreNextEnable();
-            PlayPreNextAnimation();
             bgLoading.Visibility = Visibility.Hidden;
 
             int viewedC = 0;
@@ -1419,6 +1465,7 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ((ImgControl)imgPanel.Children[i]).RetryLoad();
+                StartPreLoad();
             }
         }
 
@@ -2248,7 +2295,7 @@ namespace MoeLoaderDelta
                     }
 
                     string text = downloadC.NumOnce + "\r\n"
-                        + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+                        + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
                         ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
                         + (downloadC.IsSaSave ? "1" : "0") + ";"
                         + numOfLoading + ";"
@@ -2273,7 +2320,7 @@ namespace MoeLoaderDelta
                     {
                         text += id.Key + ":" + id.Value + "\r\n";
                     }
-                    File.WriteAllText(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+                    File.WriteAllText(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
                         + "\\Moe_config.ini", text);
                 }
             }

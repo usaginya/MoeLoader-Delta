@@ -6,7 +6,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Collections.Generic;
-using System.Windows.Controls.Primitives;
 
 namespace MoeLoaderDelta
 {
@@ -86,7 +85,7 @@ namespace MoeLoaderDelta
 
         private void ShowUsedItems()
         {
-            if (!SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
+            if (SiteManager.Instance.Sites.Count > 0 && !SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
             {
                 txtSearch.Items.Add(new SearchItem() { Name = "该站点无关键词自动提示", Count = null, Enabled = false });
             }
@@ -119,7 +118,7 @@ namespace MoeLoaderDelta
             }
 
             //auto hint when site support
-            if (SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
+            if (SiteManager.Instance.Sites.Count > 0 && SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
             {
                 if (word.Trim().Length == 0 || word == (string)tbox.Tag) return;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 namespace MoeLoaderDelta
@@ -9,24 +10,14 @@ namespace MoeLoaderDelta
     /// </summary>
     public class SiteManager
     {
-        private List<ImageSite> sites = new List<ImageSite>();
+        private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
 
         private SiteManager()
         {
-            string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (System.IO.File.Exists(path + "\\SitePacks\\SitePack.dll.new"))
-            {
-                //update site pack
-                try
-                {
-                    System.IO.File.Delete(path + "\\SitePacks\\SitePack.dll");
-                    System.IO.File.Move(path + "\\SitePack.dll.new", path + "\\SitePacks\\SitePack.dll");
-                }
-                catch { }
-            }
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SitePacks\\";
 
-            string[] dlls = System.IO.Directory.GetFiles(path + "\\SitePacks", "SitePack*.dll", System.IO.SearchOption.TopDirectoryOnly);
+            string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.TopDirectoryOnly);
             foreach (string dll in dlls)
             {
                 try
@@ -37,7 +28,7 @@ namespace MoeLoaderDelta
                 }
                 catch (Exception ex)
                 {
-                    System.IO.File.AppendAllText(path + "\\site_error.txt", ex.ToString() + "\r\n");
+                    File.AppendAllText(path + "site_error.txt", ex.ToString() + "\r\n");
                 }
             }
         }

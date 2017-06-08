@@ -19,7 +19,26 @@ namespace SitePack
             }
         }
         public override string ShortName { get { return "minitokyo"; } }
-        public override string ShortType { get { return ""; } }
+        public override string ShortType
+        {
+            get
+            {
+                if (type == WALL)
+                {
+                    return "[W]";
+                }
+                return "[S]";
+            }
+        }
+        public override string ToolTip
+        {
+            get
+            {
+                if (type == WALL)
+                    return "搜索壁纸";
+                return "搜索扫描图";
+            }
+        }
         //public string Referer { get { return null; } }
 
         public override bool IsSupportCount { get { return false; } } //fixed 24
@@ -237,7 +256,7 @@ namespace SitePack
         {
             if (sessionId != null) return;
             try
-            {  
+            {
                 int index = rand.Next(0, user.Length);
                 //http://my.minitokyo.net/login
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create("http://my.minitokyo.net/login");

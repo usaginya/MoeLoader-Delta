@@ -16,7 +16,7 @@ GitHub: https://github.com/usaginya/MoeLoader-Delta
 
 MoeLoader Δ 预览：http://usaginya.lofter.com/post/1d56d69b_d6b14fd
 
-MoeLoader Δ 下载更新程序：https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe
+[下载 MoeLoader Δ 更新\安装 程序](https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe)
 
 
 
@@ -64,17 +64,17 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 
 支持的图片站点列表：
 
-* yande.re (萌妹)
-* konachan.com
-* danbooru.donmai.us
-* behoimi.org (三次元)
-* idol.sankakucomplex.com (三次元)(新建 18x.txt 可见)
-* chan.sankakucomplex.com
-* safebooru.org
-* gelbooru.com
-* e-shuushuu.net
+* [yande.re](https://yande.re) (萌妹)
+* [konachan.com](https://konachan.com)
+* [danbooru.donmai.us](https://danbooru.donmai.us)
+* [behoimi.org](http://behoimi.org) (三次元)
+* [idol.sankakucomplex.com](https://idol.sankakucomplex.com) (三次元)(新建 18x.txt 可见)
+* [chan.sankakucomplex.com](https://chan.sankakucomplex.com)
+* [safebooru.org](http://safebooru.org)
+* [gelbooru.com](https://gelbooru.com)
+* [e-shuushuu.net](http://e-shuushuu.net)
 * www.zerochan.net
-* mjv-art.org
-* worldcosplay.net (三次元)
+* [mjv-art.org](https://anime-pictures.net)
+* [worldcosplay.net](https://worldcosplay.net) (三次元)
 * www.minitokyo.net (桌面壁纸、扫描图)
 * www.pixiv.net (标签搜索、画师搜索、日、周、月排行榜)
