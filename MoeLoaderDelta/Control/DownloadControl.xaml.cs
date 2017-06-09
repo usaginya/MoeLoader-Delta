@@ -222,7 +222,7 @@ namespace MoeLoaderDelta
                         path = saveLocation + "\\";
                     }
 
-                    //检查路径长度
+                    //检查目录长度
                     if (path.Length > 248)
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
@@ -230,10 +230,21 @@ namespace MoeLoaderDelta
                         WriteErrText(url + ": 路径太长");
                         j--;
                     }
+                    else
+                    {
+                        dlitem.LocalFileName = ReplaceInvalidPathChars(file, path, 0);
+                        file = dlitem.LocalName = path + dlitem.LocalFileName;
 
-                    dlitem.LocalFileName = ReplaceInvalidPathChars(file, path, 0);
-                    file = dlitem.LocalName = path + dlitem.LocalFileName;
-
+                        //检查全路径长度
+                        if (file.Length > 258)
+                        {
+                            downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
+                            downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
+                            WriteErrText(url + ": 路径太长");
+                            j--;
+                        }
+                    }
+                    
                     if (File.Exists(file))
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.IsHave;
@@ -406,7 +417,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                File.AppendAllText(saveLocation + "\\moeloder_error.log", content + "\r\n");
+                File.AppendAllText(saveLocation + "\\moedl_error.log", content + "\r\n");
             }
             catch { }
         }

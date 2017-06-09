@@ -6,8 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
     Width="400"
-    Height="465"
-    Closing="Window_Closing"
+    Height="505"
     Icon="m.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
@@ -18,7 +17,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="135" />
             <!--<RowDefinition Height="70"/>-->
-            <RowDefinition Height="131" />
+            <RowDefinition Height="168" />
             <RowDefinition Height="120" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
@@ -180,15 +179,9 @@
                     IsEnabled="False"
                     Text="127.0.0.1:1080"
                     TextWrapping="NoWrap" />
-                <!--<CheckBox x:Name="chkProxy" HorizontalAlignment="Left" Content="地址" Margin="10,0,0,0" VerticalAlignment="Center" Click="chkProxy_Click"/>-->
             </Grid>
         </GroupBox>
-        <!--<GroupBox Header="老板键设置" Margin="5,2" Grid.Row="1">
-            <Grid>
-                <TextBox x:Name="txtBossKey" Margin="100,13,20,9" Text="" TextWrapping="NoWrap" VerticalAlignment="Center" PreviewKeyDown="txtBossKey_PreviewKeyDown"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="老板键" Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </Grid>
-        </GroupBox>-->
+
         <GroupBox
             Grid.Row="1"
             Margin="5,2"
@@ -285,6 +278,62 @@
                     MouseDown="textNameHelp_MouseDown"
                     Text="?"
                     TextDecorations="Underline" />
+                <Button
+                    x:Name="FNRsite"
+                    Margin="97,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%site"
+                    ToolTip="插入 站点 格式" />
+                <Button
+                    x:Name="FNRid"
+                    Margin="136,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%id"
+                    ToolTip="插入 作品ID 格式" />
+                <Button
+                    x:Name="FNRtag"
+                    Margin="165,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%tag"
+                    ToolTip="插入 作品标签 格式" />
+                <Button
+                    x:Name="FNRdesc"
+                    Margin="202,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%desc"
+                    ToolTip="插入 作品描述 格式" />
+                <Button
+                    x:Name="FNRauthor"
+                    Margin="247,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%author"
+                    ToolTip="插入 作者名 格式" />
+                <Button
+                    x:Name="FNRdate"
+                    Margin="304,0,0,24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%date"
+                    ToolTip="插入 上载时间 格式" />
+                <Button
+                    x:Name="FNRimgp"
+                    Margin="97,0,0,2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="%imgp[n]"
+                    ToolTip="插入 图片页数[补0个数] 格式" />
+                <Button
+                    x:Name="FNRcut"
+                    Margin="160,0,0,2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="&lt;!&lt;"
+                    ToolTip="插入 文件名裁剪符 格式" />
             </Grid>
         </GroupBox>
         <TextBlock

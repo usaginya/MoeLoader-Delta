@@ -589,7 +589,7 @@ namespace MoeLoaderDelta
             btna.Duration = TimeSpan.FromMilliseconds(666);
             switch (btnid)
             {
-               
+
                 case 0:
                     {
                         Storyboard sb = FindResource("sbShowPageBtnPrev") as Storyboard;
@@ -1957,14 +1957,23 @@ namespace MoeLoaderDelta
                 {
                     result = mc[i];
                     imgpPatter = result.Groups["all"].ToString();
-                    zerofill = Int32.Parse(result.Groups["zf"].ToString());
-                    if (img.ImgP != "")
-                        file = file.Replace(imgpPatter, img.ImgP.PadLeft(zerofill, '0'));
-                    else
+                    zerofill = int.Parse(result.Groups["zf"].ToString());
+                    if (string.IsNullOrWhiteSpace(img.ImgP))
                         file = file.Replace(imgpPatter, "0".PadLeft(zerofill, '0'));
+                    else
+                        file = file.Replace(imgpPatter, img.ImgP.PadLeft(zerofill, '0'));
                 }
+
                 if (resc < 1)
-                    file += img.ImgP.PadLeft(3, '0');
+                {
+                    //如果图册有数量就强制加序号
+                    if (int.Parse(img.ImgP) > 0)
+                        file += img.ImgP.PadLeft(4, '0');
+
+                    //移除错误的标签格式
+                    reg = new Regex(@"%imgp\[.*?\]+");
+                    file = reg.Replace(file, "");
+                }
             }
             catch { }
             #endregion

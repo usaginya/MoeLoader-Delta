@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -23,18 +24,8 @@ namespace MoeLoaderDelta
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
 
-            //if (System.Environment.OSVersion.Version.Major >= 6)
-            //{
-            //    if (GlassHelper.DwmIsCompositionEnabled())
-            //    {
-            //        chkAero.IsEnabled = true;
-            //    }
-            //}
-
-            //SetColor(main.GetColor());
-            //chkPos.IsChecked = main.rememberPos;
             txtProxy.Text = MainWindow.Proxy;
-            //chkProxy.IsChecked = MainWindow.ProxyEnable;
+
             rtNoProxy.IsChecked = true;
             if (MainWindow.ProxyType == ProxyType.System)
             {
@@ -99,26 +90,18 @@ namespace MoeLoaderDelta
                 + "<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】\r\n"
                 + "表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题\r\n"
                + "建议把裁剪符号写在 标签%tag 或 描述%desc 后面";
+
+            #region 文件名规则格式按钮绑定
+            FNRsite.Click += new RoutedEventHandler(FNRinsert);
+            FNRid.Click += new RoutedEventHandler(FNRinsert);
+            FNRtag.Click += new RoutedEventHandler(FNRinsert);
+            FNRdesc.Click += new RoutedEventHandler(FNRinsert);
+            FNRauthor.Click += new RoutedEventHandler(FNRinsert);
+            FNRdate.Click += new RoutedEventHandler(FNRinsert);
+            FNRimgp.Click += new RoutedEventHandler(FNRinsert);
+            FNRcut.Click += new RoutedEventHandler(FNRinsert);
+            #endregion
         }
-
-        //private void SetColor(Color c)
-        //{
-        //    sr.Value = c.R;
-        //    sg.Value = c.G;
-        //    sb.Value = c.B;
-        //    sa.Value = c.A;
-        //}
-
-        //private void SetMainColor()
-        //{
-        //    Color c = Color.FromArgb((byte)sa.Value, (byte)sr.Value, (byte)sg.Value, (byte)sb.Value);
-        //    main.SetBackColorLive(c);
-        //}
-
-        //private void s_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
-        //{
-        //    SetMainColor();
-        //}
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -227,39 +210,29 @@ namespace MoeLoaderDelta
                 main.bgImg.AlignmentX = main.bgHe;
                 main.bgImg.AlignmentY = main.bgVe;
             }
-            //Color c = Color.FromArgb((byte)sa.Value, (byte)sr.Value, (byte)sg.Value, (byte)sb.Value);
-            //OK
-            //main.SetBackColor(c);
-            //main.isAero = chkAero.IsChecked.Value;
+
             PreFetcher.CachedImgCount = int.Parse(txtCount.Text);
 
             DownloadControl.SaveLocation = txtSaveLocation.Text;
             main.downloadC.IsSepSave = chkSepSave.IsChecked.Value;
             main.downloadC.IsSaSave = chkSaSave.IsChecked.Value;
             main.downloadC.NumOnce = int.Parse(txtParal.Text);
-            //main.rememberPos = chkPos.IsChecked.Value;
+
             Close();
         }
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            //cancel
-            //main.RestoreColor();
             this.Close();
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
             //default
-            //SetColor(Color.FromArgb(0x21, 0x7C, 0x9E, 0xBE));
             txtProxy.Text = "127.0.0.1:1080";
             txtPattern.Text = MainWindow.DefaultPatter;
             txtBossKey.Text = System.Windows.Forms.Keys.F9.ToString();
-            //chkProxy.IsChecked = false;
             rtNoProxy.IsChecked = true;
-            //txtProxy.IsEnabled = false;
-            //chkPos.IsChecked = false;
-            //chkAero.IsChecked = true;
             txtCount.Text = "6";
             chkProxy_Click(null, null);
             txtParal.Text = "2";
@@ -267,11 +240,6 @@ namespace MoeLoaderDelta
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
             txtSaveLocation.Text = "MoeLoaderGallery";
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            //main.RestoreColor();
         }
 
         private void txtBossKey_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -343,7 +311,7 @@ namespace MoeLoaderDelta
                 + "\r\nMoeLoader ©2008-2013 esonic All rights reserved.\r\n\r\n"
                 + "Δ Version by YIU\r\n"
                 + "Email: degdod@qq.com\r\nSite: http://usaginya.lofter.com/"
-                + "\r\nMoeLoaderΔ ©2016-2017 Moekai All rights reserved.\r\n\r\n"
+                + "\r\nMoeLoader Δ ©2016-2017 Moekai All rights reserved.\r\n\r\n"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -371,7 +339,7 @@ namespace MoeLoaderDelta
 
         private void TextBlock_MouseDown_1(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(this, "将图片文件重命名为 bg.png 或 bg.jpg 后放入 MoeLoaderDelta.exe 所在目录，重启 MoeLoaderDelta Δ 即可",
+            MessageBox.Show(this, "将图片文件重命名为 bg.png 或 bg.jpg 后放入 MoeLoaderDelta.exe 所在目录，重启 MoeLoader Δ 即可",
                 MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -380,5 +348,32 @@ namespace MoeLoaderDelta
             chkSaSave.IsEnabled = chkSepSave.IsChecked == null ? false : (bool)chkSepSave.IsChecked;
         }
 
+        /// <summary>
+        /// 插入格式到规则文本框
+        /// </summary>
+        private void FNRinsert(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            string format = btn.Content.ToSafeString();
+            int selectstart = txtPattern.SelectionStart;
+
+            if (string.IsNullOrWhiteSpace(txtPattern.SelectedText))
+            {
+                if (format.Contains("imgp"))
+                    txtPattern.Text = txtPattern.Text.Insert(selectstart, format.Replace("n", "3"));
+                else
+                    txtPattern.Text = txtPattern.Text.Insert(selectstart, format);
+            }
+            else
+            {
+                if (format.Contains("imgp"))
+                    txtPattern.SelectedText = format.Replace("n", "3");
+                else
+                    txtPattern.SelectedText = format;
+                txtPattern.SelectionLength = 0;
+            }
+            txtPattern.SelectionStart = selectstart + format.Length;
+            txtPattern.Focus();
+        }
     }
 }

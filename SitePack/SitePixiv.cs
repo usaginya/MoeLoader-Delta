@@ -155,22 +155,26 @@ namespace SitePack
 
             //retrieve all elements via xpath
             HtmlNodeCollection nodes = null;
-            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            try
             {
-                nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items autopagerize_page_element']").SelectNodes("li");
-                //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+                {
+                    nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items autopagerize_page_element']").SelectNodes("li");
+                    //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                }
+                else if (srcType == PixivSrcType.Author)
+                {
+                    nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
+                }
+                //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
+                //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
+                else
+                {
+                    //ranking
+                    nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
+                }
             }
-            else if (srcType == PixivSrcType.Author)
-            {
-                nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
-            }
-            //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
-            //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
-            else
-            {
-                //ranking
-                nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
-            }
+            catch { }
 
             if (nodes == null)
             {
