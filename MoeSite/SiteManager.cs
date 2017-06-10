@@ -18,6 +18,21 @@ namespace MoeLoaderDelta
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SitePacks\\";
 
             string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.TopDirectoryOnly);
+
+            #region 保证有基本站点包路径
+            if (dlls.Length < 1)
+            {
+                List<string> dlll = new List<string>();
+                string basisdll = path + "SitePack.dll";
+
+                if (File.Exists(basisdll))
+                {
+                    dlll.Add(basisdll);
+                    dlls = dlll.ToArray();
+                }
+            }
+            #endregion
+
             foreach (string dll in dlls)
             {
                 try
