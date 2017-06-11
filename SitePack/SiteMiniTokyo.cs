@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 
@@ -97,14 +99,14 @@ namespace SitePack
                 //先使用关键词搜索，然后HTTP 303返回实际地址
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
-                System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
                 req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "GET";
                 //prevent 303 See Other
                 req.AllowAutoRedirect = false;
-                System.Net.WebResponse rsp = req.GetResponse();
+                WebResponse rsp = req.GetResponse();
                 //http://www.minitokyo.net/Haruhi+Suzumiya
                 //HTTP 303然后返回实际地址
                 string location = rsp.Headers["Location"];
@@ -143,55 +145,65 @@ namespace SitePack
             return pageString;
         }
 
-        public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
+        public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-            List<Img> imgs = new List<Img>();
-
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(pageString);
-            //retrieve all elements via xpath
-            HtmlNode wallNode = doc.DocumentNode.SelectSingleNode("//ul[@class='wallpapers']");
-            HtmlNodeCollection imgNodes = wallNode.SelectNodes(".//li");
-            if (imgNodes == null)
+            try
             {
-                return imgs;
-            }
-
-            for (int i = 0; i < imgNodes.Count - 1; i++)
-            {
-                //最后一个是空的，跳过
-                HtmlNode imgNode = imgNodes[i];
-
-                string detailUrl = imgNode.SelectSingleNode("a").Attributes["href"].Value;
-                string id = detailUrl.Substring(detailUrl.LastIndexOf('/') + 1);
-                HtmlNode imgHref = imgNode.SelectSingleNode(".//img");
-                string previewUrl = imgHref.Attributes["src"].Value;
-                //http://static2.minitokyo.net/thumbs/24/25/583774.jpg preview
-                //http://static2.minitokyo.net/view/24/25/583774.jpg   sample
-                //http://static.minitokyo.net/downloads/24/25/583774.jpg   full
-                string sampleUrl = "http://static2.minitokyo.net/view" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
-                string fileUrl = "http://static.minitokyo.net/downloads" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
-                //Hana Nanaroba - Hana Nanaroba
-                //Submitted by YuuichiYouko 1804x2693, 2 Favorites
-                string title = imgNode.SelectSingleNode(".//div").InnerText;
-                title = title.Replace('\t', ' ').Replace("\n", "");
-                string tags = title.Substring(0, title.IndexOf("Submitted") - 1).Trim();
-                int favIndex = title.LastIndexOf(',') + 1;
-                string score = title.Substring(favIndex, title.LastIndexOf(' ') - favIndex).Trim();
-                title = title.Substring(0, favIndex - 1);
-                favIndex = title.LastIndexOf(' ');
-                if (favIndex > 0)
+                List<Img> imgs = new List<Img>();
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(pageString);
+                //retrieve all elements via xpath
+                HtmlNode wallNode = doc.DocumentNode.SelectSingleNode("//ul[@class='wallpapers']");
+                HtmlNodeCollection imgNodes = wallNode.SelectNodes(".//li");
+                if (imgNodes == null)
                 {
-                    title = title.Substring(favIndex + 1);
+                    return imgs;
                 }
 
-                Img img = GenerateImg(fileUrl, previewUrl, title, tags, sampleUrl, score, id, detailUrl);
-                if (img != null) imgs.Add(img);
+                for (int i = 0; i < imgNodes.Count - 1; i++)
+                {
+                    //最后一个是空的，跳过
+                    HtmlNode imgNode = imgNodes[i];
+
+                    string detailUrl = imgNode.SelectSingleNode("a").Attributes["href"].Value;
+                    string id = detailUrl.Substring(detailUrl.LastIndexOf('/') + 1);
+                    HtmlNode imgHref = imgNode.SelectSingleNode(".//img");
+                    string previewUrl = imgHref.Attributes["src"].Value;
+                    //http://static2.minitokyo.net/thumbs/24/25/583774.jpg preview
+                    //http://static2.minitokyo.net/view/24/25/583774.jpg   sample
+                    //http://static.minitokyo.net/downloads/24/25/583774.jpg   full
+                    string sampleUrl = "http://static2.minitokyo.net/view" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
+                    string fileUrl = "http://static.minitokyo.net/downloads" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
+
+                    // \n\tMasaru -\n\tMasaru \n\tSubmitted by\n\t\tadri24rukiachan\n\t4200x6034, 4 Favorites\n
+                    string info = imgNode.SelectSingleNode(".//div").InnerText;
+                    Match infomc = Regex.Match(info, @"^\n\t(?<tags>.*?)\s-\n.*?\n\t.*?by\n\t\t(?<author>.*?)\n\t(?<size>\d+x\d+),\s(?<score>\d+)\s");
+                    string tags = infomc.Groups["tags"].Value;
+                    string author = infomc.Groups["author"].Value;
+                    string size = infomc.Groups["size"].Value;
+                    string score = infomc.Groups["score"].Value;
+
+                    Img img = GenerateImg(
+                        fileUrl, previewUrl, size,
+                        tags, author, sampleUrl,
+                        score, id, detailUrl
+                        );
+
+                    if (img != null) imgs.Add(img);
+                }
+                return imgs;
             }
-            return imgs;
+            catch
+            {
+                throw new Exception("没有找到图片哦～ .=ω=");
+            }
         }
 
-        private Img GenerateImg(string file_url, string preview_url, string dimension, string tags, string sample_url, string scorestr, string id, string detailUrl)
+        private Img GenerateImg(
+            string file_url, string preview_url, string size,
+            string tags, string author, string sample_url,
+            string scorestr, string id, string detailUrl
+            )
         {
             int intId = int.Parse(id);
 
@@ -199,8 +211,8 @@ namespace SitePack
             try
             {
                 //706x1000
-                width = int.Parse(dimension.Substring(0, dimension.IndexOf('x')));
-                height = int.Parse(dimension.Substring(dimension.IndexOf('x') + 1));
+                width = int.Parse(size.Substring(0, size.IndexOf('x')));
+                height = int.Parse(size.Substring(size.IndexOf('x') + 1));
                 score = int.Parse(scorestr);
             }
             catch { }
@@ -211,6 +223,7 @@ namespace SitePack
                 FileSize = "",
                 Desc = tags,
                 Id = intId,
+                Author = author,
                 //IsViewed = isViewed,
                 JpegUrl = file_url,
                 OriginalUrl = file_url,
@@ -227,7 +240,7 @@ namespace SitePack
             return img;
         }
 
-        public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
+        public override List<TagItem> GetTags(string word, IWebProxy proxy)
         {
             //http://www.minitokyo.net/suggest?q=haruhi&limit=8
             List<TagItem> re = new List<TagItem>();
@@ -246,20 +259,20 @@ namespace SitePack
             {
                 //The Melancholy of Suzumiya Haruhi|Series|Noizi Ito
                 if (lines[i].Trim().Length > 0)
-                    re.Add(new TagItem() { Name = lines[i].Substring(0, lines[i].IndexOf('|')).Trim(), Count = "N/A" });
+                    re.Add(new TagItem() { Name = lines[i].Substring(0, lines[i].IndexOf('|')).Trim() });
             }
 
             return re;
         }
 
-        private void Login(System.Net.IWebProxy proxy)
+        private void Login(IWebProxy proxy)
         {
             if (sessionId != null) return;
             try
             {
                 int index = rand.Next(0, user.Length);
                 //http://my.minitokyo.net/login
-                System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create("http://my.minitokyo.net/login");
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://my.minitokyo.net/login");
                 req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
@@ -273,7 +286,7 @@ namespace SitePack
                 System.IO.Stream str = req.GetRequestStream();
                 str.Write(buf, 0, buf.Length);
                 str.Close();
-                System.Net.WebResponse rsp = req.GetResponse();
+                WebResponse rsp = req.GetResponse();
 
                 //HTTP 303然后返回地址 http://www.minitokyo.net/
                 sessionId = rsp.Headers.Get("Set-Cookie");

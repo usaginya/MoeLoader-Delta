@@ -174,7 +174,9 @@ namespace SitePack
                     nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
                 }
             }
-            catch { }
+            catch {
+                throw new Exception("没有找到图片哦～ .=ω=");
+            }
 
             if (nodes == null)
             {
