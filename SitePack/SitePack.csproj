@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SitePack</RootNamespace>
     <AssemblyName>SitePack</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -64,13 +64,6 @@
     <Compile Include="SiteZeroChan.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
-      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
-      <Name>MoeSite</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="image\behoimi.ico" />
     <EmbeddedResource Include="image\donmai.ico" />
     <EmbeddedResource Include="image\e-shu.ico" />
@@ -89,6 +82,12 @@
   <ItemGroup>
     <EmbeddedResource Include="image\chan.sku.ico" />
     <EmbeddedResource Include="image\idol.sku.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
+      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
+      <Name>MoeSite</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

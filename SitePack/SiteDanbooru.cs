@@ -63,7 +63,7 @@ namespace SitePack
                     IsExplicit = node.Attributes["data-rating"].Value == "e",
                     Tags = node.Attributes["data-tags"].Value,
                     Width = Convert.ToInt32(node.Attributes["data-width"].Value),
-                    PreviewUrl = this.SiteUrl + node3.Attributes["src"].Value,
+                    PreviewUrl = SiteUrl + node3.Attributes["src"].Value,
                     DetailUrl = detailUrl
                 };
 
@@ -88,7 +88,7 @@ namespace SitePack
                             if (n1.InnerText.Contains("Size:"))
                             {
                                 haveurl = true;
-                                i.OriginalUrl = this.SiteUrl + n1.SelectSingleNode(".//a").Attributes["href"].Value;
+                                i.OriginalUrl = SiteUrl + n1.SelectSingleNode(".//a").Attributes["href"].Value;
                                 i.JpegUrl = i.OriginalUrl;
                                 i.FileSize = n1.SelectSingleNode(".//a").InnerText;
                                 i.Dimension = n1.InnerText.Substring(n1.InnerText.IndexOf('(') + 1, n1.InnerText.LastIndexOf(')') - n1.InnerText.IndexOf('(') - 1);
@@ -104,11 +104,11 @@ namespace SitePack
                         {
                             iszip = true;
                             HtmlNode n2 = n.SelectSingleNode("//section[@id='image-container']");
-                            i.OriginalUrl = this.SiteUrl + n2.Attributes["data-large-file-url"].Value;
+                            i.OriginalUrl = SiteUrl + n2.Attributes["data-large-file-url"].Value;
                             i.JpegUrl = i.OriginalUrl;
                         }
                     }
-                    i.SampleUrl = iszip ? i.JpegUrl : this.SiteUrl + doc.DocumentNode.SelectSingleNode("//img[@id='image']").Attributes["src"].Value;
+                    i.SampleUrl = iszip ? i.JpegUrl : SiteUrl + doc.DocumentNode.SelectSingleNode("//img[@id='image']").Attributes["src"].Value;
                 };
                 list.Add(item);
             }

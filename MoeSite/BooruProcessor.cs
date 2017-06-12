@@ -296,7 +296,7 @@ namespace MoeLoaderDelta
                 try
                 {
                     if (post.HasAttribute("file_size"))
-                        file_size = Int32.Parse(post.GetAttribute("file_size"));
+                        file_size = int.Parse(post.GetAttribute("file_size"));
                 }
                 catch { }
 

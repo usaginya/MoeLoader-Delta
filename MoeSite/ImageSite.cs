@@ -79,13 +79,6 @@ namespace MoeLoaderDelta
         /// </summary>
         bool IsSupportPreview { get; }
 
-        /*
-        /// <summary>
-        /// 是否支持jpeg格式图片【Not yet used】
-        /// </summary>
-        //bool IsSupportJpeg { get; }
-         */
-
         /// <summary>
         /// 是否支持搜索框自动提示，若为false则输入关键词时无自动提示
         /// </summary>

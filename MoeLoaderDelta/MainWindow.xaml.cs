@@ -1472,8 +1472,6 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 屏蔽图片rate 菜单勾选状态
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void itm5_Checked(object sender, RoutedEventArgs e)
         {
             if (sender == itm5)
@@ -1531,8 +1529,6 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 屏蔽图片res 菜单勾选状态
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void itmx5_Checked(object sender, RoutedEventArgs e)
         {
             if (sender == itmx5)
@@ -1585,6 +1581,15 @@ namespace MoeLoaderDelta
                     itmx30.IsChecked = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// 打开站点主页
+        /// </summary>
+        private void itmOpenSite_Click(object sender, RoutedEventArgs e)
+        {
+            if (SiteManager.Instance.Sites.Count > 0)
+                System.Diagnostics.Process.Start(SiteManager.Instance.Sites[comboBoxIndex].SiteUrl);
         }
 
         /// <summary>
@@ -2050,14 +2055,6 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 打开站点主页
-        /// </summary>
-        private void rectangle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            System.Diagnostics.Process.Start(SiteManager.Instance.Sites[comboBoxIndex].SiteUrl);
-        }
-
-        /// <summary>
         /// 窗口按键事件处理
         /// </summary>
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -2271,13 +2268,13 @@ namespace MoeLoaderDelta
         private void contentWnd_SizeChanged_1(object sender, SizeChangedEventArgs e)
         {
             ContentPresenter cp = sender as ContentPresenter;
-            Rectangle sn = this.Template.FindName("shadowN", this) as Rectangle;
+            Rectangle sn = Template.FindName("shadowN", this) as Rectangle;
             sn.Width = cp.ActualWidth + 3;
-            Rectangle ss = this.Template.FindName("shadowS", this) as Rectangle;
+            Rectangle ss = Template.FindName("shadowS", this) as Rectangle;
             ss.Width = cp.ActualWidth + 3;
-            Rectangle se = this.Template.FindName("shadowE", this) as Rectangle;
+            Rectangle se = Template.FindName("shadowE", this) as Rectangle;
             se.Height = cp.ActualHeight + 3;
-            Rectangle sw = this.Template.FindName("shadowW", this) as Rectangle;
+            Rectangle sw = Template.FindName("shadowW", this) as Rectangle;
             sw.Height = cp.ActualHeight + 3;
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);

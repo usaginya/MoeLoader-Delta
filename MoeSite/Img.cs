@@ -1,6 +1,5 @@
-﻿using System;
+﻿using System.Web;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace MoeLoaderDelta
@@ -87,7 +86,7 @@ namespace MoeLoaderDelta
         {
             get
             {
-                return StringLineBreak(htmlDecode(desc), 64);
+                return StringLineBreak(HttpUtility.HtmlDecode (desc), 64);
             }
             set { desc = value; }
         }
@@ -135,7 +134,7 @@ namespace MoeLoaderDelta
         {
             get
             {
-                return htmlDecode(author);
+                return HttpUtility.HtmlDecode(author);
             }
             set { author = value; }
         }
@@ -174,22 +173,6 @@ namespace MoeLoaderDelta
             this.DetailUrl = "";
             this.Author = "UnkwnAuthor";
             this.ImgP = "";
-        }
-
-        /// <summary>
-        /// html符号解译
-        /// </summary>
-        /// <param name="str">html</param>
-        /// <returns></returns>
-        public static string htmlDecode(string str)
-        {
-            str = str.Replace("<br>", "\n");
-            str = str.Replace("&gt;", ">");
-            str = str.Replace("&lt;", "<");
-            str = str.Replace("&nbsp;", " ");
-            str = str.Replace("&quot;", "\"");
-            str = str.Replace("&amp;", "&");
-            return str;
         }
 
         /// <summary>

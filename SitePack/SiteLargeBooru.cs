@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SitePack
+﻿namespace SitePack
 {
     public class SiteLargeBooru : SiteBooru
     {
@@ -12,9 +7,24 @@ namespace SitePack
 
         public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(LWIDTH, LHEIGHT); } }
 
-        public SiteLargeBooru(string siteUrl, string tagUrl, string siteName, string shortName, string referer, bool needMinus, MoeLoaderDelta.BooruProcessor.SourceType srcType)
-            : base(siteUrl, tagUrl, siteName, shortName, referer, needMinus, srcType)
-        {
-        }
+        public SiteLargeBooru(
+            string siteUrl,
+            string tagUrl,
+            string siteName,
+            string shortName,
+            string referer,
+            bool needMinus,
+            MoeLoaderDelta.BooruProcessor.SourceType srcType
+            )
+            : base(
+                  siteUrl,
+                  tagUrl,
+                  siteName,
+                  shortName,
+                  referer,
+                  needMinus,
+                  srcType
+                  )
+        { }
     }
 }

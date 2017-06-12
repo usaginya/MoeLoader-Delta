@@ -1,10 +1,7 @@
 ﻿using MoeLoaderDelta;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Xml;
-
 
 namespace SitePack
 {
@@ -46,7 +43,7 @@ namespace SitePack
             //ShowExplicit = false;
         }
 
-        public override string SiteUrl { get { return siteUrl.Substring(0, siteUrl.IndexOf('/', 7)); } }
+        public override string SiteUrl { get { return siteUrl.Substring(0, siteUrl.IndexOf('/', 8)); } }
         public override string SiteName { get { return siteName; } }
         public override string ShortName { get { return shortName; } }
         public override string ShortType { get { return shortType; } }

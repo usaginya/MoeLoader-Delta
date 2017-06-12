@@ -630,11 +630,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Storyboard x:Key="OnMouseEnter1">
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="rectangle" Storyboard.TargetProperty="(Shape.StrokeThickness)">
-                <SplineDoubleKeyFrame KeyTime="0:0:0.5" Value="1" />
-            </DoubleAnimationUsingKeyFrames>
-        </Storyboard>
         <Storyboard x:Key="OnMouseEnter2">
             <ColorAnimationUsingKeyFrames Storyboard.TargetName="txtSetting" Storyboard.TargetProperty="(TextElement.Foreground).(SolidColorBrush.Color)">
                 <SplineColorKeyFrame KeyTime="0:0:0.2" Value="#666666" />
@@ -656,7 +651,6 @@
             <Setter Property="VerticalContentAlignment" Value="{Binding Path=VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}" />
-            <Setter Property="Width" Value="210" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type MenuItem}">
@@ -871,18 +865,6 @@
         </Storyboard>
     </Window.Resources>
     <Window.Triggers>
-        <!--<EventTrigger RoutedEvent="FocusManager.GotFocus" SourceName="searchControl">
-            <BeginStoryboard x:Name="OnSearchGotFocus_BeginStoryboard" Storyboard="{StaticResource OnSearchGotFocus}"/>
-        </EventTrigger>
-        <EventTrigger RoutedEvent="FocusManager.LostFocus" SourceName="searchControl" >
-            <BeginStoryboard x:Name="OnSearchLostFocus_BeginStoryboard" Storyboard="{StaticResource OnSearchLostFocus}"/>
-        </EventTrigger>-->
-        <EventTrigger RoutedEvent="Mouse.MouseEnter" SourceName="rectangle">
-            <BeginStoryboard x:Name="OnMouseEnter1_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter1}" />
-        </EventTrigger>
-        <EventTrigger RoutedEvent="Mouse.MouseLeave" SourceName="rectangle">
-            <StopStoryboard BeginStoryboardName="OnMouseEnter1_BeginStoryboard" />
-        </EventTrigger>
         <EventTrigger RoutedEvent="Mouse.MouseEnter" SourceName="txtSetting">
             <BeginStoryboard x:Name="OnMouseEnter2_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter2}" />
         </EventTrigger>
@@ -981,7 +963,7 @@
                                                 Click="itmSmallPre_Click"
                                                 Header="使用小缩略图(_S)"
                                                 IsCheckable="True" />
-                                            <MenuItem Header="图片地址类型(_T)" ToolTip="此设置即时决定导出及下载使用的地址">
+                                            <MenuItem Header="图片地址类型(_T)" ToolTip="此设置决定导出和下载时使用的图片地址">
                                                 <MenuItem
                                                     x:Name="itmTypeOri"
                                                     Click="itmTypeOri_Checked"
@@ -1072,18 +1054,12 @@
                                                     x:Name="itmxExplicit"
                                                     Click="itmxExplicit_Click"
                                                     Header="过滤Explicit图片(_E)"
-                                                    IsCheckable="True"
-                                                    IsChecked="False" />
+                                                    IsCheckable="True" />
                                             </MenuItem>
-                                            <!--<Separator/>-->
-                                            <!--<MenuItem x:Name="itmThunder" Header="迅雷(_X)" IsEnabled="False" Click="itmThunder_Click" ToolTip="调用迅雷下载选中的图片"/>-->
-                                            <!--<MenuItem x:Name="itmLst" Header="导出下载列表(L)" IsEnabled="False" Click="itmLst_Click" ToolTip="生成选中图片的下载列表文件"/>-->
-                                            <!--<Separator/>
-                                    <MenuItem x:Name="itmBack" Header="程序设置(_O)" Click="itmSelectAll_Click_1"/>
-                                    <MenuItem Header="帮助(_H)">
-                                        <MenuItem x:Name="itmHelp" Header="查看帮助(_V)" Click="itmHelp_Click"/>
-                                        <MenuItem x:Name="itmAbout" Header="关于(_A)" Click="itmAbout_Click"/>
-                                    </MenuItem>-->
+                                            <Separator />
+                                            <MenuItem
+                                                x:Name="itmOpenSite"
+                                                Header="访问站点主页(_W)" Click="itmOpenSite_Click" />
                                         </ContextMenu>
                                     </ScrollViewer.ContextMenu>
                                     <WrapPanel x:Name="imgPanel" Margin="20,0,45,0" />
@@ -1171,13 +1147,11 @@
                             </Grid.RenderTransform>
                             <Grid
                                 x:Name="grdSite"
-                                Width="115"
+                                Width="135"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top">
-                                <!--<TextBlock Text="站点" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,1,0,0" Style="{StaticResource glowT}"/>-->
                                 <Menu
                                     Height="25"
-                                    Margin="0,0,0,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     BorderBrush="LightGray"
@@ -1195,7 +1169,6 @@
                                 <Grid
                                     Width="16"
                                     Height="23"
-                                    Margin="0,0,0,0"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     IsHitTestVisible="False">
@@ -1211,9 +1184,9 @@
                             </Grid>
                             <local:SearchControl
                                 x:Name="searchControl"
-                                Width="200"
+                                Width="180"
                                 Height="25"
-                                Margin="115,0,0,0"
+                                Margin="135,0,0,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
                                 BorderBrush="LightGray"
@@ -1245,22 +1218,6 @@
                                         Stretch="None" />
                                 </Grid>
                             </Button>
-                            <Rectangle
-                                x:Name="rectangle"
-                                Width="16"
-                                Height="16"
-                                Margin="0,0,0,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                MouseLeftButtonUp="rectangle_MouseLeftButtonUp"
-                                Stroke="#FF7A7A7A"
-                                StrokeThickness="0"
-                                ToolTip="访问该站点"
-                                Visibility="Hidden">
-                                <Rectangle.Fill>
-                                    <ImageBrush ImageSource="Images/goto.png" Stretch="Uniform" />
-                                </Rectangle.Fill>
-                            </Rectangle>
                         </Grid>
                     </Grid>
                     <Grid
@@ -1370,7 +1327,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
-                            ToolTip="每一页的数量">
+                            ToolTip="每页搜索的图片数量">
                             <TextBox
                                 x:Name="txtNum"
                                 Width="50"
