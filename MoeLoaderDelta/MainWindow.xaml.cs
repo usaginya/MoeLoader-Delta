@@ -449,7 +449,7 @@ namespace MoeLoaderDelta
                             togglePram.IsChecked = parts[10].Equals("1");
                             if (togglePram.IsChecked.Value)
                             {
-                                togglePram.ToolTip = "显示搜索设置";
+                                togglePram.ToolTip = "显示搜索设定";
                             }
                             else
                             {
