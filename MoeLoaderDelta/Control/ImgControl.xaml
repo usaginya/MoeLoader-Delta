@@ -236,27 +236,33 @@
                         <MenuItem
                             Click="txtDesc_Click_1"
                             Header="复制原图地址(_O)"
-                            ToolTip="复制原图地址至剪贴板" />
+                            ToolTip="复制原图地址到剪贴板" />
                         <MenuItem
                             Click="txtDesc_Click_2"
                             Header="复制JPG图地址(_J)"
-                            ToolTip="复制JPG图地址至剪贴板" />
+                            ToolTip="复制JPG图地址到剪贴板" />
                         <MenuItem
                             Click="txtDesc_Click_3"
                             Header="复制预览图地址(_P)"
-                            ToolTip="复制预览图地址至剪贴板" />
+                            ToolTip="复制预览图地址到剪贴板" />
                         <MenuItem
                             Click="txtDesc_Click_4"
                             Header="复制缩略图地址(_T)"
-                            ToolTip="复制缩略图地址至剪贴板" />
+                            ToolTip="复制缩略图地址到剪贴板" />
+                        <MenuItem
+                            Click="txtDesc_Click_6"
+                            Header="复制来源(_R)"
+                            ToolTip="复制来源地址到剪贴板" />
+                        <Separator/>
                         <MenuItem
                             Click="txtDesc_Click_5"
                             Header="复制描述(_D)"
-                            ToolTip="复制标题描述名称至剪贴板" />
+                            ToolTip="复制标题描述名称到剪贴板" />
+                        <Separator/>
                         <MenuItem
                             Click="txtDetail_Click"
-                            Header="打开详情页面(_X)"
-                            ToolTip="打开图片所在详情页面" />
+                            Header="访问详情页面(_X)"
+                            ToolTip="用浏览器访问作品页面" />
                     </ContextMenu>
                 </TextBlock.ContextMenu>
             </TextBlock>

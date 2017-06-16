@@ -174,7 +174,8 @@ namespace SitePack
                     nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
                 }
             }
-            catch {
+            catch
+            {
                 throw new Exception("没有找到图片哦～ .=ω=");
             }
 
@@ -404,7 +405,7 @@ namespace SitePack
                 return;
             }
 
-            if (!cookie.Contains("pixiv"))
+            if (!cookie.Contains("pixiv") || !cookie.Contains("token="))
             {
                 try
                 {

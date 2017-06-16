@@ -363,34 +363,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        //private void preB_MouseEnter(object sender, MouseEventArgs e)
-        //{
-        //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.Fant);
-        //preB.Width = preview.ActualWidth + 20;
-        //preB.Height = preview.ActualHeight + 20;
-        //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseEnter1") as System.Windows.Media.Animation.Storyboard;
-        //sb.Begin();
-        //}
-
-        //private void preB_MouseLeave(object sender, MouseEventArgs e)
-        //{
-        //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.NearestNeighbor);
-        //preB.Width = preview.ActualWidth + 20;
-        //preB.Height = preview.ActualHeight + 20;
-        //System.Windows.Media.Animation.Storyboard sb = FindResource("OnMouseLeave1") as System.Windows.Media.Animation.Storyboard;
-        //sb.Begin();
-        //}
-
-        //private void Storyboard_Completed(object sender, EventArgs e)
-        //{
-        //    RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.NearestNeighbor);
-        //}
-
-        //private void MenuItem_Click(object sender, RoutedEventArgs e)
-        //{
-        //    RetryLoad();
-        //}
-
         /// <summary>
         /// 重载缩略图
         /// </summary>
@@ -422,7 +394,7 @@ namespace MoeLoaderDelta
             {
                 Clipboard.SetText(img.OriginalUrl);
             }
-            catch (Exception) { }
+            catch { }
         }
 
         private void txtDesc_Click_2(object sender, RoutedEventArgs e)
@@ -432,7 +404,7 @@ namespace MoeLoaderDelta
             {
                 Clipboard.SetText(img.JpegUrl);
             }
-            catch (Exception) { }
+            catch { }
         }
 
         private void txtDesc_Click_3(object sender, RoutedEventArgs e)
@@ -442,7 +414,7 @@ namespace MoeLoaderDelta
             {
                 Clipboard.SetText(img.SampleUrl);
             }
-            catch (Exception) { }
+            catch { }
         }
 
         private void txtDesc_Click_4(object sender, RoutedEventArgs e)
@@ -452,7 +424,7 @@ namespace MoeLoaderDelta
             {
                 Clipboard.SetText(img.PreviewUrl);
             }
-            catch (Exception) { }
+            catch { }
         }
 
         private void txtDesc_Click_5(object sender, RoutedEventArgs e)
@@ -462,7 +434,17 @@ namespace MoeLoaderDelta
             {
                 Clipboard.SetText(img.Desc.Replace("\r\n", ""));
             }
-            catch (Exception) { }
+            catch { }
+        }
+
+        private void txtDesc_Click_6(object sender, RoutedEventArgs e)
+        {
+            //source
+            try
+            {
+                Clipboard.SetText(img.Source);
+            }
+            catch { }
         }
 
         private void txtDetail_Click(object sender, RoutedEventArgs e)

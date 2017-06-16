@@ -110,24 +110,24 @@
                     <MenuItem
                         Click="MenuItem_Click_2"
                         Header="复制原图地址(_O)"
-                        ToolTip="复制原图地址至剪贴板" />
+                        ToolTip="复制原图地址到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_6"
                         Header="复制JPG图地址(_J)"
-                        ToolTip="复制JPG图地址至剪贴板" />
+                        ToolTip="复制JPG图地址到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_1"
                         Header="复制预览图地址(_P)"
-                        ToolTip="复制预览图地址至剪贴板" />
-                    <Separator />
+                        ToolTip="复制预览图地址到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_3"
                         Header="复制来源(_R)"
-                        ToolTip="复制来源至剪贴板" />
+                        ToolTip="复制来源到剪贴板" />
+                    <Separator />
                     <MenuItem
                         Click="MenuItem_Click_4"
                         Header="复制描述(_D)"
-                        ToolTip="复制标题描述名称至剪贴板" />
+                        ToolTip="复制标题描述名称到剪贴板" />
                     <Separator />
                     <MenuItem
                         Click="MenuItem_Click_5"
@@ -197,19 +197,19 @@
                     <MenuItem
                         Click="MenuItem_Click_2"
                         Header="复制原图地址(_O)"
-                        ToolTip="复制原图地址至剪贴板" />
+                        ToolTip="复制原图地址到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_1"
                         Header="复制预览图地址(_P)"
-                        ToolTip="复制预览图地址至剪贴板" />
+                        ToolTip="复制预览图地址到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_3"
                         Header="复制来源(_R)"
-                        ToolTip="复制来源至剪贴板" />
+                        ToolTip="复制来源到剪贴板" />
                     <MenuItem
                         Click="MenuItem_Click_4"
                         Header="复制描述(_D)"
-                        ToolTip="复制标题描述名称至剪贴板" />
+                        ToolTip="复制标题描述名称到剪贴板" />
                 </ContextMenu>
             </Border.ContextMenu>
         </Border>

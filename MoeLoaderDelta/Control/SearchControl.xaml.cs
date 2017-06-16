@@ -26,6 +26,9 @@ namespace MoeLoaderDelta
 
             sb = (Storyboard)FindResource("searching");
 
+            txtSearch.ToolTip = "按下Delete键可删除当前的搜索词"
+                + Environment.NewLine + "按下Shift+Delete键可删除全部搜索过的词";
+
             //sb.Begin(path, true);
             //sb.Pause();
         }
@@ -97,7 +100,7 @@ namespace MoeLoaderDelta
             PopupScroll.ScrollToTop();
         }
 
-        private void PART_EditableTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void PART_EditableTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             //try
             //{
@@ -161,9 +164,7 @@ namespace MoeLoaderDelta
                             }), tagList);
                         }
                     }
-                    catch (Exception)
-                    {
-                    }
+                    catch (Exception) { }
                     finally
                     {
                         if (!(o as SessionState).IsStop)
@@ -258,10 +259,13 @@ namespace MoeLoaderDelta
         {
             if (e.Key == Key.Delete)
             {
-                //int index = txtSearch.Items.IndexOf(txtSearch.Text);
-                //if (index >= 0)
-                //    txtSearch.Items.RemoveAt(index);
-                if (usedItems.Contains(Text))
+                if (MainWindow.IsShiftDown())
+                {
+                    usedItems.Clear();
+                    txtSearch.IsDropDownOpen = false;
+                    Text = "";
+                }
+                else if (usedItems.Contains(Text))
                 {
                     usedItems.Remove(Text);
                     txtSearch.IsDropDownOpen = false;

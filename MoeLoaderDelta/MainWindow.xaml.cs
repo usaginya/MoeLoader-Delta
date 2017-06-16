@@ -88,7 +88,7 @@ namespace MoeLoaderDelta
         /// 已经浏览过的位置
         /// </summary>
         private Dictionary<string, ViewedID> viewedIds;
-        private int nowSelectedIndex = 0, lastSelectIndex = 0;
+        private int nowSelectedIndex = 0;
 
         internal List<Img> imgs;
         private List<int> selected = new List<int>();
@@ -164,6 +164,8 @@ namespace MoeLoaderDelta
         {
             InitializeComponent();
             Title = ProgramName;
+
+            btnGet.ToolTip = btnGet.Tag as string;
 
             if (!File.Exists(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\nofont.txt"))
             {
@@ -551,7 +553,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 更改翻页按钮状态
+        /// 启用翻页按钮
         /// </summary>
         /// <param name="btnid">0上一页, 1下一页</param>
         private void UpdatePreNextEnable(int btnid)
@@ -559,22 +561,38 @@ namespace MoeLoaderDelta
             switch (btnid)
             {
                 case 0:
-                    btnPrev.IsEnabled = realPage > 1;
-                    btnPrev.Visibility = (realPage > 1 ? Visibility.Visible : Visibility.Hidden);
+                    if (realPage > 1 && !btnPrev.IsEnabled)
+                    {
+                        btnPrev.IsEnabled = true;
+                        btnPrev.Visibility = Visibility.Visible;
+                        PlayPreNextAnimation(btnid);
+                    }
                     break;
                 case 1:
-                    btnNext.IsEnabled = HaveNextPage;
-                    btnNext.Visibility = (HaveNextPage ? Visibility.Visible : Visibility.Hidden);
+                    if (!btnNext.IsEnabled)
+                    {
+                        btnNext.IsEnabled = true;
+                        btnNext.Visibility = Visibility.Visible;
+                        PlayPreNextAnimation(btnid);
+                    }
                     break;
             }
-            PlayPreNextAnimation(btnid);
         }
         /// <summary>
-        /// 更改上一页按钮状态
+        /// 启用上一页按钮
         /// </summary>
         private void UpdatePreNextEnable()
         {
             UpdatePreNextEnable(0);
+        }
+
+        /// <summary>
+        /// 禁用翻页按钮
+        /// </summary>
+        private void UpdatePreNextDisable()
+        {
+            btnPrev.IsEnabled = btnNext.IsEnabled = false;
+            btnPrev.Visibility = btnNext.Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -630,7 +648,7 @@ namespace MoeLoaderDelta
                 statusText.Text = "加载完毕，取得 0 张图片";
 
                 txtGet.Text = "搜索";
-                btnGet.ToolTip = "获取图片列表";
+                btnGet.ToolTip = btnGet.Tag as string;
                 isGetting = false;
                 imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
 
@@ -834,6 +852,10 @@ namespace MoeLoaderDelta
                 //重设缩略图大小
                 itmSmallPre_Click(null, null);
             }
+
+            //只要有下一页就显示翻页按钮
+            if (HaveNextPage)
+                UpdatePreNextEnable(1);
         }
 
         /// <summary>
@@ -850,18 +872,9 @@ namespace MoeLoaderDelta
                         //防止多次设置按钮状态
                         bool tmphave = HaveNextPage;
                         HaveNextPage = (int)sender > 0;
-
-                        if (HaveNextPage && !tmphave && IsLoaded)
-                        {
-                            //等滚动条
-                            for (int i = 0; i < 3; i++)
-                            {
-                                if (scrList.ComputedVerticalScrollBarVisibility == Visibility.Visible)
-                                    break;
-                                Thread.Sleep(999);
-                            }
+                        //如果搜索结束时才有翻页就显示翻页按钮
+                        if (HaveNextPage && !tmphave && IsLoaded && !isGetting)
                             UpdatePreNextEnable(1);
-                        }
                     }));
         }
 
@@ -891,24 +904,20 @@ namespace MoeLoaderDelta
                 btnGet.ToolTip = "停止搜索";
                 imgGet.Source = new BitmapImage(new Uri("/Images/stop.png", UriKind.Relative));
 
-                //隐藏翻页按钮
-                btnPrev.IsEnabled = btnNext.IsEnabled = false;
-                btnPrev.Visibility = btnNext.Visibility = Visibility.Hidden;
+                UpdatePreNextDisable();
 
                 if (sender != null)
                 {
-                    //记录上一次选择，用于当缩略图尚未加载就停止时恢复
-                    lastSelectIndex = nowSelectedIndex;
+                    //记录当前页面
                     lastPage = realPage;
 
                     //由点击搜索按钮触发，所以使用界面上的设定
                     realNum = num;
-                    realPage = page;
+                    realPage = IsShiftDown() ? lastPage : page;
                     nowSelectedIndex = comboBoxIndex;
                     siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].SiteName;
                 }
-                //btnNext.Content = "下一页 (" + (realPage + 1) + ")";
-                //btnPrev.Content = "上一页 (" + (realPage - 1) + ")";
+
                 pageText.Text = "当前页码 " + realPage;
 
                 bgLoading.Visibility = Visibility.Visible;
@@ -987,29 +996,24 @@ namespace MoeLoaderDelta
                     }
                     unloaded.Clear();
                 }
-                else
-                {
-                    currentSession.IsStop = true;
-                    statusText.Text = "加载完毕，取得 0 张图片";
-                    //恢复站点选择
-                    nowSelectedIndex = lastSelectIndex;
-                    siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
-                    realPage = lastPage;
+                currentSession.IsStop = true;
+                statusText.Text = "加载完毕，取得 0 张图片";
+                siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
 
-                    //尝试加载下一页
+                //尝试加载下一页
+                if (!HaveNextPage)
                     StartPreLoad();
 
-                    //显示上一页按钮
-                    UpdatePreNextEnable();
+                //显示上一页按钮
+                UpdatePreNextEnable();
 
-                    isGetting = false;
-                    txtGet.Text = "搜索";
-                    btnGet.ToolTip = "获取图片列表";
-                    imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
+                isGetting = false;
+                txtGet.Text = "搜索";
+                btnGet.ToolTip = btnGet.Tag as string;
+                imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
 
-                    logo.Stop();
-                    bgLoading.Visibility = Visibility.Hidden;
-                }
+                logo.Stop();
+                bgLoading.Visibility = Visibility.Hidden;
             }
         }
 
@@ -1122,7 +1126,7 @@ namespace MoeLoaderDelta
 
             //statusText.Text = "搜索完成！取得 " + imgs.Count + " 张图片信息 (上次浏览至 " + viewedIds[nowSelectedIndex].ViewedBiggestId + " )";
             txtGet.Text = "搜索";
-            btnGet.ToolTip = "获取图片列表";
+            btnGet.ToolTip = btnGet.Tag as string;
             isGetting = false;
             imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
 
@@ -1332,7 +1336,7 @@ namespace MoeLoaderDelta
 
         private void numUp_Click(object sender, RoutedEventArgs e)
         {
-            if (num < 999)
+            if (num < 500)
                 txtNum.Text = (num + 1).ToString();
         }
 
@@ -1678,7 +1682,7 @@ namespace MoeLoaderDelta
             if (downloadC.IsWorking)
             {
                 if (
-                    MessageBox.Show(this, "正在下载图片，确定要关闭程序吗？未下载完成的图片将丢失",
+                    MessageBox.Show(this, "正在下载图片，确定要关闭程序吗？未下载完成的图片不会保存",
                     ProgramName,
                     MessageBoxButton.OKCancel,
                     MessageBoxImage.Question) == MessageBoxResult.Cancel
@@ -1879,10 +1883,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void btnPrev_Click(object sender, RoutedEventArgs e)
         {
-            if (realPage > 1)
-            {
-                DelayPageTurn(1);
-            }
+            DelayPageTurn(1);
         }
 
         /// <summary>
@@ -2345,7 +2346,7 @@ namespace MoeLoaderDelta
         private void DelayPageTurn(int operating)
         {
             Thread newThread = null;
-            if (operating == 1)
+            if (operating == 1 && realPage > 1)
             {
                 newThread = new Thread(new ThreadStart(RDelayP));
                 newThread.Name = "RDelayP";
@@ -2357,7 +2358,10 @@ namespace MoeLoaderDelta
             }
 
             if (newThread != null)
+            {
+                UpdatePreNextDisable();
                 newThread.Start();
+            }
         }
 
         private void RDelayP()
@@ -2370,10 +2374,9 @@ namespace MoeLoaderDelta
                     Button_Click(null, null);
                 }));
             }
-            Thread.Sleep(666);
+            Thread.Sleep(233);
             if (!isGetting)
             {
-                lastPage = realPage;
                 realPage--;
                 Dispatcher.Invoke(new Action(delegate
                 {
@@ -2392,10 +2395,9 @@ namespace MoeLoaderDelta
                     Button_Click(null, null);
                 }));
             }
-            Thread.Sleep(666);
+            Thread.Sleep(233);
             if (!isGetting)
             {
-                lastPage = realPage;
                 realPage++;
                 this.Dispatcher.Invoke(new Action(delegate
                 {

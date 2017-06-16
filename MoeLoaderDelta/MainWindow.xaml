@@ -920,7 +920,14 @@
                     Style="{DynamicResource max}" />
                 <Rectangle Style="{StaticResource min}" />
                 <Grid Margin="0,35,0,0">
-                    <Grid x:Name="imgListGrid" Margin="0,36,0,39">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="341*" />
+                        <ColumnDefinition Width="100*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        x:Name="imgListGrid"
+                        Grid.ColumnSpan="2"
+                        Margin="0,36,0,39">
                         <Border
                             x:Name="imgBorder"
                             Margin="0"
@@ -1053,13 +1060,14 @@
                                                 <MenuItem
                                                     x:Name="itmxExplicit"
                                                     Click="itmxExplicit_Click"
-                                                    Header="过滤Explicit图片(_E)"
+                                                    Header="过滤限制级图片(_E)"
                                                     IsCheckable="True" />
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem
                                                 x:Name="itmOpenSite"
-                                                Header="访问站点主页(_W)" Click="itmOpenSite_Click" />
+                                                Click="itmOpenSite_Click"
+                                                Header="访问站点主页(_W)" />
                                         </ContextMenu>
                                     </ScrollViewer.ContextMenu>
                                     <WrapPanel x:Name="imgPanel" Margin="20,0,45,0" />
@@ -1202,7 +1210,7 @@
                                 BorderBrush="LightGray"
                                 Click="Button_Click"
                                 IsDefault="True"
-                                ToolTip="搜索图片">
+                                Tag="搜索图片 (按住Shift键时会用新的搜索设定重新搜索当前页)">
                                 <Grid Width="60" Height="25">
                                     <AccessText
                                         x:Name="txtGet"
@@ -1222,6 +1230,7 @@
                     </Grid>
                     <Grid
                         x:Name="grdFuncBtns"
+                        Grid.Column="1"
                         Margin="0,0,-200,0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
@@ -1257,8 +1266,8 @@
                         VerticalAlignment="Bottom"
                         Click="togglePram_Click"
                         IsChecked="True"
-                        Tag="隐藏搜索设置"
-                        ToolTip="显示搜索设置" />
+                        Tag="隐藏搜索设定"
+                        ToolTip="显示搜索设定" />
                     <Grid
                         x:Name="grdParam"
                         Width="0"
@@ -1410,7 +1419,7 @@
                     FontSize="11"
                     MouseDown="TextBlock_MouseDown1"
                     Style="{StaticResource glowT}"
-                    Text="设置"
+                    Text="设定"
                     TextDecorations="Underline" />
                 <TextBlock
                     Margin="28,0,0,0"

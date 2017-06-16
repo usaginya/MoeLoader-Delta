@@ -196,8 +196,7 @@
             PreviewKeyDown="PART_EditableTextBox_KeyDown"
             SelectionChanged="txtSearch_SelectionChanged"
             StaysOpenOnEdit="True"
-            Style="{StaticResource MyComboBox}"
-            ToolTip="点击Delete键可删除选中的已搜索词" />
+            Style="{StaticResource MyComboBox}" />
         <Path
             x:Name="path"
             Width="20"
