@@ -11,15 +11,14 @@ namespace SitePack
 
             sites.Add(new SiteLargeBooru(
                 //"https://yande.re/post/index.xml?page={0}&limit={1}&tags={2}", //XML
-                "https://yande.re/post?page={0}&limit={1}&tags={2}", //HTML
-                "https://yande.re/tag/index.xml?limit={0}&order=count&name={1}",
-                "yande.re", "yande", "https://yande.re/", false, BooruProcessor.SourceType.HTML));
+                "https://yande.re/post.xml?page={0}&limit={1}&tags={2}", //XML
+                "https://yande.re/tag.xml?limit={0}&order=count&name={1}",
+                "yande.re", "yande", "https://yande.re/", false, MoeLoader.BooruProcessor.SourceType.XML));
 
             sites.Add(new SiteLargeBooru(
-                "https://konachan.com/post/index.xml?page={0}&limit={1}&tags={2}",
-                "https://konachan.com/tag/index.xml?limit={0}&order=count&name={1}",
-                "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XML));
-
+                "https://konachan.com/post.xml?page={0}&limit={1}&tags={2}",
+                "https://konachan.com/tag.xml?limit={0}&order=count&name={1}",
+                "konachan.com", "konachan", "https://konachan.com", false, MoeLoader.BooruProcessor.SourceType.XML));
             //sites.Add(new SiteBooru(
             //    "http://donmai.us/post?page={0}&limit={1}&tags={2}",
             //    "http://donmai.us/tag/index.xml?limit={0}&order=count&name={1}",
