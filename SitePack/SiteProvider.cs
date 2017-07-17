@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SitePack
 {
-    internal class SiteProvider
+    class SiteProvider
     {
         public List<ImageSite> SiteList()
         {
