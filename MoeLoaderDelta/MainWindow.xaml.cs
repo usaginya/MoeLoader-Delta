@@ -765,7 +765,7 @@ namespace MoeLoaderDelta
                 }
                 string fileName = GenFileName(dlimg);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
-                downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id) });
+                downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify) });
             }
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
@@ -1925,7 +1925,7 @@ namespace MoeLoaderDelta
                         }
                         string fileName = GenFileName(dlimg);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
-                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id));
+                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify));
                     }
                 }
                 downloadC.AddDownload(urls);

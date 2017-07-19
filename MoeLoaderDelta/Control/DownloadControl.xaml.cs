@@ -21,7 +21,8 @@ namespace MoeLoaderDelta
         public string localName;
         public string localfileName;
         public int id;
-        public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id)
+        public bool noVerify;
+        public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id, bool noVerify)
         {
             //原始后缀名
             string ext = "";
@@ -29,11 +30,7 @@ namespace MoeLoaderDelta
             if (file != null && file != "")
             {
                 ext = url.Substring(url.LastIndexOf('.'), url.Length - url.LastIndexOf('.'));
-
-                if (file.EndsWith(ext))
-                    this.fileName = file;
-                else
-                    this.fileName = file + ext;
+                fileName = file.EndsWith(ext) ? file : file + ext;
             }
             else
             {
@@ -46,6 +43,7 @@ namespace MoeLoaderDelta
             this.localName = localName.EndsWith(ext) ? localName : localName + ext;
             this.localfileName = localfileName.EndsWith(ext) ? localfileName : localfileName + ext;
             this.id = id;
+            this.noVerify = noVerify;
         }
     }
 
@@ -73,6 +71,7 @@ namespace MoeLoaderDelta
             public string SaveLocation { set; get; }
             public bool IsStop { set; get; }
             public string NeedReferer { get; set; }
+            public bool NoVerify { get; set; }
 
             /// <summary>
             /// 下载任务
@@ -80,11 +79,12 @@ namespace MoeLoaderDelta
             /// <param name="url">目标地址</param>
             /// <param name="saveLocation">保存位置</param>
             /// <param name="referer">是否需要伪造Referer</param>
-            public DownloadTask(string url, string saveLocation, string referer)
+            public DownloadTask(string url, string saveLocation, string referer, bool noVerify)
             {
                 SaveLocation = saveLocation;
                 Url = url;
                 NeedReferer = referer;
+                NoVerify = noVerify;
                 IsStop = false;
             }
         }
@@ -173,7 +173,7 @@ namespace MoeLoaderDelta
 
                 try
                 {
-                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id);
+                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify);
                     downloadItemsDic.Add(item.url, itm);
                     downloadItems.Add(itm);
                     numLeft = numLeft < 0 ? 0 : numLeft;
@@ -244,7 +244,7 @@ namespace MoeLoaderDelta
                             j--;
                         }
                     }
-                    
+
                     if (File.Exists(file))
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.IsHave;
@@ -259,7 +259,7 @@ namespace MoeLoaderDelta
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.DLing;
 
-                        DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url));
+                        DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
                         webs.Add(url, task);
 
                         //异步下载开始
@@ -285,6 +285,7 @@ namespace MoeLoaderDelta
             Stream str = null;
             SessionClient sc = new SessionClient();
             System.Net.WebResponse res = null;
+            double downed = 0;
 
             try
             {
@@ -304,7 +305,7 @@ namespace MoeLoaderDelta
                 int bytesReceived = 0;
                 DateTime last = DateTime.Now;
                 int osize = str.Read(bytes, 0, bytes.Length);
-                double downed = osize;
+                downed = osize;
                 while (!task.IsStop && osize > 0)
                 {
                     fs.Write(bytes, 0, osize);
@@ -318,7 +319,7 @@ namespace MoeLoaderDelta
                         last = now;
                     }
                     Dispatcher.Invoke(new DownloadHandler(web_DownloadProgressChanged),
-                        res.ContentLength, (double)bytesReceived / (double)res.ContentLength * 100.0, task.Url, speed);
+                        res.ContentLength, bytesReceived / (double)res.ContentLength * 100.0, task.Url, speed);
                     osize = str.Read(bytes, 0, bytes.Length);
                     downed += osize;
                 }
@@ -385,7 +386,7 @@ namespace MoeLoaderDelta
                         //DownloadTask task1 = obj as DownloadTask;
 
                         //判断完整性
-                        if (100 - downloadItemsDic[task.Url].Progress > 0.001)
+                        if (!downloadItemsDic[task.Url].NoVerify && 100 - downloadItemsDic[task.Url].Progress > 0.001)
                         {
                             task.IsStop = true;
                             downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
@@ -397,7 +398,11 @@ namespace MoeLoaderDelta
                             //修改后缀名
                             File.Move(task.SaveLocation + DLEXT, task.SaveLocation);
 
+                            downloadItemsDic[task.Url].Progress = 100.0;
                             downloadItemsDic[task.Url].StatusE = DLStatus.Success;
+                            downloadItemsDic[task.Url].Size = (downed > 1048576
+                            ? (downed / 1048576.0).ToString("0.00MB")
+                            : (downed / 1024.0).ToString("0.00KB"));
                             numSaved++;
                         }
                     }
@@ -667,7 +672,7 @@ namespace MoeLoaderDelta
                             downloadItems.Remove(item);
                             downloadItemsDic.Remove(item.Url);
                             AddDownload(new MiniDownloadItem[] {
-                                new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName, item.Id)
+                                new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName, item.Id, item.NoVerify)
                             });
                         }
                         break;
@@ -1033,7 +1038,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UserControl_Drop(object sender, System.Windows.DragEventArgs e)
+        public void UserControl_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -1046,15 +1051,43 @@ namespace MoeLoaderDelta
             }
         }
 
+        /// <summary>
+        /// 打开保存目录
+        /// </summary>
         private void itmOpenSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
+
+                string fileName = dlItem.FileName;
+                string pathA = SaveLocation + "\\" + fileName,
+                    pathB = SaveLocation + "\\" + dlItem.Host + "\\" + fileName,
+                    pathC = SaveLocation + "\\" + dlItem.Host + "\\" + dlItem.Author + "\\" + fileName;
+
+                if (File.Exists(pathA))
+                {
+                    fileName = pathA;
+                }
+                else if (File.Exists(pathB))
+                {
+                    fileName = pathB;
+                }
+                else if (File.Exists(pathC))
+                {
+                    fileName = pathC;
+                }
+
+                System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("explorer.exe");
+                psi.Arguments = "/e,/select," + fileName;
                 System.Diagnostics.Process.Start(SaveLocation);
             }
             catch { }
         }
 
+        /// <summary>
+        /// 双击打开文件
+        /// </summary>
         private void grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             try
@@ -1209,7 +1242,7 @@ namespace MoeLoaderDelta
                 foreach (string surl in selurl)
                 {
                     ii++;
-                    if (item.Url == surl)
+                    if (item.Url.Contains(surl))
                     {
                         break;
                     }

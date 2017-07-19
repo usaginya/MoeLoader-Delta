@@ -23,6 +23,7 @@ namespace MoeLoaderDelta
         public string LocalName { get; set; }
         public string LocalFileName { get; set; }
         public int Id { get; set; }
+        public bool NoVerify { get; set; }
 
         /// <summary>
         /// 大小
@@ -120,7 +121,7 @@ namespace MoeLoaderDelta
         /// <param name="localName">本地路径文件名</param>
         /// <param name="localfileName">本地文件名</param>
         /// <param name="id">作品ID</param>
-        public DownloadItem(string fileName, string url, string host, string author, string localName,string localfileName, int id)
+        public DownloadItem(string fileName, string url, string host, string author, string localName, string localfileName, int id, bool? noVerify)
         {
             FileName = fileName;
             Size = "N/A";
@@ -132,17 +133,15 @@ namespace MoeLoaderDelta
             LocalName = localName;
             LocalFileName = localfileName;
             Id = id;
+            NoVerify = noVerify != null ? (bool)noVerify : false;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-            {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        
+
     }
 }
