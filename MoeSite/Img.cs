@@ -145,6 +145,11 @@ namespace MoeLoaderDelta
         public string ImgP { get; set; }
 
         /// <summary>
+        /// 不对下载的图标进行完整性验证（对于无法获取原文件大小的站点）
+        /// </summary>
+        public bool NoVerify { get; set; }
+
+        /// <summary>
         /// 若图片的某些信息需要单独获取（例如原图URL可能位于第二层页面），则实现该接口，将网络操作、提取信息操作置于此处
         /// </summary>
         public DetailHandler DownloadDetail;
@@ -154,25 +159,26 @@ namespace MoeLoaderDelta
         /// </summary>
         public Img()
         {
-            this.Date = "NoDate";
-            this.Desc = "";
-            this.FileSize = "N/A";
-            this.Height = 0;
-            this.Id = 0;
-            this.IsExplicit = false;
-            this.IsViewed = false;
-            this.JpegUrl = "";
-            this.OriginalUrl = "";
-            this.PreviewUrl = "";
-            this.SampleUrl = "";
-            this.Score = 0;
-            this.Source = "";
-            this.Tags = "NoTags";
-            this.Width = 0;
-            this.OrignalUrlList = new List<string>();
-            this.DetailUrl = "";
-            this.Author = "UnkwnAuthor";
-            this.ImgP = "";
+            Date = "NoDate";
+            Desc = "";
+            FileSize = "N/A";
+            Height = 0;
+            Id = 0;
+            IsExplicit = false;
+            IsViewed = false;
+            JpegUrl = "";
+            OriginalUrl = "";
+            PreviewUrl = "";
+            SampleUrl = "";
+            Score = 0;
+            Source = "";
+            Tags = "NoTags";
+            Width = 0;
+            OrignalUrlList = new List<string>();
+            DetailUrl = "";
+            Author = "UnkwnAuthor";
+            ImgP = "";
+            NoVerify = false;
         }
 
         /// <summary>

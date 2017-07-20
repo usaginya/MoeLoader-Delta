@@ -90,6 +90,11 @@ namespace SitePack
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));
 
+            sites.Add(new SiteLargeBooru(
+                "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
+                "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
+                "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+
             return sites;
         }
     }

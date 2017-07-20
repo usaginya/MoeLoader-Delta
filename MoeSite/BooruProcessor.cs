@@ -40,7 +40,19 @@ namespace MoeLoaderDelta
             /// <summary>
             /// HTML
             /// </summary>
-            HTML
+            HTML,
+            /// <summary>
+            /// XML No Verify
+            /// </summary>
+            XMLNV,
+            /// <summary>
+            /// JSON No Verify
+            /// </summary>
+            JSONNV,
+            /// <summary>
+            /// HTML No Verify
+            /// </summary>
+            HTMLNV
         }
 
         /// <summary>
@@ -154,7 +166,7 @@ namespace MoeLoaderDelta
             switch (type)
             {
                 case SourceType.HTML:
-                    ProcessHTML(url, pageString, imgs);
+                    ProcessHTML(url, pageString, imgs, "");
                     break;
                 case SourceType.JSON:
                     ProcessJSON(url, pageString, imgs, "");
@@ -163,7 +175,16 @@ namespace MoeLoaderDelta
                     ProcessJSON(url, pageString, imgs, "sku");
                     break;
                 case SourceType.XML:
-                    ProcessXML(url, pageString, imgs);
+                    ProcessXML(url, pageString, imgs, "");
+                    break;
+                case SourceType.HTMLNV:
+                    ProcessHTML(url, pageString, imgs, "nv");
+                    break;
+                case SourceType.JSONNV:
+                    ProcessJSON(url, pageString, imgs, "nv");
+                    break;
+                case SourceType.XMLNV:
+                    ProcessXML(url, pageString, imgs, "nv");
                     break;
             }
 
@@ -176,7 +197,8 @@ namespace MoeLoaderDelta
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
-        private void ProcessHTML(string url, string pageString, List<Img> imgs)
+        /// <param name="sub">标记 (nv 不验证完整性)</param>
+        private void ProcessHTML(string url, string pageString, List<Img> imgs, string sub)
         {
             /* Post.register({"jpeg_height":1200,"sample_width":1333,"md5":"1550bb8d9fa4e1ee7903ee103459f69a","created_at":{"n":666146000,"json_class":"Time","s":1290715184},
              * "status":"active","jpeg_file_size":215756,"sample_height":1000,"score":4,"sample_url":"http://yuinyan.imouto.org/sample/1550bb8d9fa4e459f69a/moe%20163698%20sample.jpg",
@@ -211,7 +233,7 @@ namespace MoeLoaderDelta
                 try
                 {
                     if (obj.ContainsKey("file_size"))
-                        file_size = Int32.Parse(obj["file_size"].ToString());
+                        file_size = int.Parse(obj["file_size"].ToString());
                 }
                 catch { }
 
@@ -262,7 +284,9 @@ namespace MoeLoaderDelta
                 //if (!UseJpeg)
                 //jpeg_url = file_url;
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags);
+                bool noVerify = sub.Length == 2 && sub.Contains("nv");
+
+                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
                 #endregion
 
@@ -276,8 +300,10 @@ namespace MoeLoaderDelta
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
-        private void ProcessXML(string url, string pageString, List<Img> imgs)
+        /// <param name="sub">标记 (nv 不验证完整性)</param>
+        private void ProcessXML(string url, string pageString, List<Img> imgs, string sub)
         {
+
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(pageString);
 
@@ -350,8 +376,9 @@ namespace MoeLoaderDelta
 
                 //if (!UseJpeg)
                 //jpeg_url = file_url;
+                bool noVerify = sub.Length == 2 && sub.Contains("nv");
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags);
+                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
             }
         }
@@ -489,7 +516,9 @@ namespace MoeLoaderDelta
                     }
                 }
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags);
+                bool noVerify = sub.Length == 2 && sub.Contains("nv");
+
+                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
             }
         }
@@ -514,7 +543,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private Img GenerateImg(string url, string id, string author,
             string src, int width, int height, int file_size, string created_at,
-            string score, string sample, string preview_url, string file_url, string jpeg_url, string tags)
+            string score, string sample, string preview_url, string file_url, string jpeg_url, string tags, bool noVerify)
         {
             int scoreInt = 0, intId = 0;
             try
@@ -524,7 +553,7 @@ namespace MoeLoaderDelta
             catch { }
             try
             {
-                scoreInt = Int32.Parse(score.Substring(score.IndexOf(' '), score.Length - score.IndexOf(' ')));
+                scoreInt = int.Parse(score.Substring(score.IndexOf(' '), score.Length - score.IndexOf(' ')));
             }
             catch { }
 
@@ -573,7 +602,8 @@ namespace MoeLoaderDelta
                 Source = src,
                 Tags = tags,
                 Width = width,
-                DetailUrl = detailUrl
+                DetailUrl = detailUrl,
+                NoVerify = noVerify
             };
             return img;
         }

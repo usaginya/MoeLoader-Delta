@@ -164,7 +164,8 @@ namespace MoeLoaderDelta.Control
                         Stream str = res.GetResponseStream();
 
                         //响应长度
-                        double reslength = res.ContentLength;
+                        double reslength = res.ContentLength, restmplength = 0;
+
 
                         //获取数据更新进度条
                         ThreadPool.QueueUserWorkItem((obj) =>
@@ -175,6 +176,7 @@ namespace MoeLoaderDelta.Control
                             int realReadLen = str.Read(buffer, 0, 1024);
                             //进度条字节进度
                             long progressBarValue = 0;
+                            double progressSetValue = 0;
                             //内存流字节组
                             byte[] data = null;
                             MemoryStream ms = new MemoryStream();
@@ -184,7 +186,16 @@ namespace MoeLoaderDelta.Control
                             {
                                 ms.Write(buffer, 0, realReadLen);
                                 progressBarValue += realReadLen;
-                                pdload.Dispatcher.BeginInvoke(new ProgressBarSetter(SetProgressBar), progressBarValue / reslength);
+                                if (reslength < 1)
+                                {
+                                    if (restmplength < progressBarValue)
+                                        restmplength = progressBarValue * 2;
+                                    progressSetValue = progressBarValue / restmplength;
+                                }
+                                else
+                                { progressSetValue = progressBarValue / reslength; }
+
+                                pdload.Dispatcher.BeginInvoke(new ProgressBarSetter(SetProgressBar), progressSetValue);
                                 try
                                 {
                                     realReadLen = str.Read(buffer, 0, 1024);
