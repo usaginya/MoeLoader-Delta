@@ -62,7 +62,7 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 
 ------
 
-支持的图片站点列表：
+### 支持的图片站点：
 
 * [yande.re](https://yande.re) (萌妹)
 * [konachan.com](https://konachan.com)
@@ -76,5 +76,6 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 * www.zerochan.net
 * [mjv-art.org](https://anime-pictures.net)
 * [worldcosplay.net](https://worldcosplay.net) (三次元)
+* www.pixiv.net (标签\完全标签搜索、画师搜索、日、周、月排行榜)
 * www.minitokyo.net (桌面壁纸、扫描图)
-* www.pixiv.net (标签搜索、画师搜索、日、周、月排行榜)
+* [lolibooru.moe](https://lolibooru.moe)
