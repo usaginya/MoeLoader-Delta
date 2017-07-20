@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Linq;
 using System.Web.Script.Serialization;
+using System.Web;
 
 namespace MoeLoaderDelta
 {
@@ -305,7 +306,7 @@ namespace MoeLoaderDelta
         {
 
             XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(pageString);
+            xmlDoc.LoadXml(HttpUtility.HtmlDecode(pageString));
 
             XmlElement root = null;
             if (xmlDoc.SelectSingleNode("posts") == null)
