@@ -236,7 +236,7 @@ namespace MoeLoaderDelta
             txtCount.Text = "6";
             chkProxy_Click(null, null);
             txtParal.Text = "2";
-            chkSepSave.IsChecked = chkSaSave.IsChecked = false;
+            chkSepSave.IsChecked = chkSaSave.IsChecked = chkSaSave.IsEnabled = false;
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
             txtSaveLocation.Text = "MoeLoaderGallery";

@@ -228,7 +228,7 @@
                     <Separator />
                     <MenuItem
                         x:Name="itmAutoClose"
-                        Header="完成后自动关机(_G)"
+                        Header="完成后自动关机(_N)"
                         IsCheckable="True" />
                 </ContextMenu>
             </ListBox.ContextMenu>

@@ -12,8 +12,8 @@ namespace SitePack
     {
         private SessionClient Sweb = new SessionClient();
         private Random rand = new Random();
-        private string[] user = { "hdy", "moelu1" };
-        private string[] pass = { "hdy123456", "moe2017" };
+        private string[] user = { "girltmp"};
+        private string[] pass = { "girlis2018"};
         private string sitePrefix, tempuser, temppass, tempappkey, ua;
         private static string cookie = "";
         private static bool isLogin = false;
