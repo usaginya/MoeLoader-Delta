@@ -100,14 +100,18 @@ namespace MoeLoaderDelta
             get
             {
                 if (statusE == DLStatus.DLing)
-                    return speed.ToString("0.00") + " KB/s";
+                {
+                    return (speed > 1024.0
+                           ? (speed / 1024.0).ToString("0.00 MB")
+                           : speed.ToString("0.00 KB")) + "/s";
+                }
                 else return "";
             }
         }
 
         public void SetSpeed(double sp)
         {
-            this.speed = sp;
+            speed = sp;
             OnPropertyChanged("Speed");
         }
 

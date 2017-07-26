@@ -306,7 +306,14 @@ namespace MoeLoaderDelta
         {
 
             XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(HttpUtility.HtmlDecode(pageString));
+            try
+            {
+                xmlDoc.LoadXml(pageString);
+            }
+            catch
+            {
+                xmlDoc.LoadXml(HttpUtility.HtmlDecode(pageString));
+            }
 
             XmlElement root = null;
             if (xmlDoc.SelectSingleNode("posts") == null)

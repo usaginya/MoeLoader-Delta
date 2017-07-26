@@ -365,7 +365,6 @@ namespace MoeLoaderDelta
                         if (!dlerrtxt.Contains(downloadItemsDic[task.Url].Size))
                         {
                             downloadItemsDic[task.Url].StatusE = DLStatus.Cancel;
-                            downloadItemsDic[task.Url].Size = "已取消";
                         }
                     }
                 }));
@@ -640,7 +639,8 @@ namespace MoeLoaderDelta
         //============================== Menu Function ===================================
         private void ExecuteDownloadListTask(DLWorkMode dlworkmode)
         {
-
+            bool delitemfile = false;
+            int selectcs = 0;
             List<DownloadItem> selected = new List<DownloadItem>();
             if (dlworkmode == DLWorkMode.RetryAll || dlworkmode == DLWorkMode.StopAll || dlworkmode == DLWorkMode.RemoveAll)
             {
@@ -650,6 +650,7 @@ namespace MoeLoaderDelta
                     DownloadItem item = (DownloadItem)o;
                     selected.Add(item);
                 }
+                selectcs = selected.Count;
             }
             else
             {
@@ -668,11 +669,12 @@ namespace MoeLoaderDelta
                     case DLWorkMode.RetryAll:
                         if (item.StatusE == DLStatus.Failed || item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
                         {
-                            numLeft--;
+                            numLeft = numLeft > selectcs ? selectcs : numLeft;
                             downloadItems.Remove(item);
                             downloadItemsDic.Remove(item.Url);
                             AddDownload(new MiniDownloadItem[] {
-                                new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName, item.Id, item.NoVerify)
+                                new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName,
+                                item.Id, item.NoVerify)
                             });
                         }
                         break;
@@ -686,26 +688,30 @@ namespace MoeLoaderDelta
                                 webs[item.Url].IsStop = true;
                                 webs.Remove(item.Url);
                             }
+                            else
+                                numLeft--;
+
                             if (dlworkmode == DLWorkMode.StopAll)
                             {
                                 numLeft = 0;
-                                item.StatusE = DLStatus.Cancel;
                             }
+                            item.StatusE = DLStatus.Cancel;
+                            item.Size = "已取消";
                         }
                         break;
 
                     case DLWorkMode.Del:
                     case DLWorkMode.Remove:
                     case DLWorkMode.RemoveAll:
-                        if (dlworkmode == DLWorkMode.Del)
+                        if (dlworkmode == DLWorkMode.Del && !delitemfile)
                         {
                             if (MessageBox.Show("QwQ 真的要把任务和文件一起删除么？",
                                 MainWindow.ProgramName,
                                 MessageBoxButton.YesNo,
                                 MessageBoxImage.Warning) == MessageBoxResult.No)
-                            {
-                                break;
-                            }
+                            { break; }
+                            else
+                            { delitemfile = true; }
                         }
 
                         if (item.StatusE == DLStatus.DLing)
@@ -717,9 +723,9 @@ namespace MoeLoaderDelta
                             }
                         }
                         else if (item.StatusE == DLStatus.Success || item.StatusE == DLStatus.IsHave)
-                            numSaved--;
+                            numSaved = numSaved > 0 ? --numSaved : 0;
                         else if (item.StatusE == DLStatus.Wait || item.StatusE == DLStatus.Cancel)
-                            numLeft--;
+                            numLeft = numLeft > 0 ? --numLeft : 0;
 
                         downloadItems.Remove(item);
                         downloadItemsDic.Remove(item.Url);
@@ -1320,13 +1326,6 @@ namespace MoeLoaderDelta
                         {    //和文件一起删除
                             itmDeleteFile_Click(null, null);
                         }
-                    }
-                    else if (dlList.Items.Count > 0)
-                    {
-                        if (e.Key == Key.T)
-                        {   //重试所有任务
-                            itmRetryAll_Click(null, null);
-                        }
                         else if (e.Key == Key.G)
                         {   //停止所有任务
                             itmStopAll_Click(null, null);
@@ -1334,6 +1333,10 @@ namespace MoeLoaderDelta
                         else if (e.Key == Key.V)
                         {   //清空所有任务
                             itmDeleteAll_Click(null, null);
+                        }
+                        if (e.Key == Key.T)
+                        {   //重试所有任务
+                            itmRetryAll_Click(null, null);
                         }
                     }
                 }
