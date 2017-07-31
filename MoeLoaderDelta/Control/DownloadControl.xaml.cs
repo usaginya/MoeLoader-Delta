@@ -1229,6 +1229,12 @@ namespace MoeLoaderDelta
                 return;
             }
 
+            if (dlList.SelectedItems.Count < 1)
+            {
+                itmSelAll_Click(null, null);
+                return;
+            }
+
             foreach (DownloadItem sitem in dlList.SelectedItems)
             {
                 selurl.Add(sitem.Url);
@@ -1293,55 +1299,52 @@ namespace MoeLoaderDelta
         {
             if (MainWindow.IsCtrlDown())
             {
-                if (e.Key == Key.I)
+                int dlselect = dlList.SelectedItems.Count;
+
+                if (e.Key == Key.U)
                 {   //反选
                     itmSelInvert_Click(null, null);
                 }
-                else
+                else if (dlselect > 0)
                 {
-                    int dlselect = dlList.SelectedItems.Count;
-                    if (dlselect > 0)
-                    {
-                        if (e.Key == Key.L)
-                        {//导出下载列表
-                            itmLst_Click(null, null);
-                        }
-                        else if (e.Key == Key.C && dlselect == 1)
-                        {   //复制地址
-                            itmCopy_Click(null, null);
-                        }
-                        else if (e.Key == Key.R)
-                        {    //重试
-                            itmRetry_Click(null, null);
-                        }
-                        else if (e.Key == Key.S)
-                        {    //停止
-                            itmStop_Click(null, null);
-                        }
-                        else if (e.Key == Key.D)
-                        {    //移除
-                            itmDelete_Click(null, null);
-                        }
-                        else if (e.Key == Key.X)
-                        {    //和文件一起删除
-                            itmDeleteFile_Click(null, null);
-                        }
-                        else if (e.Key == Key.G)
-                        {   //停止所有任务
-                            itmStopAll_Click(null, null);
-                        }
-                        else if (e.Key == Key.V)
-                        {   //清空所有任务
-                            itmDeleteAll_Click(null, null);
-                        }
-                        if (e.Key == Key.T)
-                        {   //重试所有任务
-                            itmRetryAll_Click(null, null);
-                        }
+                    if (e.Key == Key.L)
+                    {//导出下载列表
+                        itmLst_Click(null, null);
                     }
+                    else if (e.Key == Key.C && dlselect == 1)
+                    {   //复制地址
+                        itmCopy_Click(null, null);
+                    }
+                    else if (e.Key == Key.R)
+                    {    //重试
+                        itmRetry_Click(null, null);
+                    }
+                    else if (e.Key == Key.S)
+                    {    //停止
+                        itmStop_Click(null, null);
+                    }
+                    else if (e.Key == Key.D)
+                    {    //移除
+                        itmDelete_Click(null, null);
+                    }
+                    else if (e.Key == Key.X)
+                    {    //和文件一起删除
+                        itmDeleteFile_Click(null, null);
+                    }
+                }
+                if (e.Key == Key.G)
+                {   //停止所有任务
+                    itmStopAll_Click(null, null);
+                }
+                else if (e.Key == Key.V)
+                {   //清空所有任务
+                    itmDeleteAll_Click(null, null);
+                }
+                else if (e.Key == Key.T)
+                {   //重试所有任务
+                    itmRetryAll_Click(null, null);
                 }
             }
         }
-
     }
 }
