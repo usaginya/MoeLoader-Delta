@@ -1093,7 +1093,7 @@
                                     IsEnabled="False"
                                     RenderTransformOrigin="0.5,0.5"
                                     Style="{DynamicResource nextstyle}"
-                                    ToolTip="下一页"
+                                    ToolTip="下一页 (Ctrl + → 强制翻页)"
                                     Visibility="Hidden">
                                     <Button.Background>
                                         <ImageBrush ImageSource="Images/page.png" Stretch="None">
