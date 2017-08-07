@@ -61,7 +61,6 @@
     <Compile Include="SiteProvider.cs" />
     <Compile Include="SiteSankaku.cs" />
     <Compile Include="SiteWCosplay.cs" />
-    <Compile Include="SiteYuriimg.cs" />
     <Compile Include="SiteZeroChan.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -92,9 +91,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="image\lolibooru.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="image\yuriimg.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
