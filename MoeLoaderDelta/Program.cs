@@ -9,6 +9,8 @@ namespace MoeLoaderDelta
 {
     class Program
     {
+        public static bool is_debug = false;
+
         /// <summary>
         /// 允许多重启动参数
         /// </summary>
@@ -23,6 +25,7 @@ namespace MoeLoaderDelta
         /// 更新程序名
         /// </summary>
         private const string UpdateAppName = "MoeToNew";
+
         private const string UpdateAppEXEName = UpdateAppName + ".exe";
 
         /// <summary>
@@ -34,9 +37,6 @@ namespace MoeLoaderDelta
         /// 更新程序需要的dll
         /// </summary>
         private const string UpdateAppDll = "HtmlTextBlock.dll";
-
-
-        public static bool is_debug = false;
 
         static Program()
         {
