@@ -103,15 +103,10 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            //防止二次登录造成Cookie错误
+            //防止再次登录
             if (isLogin)
-            {
-                while (!(cookie.Contains("PHPSESSID") || cookie.Contains("otome_id")))
-                {
-                    System.Threading.Thread.Sleep(100);
-                }
                 return;
-            }
+
             //第一次获取站点给的Cookie
             if (cookie == "")
             {
@@ -138,8 +133,7 @@ namespace SitePack
             if (cookie.Contains("PHPSESSID"))
             {
                 try
-                {
-                    isLogin = true;
+                { 
                     HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create("http://yuriimg.com/account/login");
                     HttpWebResponse postResponse;
 
@@ -191,14 +185,14 @@ namespace SitePack
                     {
                         throw new Exception("密码错误");
                     }
+                    else
+                    {
+                        isLogin = true;
+                    }
                 }
                 catch (Exception ex)
                 {
                     throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自动登录失败");
-                }
-                finally
-                {
-                    isLogin = false;
                 }
             }
         }
