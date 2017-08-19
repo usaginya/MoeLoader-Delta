@@ -168,15 +168,15 @@ namespace MoeLoaderDelta
                 request.Method = "POST";
                 request.KeepAlive = true;
                 request.ContentType = "application/x-www-form-urlencoded";
-                request.CookieContainer = m_Cookie;//设置上次访问页面的Cookie 保持Session  
+                request.CookieContainer = m_Cookie;//设置上次访问页面的Cookie 保持Session
                 request.ContentLength = bytesToPost.Length;
 
                 Stream requestStream = request.GetRequestStream();
-                requestStream.Write(bytesToPost, 0, bytesToPost.Length);//写入Post数据  
+                requestStream.Write(bytesToPost, 0, bytesToPost.Length);//写入Post数据
                 requestStream.Close();
 
                 response = (HttpWebResponse)request.GetResponse();
-                m_Cookie = request.CookieContainer;//访问后更新Cookie  
+                m_Cookie = request.CookieContainer;//访问后更新Cookie
                 Stream responseStream = response.GetResponseStream();
                 string resData = "";
 
