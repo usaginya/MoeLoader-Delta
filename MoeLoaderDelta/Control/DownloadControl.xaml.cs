@@ -40,8 +40,10 @@ namespace MoeLoaderDelta
             this.url = url;
             this.host = host;
             this.author = author;
-            this.localName = localName.EndsWith(ext) ? localName : localName + ext;
-            this.localfileName = localfileName.EndsWith(ext) ? localfileName : localfileName + ext;
+            this.localName = localName.EndsWith(ext) ? localName
+                : localName.IsNullOrEmptyOrWhiteSpace() ? fileName : localName + ext;
+            this.localfileName = localfileName.EndsWith(ext) ? localfileName
+                : localfileName.IsNullOrEmptyOrWhiteSpace() ? fileName : localfileName + ext;
             this.id = id;
             this.noVerify = noVerify;
         }
@@ -191,6 +193,30 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 取本地保存目录
+        /// </summary>
+        /// <param name="dlitem">下载项</param>
+        /// <returns></returns>
+        private string GetLocalPath(DownloadItem dlitem)
+        {
+            string path = "";
+
+            if (IsSepSave)
+            {
+                string sPath = saveLocation + "\\" + dlitem.Host + (IsSaSave ? "\\" + dlitem.Author : "");
+                if (!Directory.Exists(sPath))
+                    Directory.CreateDirectory(sPath);
+
+                path = sPath + "\\";
+            }
+            else
+            {
+                path = saveLocation + "\\";
+            }
+            return path;
+        }
+
+        /// <summary>
         /// 刷新下载状态
         /// </summary>
         private void RefreshList()
@@ -207,20 +233,7 @@ namespace MoeLoaderDelta
 
                     string url = dlitem.Url;
                     string file = dlitem.FileName.Replace("\r\n", "");
-                    string path = "";
-
-                    if (IsSepSave)
-                    {
-                        string sPath = saveLocation + "\\" + dlitem.Host + (IsSaSave ? "\\" + dlitem.Author : "");
-                        if (!Directory.Exists(sPath))
-                            Directory.CreateDirectory(sPath);
-
-                        path = sPath + "\\";
-                    }
-                    else
-                    {
-                        path = saveLocation + "\\";
-                    }
+                    string path = GetLocalPath(dlitem);
 
                     //检查目录长度
                     if (path.Length > 248)
@@ -286,6 +299,7 @@ namespace MoeLoaderDelta
             SessionClient sc = new SessionClient();
             System.Net.WebResponse res = null;
             double downed = 0;
+            string lpath = GetLocalPath(downloadItemsDic[task.Url]);
 
             try
             {
@@ -338,6 +352,23 @@ namespace MoeLoaderDelta
                         WriteErrText(task.Url);
                         WriteErrText(task.SaveLocation);
                         WriteErrText(ex.Message + "\r\n");
+
+                        try
+                        {
+                            if (fs != null)
+                                fs.Close();
+                            if (str != null)
+                                str.Close();
+                            if (res != null)
+                                res.Close();
+
+                            File.Delete(task.SaveLocation + DLEXT);
+
+                            DirectoryInfo di = new DirectoryInfo(lpath);
+                            if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                                Directory.Delete(lpath);
+                        }
+                        catch { }
                     }
                 }));
             }
@@ -372,6 +403,10 @@ namespace MoeLoaderDelta
                 try
                 {
                     File.Delete(task.SaveLocation + DLEXT);
+
+                    DirectoryInfo di = new DirectoryInfo(lpath);
+                    if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                        Directory.Delete(lpath);
                 }
                 catch { }
             }
@@ -390,7 +425,15 @@ namespace MoeLoaderDelta
                             task.IsStop = true;
                             downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
                             downloadItemsDic[task.Url].Size = "下载未完成";
-                            File.Delete(task.SaveLocation + DLEXT);
+                            try
+                            {
+                                File.Delete(task.SaveLocation + DLEXT);
+
+                                DirectoryInfo di = new DirectoryInfo(lpath);
+                                if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                                    Directory.Delete(lpath);
+                            }
+                            catch { }
                         }
                         else
                         {
@@ -596,12 +639,13 @@ namespace MoeLoaderDelta
 
                         if (!isexists)
                         {
-                            //url|文件名|域名|上传者|ID(用于判断重复)
+                            //url|文件名|域名|上传者|ID(用于判断重复)|免文件校验
                             text += i.Url
                                 + "|" + i.LocalFileName
                                 + "|" + i.Host
                                 + "|" + i.Author
                                 + "|" + i.Id
+                                + "|" + (i.NoVerify ? 'v' : 'x')
                                 + "\r\n";
                             success++;
                         }
@@ -661,6 +705,9 @@ namespace MoeLoaderDelta
                 }
             }
 
+            string lpath = "";
+            DirectoryInfo di;
+
             foreach (DownloadItem item in selected)
             {
                 switch (dlworkmode)
@@ -697,6 +744,17 @@ namespace MoeLoaderDelta
                             }
                             item.StatusE = DLStatus.Cancel;
                             item.Size = "已取消";
+
+                            try
+                            {
+                                File.Delete(item.LocalFileName + DLEXT);
+
+                                lpath = GetLocalPath(item);
+                                di = new DirectoryInfo(lpath);
+                                if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                                    Directory.Delete(lpath);
+                            }
+                            catch { }
                         }
                         break;
 
@@ -731,19 +789,18 @@ namespace MoeLoaderDelta
                         downloadItemsDic.Remove(item.Url);
 
                         //删除文件
+                        string fname = item.LocalName;
                         if (dlworkmode == DLWorkMode.Del)
                         {
-                            string fname = item.LocalName;
                             if (File.Exists(fname))
                             {
                                 File.Delete(fname);
                             }
-                            else
-                            {
-                                fname = fname.Substring(0, fname.LastIndexOf('.')) + DLEXT;
-                                if (File.Exists(fname))
-                                    File.Delete(fname);
-                            }
+
+                            lpath = GetLocalPath(item);
+                            di = new DirectoryInfo(lpath);
+                            if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                                Directory.Delete(lpath);
                         }
                         break;
                 }
@@ -968,7 +1025,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 文件拖拽事件
         /// </summary>
-        public void UserControl_DragEnter(object sender, System.Windows.DragEventArgs e)
+        public void UserControl_DragEnter(object sender, DragEventArgs e)
         {
             try
             {
@@ -1026,10 +1083,15 @@ namespace MoeLoaderDelta
                     {
                         try
                         {
-                            di.id = Int32.Parse(parts[4]);
+                            di.id = int.Parse(parts[4]);
                         }
                         catch { }
                     }
+
+                    //免文件校验
+                    if (parts.Length > 5 && parts[5].Trim().Length > 0)
+                        di.noVerify = parts[5].Contains('v');
+
 
                     items.Add(di);
                 }
@@ -1066,27 +1128,17 @@ namespace MoeLoaderDelta
             {
                 DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
 
-                string fileName = dlItem.FileName;
-                string pathA = SaveLocation + "\\" + fileName,
-                    pathB = SaveLocation + "\\" + dlItem.Host + "\\" + fileName,
-                    pathC = SaveLocation + "\\" + dlItem.Host + "\\" + dlItem.Author + "\\" + fileName;
-
-                if (File.Exists(pathA))
+                if (File.Exists(dlItem.LocalName))
                 {
-                    fileName = pathA;
+                    System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("explorer.exe");
+                    psi.Arguments = "/e,/select," + dlItem.LocalName;
+                    System.Diagnostics.Process.Start(psi);
                 }
-                else if (File.Exists(pathB))
+                else
                 {
-                    fileName = pathB;
-                }
-                else if (File.Exists(pathC))
-                {
-                    fileName = pathC;
+                    System.Diagnostics.Process.Start(GetLocalPath(dlItem));
                 }
 
-                System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("explorer.exe");
-                psi.Arguments = "/e,/select," + fileName;
-                System.Diagnostics.Process.Start(SaveLocation);
             }
             catch { }
         }
@@ -1103,23 +1155,12 @@ namespace MoeLoaderDelta
                     DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
                     if (dlItem.StatusE == DLStatus.Success)
                     {
-                        string fileName = dlItem.FileName;
-                        string pathA = SaveLocation + "\\" + fileName,
-                            pathB = SaveLocation + "\\" + dlItem.Host + "\\" + fileName,
-                            pathC = SaveLocation + "\\" + dlItem.Host + "\\" + dlItem.Author + "\\" + fileName;
-
-                        if (File.Exists(pathA))
+                        if (!File.Exists(dlItem.LocalName))
                         {
-                            System.Diagnostics.Process.Start(pathA);
+                            MessageBox.Show("无法打开文件！ 可能已被更名、删除或移动。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
                         }
-                        else if (File.Exists(pathB))
-                        {
-                            System.Diagnostics.Process.Start(pathB);
-                        }
-                        else if (File.Exists(pathC))
-                        {
-                            System.Diagnostics.Process.Start(pathC);
-                        }
+                        System.Diagnostics.Process.Start(dlItem.LocalName);
                     }
                 }
             }
@@ -1229,6 +1270,12 @@ namespace MoeLoaderDelta
                 return;
             }
 
+            if (dlList.SelectedItems.Count < 1)
+            {
+                itmSelAll_Click(null, null);
+                return;
+            }
+
             foreach (DownloadItem sitem in dlList.SelectedItems)
             {
                 selurl.Add(sitem.Url);
@@ -1293,55 +1340,52 @@ namespace MoeLoaderDelta
         {
             if (MainWindow.IsCtrlDown())
             {
-                if (e.Key == Key.I)
+                int dlselect = dlList.SelectedItems.Count;
+
+                if (e.Key == Key.U)
                 {   //反选
                     itmSelInvert_Click(null, null);
                 }
-                else
+                else if (dlselect > 0)
                 {
-                    int dlselect = dlList.SelectedItems.Count;
-                    if (dlselect > 0)
-                    {
-                        if (e.Key == Key.L)
-                        {//导出下载列表
-                            itmLst_Click(null, null);
-                        }
-                        else if (e.Key == Key.C && dlselect == 1)
-                        {   //复制地址
-                            itmCopy_Click(null, null);
-                        }
-                        else if (e.Key == Key.R)
-                        {    //重试
-                            itmRetry_Click(null, null);
-                        }
-                        else if (e.Key == Key.S)
-                        {    //停止
-                            itmStop_Click(null, null);
-                        }
-                        else if (e.Key == Key.D)
-                        {    //移除
-                            itmDelete_Click(null, null);
-                        }
-                        else if (e.Key == Key.X)
-                        {    //和文件一起删除
-                            itmDeleteFile_Click(null, null);
-                        }
-                        else if (e.Key == Key.G)
-                        {   //停止所有任务
-                            itmStopAll_Click(null, null);
-                        }
-                        else if (e.Key == Key.V)
-                        {   //清空所有任务
-                            itmDeleteAll_Click(null, null);
-                        }
-                        if (e.Key == Key.T)
-                        {   //重试所有任务
-                            itmRetryAll_Click(null, null);
-                        }
+                    if (e.Key == Key.L)
+                    {//导出下载列表
+                        itmLst_Click(null, null);
                     }
+                    else if (e.Key == Key.C && dlselect == 1)
+                    {   //复制地址
+                        itmCopy_Click(null, null);
+                    }
+                    else if (e.Key == Key.R)
+                    {    //重试
+                        itmRetry_Click(null, null);
+                    }
+                    else if (e.Key == Key.S)
+                    {    //停止
+                        itmStop_Click(null, null);
+                    }
+                    else if (e.Key == Key.D)
+                    {    //移除
+                        itmDelete_Click(null, null);
+                    }
+                    else if (e.Key == Key.X)
+                    {    //和文件一起删除
+                        itmDeleteFile_Click(null, null);
+                    }
+                }
+                if (e.Key == Key.G)
+                {   //停止所有任务
+                    itmStopAll_Click(null, null);
+                }
+                else if (e.Key == Key.V)
+                {   //清空所有任务
+                    itmDeleteAll_Click(null, null);
+                }
+                else if (e.Key == Key.T)
+                {   //重试所有任务
+                    itmRetryAll_Click(null, null);
                 }
             }
         }
-
     }
 }

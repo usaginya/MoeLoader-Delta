@@ -152,7 +152,7 @@
                     <MenuItem
                         x:Name="itmSelInvert"
                         Click="itmSelInvert_Click"
-                        Header="反选(_I)"
+                        Header="反选(_U)"
                         IsEnabled="True" />
                     <Separator />
                     <MenuItem

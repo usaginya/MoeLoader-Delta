@@ -28,7 +28,7 @@ namespace MoeLoaderDelta
     }
 
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for xaml
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -524,7 +524,7 @@ namespace MoeLoaderDelta
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "读取配置文件失败\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "读取配置文件失败\r\n" + ex.Message, ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
 
@@ -1154,11 +1154,13 @@ namespace MoeLoaderDelta
         /// <param name="e"></param>
         private void toggleDownload_Click(object sender, RoutedEventArgs e)
         {
+            Storyboard sb;
+
             if (toggleDownload.IsChecked.Value)
             {
                 toggleDownload.ToolTip = "隐藏下载面板";
-                Storyboard sb = (Storyboard)FindResource("showDownload");
-
+                sb = (Storyboard)FindResource("showDownload");
+                
                 if (IsCtrlDown())
                 {
                     double rmrg = MainW.Width / 2;
@@ -1180,9 +1182,21 @@ namespace MoeLoaderDelta
             {
                 grdNavi.Visibility = Visibility.Visible;
                 toggleDownload.ToolTip = "显示下载面板(按住Ctrl隐藏缩略图)";
-                Storyboard sb = (Storyboard)FindResource("closeDownload");
+                sb = (Storyboard)FindResource("closeDownload");
                 sb.Begin();
             }
+            sb.Completed += toggleDownloadAni_Completed;
+        }
+
+        /// <summary>
+        /// 下载列表动画结束时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void toggleDownloadAni_Completed(object sender, EventArgs e)
+        {
+            PlayPreNextAnimation();
+            PlayPreNextAnimation(1);
         }
 
         #region Window Related
@@ -1213,7 +1227,7 @@ namespace MoeLoaderDelta
                 // 老板键
                 if (wParam.ToInt32() == (int)bossKey)
                 {
-                    this.Visibility = this.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+                    Visibility = Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
                 }
             }
             else if (msg == 0x0024)
@@ -1277,8 +1291,9 @@ namespace MoeLoaderDelta
         /// </summary>
         private void txtPage_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back || e.Key == Key.Enter
-                || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
+            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
+                || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
+                || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
             {
                 e.Handled = true;
             }
@@ -1607,7 +1622,7 @@ namespace MoeLoaderDelta
             {
                 if (selected.Count == 0)
                 {
-                    MessageBox.Show(this, "未选择图片", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "未选择图片", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -1661,6 +1676,7 @@ namespace MoeLoaderDelta
                                     + "|" + host
                                     + "|" + selectimg.Author
                                     + "|" + selectimg.Id
+                                    + "|" + (selectimg.NoVerify ? 'v' : 'x')
                                     + "\r\n";
                                 success++;
                             }
@@ -1669,13 +1685,13 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", MainWindow.ProgramName,
+                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", ProgramName,
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception)
             {
-                MessageBox.Show(this, "保存失败", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, "保存失败", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2095,6 +2111,12 @@ namespace MoeLoaderDelta
                         {//重试
                             itmReload_Click(null, null);
                         }
+                        else if (e.Key == Key.Right)
+                        {//强制下一页
+                            e.Handled = true;
+                            DelayPageTurn(2, true);
+                        }
+                        return;
                     }
 
                     //滚动列表
@@ -2162,7 +2184,7 @@ namespace MoeLoaderDelta
         {
             if (!itmxExplicit.IsChecked)
             {
-                if (MessageBox.Show(this, "Explicit评分的图片含有限制级内容，请确认您已年满18周岁", MainWindow.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+                if (MessageBox.Show(this, "Explicit评分的图片含有限制级内容，请确认您已年满18周岁", ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                 {
                     itmxExplicit.IsChecked = true;
                 }
@@ -2345,7 +2367,8 @@ namespace MoeLoaderDelta
         /// 线程延迟执行翻页
         /// </summary>
         /// <param name="operating">1上一页 2下一页</param>
-        private void DelayPageTurn(int operating)
+        /// <param name="force">强制翻页</param>
+        private void DelayPageTurn(int operating, bool force)
         {
             Thread newThread = null;
             if (operating == 1 && realPage > 1)
@@ -2353,10 +2376,13 @@ namespace MoeLoaderDelta
                 newThread = new Thread(new ThreadStart(RDelayP));
                 newThread.Name = "RDelayP";
             }
-            else if (operating == 2 && HaveNextPage)
+            else if (operating == 2)
             {
-                newThread = new Thread(new ThreadStart(RDelayN));
-                newThread.Name = "RDelayN";
+                if (HaveNextPage || force)
+                {
+                    newThread = new Thread(new ThreadStart(RDelayN));
+                    newThread.Name = "RDelayN";
+                }
             }
 
             if (newThread != null)
@@ -2364,6 +2390,14 @@ namespace MoeLoaderDelta
                 UpdatePreNextDisable();
                 newThread.Start();
             }
+        }
+        /// <summary>
+        /// 线程延迟执行翻页
+        /// </summary>
+        /// <param name="operating">1上一页 2下一页</param>
+        private void DelayPageTurn(int operating)
+        {
+            DelayPageTurn(operating, false);
         }
 
         private void RDelayP()
@@ -2392,7 +2426,7 @@ namespace MoeLoaderDelta
             // 如果正在搜索就先停止
             if (isGetting)
             {
-                this.Dispatcher.Invoke(new Action(delegate
+                Dispatcher.Invoke(new Action(delegate
                 {
                     Button_Click(null, null);
                 }));
@@ -2401,7 +2435,7 @@ namespace MoeLoaderDelta
             if (!isGetting)
             {
                 realPage++;
-                this.Dispatcher.Invoke(new Action(delegate
+                Dispatcher.Invoke(new Action(delegate
                 {
                     Button_Click(null, null);
                 }));
