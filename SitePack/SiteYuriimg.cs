@@ -4,6 +4,9 @@ using System.Text;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Linq;
+using System.Net;
+using System.IO;
+using System.IO.Compression;
 
 namespace SitePack
 {
@@ -12,6 +15,10 @@ namespace SitePack
     /// </summary>
     class SiteYuriimg : AbstractImageSite
     {
+        private static string cookie = "";
+        private static bool isLogin = false;
+        private string user = "mluser1";
+        private string pass = "ml1yuri";
         public override string SiteUrl { get { return "http://yuriimg.com"; } }
         public override string ShortName { get { return "yuriimg"; } }
         public override string SiteName { get { return "yuriimg.com"; } }
@@ -22,6 +29,7 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
         {
+            Login(proxy);
             //http://yuriimg.com/post/?.html
             string url = SiteUrl + "/post/" + page + ".html";
             // string url = "http://yuriimg.com/show/ge407xd5o.jpg";
@@ -91,6 +99,102 @@ namespace SitePack
             TxdBuf = charToASCII.GetBytes(charBuf);
             int idOut = BitConverter.ToInt32(TxdBuf, 0);
             return idOut;
+        }
+
+        private void Login(IWebProxy proxy)
+        {
+            //防止再次登录
+            if (isLogin)
+                return;
+
+            //第一次获取站点给的Cookie
+            if (cookie == "")
+            {
+                try
+                {
+                    string ua = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                    SessionClient Sweb = new SessionClient();
+                    Sweb.Get(SiteUrl, proxy, Encoding.UTF8, ua);
+                    string cookietmp = Sweb.GetURLCookies(SiteUrl);
+                    if (cookietmp.Contains("PHPSESSID"))
+                    {
+                        if (cookietmp.Contains(":"))
+                            cookie = cookietmp.Split(';')[0];
+                        cookie = cookietmp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+            }
+
+            //第二次上传账户密码,使cookie可以用于登录
+            if (cookie.Contains("PHPSESSID"))
+            {
+                try
+                { 
+                    HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create("http://yuriimg.com/account/login");
+                    HttpWebResponse postResponse;
+
+                    // 生成边界符
+                    string boundary = "---------------" + DateTime.Now.Ticks.ToString("x");
+                    // post数据中的边界符
+                    string pboundary = "--" + boundary;
+                    // 最后的结束符
+                    string endBoundary = "--" + boundary + "--\r\n";
+                    // post数据
+                    string postData = pboundary + "\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n"
+                        + user + "\r\n" + pboundary
+                        + "\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n"
+                        + pass + "\r\n" + endBoundary;
+
+                    // 设置属性
+                    postRequest.Proxy = proxy;
+                    postRequest.Method = "POST";
+                    postRequest.Timeout = 8000;
+                    postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                    postRequest.Accept = "application/json";
+                    postRequest.Headers.Add("Accept-Language", "en-US,en;q=0.5");
+                    postRequest.Headers.Add("Accept-Encoding", "gzip, deflate");
+                    postRequest.ContentType = "multipart/form-data; boundary=" + boundary;
+                    postRequest.Headers.Add("Cookie", cookie);
+                    postRequest.Referer = "http://yuriimg.com/account/login";
+                    postRequest.KeepAlive = true;
+                    postRequest.AllowAutoRedirect = false;
+                    //postRequest.CookieContainer = cookieContainer;
+                    postRequest.AutomaticDecompression = DecompressionMethods.GZip;
+                    // 上传post数据
+                    byte[] bt_postData = Encoding.UTF8.GetBytes(postData);
+                    postRequest.ContentLength = bt_postData.Length;
+                    Stream writeStream = postRequest.GetRequestStream();
+                    writeStream.Write(bt_postData, 0, bt_postData.Length);
+                    writeStream.Close();
+
+                    //获取响应
+                    postResponse = (HttpWebResponse)postRequest.GetResponse();
+                    Stream responseStream = postResponse.GetResponseStream();
+                    string resData = "";
+                    StreamReader resSR = new StreamReader(responseStream, Encoding.UTF8);
+
+                    resData = resSR.ReadToEnd();
+                    resSR.Close();
+                    responseStream.Close();
+
+                    if (resData.Contains("-2"))
+                    {
+                        throw new Exception("密码错误");
+                    }
+                    else
+                    {
+                        isLogin = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自动登录失败");
+                }
+            }
         }
     }
 }
