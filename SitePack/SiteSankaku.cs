@@ -12,11 +12,10 @@ namespace SitePack
     {
         private SessionClient Sweb = new SessionClient();
         private Random rand = new Random();
-        private string[] user = { "girltmp"};
-        private string[] pass = { "girlis2018"};
+        private string[] user = { "girltmp" };
+        private string[] pass = { "girlis2018" };
         private string sitePrefix, tempuser, temppass, tempappkey, ua;
         private static string cookie = "";
-        private static bool isLogin = false;
 
         public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
         public override string SiteName { get { return sitePrefix + ".sankakucomplex.com"; } }
@@ -143,21 +142,10 @@ namespace SitePack
         {
             string subdomain = sitePrefix.Substring(0, 1) + "api";
 
-            //防止二次登录造成Cookie错误
-            if (isLogin)
-            {
-                while (!cookie.Contains(subdomain + ".sankaku"))
-                {
-                    System.Threading.Thread.Sleep(100);
-                }
-                return;
-            }
-
             if (!cookie.Contains(subdomain + ".sankaku"))
             {
                 try
                 {
-                    isLogin = true;
                     cookie = "";
                     int index = rand.Next(0, user.Length);
                     tempuser = user[index];
@@ -166,7 +154,6 @@ namespace SitePack
                     string post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
 
                     //Post登录取Cookie
-
                     Sweb.Post(
                         "https://" + subdomain + ".sankakucomplex.com/user/authenticate.json",
                         post, proxy, Encoding.GetEncoding("UTF-8"), ua
@@ -182,10 +169,6 @@ namespace SitePack
                 catch (Exception e)
                 {
                     throw new Exception("自动登录失败: " + e.Message);
-                }
-                finally
-                {
-                    isLogin = false;
                 }
             }
         }

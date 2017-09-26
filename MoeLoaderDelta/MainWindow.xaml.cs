@@ -849,6 +849,8 @@ namespace MoeLoaderDelta
             //加载完第一张图时
             if (loaded.Count < 2)
             {
+                //预加载
+                StartPreLoad();
                 //显示上一页按钮
                 UpdatePreNextEnable();
                 //重设缩略图大小
@@ -943,8 +945,6 @@ namespace MoeLoaderDelta
                 //(new System.Threading.Thread(new System.Threading.ThreadStart(nowSession.ProcessSingleLink))).Start();
                 currentSession = new SessionState();
 
-                //尝试预加载
-                StartPreLoad();
 
                 (new Thread(new ParameterizedThreadStart((o) =>
                 {

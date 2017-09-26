@@ -41,15 +41,6 @@ namespace SitePack
             //    "http://nekobooru.net/tag/index.xml?limit={0}&order=count&name={1}",
             //    "nekobooru.net", "nekobooru", null, false, BooruProcessor.SourceType.XML));
 
-            //sites.Add(new SiteBooru(
-            //    "http://idol.sankakucomplex.com/post/index.json?page={0}&limit={1}&tags={2}",
-            //    "http://idol.sankakucomplex.com/tag/index.xml?limit={0}&order=count&name={1}",
-            //    "idol.sankakucomplex.com", "idol", null, false, BooruProcessor.SourceType.JSON));
-
-            //sites.Add(new SiteBooru(
-            //    "http://chan.sankakucomplex.com/post/index.json?page={0}&limit={1}&tags={2}",
-            //    "http://chan.sankakucomplex.com/tag/index.xml?limit={0}&order=count&name={1}",
-            //    "chan.sankakucomplex.com", "chan", null, false, BooruProcessor.SourceType.JSON));
             if (System.IO.File.Exists(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"))
                 sites.Add(new SiteSankaku("idol"));
 
@@ -65,14 +56,10 @@ namespace SitePack
                 "https://gelbooru.com/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
                 "gelbooru.com", "gelbooru", null, true, BooruProcessor.SourceType.XML));
 
-            //tag
-            sites.Add(new SiteEshuu(1));
-            //artist
-            sites.Add(new SiteEshuu(3));
-            //source
-            sites.Add(new SiteEshuu(2));
-            //chara
-            sites.Add(new SiteEshuu(4));
+            sites.Add(new SiteEshuu(1)); //tag
+            sites.Add(new SiteEshuu(3)); //artist
+            sites.Add(new SiteEshuu(2)); //source
+            sites.Add(new SiteEshuu(4)); //chara
 
             sites.Add(new SiteZeroChan());
 
@@ -94,7 +81,9 @@ namespace SitePack
                 "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
                 "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
                 "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+
             sites.Add(new SiteYuriimg());
+
             return sites;
         }
     }

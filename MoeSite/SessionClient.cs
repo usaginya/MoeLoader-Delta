@@ -24,16 +24,7 @@ namespace MoeLoaderDelta
             set { m_Cookie = value; }
         }
 
-        /*
-        /// <summary>
-        /// 清空已连接的Session 同时也是清空当前访问网站的Cookies
-        /// </summary>
-        public void ClearSession()
-        {
-            this.CookieContainer = m_Cookie = new CookieContainer();
-        }
-        */
-
+ 
         //#############################   GET   #################################################
         /// <summary>
         /// Get访问
@@ -194,8 +185,12 @@ namespace MoeLoaderDelta
             }
         }
 
-        //########################################################################################
 
+
+
+
+        //########################################################################################
+        //#############################   Cookies   #################################################
         /// <summary>
         /// 取CookieContainer中所有站点Cookies
         /// </summary>
