@@ -371,7 +371,22 @@ namespace MoeLoaderDelta
                 try
                 {
                     string[] lines = File.ReadAllLines(configFile);
-                    downloadC.NumOnce = int.Parse(lines[0]);
+
+                    if (Regex.IsMatch(lines[0],@"^[+-]?\d*$"))
+                    {
+                        try
+                        {
+                            checked{downloadC.NumOnce = int.Parse(lines[0]);}
+                        }
+                        catch (OverflowException)
+                        {
+                            downloadC.NumOnce = 2;
+                        }
+                    }
+                    else
+                    {
+                        downloadC.NumOnce = 2;
+                    }
 
                     if (lines[1] != "." && Directory.Exists(lines[1]))
                         DownloadControl.SaveLocation = lines[1];
@@ -386,11 +401,27 @@ namespace MoeLoaderDelta
                         {
                             downloadC.IsSaSave = parts[1].Equals("1");
                         }
-
                         if (parts.Length > 2)
                         {
-                            numOfLoading = Int32.Parse(parts[2]);
-                            if (numOfLoading < 4) numOfLoading = 5;
+                            if (Regex.IsMatch(parts[2], @"^[+-]?\d*$"))
+                            {
+                                try
+                                {
+                                    checked
+                                    {
+                                        numOfLoading = int.Parse(parts[2]);
+                                        if (numOfLoading < 4) numOfLoading = 5;
+                                    }
+                                }
+                                catch(OverflowException)
+                                {
+                                    numOfLoading = 5;
+                                }
+                            }
+                            else
+                            {
+                                numOfLoading = 5;
+                            }
                         }
                         if (parts.Length > 3)
                         {

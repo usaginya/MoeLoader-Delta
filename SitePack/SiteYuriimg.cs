@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Linq;
@@ -24,8 +25,9 @@ namespace SitePack
         public override string SiteName { get { return "yuriimg.com"; } }
         public override string ShortType { get { return ""; } }
         public override bool IsSupportCount { get { return false; } }
-        public override string Referer { get { return "https://yuriimg.com"; } }
+        public override string Referer { get { return "http://yuriimg.com"; } }
         public override bool IsSupportTag { get { return false; } }
+        public override string SubReferer { get { return ShortName; } }
 
         public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
         {
@@ -49,8 +51,9 @@ namespace SitePack
             return pageString;
         }
 
-        public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
+        public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
+            
             List<Img> list = new List<Img>();
 
             HtmlDocument dococument = new HtmlDocument();
@@ -63,26 +66,53 @@ namespace SitePack
             foreach (HtmlNode imageItem in imageItems)
             {
                 HtmlNode imgNode = imageItem.SelectSingleNode("./div[1]/img");
-                string detailUrl = SiteUrl + imgNode.Attributes["data-href"].Value;
                 string tags = imgNode.Attributes["alt"].Value;
-                int id = StringToInt(imgNode.Attributes["id"].Value);
                 Img item = new Img()
                 {
-                    Height = Convert.ToInt32(imageItem.SelectSingleNode("//div[@class='image']").Attributes["data-height"].Value),
-                    Width = Convert.ToInt32(imageItem.SelectSingleNode("//div[@class='image']").Attributes["data-width"].Value),
+                    Height = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-height"].Value),
+                    Width = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-width"].Value),
+                    Author = imageItem.SelectSingleNode("//small/a").InnerText,
                     IsExplicit = false,
                     Tags = tags,
                     Desc = tags,
                     PreviewUrl = imgNode.Attributes["data-original"].Value,
-                    Id = id,
-                    DetailUrl = detailUrl
+                    //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
+                    Id = StringToInt(imgNode.Attributes["id"].Value),
+                    DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,
+                    Score = Convert.ToInt32(imageItem.SelectSingleNode(".//span[@class='num']").InnerText)
                 };
 
                 item.DownloadDetail = (i, p) =>
                 {
-                    //string html = new MyWebClient { Proxy = p, Encoding = Encoding.UTF8 }.DownloadString(i.DetailUrl);
-                    //HtmlDocument doc = new HtmlDocument();
-                    //doc.LoadHtml(html);
+
+                    string html = new MyWebClient { Proxy = p, Encoding = Encoding.UTF8 }.DownloadString(i.DetailUrl);
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(html);
+                    HtmlNode showIndexs = doc.DocumentNode.SelectSingleNode("//div[@class='logo']");
+                    HtmlNode imgDownNode = showIndexs.SelectSingleNode("//div[@class='img-control']");
+                    string nodeHtml= showIndexs.OuterHtml;
+                    i.Date = Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value;
+                    if (nodeHtml.Contains("pixiv page"))
+                    {
+                        i.Source = showIndexs.SelectSingleNode(".//a[@target='_blank']").Attributes["href"].Value;
+                    }
+                    else
+                    {
+                        i.Source = Regex.Match(nodeHtml, @"(?<=源地址).*?(?=</p>)").Value.Trim();
+                    }
+                    i.SampleUrl = doc.DocumentNode.SelectSingleNode("//figure[@class=\'show-image\']/img").Attributes["src"].Value;
+                    if(Regex.Matches(imgDownNode.OuterHtml, "href").Count>1)
+                    {
+                        i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a[1]").Attributes["href"].Value;
+                        i.JpegUrl = i.OriginalUrl;
+                        i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a[1]").InnerText, @"(?<=().*?(?=))").Value;
+                    }
+                    else
+                    {
+                        i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a").Attributes["href"].Value;
+                        i.JpegUrl = i.OriginalUrl;
+                        i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a").InnerText, @"(?<=().*?(?=))").Value;
+                    }
                 };
                 list.Add(item);
             }
@@ -112,13 +142,13 @@ namespace SitePack
             {
                 try
                 {
-                    string ua = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                   
                     SessionClient Sweb = new SessionClient();
-                    Sweb.Get(SiteUrl, proxy, Encoding.UTF8, ua);
+                    Sweb.Get(SiteUrl, proxy, Encoding.UTF8);
                     string cookietmp = Sweb.GetURLCookies(SiteUrl);
                     if (cookietmp.Contains("PHPSESSID"))
                     {
-                        if (cookietmp.Contains(":"))
+                        if (cookietmp.Contains(";"))
                             cookie = cookietmp.Split(';')[0];
                         cookie = cookietmp;
                     }
