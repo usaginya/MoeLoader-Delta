@@ -283,8 +283,8 @@ namespace MoeLoaderDelta
                     System.Collections.SortedList lstCookieCol = (System.Collections.SortedList)pathList.GetType().InvokeMember("m_list",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField
                         | System.Reflection.BindingFlags.Instance, null, pathList, new object[] { });
-                    foreach (System.Net.CookieCollection colCookies in lstCookieCol.Values)
-                        foreach (System.Net.Cookie c1 in colCookies) lstCookies.Add(c1);
+                    foreach (CookieCollection colCookies in lstCookieCol.Values)
+                        foreach (Cookie c1 in colCookies) lstCookies.Add(c1);
                 }
 
                 string ret = "";
