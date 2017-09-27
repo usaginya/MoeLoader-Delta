@@ -7,7 +7,6 @@ using MoeLoaderDelta;
 using System.Linq;
 using System.Net;
 using System.IO;
-using System.IO.Compression;
 
 namespace SitePack
 {
@@ -39,6 +38,7 @@ namespace SitePack
             MyWebClient web = new MyWebClient();
             web.Proxy = proxy;
             web.Encoding = Encoding.UTF8;
+            web.Headers["Cookie"] = cookie;
 
             if (keyWord.Length > 0)
             {
@@ -53,7 +53,7 @@ namespace SitePack
 
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-            
+
             List<Img> list = new List<Img>();
 
             HtmlDocument dococument = new HtmlDocument();
@@ -90,7 +90,7 @@ namespace SitePack
                     doc.LoadHtml(html);
                     HtmlNode showIndexs = doc.DocumentNode.SelectSingleNode("//div[@class='logo']");
                     HtmlNode imgDownNode = showIndexs.SelectSingleNode("//div[@class='img-control']");
-                    string nodeHtml= showIndexs.OuterHtml;
+                    string nodeHtml = showIndexs.OuterHtml;
                     i.Date = Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value;
                     if (nodeHtml.Contains("pixiv page"))
                     {
@@ -101,7 +101,7 @@ namespace SitePack
                         i.Source = Regex.Match(nodeHtml, @"(?<=源地址).*?(?=</p>)").Value.Trim();
                     }
                     i.SampleUrl = doc.DocumentNode.SelectSingleNode("//figure[@class=\'show-image\']/img").Attributes["src"].Value;
-                    if(Regex.Matches(imgDownNode.OuterHtml, "href").Count>1)
+                    if (Regex.Matches(imgDownNode.OuterHtml, "href").Count > 1)
                     {
                         i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a[1]").Attributes["href"].Value;
                         i.JpegUrl = i.OriginalUrl;
@@ -137,33 +137,11 @@ namespace SitePack
             if (isLogin)
                 return;
 
-            //第一次获取站点给的Cookie
-            if (cookie == "")
-            {
-                try
-                {
-                   
-                    SessionClient Sweb = new SessionClient();
-                    Sweb.Get(SiteUrl, proxy, Encoding.UTF8);
-                    string cookietmp = Sweb.GetURLCookies(SiteUrl);
-                    if (cookietmp.Contains("PHPSESSID"))
-                    {
-                        if (cookietmp.Contains(";"))
-                            cookie = cookietmp.Split(';')[0];
-                        cookie = cookietmp;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
-            }
-
             //第二次上传账户密码,使cookie可以用于登录
-            if (cookie.Contains("PHPSESSID"))
+            if (!cookie.Contains("otome_"))
             {
                 try
-                { 
+                {
                     HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create("http://yuriimg.com/account/login");
                     HttpWebResponse postResponse;
 
@@ -188,7 +166,7 @@ namespace SitePack
                     postRequest.Headers.Add("Accept-Language", "en-US,en;q=0.5");
                     postRequest.Headers.Add("Accept-Encoding", "gzip, deflate");
                     postRequest.ContentType = "multipart/form-data; boundary=" + boundary;
-                    postRequest.Headers.Add("Cookie", cookie);
+                    //postRequest.Headers.Add("Cookie", cookie);
                     postRequest.Referer = "http://yuriimg.com/account/login";
                     postRequest.KeepAlive = true;
                     postRequest.AllowAutoRedirect = false;
@@ -211,9 +189,15 @@ namespace SitePack
                     resSR.Close();
                     responseStream.Close();
 
+                    cookie = postResponse.Headers["Set-Cookie"];
+
                     if (resData.Contains("-2"))
                     {
                         throw new Exception("密码错误");
+                    }
+                    else if ((!cookie.Contains("otome_")))
+                    {
+                        throw new Exception("登录数据错误");
                     }
                     else
                     {

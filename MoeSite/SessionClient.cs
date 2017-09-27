@@ -24,16 +24,7 @@ namespace MoeLoaderDelta
             set { m_Cookie = value; }
         }
 
-        /*
-        /// <summary>
-        /// 清空已连接的Session 同时也是清空当前访问网站的Cookies
-        /// </summary>
-        public void ClearSession()
-        {
-            this.CookieContainer = m_Cookie = new CookieContainer();
-        }
-        */
-
+ 
         //#############################   GET   #################################################
         /// <summary>
         /// Get访问
@@ -194,8 +185,12 @@ namespace MoeLoaderDelta
             }
         }
 
-        //########################################################################################
 
+
+
+
+        //########################################################################################
+        //#############################   Cookies   #################################################
         /// <summary>
         /// 取CookieContainer中所有站点Cookies
         /// </summary>
@@ -288,8 +283,8 @@ namespace MoeLoaderDelta
                     System.Collections.SortedList lstCookieCol = (System.Collections.SortedList)pathList.GetType().InvokeMember("m_list",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField
                         | System.Reflection.BindingFlags.Instance, null, pathList, new object[] { });
-                    foreach (System.Net.CookieCollection colCookies in lstCookieCol.Values)
-                        foreach (System.Net.Cookie c1 in colCookies) lstCookies.Add(c1);
+                    foreach (CookieCollection colCookies in lstCookieCol.Values)
+                        foreach (Cookie c1 in colCookies) lstCookies.Add(c1);
                 }
 
                 string ret = "";

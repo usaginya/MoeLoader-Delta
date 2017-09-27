@@ -94,8 +94,6 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    //延迟预加载,避免登录冲突
-                    Thread.Sleep(2333);
                     preFetchedPage = site.GetPageString(page, count, word, MainWindow.WebProxy);
                     prePage = page;
                     preCount = count;
