@@ -28,7 +28,7 @@ namespace SitePack
         public override bool IsSupportTag { get { return false; } }
         public override string SubReferer { get { return ShortName; } }
 
-        public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             Login(proxy);
             //http://yuriimg.com/post/?.html
