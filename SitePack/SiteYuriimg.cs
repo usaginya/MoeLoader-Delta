@@ -85,13 +85,31 @@ namespace SitePack
                 item.DownloadDetail = (i, p) =>
                 {
 
-                    string html = new MyWebClient { Proxy = p, Encoding = Encoding.UTF8 }.DownloadString(i.DetailUrl);
+                    MyWebClient web = new MyWebClient();
+                    web.Proxy = p;
+                    web.Encoding = Encoding.UTF8;
+                    web.Headers["Cookie"] = cookie;
+                    string html = web.DownloadString(i.DetailUrl);
+
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(html);
                     HtmlNode showIndexs = doc.DocumentNode.SelectSingleNode("//div[@class='logo']");
                     HtmlNode imgDownNode = showIndexs.SelectSingleNode("//div[@class='img-control']");
                     string nodeHtml = showIndexs.OuterHtml;
-                    i.Date = Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value;
+                    if (Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value.Contains("天前"))
+                    {
+                        i.Date = (Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd")) - 
+                                  Convert.ToInt32(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=天前</span>)").Value.Trim())).ToString();
+                    }
+                    else if(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value.Contains("月前"))
+                    {
+                        i.Date = (Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd")) -
+                                  Convert.ToInt32(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=月前</span>)").Value.Trim()) * 100).ToString();
+                    }
+                    else
+                    {
+                        i.Date = Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value;
+                    }
                     if (nodeHtml.Contains("pixiv page"))
                     {
                         i.Source = showIndexs.SelectSingleNode(".//a[@target='_blank']").Attributes["href"].Value;

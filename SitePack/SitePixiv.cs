@@ -155,11 +155,12 @@ namespace SitePack
 
             //retrieve all elements via xpath
             HtmlNodeCollection nodes = null;
+            HtmlNode tagNode = null;
             try
             {
                 if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                 {
-                    nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items autopagerize_page_element']").SelectNodes("li");
+                    tagNode = doc.DocumentNode.SelectSingleNode("//div[@id='js-mount-point-search-result-list']");
                     //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
                 }
                 else if (srcType == PixivSrcType.Author)
@@ -179,43 +180,78 @@ namespace SitePack
                 throw new Exception("没有找到图片哦～ .=ω=");
             }
 
-            if (nodes == null)
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            { 
+                if (tagNode == null)
+                {
+                    return imgs;
+                }
+            }
+            else if (nodes == null)
             {
                 return imgs;
             }
 
-            foreach (HtmlNode imgNode in nodes)
+            //Tag search js-mount-point-search-related-tags Json
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
-                try
+                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;","\"");
+                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
+                foreach (object o in array)
                 {
-                    HtmlNode anode = imgNode.SelectSingleNode("a");
-                    if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
+                    Dictionary<string, object> obj = o as Dictionary<string, object>;
+                    string
+                        detailUrl = "",
+                        previewUrl = "",
+                        id = "";
+                    if (obj["illustId"] != null)
                     {
-                        anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
+                        id = obj["illustId"].ToString();
+                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                     }
-                    //details will be extracted from here
-                    //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
-                    string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
-                    string previewUrl = "";
-                    previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
-
-                    if (previewUrl.ToLower().Contains("images/common"))
-                        previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
-
-                    if (previewUrl.Contains('?'))
-                        previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
-
-                    //extract id from detail url
-                    //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
-                    string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
-                    id = id.Substring(id.IndexOf('=') + 1);
-
+                    if(obj["url"] != null)
+                    {
+                        previewUrl = obj["url"].ToString();
+                    }
                     Img img = GenerateImg(detailUrl, previewUrl, id);
                     if (img != null) imgs.Add(img);
                 }
-                catch
+            }
+            else
+            {
+                foreach (HtmlNode imgNode in nodes)
                 {
-                    //int i = 0;
+                    try
+                    {
+                        HtmlNode anode = imgNode.SelectSingleNode("a");
+                        if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
+                        {
+                            anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
+                        }
+                        //details will be extracted from here
+                        //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
+                        string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
+                        string previewUrl = "";
+                        previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
+
+                        if (previewUrl.ToLower().Contains("images/common"))
+                            previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
+
+                        if (previewUrl.Contains('?'))
+                            previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
+
+                        //extract id from detail url
+                        //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
+                        string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
+                        id = id.Substring(id.IndexOf('=') + 1);
+
+                        Img img = GenerateImg(detailUrl, previewUrl, id);
+                        if (img != null) imgs.Add(img);
+                    }
+                    catch
+                    {
+                        //int i = 0;
+                    }
                 }
             }
 
