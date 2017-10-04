@@ -16,7 +16,6 @@ namespace SitePack
     class SiteYuriimg : AbstractImageSite
     {
         private static string cookie = "";
-        private static bool isLogin = false;
         private string user = "mluser1";
         private string pass = "ml1yuri";
         public override string SiteUrl { get { return "http://yuriimg.com"; } }
@@ -151,10 +150,6 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            //防止再次登录
-            if (isLogin)
-                return;
-
             //第二次上传账户密码,使cookie可以用于登录
             if (!cookie.Contains("otome_"))
             {
@@ -215,11 +210,7 @@ namespace SitePack
                     }
                     else if ((!cookie.Contains("otome_")))
                     {
-                        throw new Exception("登录数据错误");
-                    }
-                    else
-                    {
-                        isLogin = true;
+                        throw new Exception("登录时出错");
                     }
                 }
                 catch (Exception ex)

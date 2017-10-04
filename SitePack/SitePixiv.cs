@@ -81,7 +81,6 @@ namespace SitePack
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
 
-        private static bool isLogin = false;
         private static string cookie = "";
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
@@ -294,12 +293,6 @@ namespace SitePack
             }
             return re;
         }
-        // DO NOT SUPPORT TAG HINT
-        //public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
-        //{
-        //    List<TagItem> re = new List<TagItem>();
-        //    return re;
-        //}
 
         private Img GenerateImg(string detailUrl, string preview_url, string id)
         {
@@ -431,21 +424,10 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            //防止二次登录造成Cookie错误
-            if (isLogin)
-            {
-                while (!cookie.Contains("pixiv"))
-                {
-                    System.Threading.Thread.Sleep(100);
-                }
-                return;
-            }
-
             if (!cookie.Contains("pixiv") || !cookie.Contains("token="))
             {
                 try
                 {
-                    isLogin = true;
                     HtmlDocument hdoc = new HtmlDocument();
                     SessionClient Sweb = new SessionClient();
 
@@ -477,10 +459,6 @@ namespace SitePack
                 catch (Exception e)
                 {
                     throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
-                }
-                finally
-                {
-                    isLogin = false;
                 }
             }
         }
