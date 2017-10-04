@@ -96,20 +96,8 @@ namespace SitePack
                     HtmlNode showIndexs = doc.DocumentNode.SelectSingleNode("//div[@class='logo']");
                     HtmlNode imgDownNode = showIndexs.SelectSingleNode("//div[@class='img-control']");
                     string nodeHtml = showIndexs.OuterHtml;
-                    if (Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value.Contains("天前"))
-                    {
-                        i.Date = (Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd")) - 
-                                  Convert.ToInt32(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=天前</span>)").Value.Trim())).ToString();
-                    }
-                    else if(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value.Contains("月前"))
-                    {
-                        i.Date = (Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd")) -
-                                  Convert.ToInt32(Regex.Match(nodeHtml, @"(?<=<span>).*?(?=月前</span>)").Value.Trim()) * 100).ToString();
-                    }
-                    else
-                    {
-                        i.Date = Regex.Match(nodeHtml, @"(?<=<span>).*?(?=</span>)").Value;
-                    }
+                    i.Date = TimeConvert(nodeHtml);
+
                     if (nodeHtml.Contains("pixiv page"))
                     {
                         i.Source = showIndexs.SelectSingleNode(".//a[@target='_blank']").Attributes["href"].Value;
@@ -227,6 +215,23 @@ namespace SitePack
                     throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自动登录失败");
                 }
             }
+        }
+        private string TimeConvert(string html)
+        {
+            string Date = "";
+            if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("天前"))
+            {
+                Date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(html, @"(?<=<span>).*?(?=天前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+            }
+            else if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("月前"))
+            {
+                Date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(html, @"(?<=<span>).*?(?=月前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+            }
+            else
+            {
+                Date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
+            }
+            return Date;
         }
     }
 }
