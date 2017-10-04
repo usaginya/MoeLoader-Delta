@@ -136,10 +136,6 @@ namespace SitePack
             int idOut = BitConverter.ToInt32(TxdBuf, 0);
             return idOut;
         }
-        //private string IntToString (int id)
-        //{
-        //    string str = BitConverter.ToString()
-        //}
 
         private void Login(IWebProxy proxy)
         {
