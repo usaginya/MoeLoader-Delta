@@ -103,7 +103,7 @@ namespace MoeLoaderDelta.Control
 
         public PreviewImg(PreviewWnd prew, Img img)
         {
-            this.InitializeComponent();
+            InitializeComponent();
             this.prew = prew;
             this.img = img;
             //格式初始化
@@ -402,7 +402,7 @@ namespace MoeLoaderDelta.Control
                 //选中的预览图显示出来
                 if (key == prew.SelectedId)
                 {
-                    this.Visibility = Visibility.Visible;
+                    Visibility = Visibility.Visible;
                 }
 
                 //隐藏进度条

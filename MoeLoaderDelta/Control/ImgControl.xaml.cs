@@ -40,8 +40,8 @@ namespace MoeLoaderDelta
         /// <param name="supportScore">是否支持分数过滤(Not yet used)</param>
         public ImgControl(Img img, int index, string referer, bool supportScore)
         {
-            this.InitializeComponent();
-            this.needReferer = referer;
+            InitializeComponent();
+            needReferer = referer;
             this.img = img;
             this.index = index;
 
@@ -102,13 +102,14 @@ namespace MoeLoaderDelta
         {
             chk.Text = img.Dimension;
             string type = "N/A";
+
             if (img.OriginalUrl.Length > 6)
             {
-                type = img.OriginalUrl.Substring(img.OriginalUrl.Length - 3, 3).ToUpper();
+                type = BooruProcessor.FormattedImgUrl("", img.OriginalUrl.Substring(img.OriginalUrl.LastIndexOf('.') + 1)).ToUpper();
             }
             else
             {
-                //不应该有这么短的url，有问题
+                //url不可能这么短
                 LayoutRoot.IsEnabled = false;
                 chk.Text = "原始地址无效";
                 return;

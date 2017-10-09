@@ -16,7 +16,6 @@ namespace SitePack
     class SiteYuriimg : AbstractImageSite
     {
         private static string cookie = "";
-        private static bool isLogin = false;
         private string user = "mluser1";
         private string pass = "ml1yuri";
         public override string SiteUrl { get { return "http://yuriimg.com"; } }
@@ -28,7 +27,7 @@ namespace SitePack
         public override bool IsSupportTag { get { return false; } }
         public override string SubReferer { get { return ShortName; } }
 
-        public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             Login(proxy);
             //http://yuriimg.com/post/?.html
@@ -139,10 +138,6 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            //防止再次登录
-            if (isLogin)
-                return;
-
             //第二次上传账户密码,使cookie可以用于登录
             if (!cookie.Contains("otome_"))
             {
@@ -203,11 +198,7 @@ namespace SitePack
                     }
                     else if ((!cookie.Contains("otome_")))
                     {
-                        throw new Exception("登录数据错误");
-                    }
-                    else
-                    {
-                        isLogin = true;
+                        throw new Exception("登录时出错");
                     }
                 }
                 catch (Exception ex)
@@ -218,20 +209,20 @@ namespace SitePack
         }
         private string TimeConvert(string html)
         {
-            string Date = "";
-            if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("天前"))
+            string date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
+            if (date.Contains("时前"))
             {
-                Date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(html, @"(?<=<span>).*?(?=天前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+                date =DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            else if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("月前"))
+            else if (date.Contains("天前"))
             {
-                Date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(html, @"(?<=<span>).*?(?=月前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+                date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            else
+            else if (date.Contains("月前"))
             {
-                Date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
+                date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            return Date;
+            return date;
         }
     }
 }

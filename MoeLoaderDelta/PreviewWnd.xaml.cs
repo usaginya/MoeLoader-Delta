@@ -226,7 +226,7 @@ namespace MoeLoaderDelta
                 try
                 {
                     string fileType = descs[selectedId].OriginalUrl.Substring(descs[selectedId].OriginalUrl.LastIndexOf('.') + 1);
-                    desc.Inlines.Add("类型: " + fileType.ToUpper());
+                    desc.Inlines.Add("类型: " + BooruProcessor.FormattedImgUrl("", fileType.ToUpper()));
                 }
                 catch { }
                 desc.Inlines.Add(" 大小: " + descs[selectedId].FileSize);

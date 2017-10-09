@@ -68,7 +68,7 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 * [konachan.com](https://konachan.com)
 * [danbooru.donmai.us](https://danbooru.donmai.us)
 * [behoimi.org](http://behoimi.org) (三次元)
-* [idol.sankakucomplex.com](https://idol.sankakucomplex.com) (三次元)(新建 18x.txt 可见)
+* [idol.sankakucomplex.com](https://idol.sankakucomplex.com) (三次元)(在 SitePacks 目录中新建 18x.txt 可见)
 * [chan.sankakucomplex.com](https://chan.sankakucomplex.com)
 * [safebooru.org](http://safebooru.org)
 * [gelbooru.com](https://gelbooru.com)
