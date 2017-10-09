@@ -209,20 +209,20 @@ namespace SitePack
         }
         private string TimeConvert(string html)
         {
-            string Date = "";
-            if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("天前"))
+            string date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
+            if (date.Contains("时前"))
             {
-                Date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(html, @"(?<=<span>).*?(?=天前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+                date =DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            else if (Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value.Contains("月前"))
+            else if (date.Contains("天前"))
             {
-                Date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(html, @"(?<=<span>).*?(?=月前</span>)").Value.Trim())).ToString("yyyy/MM/dd");
+                date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            else
+            else if (date.Contains("月前"))
             {
-                Date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
+                date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
-            return Date;
+            return date;
         }
     }
 }

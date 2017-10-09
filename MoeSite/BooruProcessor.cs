@@ -417,6 +417,7 @@ namespace MoeLoaderDelta
                     preview_url = "",
                     author = "";
                 int width = 0, height = 0, file_size = 0;
+                bool skin_parm;
 
                 //域名
                 host = url.Substring(0, url.IndexOf('/', 8));
@@ -479,23 +480,32 @@ namespace MoeLoaderDelta
 
                 //缩略图
                 if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
-                    sample = FormattedImgUrl(host, obj["sample_url"].ToString());
+                    sample = obj["sample_url"].ToString();
 
                 //预览图
                 if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
-                    preview_url = FormattedImgUrl(host, obj["preview_url"].ToString());
+                    preview_url = obj["preview_url"].ToString();
 
                 //原图
 
                 if (obj.ContainsKey("file_url") && obj["file_url"] != null)
                 {
-                    file_url = FormattedImgUrl(host, obj["file_url"].ToString());
+                    file_url = obj["file_url"].ToString();
                     jpeg_url = file_url;
                 }
 
                 //JPG
                 if (obj.ContainsKey("jpeg_url") && obj["jpeg_url"] != null)
-                    jpeg_url = FormattedImgUrl(host, obj["jpeg_url"].ToString());
+                    jpeg_url = obj["jpeg_url"].ToString();
+
+                //Formatted
+                skin_parm = sub.Contains("sku");
+
+                sample = FormattedImgUrl(host, sample, skin_parm);
+                preview_url = FormattedImgUrl(host, preview_url, skin_parm);
+                file_url = FormattedImgUrl(host, file_url, skin_parm);
+                jpeg_url = FormattedImgUrl(host, jpeg_url, skin_parm);
+
 
                 //标签
                 if (obj.ContainsKey("tags") && obj["tags"] != null)
@@ -623,30 +633,34 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="pr_host">图站域名</param>
         /// <param name="pr_url">预处理的URL</param>
+        /// <param name="skin_parameters">不处理链接带的参数</param>
         /// <returns>处理后的图片URL</returns>
-        private static string FormattedImgUrl(string pr_host, string pr_url)
+        public static string FormattedImgUrl(string pr_host, string pr_url, bool skin_parameters)
         {
             //System.Diagnostics.Trace.WriteLine("host: " + pr_host);
             try
             {
-                int po = pr_host.IndexOf("//");
-                string phh = pr_host.Substring(0, pr_host.IndexOf(':') + 1);
-                string phu = pr_host.Substring(po, pr_host.Length - po);
+                //域名处理 - 如果有
+                if (!string.IsNullOrWhiteSpace(pr_host))
+                {
+                    int po = pr_host.IndexOf("//");
+                    string phh = pr_host.Substring(0, pr_host.IndexOf(':') + 1);
+                    string phu = pr_host.Substring(po, pr_host.Length - po);
 
-                //地址中有主域名 去掉主域名
-                if (pr_url.StartsWith(phu))
-                    pr_url = pr_host + pr_url.Replace(phu, "");
+                    //地址中有主域名 去掉主域名
+                    if (pr_url.StartsWith(phu))
+                        pr_url = pr_host + pr_url.Replace(phu, "");
 
-                //地址中有子域名 补完子域名
-                else if (pr_url.StartsWith("//"))
-                    pr_url = phh + pr_url;
+                    //地址中有子域名 补完子域名
+                    else if (pr_url.StartsWith("//"))
+                        pr_url = phh + pr_url;
 
-                //地址没有域名 补完地址
-                else if (pr_url.StartsWith("/"))
-                    pr_url = pr_host + pr_url;
-
+                    //地址没有域名 补完地址
+                    else if (pr_url.StartsWith("/"))
+                        pr_url = pr_host + pr_url;
+                }
                 //过滤图片地址?后的内容
-                if (pr_url.Contains("?"))
+                if (!skin_parameters && pr_url.Contains("?"))
                     pr_url = pr_url.Substring(0, pr_url.LastIndexOf('?'));
 
                 return pr_url;
@@ -656,5 +670,17 @@ namespace MoeLoaderDelta
                 return pr_url;
             }
         }
+
+        /// <summary>
+        /// 图片地址格式化-All
+        /// </summary>
+        /// <param name="pr_host">图站域名</param>
+        /// <param name="pr_url">预处理的URL</param>
+        /// <returns>处理后的图片URL</returns>
+        public static string FormattedImgUrl(string pr_host, string pr_url)
+        {
+            return FormattedImgUrl(pr_host, pr_url, false);
+        }
+
     }
 }

@@ -309,7 +309,7 @@ namespace MoeLoaderDelta
 
         private void LoadBgImg()
         {
-            string bgPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\bg.png";
+            string bgPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\bg.png";
             bool hasBg = false;
             if (File.Exists(bgPath))
             {
@@ -317,7 +317,7 @@ namespace MoeLoaderDelta
             }
             else
             {
-                bgPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\bg.jpg";
+                bgPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\bg.jpg";
                 if (File.Exists(bgPath))
                 {
                     hasBg = true;
@@ -372,11 +372,11 @@ namespace MoeLoaderDelta
                 {
                     string[] lines = File.ReadAllLines(configFile);
 
-                    if (Regex.IsMatch(lines[0],@"^[+-]?\d*$"))
+                    if (Regex.IsMatch(lines[0], @"^[+-]?\d*$"))
                     {
                         try
                         {
-                            checked{downloadC.NumOnce = int.Parse(lines[0]);}
+                            checked { downloadC.NumOnce = int.Parse(lines[0]); }
                         }
                         catch (OverflowException)
                         {
@@ -413,7 +413,7 @@ namespace MoeLoaderDelta
                                         if (numOfLoading < 4) numOfLoading = 5;
                                     }
                                 }
-                                catch(OverflowException)
+                                catch (OverflowException)
                                 {
                                     numOfLoading = 5;
                                 }
@@ -1191,7 +1191,7 @@ namespace MoeLoaderDelta
             {
                 toggleDownload.ToolTip = "隐藏下载面板";
                 sb = (Storyboard)FindResource("showDownload");
-                
+
                 if (IsCtrlDown())
                 {
                     double rmrg = MainW.Width / 2;
@@ -1431,8 +1431,7 @@ namespace MoeLoaderDelta
 
             //排除不支持预览的格式
             string supportformat = "jpg jpeg png bmp gif";
-            string[] arr = imgs[index].SampleUrl.Split('.');
-            string ext = arr[arr.Length - 1];
+            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].SampleUrl.Substring(imgs[index].SampleUrl.LastIndexOf('.') + 1));
             if (!supportformat.Contains(ext))
             {
                 MessageBox.Show(this, "未支持" + ext + "格式的预览显示，请下载后使用其它程序方式打开文件预览",
@@ -1444,7 +1443,7 @@ namespace MoeLoaderDelta
             {
                 previewFrm = new PreviewWnd(this);
                 previewFrm.Show();
-                this.Focus();
+                Focus();
                 //System.GC.Collect();
             }
             previewFrm.AddPreview(imgs[index], index, SiteManager.Instance.Sites[nowSelectedIndex].Referer);

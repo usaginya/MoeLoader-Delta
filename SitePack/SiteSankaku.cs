@@ -12,8 +12,8 @@ namespace SitePack
     {
         private SessionClient Sweb = new SessionClient();
         private Random rand = new Random();
-        private string[] user = { "girltmp" };
-        private string[] pass = { "girlis2018" };
+        private string[] user = { "girltmp", "mload006", "mload107", "mload482", "mload367", "mload876", "mload652", "mload740", "mload453", "mload263", "mload395" };
+        private string[] pass = { "girlis2018", "moel006", "moel107", "moel482", "moel367", "moel876", "moel652", "moel740", "moel453", "moel263", "moel395" };
         private string sitePrefix, tempuser, temppass, tempappkey, ua;
         private static string cookie = "";
 
@@ -24,7 +24,7 @@ namespace SitePack
         public override bool IsSupportScore { get { return false; } }
         public override bool IsSupportCount { get { return true; } }
         public override string Referer { get { return "https://" + sitePrefix + ".sankakucomplex.com/post/show/12345"; } }
-        public override string SubReferer { get { return ShortName + ",sankakucomplex"; } }
+        public override string SubReferer { get { return "*"; } }
 
         /// <summary>
         /// sankakucomplex site

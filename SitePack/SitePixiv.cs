@@ -159,7 +159,7 @@ namespace SitePack
             {
                 if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                 {
-                    tagNode = doc.DocumentNode.SelectSingleNode("//div[@id='js-mount-point-search-result-list']");
+                    tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
                     //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
                 }
                 else if (srcType == PixivSrcType.Author)
