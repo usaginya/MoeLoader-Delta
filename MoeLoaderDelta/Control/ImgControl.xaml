@@ -183,6 +183,19 @@
             x:Name="grdStatus"
             Margin="0"
             VerticalAlignment="Bottom">
+            <Rectangle
+                x:Name="selani"
+                Width="40"
+                Height="40"
+                Margin="0,0,0,25"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Opacity="0"
+                StrokeThickness="0">
+                <Rectangle.Fill>
+                    <ImageBrush ImageSource="/MoeLoaderDelta;component/Images/ani.png" />
+                </Rectangle.Fill>
+            </Rectangle>
             <Border
                 x:Name="statusBorder"
                 Height="25"
@@ -253,12 +266,12 @@
                             Click="txtDesc_Click_6"
                             Header="复制来源(_R)"
                             ToolTip="复制来源地址到剪贴板" />
-                        <Separator/>
+                        <Separator />
                         <MenuItem
                             Click="txtDesc_Click_5"
                             Header="复制描述(_D)"
                             ToolTip="复制标题描述名称到剪贴板" />
-                        <Separator/>
+                        <Separator />
                         <MenuItem
                             Click="txtDetail_Click"
                             Header="访问详情页面(_X)"
@@ -328,19 +341,6 @@
             StrokeThickness="0">
             <Rectangle.Fill>
                 <ImageBrush ImageSource="/MoeLoaderDelta;component/Images/corner.png" />
-            </Rectangle.Fill>
-        </Rectangle>
-        <Rectangle
-            x:Name="selani"
-            Width="40"
-            Height="40"
-            Margin="0,0,0,25"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Opacity="0"
-            StrokeThickness="0">
-            <Rectangle.Fill>
-                <ImageBrush ImageSource="/MoeLoaderDelta;component/Images/ani.png" />
             </Rectangle.Fill>
         </Rectangle>
         <Border

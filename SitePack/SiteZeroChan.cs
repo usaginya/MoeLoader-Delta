@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 
@@ -22,17 +25,19 @@ namespace SitePack
 
         public override bool IsSupportCount { get { return false; } } //fixed 24
         public override bool IsSupportScore { get { return false; } }
+       // public override bool IsSupportRes { get { return false; } }
+        public override bool IsSupportTag { get { return true; } }
         //public bool IsSupportRes { get { return true; } }
         //public bool IsSupportPreview { get { return true; } }
         //public bool IsSupportTag { get { return true; } }
         //public override string Referer { get { return "http://www.zerochan.net/"; } }
 
         public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(240, 240); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(240, 240); } }
 
+        private SessionClient Sweb = new SessionClient();
         private string[] user = { "zerouser1" };
         private string[] pass = { "zeropass" };
-        private string sessionId;
+        private string cookie = "", beforeWord = "", beforeUrl = "";
         private Random rand = new Random();
 
         /// <summary>
@@ -42,70 +47,59 @@ namespace SitePack
         {
         }
 
-        /// <summary>
-        /// get images sync
-        /// </summary>
-        //public List<Img> GetImages(int page, int count, string keyWord, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, System.Net.IWebProxy proxy, bool showExplicit)
-        //{
-        //    return GetImages(GetPageString(page, count, keyWord, proxy), maskScore, maskRes, lastViewed, maskViewed, proxy, showExplicit);
-        //}
 
-        public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             Login(proxy);
 
-            string url = SiteUrl + "/?p=" + page;
+            string pageString = "";
+            string url = SiteUrl + (keyWord.Length > 0 ? "/search?q=" + keyWord + "&" : "/?") + "p=" + page;
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Headers["Cookie"] = sessionId;
-            web.Encoding = Encoding.UTF8;
-
-            if (keyWord.Length > 0)
+            if (!beforeWord.Equals(keyWord, StringComparison.CurrentCultureIgnoreCase))
             {
-                //先使用关键词搜索，然后HTTP 301返回实际地址
-                //http://www.zerochan.net/search?q=tony+taka
-                url = SiteUrl + "/search?q=" + keyWord;
-                System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                req.Proxy = proxy;
-                req.Timeout = 8000;
-                req.Method = "GET";
-                //prevent 301
-                req.AllowAutoRedirect = false;
-                System.Net.WebResponse rsp = req.GetResponse();
-                //http://www.zerochan.net/Tony+Taka?p=1
-                //HTTP 301然后返回实际地址
-                string location = rsp.Headers["Location"];
-                rsp.Close();
-                if (location != null && location.Length > 0)
+                // 301
+                WebResponse rsp = Sweb.GetWebResponse(url, proxy, SiteUrl);
+                try
                 {
-                    //非完整地址，需要前缀
-                    url = SiteUrl + location + "?p=" + page;
+                    beforeUrl = rsp.ResponseUri.AbsoluteUri;
                 }
-                else
+                catch
                 {
                     throw new Exception("搜索失败，请检查您输入的关键词");
                 }
-            }
 
-            string pageString = web.DownloadString(url);
-            web.Dispose();
+                StreamReader sr = new StreamReader(rsp.GetResponseStream(), Encoding.UTF8);
+                pageString = sr.ReadToEnd();
+                sr.Close();
+                rsp.Close();
+
+                beforeWord = keyWord;
+            }
+            else
+            {
+                url = string.IsNullOrWhiteSpace(keyWord) ? url : beforeUrl + "?p=" + page;
+                pageString = Sweb.Get(url, proxy, Encoding.UTF8);
+            }
 
             return pageString;
         }
 
-        public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
+        public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
             List<Img> imgs = new List<Img>();
 
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(pageString);
             //retrieve all elements via xpath
-            HtmlNodeCollection nodes = doc.DocumentNode.SelectSingleNode("//ul[@id='thumbs2']").SelectNodes(".//li");
-            if (nodes == null)
+
+            HtmlNodeCollection nodes;
+            try
             {
-                return imgs;
+                nodes = doc.DocumentNode.SelectSingleNode("//ul[@id='thumbs2']").SelectNodes(".//li");
+            }
+            catch
+            {
+                throw new Exception("没有搜索到图片");
             }
 
             foreach (HtmlNode imgNode in nodes)
@@ -134,28 +128,22 @@ namespace SitePack
             return imgs;
         }
 
-        public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
+        public override List<TagItem> GetTags(string word, IWebProxy proxy)
         {
             //http://www.zerochan.net/suggest?q=tony&limit=8
             List<TagItem> re = new List<TagItem>();
 
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
-            MyWebClient web = new MyWebClient();
-            web.Timeout = 8;
-            web.Proxy = proxy;
-            web.Headers["Cookie"] = sessionId;
-            web.Encoding = Encoding.UTF8;
-
-            string txt = web.DownloadString(url);
+            string txt = Sweb.Get(url, proxy, Encoding.UTF8);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
             {
                 //Tony Taka|Mangaka|
                 if (lines[i].Trim().Length > 0)
-                    re.Add(new TagItem() { Name = lines[i].Substring(0, lines[i].IndexOf('|')).Trim(), Count = "N/A" });
+                    re.Add(new TagItem() { Name = lines[i].Substring(0, lines[i].IndexOf('|')).Trim() });
             }
-          
+
             return re;
         }
 
@@ -197,52 +185,42 @@ namespace SitePack
                 Tags = tags,
                 DetailUrl = SiteUrl + "/" + id,
             };
+
+            img.FileSize = new Regex(@"\d+").Match(img.FileSize).Value;
+            int fs = Convert.ToInt32(img.FileSize);
+            img.FileSize = (fs > 1024 ? (fs / 1024.0).ToString("0.00MB") : fs.ToString("0KB"));
+
             return img;
         }
 
-        private void Login(System.Net.IWebProxy proxy)
+        private void Login(IWebProxy proxy)
         {
-            if (sessionId != null) return;
-            try
+            if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("zeroc"))
             {
-                int index = rand.Next(0, user.Length);
-                //http://my.minitokyo.net/login
-                System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create("http://www.zerochan.net/login");
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                req.Proxy = proxy;
-                req.Timeout = 8000;
-                req.Method = "POST";
-                //prevent 303 See Other
-                req.AllowAutoRedirect = false;
-
-                byte[] buf = Encoding.UTF8.GetBytes("ref=%2F&login=Login&name=" + user[index] + "&password=" + pass[index]);
-                req.ContentType = "application/x-www-form-urlencoded";
-                req.ContentLength = buf.Length;
-                System.IO.Stream str = req.GetRequestStream();
-                str.Write(buf, 0, buf.Length);
-                str.Close();
-                System.Net.WebResponse rsp = req.GetResponse();
-
-                //HTTP 303然后返回地址 /
-                sessionId = rsp.Headers.Get("Set-Cookie");
-                //z_id=187999; expires=Fri, 07-Sep-2012 15:59:04 GMT; path=/; domain=.zerochan.net, z_hash=23c10fa5869459ce402ba466c1cbdb6a; expires=Fri, 07-Sep-2012 15:59:04 GMT; path=/; domain=.zerochan.net
-                if (sessionId == null || !sessionId.Contains("z_hash"))
+                try
                 {
-                    throw new Exception("自动登录失败");
+                    int index = rand.Next(0, user.Length);
+                    Sweb.Post(
+                        "https://www.zerochan.net/login",
+                        "ref=%2F&login=Login&name=" + user[index] + "&password=" + pass[index],
+                        proxy, Encoding.GetEncoding("UTF-8"));
+
+                    cookie = Sweb.GetURLCookies("https://www.zerochan.net");
+
+                    if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("z_hash"))
+                        throw new Exception("登录失败");
+                    else
+                        cookie = "zeroc;" + cookie;
+
                 }
-                //z_id=376440; z_hash=978bb6cb9e0aeac077dcc6032f2e9f3d
-                int idIndex = sessionId.IndexOf("z_id");
-                string idstr = sessionId.Substring(idIndex, sessionId.IndexOf(';', idIndex) + 2 - idIndex);
-                idIndex = sessionId.IndexOf("z_hash");
-                string hashstr = sessionId.Substring(idIndex, sessionId.IndexOf(';', idIndex) - idIndex);
-                sessionId = idstr + hashstr;
-                rsp.Close();
-            }
-            catch (System.Net.WebException)
-            {
-                //invalid user will encounter 404
-                throw new Exception("自动登录失败");
+                catch (WebException)
+                {
+                    //invalid user will encounter 404
+                    throw new Exception("访问服务器失败");
+                }
             }
         }
+
+
     }
 }
