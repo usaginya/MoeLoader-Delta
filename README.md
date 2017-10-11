@@ -1,6 +1,8 @@
 # MoeLoader-Delta
 > From https://github.com/esonic/moe-loader-v7
 
+> From https://github.com/usaginya/MoeLoader-Delta
+
 ***
 
 ## About MoeLoader Δ
@@ -8,6 +10,8 @@
 MoeLoader Δ 是以 MoeLoader 图片浏览和收集工具延续的一个非官方编译版本
 
 此版本由 YIU 进行更新，MoeLoader 原作者是 esonic
+
+AoiAizawa 不定期繁體中文化及小修改
 
 MoeLoader Δ 在 2016-12-25 诞生，至今修复了原程序大量BUG并增强了功能
 
