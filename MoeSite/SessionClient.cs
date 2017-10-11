@@ -13,7 +13,7 @@ namespace MoeLoaderDelta
     public class SessionClient
     {
         private static CookieContainer m_Cookie = new CookieContainer();
-        private static string defUA = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+        private static string defUA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
 
         /// <summary>
         /// Cookie集合

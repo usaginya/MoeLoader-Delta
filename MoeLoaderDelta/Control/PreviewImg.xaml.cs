@@ -124,7 +124,7 @@ namespace MoeLoaderDelta.Control
                 SessionClient ss = new SessionClient();
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
                 req.Proxy = MainWindow.WebProxy;
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
                 req.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
                 if (needReferer != null)
                     req.Referer = needReferer;
