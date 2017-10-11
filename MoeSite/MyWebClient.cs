@@ -147,7 +147,7 @@ namespace MoeLoaderDelta
         {
             //最大连接数512
             ServicePointManager.DefaultConnectionLimit = 512;
-            Headers["User-Agent"] = "Googlebot-Image/1.0";
+            Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
         }
 
         /// <summary>

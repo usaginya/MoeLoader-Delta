@@ -162,7 +162,7 @@ namespace SitePack
                     postRequest.Proxy = proxy;
                     postRequest.Method = "POST";
                     postRequest.Timeout = 8000;
-                    postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                    postRequest.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
                     postRequest.Accept = "application/json";
                     postRequest.Headers.Add("Accept-Language", "en-US,en;q=0.5");
                     postRequest.Headers.Add("Accept-Encoding", "gzip, deflate");
