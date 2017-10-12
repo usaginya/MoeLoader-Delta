@@ -151,7 +151,7 @@ namespace MoeLoaderDelta
 
         public DownloadControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             NumOnce = 2;
             IsSepSave = IsSaSave = false;
@@ -306,8 +306,8 @@ namespace MoeLoaderDelta
                 res = sc.GetWebResponse(
                     task.Url,
                     MainWindow.WebProxy,
-                    60000,
-                    60000,
+                    20000,
+                    20000,
                     task.NeedReferer
                     );
 

@@ -108,7 +108,7 @@ namespace MoeLoaderDelta
             return reponse;
         }
         /// <summary>
-        /// Get Response 取回响应 Timeout 60000ms, Please use Close()
+        /// Get Response 取回响应 Timeout 20s, Please use Close()
         /// </summary>
         /// <param name="url">网址</param>
         /// <param name="proxy">代理</param>
@@ -116,7 +116,7 @@ namespace MoeLoaderDelta
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, string referer)
         {
-            return GetWebResponse(url, proxy, 60000, 60000, referer);
+            return GetWebResponse(url, proxy, 20000, 20000, referer);
         }
 
         //########################################################################################
@@ -184,8 +184,6 @@ namespace MoeLoaderDelta
                 return e.Message;
             }
         }
-
-
 
 
 
@@ -338,5 +336,6 @@ namespace MoeLoaderDelta
 
             return ret;
         }
+
     }
 }

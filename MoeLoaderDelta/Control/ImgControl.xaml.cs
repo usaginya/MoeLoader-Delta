@@ -101,7 +101,7 @@ namespace MoeLoaderDelta
         void ShowImgDetail()
         {
             chk.Text = img.Dimension;
-            string type = "N/A";
+            string type = "N/A", aniformat = "gif webm mpeg  mpg mp4 avi";
 
             if (img.OriginalUrl.Length > 6)
             {
@@ -126,6 +126,9 @@ namespace MoeLoaderDelta
             //txtDesc.Inlines.Add(new LineBreak());
             //txtDesc.Inlines.Add("时间: " + img.Date);
             isDetailSucc = true;
+
+            //ANI ico
+            selani.Opacity = aniformat.Contains(type, StringComparison.CurrentCultureIgnoreCase) ? .5 : 0;
         }
 
         /// <summary>
