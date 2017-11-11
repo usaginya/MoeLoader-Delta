@@ -8,6 +8,9 @@ namespace SitePack
         public List<ImageSite> SiteList()
         {
             List<ImageSite> sites = new List<ImageSite>();
+            bool ecchimode = System.IO.File.Exists(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"
+                );
 
             sites.Add(new SiteLargeBooru(
                 //"https://yande.re/post/index.xml?page={0}&limit={1}&tags={2}", //XML
@@ -41,7 +44,7 @@ namespace SitePack
             //    "http://nekobooru.net/tag/index.xml?limit={0}&order=count&name={1}",
             //    "nekobooru.net", "nekobooru", null, false, BooruProcessor.SourceType.XML));
 
-            if (System.IO.File.Exists(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"))
+            if (ecchimode)
                 sites.Add(new SiteSankaku("idol"));
 
             sites.Add(new SiteSankaku("chan"));
@@ -77,7 +80,8 @@ namespace SitePack
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));
 
-            sites.Add(new SiteLargeBooru(
+            if (ecchimode)
+                sites.Add(new SiteLargeBooru(
                 "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
                 "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
                 "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));

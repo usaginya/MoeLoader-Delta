@@ -125,7 +125,7 @@ namespace MoeLoaderDelta
                         imgReqs.Add(req);
                         req.Proxy = MainWindow.WebProxy;
 
-                        req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+                        req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
                         req.Referer = site.Referer;
 
                         WebResponse res = req.GetResponse();
@@ -201,7 +201,7 @@ namespace MoeLoaderDelta
         //                imgReqs.Add(req);
         //                req.Proxy = MainWindow.WebProxy;
 
-        //                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+        //                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
         //                req.Referer = MainWindow.IsNeedReferer(imgs[i].PreUrl);
 
         //                System.Net.WebResponse res = req.GetResponse();
