@@ -100,7 +100,7 @@ namespace SitePack
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "GET";
@@ -273,7 +273,7 @@ namespace SitePack
                 int index = rand.Next(0, user.Length);
                 //http://my.minitokyo.net/login
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://my.minitokyo.net/login");
-                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";

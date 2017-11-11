@@ -110,7 +110,7 @@ namespace MoeLoaderDelta
         //    //web.Proxy = MainWindow.GetProxy(web.Proxy);
         //    web.Proxy = proxy;
 
-        //    //web.Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+        //    //web.Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
 
         //    web.Encoding = Encoding.UTF8;
         //    string pageString = web.DownloadString(Url);

@@ -148,7 +148,7 @@ namespace MoeLoaderDelta
                     req = (HttpWebRequest)WebRequest.Create(img.PreviewUrl);
                     req.Proxy = MainWindow.WebProxy;
 
-                    req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
+                    req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
                     if (!string.IsNullOrWhiteSpace(needReferer))
                         //req.Referer = img.PreUrl.Substring(0, img.PreUrl.IndexOf('/', 7) + 1);
                         req.Referer = needReferer;
