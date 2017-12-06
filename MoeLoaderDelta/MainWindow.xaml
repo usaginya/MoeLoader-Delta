@@ -1237,6 +1237,7 @@
                         IsEnabled="False"
                         Opacity="0">
                         <Button
+                            x:Name="ButtonMainDL"
                             Width="85"
                             Height="28"
                             Margin="0,0,0,1"

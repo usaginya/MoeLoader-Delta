@@ -33,6 +33,11 @@ namespace MoeLoaderDelta
     public partial class MainWindow : Window
     {
         /// <summary>
+        /// 下载工作委托
+        /// </summary>
+        private delegate void downlwork();
+
+        /// <summary>
         /// 主窗口的句柄
         /// </summary>
         public static IntPtr Hwnd;
@@ -158,7 +163,6 @@ namespace MoeLoaderDelta
             get;
             set;
         }
-
 
         public MainWindow()
         {
@@ -1466,16 +1470,7 @@ namespace MoeLoaderDelta
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
 
-                if (selected.Contains(i))
-                {
-                    imgc.SetChecked(false);
-                    selected.Remove(i);
-                }
-                else
-                {
-                    imgc.SetChecked(true);
-                    selected.Add(i);
-                }
+                imgc.SetChecked(!selected.Contains(i));
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1953,9 +1948,29 @@ namespace MoeLoaderDelta
         {
             if (!toggleDownload.IsChecked.Value)
                 toggleDownload.IsChecked = true;
-
             toggleDownload_Click(null, null);
 
+            Thread thread = new Thread(new ThreadStart(delegate {
+                DownloadThread();
+            }));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        /// <summary>
+        /// 处理准备的下载工作
+        /// </summary>
+        private void DownloadThread()
+        {
+            Dispatcher.BeginInvoke(new downlwork(DownloadWork));
+        }
+
+        /// <summary>
+        /// 下载工作
+        /// </summary>
+        private void DownloadWork()
+        {
+            ButtonMainDL.IsEnabled = false;
             //添加下载
             if (selected.Count > 0)
             {
@@ -1978,10 +1993,11 @@ namespace MoeLoaderDelta
                 }
                 downloadC.AddDownload(urls);
             }
+            ButtonMainDL.IsEnabled = true;
         }
 
         /// <summary>
-        /// 构建文件名
+        /// 构建文件名 generate file name
         /// </summary>
         /// <param name="img"></param>
         /// <returns></returns>
@@ -2022,11 +2038,7 @@ namespace MoeLoaderDelta
                 {
                     //如果图册有数量就强制加序号
                     if (int.Parse(img.ImgP) > 0)
-                        file += img.ImgP.PadLeft(4, '0');
-
-                    //移除错误的标签格式
-                    reg = new Regex(@"%imgp\[.*?\]+");
-                    file = reg.Replace(file, "");
+                        file += img.ImgP.PadLeft(5, '0');
                 }
             }
             catch { }
@@ -2094,11 +2106,11 @@ namespace MoeLoaderDelta
             {
                 string[] strs = Regex.Split(timeStr, ">");
                 timeStr = Regex.Replace(strs[0], "<", "-");
-                timeStr = timeStr + "_" + Regex.Replace(strs[1], "<", ".");
+                timeStr = timeStr + " " + Regex.Replace(strs[1], "<", "：");
             }
             else
             {
-                timeStr = Regex.Replace(timeStr, "<", ".");
+                timeStr = Regex.Replace(timeStr, "<", "：");
             }
             return timeStr;
         }

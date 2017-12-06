@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
+using System.Web;
 
 namespace MoeLoaderDelta
 {
@@ -13,7 +14,7 @@ namespace MoeLoaderDelta
     public class SessionClient
     {
         private static CookieContainer m_Cookie = new CookieContainer();
-        private static string defUA = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+        private static string defUA = "Googlebot-Image/1.0";
 
         /// <summary>
         /// Cookie集合
@@ -54,7 +55,7 @@ namespace MoeLoaderDelta
             try
             {
                 request.UserAgent = UA;
-                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentType = MimeMapping.GetMimeMapping(url);
                 request.Proxy = proxy;
                 request.CookieContainer = m_Cookie;
                 reponse = (HttpWebResponse)request.GetResponse();
@@ -95,7 +96,7 @@ namespace MoeLoaderDelta
             try
             {
                 request.UserAgent = defUA;
-                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentType = MimeMapping.GetMimeMapping(url);
                 request.Proxy = proxy;
                 request.CookieContainer = m_Cookie;
                 request.ReadWriteTimeout = rwtimeout;
@@ -154,11 +155,10 @@ namespace MoeLoaderDelta
             {
                 request = WebRequest.Create(url) as HttpWebRequest;
                 request.UserAgent = UA;
-                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentType = MimeMapping.GetMimeMapping(url);
                 request.Proxy = proxy;
                 request.Method = "POST";
                 request.KeepAlive = true;
-                request.ContentType = "application/x-www-form-urlencoded";
                 request.CookieContainer = m_Cookie;//设置上次访问页面的Cookie 保持Session
                 request.ContentLength = bytesToPost.Length;
 
