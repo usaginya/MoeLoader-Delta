@@ -48,15 +48,15 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <!--  定义按钮样式  -->
+            <!--  定義按鈕樣式  -->
             <Style TargetType="{x:Type Button}">
                 <Setter Property="Foreground" Value="Black" />
                 <Setter Property="Background" Value="#4434A3E0" />
                 <Setter Property="BorderBrush" Value="#34A3E0" />
-                <!--  修改模板属性  -->
+                <!--  修改模板屬性  -->
                 <Setter Property="Template">
                     <Setter.Value>
-                        <!--  控件模板  -->
+                        <!--  控制項模板  -->
                         <ControlTemplate TargetType="{x:Type Button}">
                             <!--  背景色  -->
                             <Border
@@ -66,16 +66,16 @@
                                 BorderThickness="1"
                                 CornerRadius="0"
                                 Opacity="0.8">
-                                <!--  按钮内容  -->
+                                <!--  按鈕內容  -->
                                 <ContentPresenter
                                     x:Name="content"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Content="{TemplateBinding Content}" />
                             </Border>
-                            <!--  触发器  -->
+                            <!--  觸發器  -->
                             <ControlTemplate.Triggers>
-                                <!--  鼠标移入移出  -->
+                                <!--  滑鼠移入移出  -->
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Trigger.EnterActions>
                                         <BeginStoryboard>
@@ -102,11 +102,11 @@
                                         </BeginStoryboard>
                                     </Trigger.ExitActions>
                                 </Trigger>
-                                <!--  按钮按下弹起  -->
+                                <!--  按鈕按下彈起  -->
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="back" Property="Background" Value="#BB34A3E0" />
                                 </Trigger>
-                                <!--  按钮失效  -->
+                                <!--  按鈕失效  -->
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="back" Property="Background" Value="#22000000" />
                                     <Setter TargetName="back" Property="BorderBrush" Value="#55000000" />
@@ -121,7 +121,7 @@
             <Style x:Key="glowT" TargetType="{x:Type TextBlock}">
                 <Setter Property="Foreground" Value="Black" />
                 <!--<Setter Property="Opacity" Value="0.8"/>-->
-                <!--  修改模板属性  -->
+                <!--  修改模板屬性  -->
                 <!--<Setter Property="BitmapEffect">
                     <Setter.Value>
                         <OuterGlowBitmapEffect GlowColor="White" GlowSize="10" Opacity="0.5"/>
@@ -135,7 +135,7 @@
             </Style>
 
             <Style TargetType="{x:Type ScrollViewer}">
-                <!--  修改模板属性  -->
+                <!--  修改模板屬性  -->
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type ScrollViewer}">
@@ -189,7 +189,7 @@
                 </Setter>
             </Style>
 
-            <!--  纵向滚动条样式  -->
+            <!--  縱向滾動條樣式  -->
             <Style x:Key="ScrollBarStyle1" TargetType="{x:Type ScrollBar}">
                 <Setter Property="Template">
                     <Setter.Value>
@@ -250,7 +250,7 @@
                 </Setter>
                 <Setter Property="Margin" Value="1" />
             </Style>
-            <!--  横向滚动条样式  -->
+            <!--  橫向滾動條樣式  -->
             <Style x:Key="ScrollBarStyle2" TargetType="{x:Type ScrollBar}">
                 <Setter Property="Template">
                     <Setter.Value>

@@ -98,7 +98,7 @@ namespace SitePack
                                 i.Score = Convert.ToInt32(n1.SelectSingleNode(".//span").InnerText);
                             }
                         }
-                        //原图地址不应该是zip
+                        //原圖地址不應該是zip
                         if (haveurl && i.OriginalUrl.Substring(i.OriginalUrl.LastIndexOf("."), i.OriginalUrl.Length - i.OriginalUrl.LastIndexOf(".")).ToLower() == ".zip" &&
                             n.InnerText.Contains("Save this video"))
                         {

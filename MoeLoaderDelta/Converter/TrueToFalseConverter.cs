@@ -5,7 +5,7 @@ using System.Windows.Data;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 这是一个颠倒黑白的世界
+    /// 這是一個顛倒黑白的世界
     /// </summary>
     public sealed class TrueToFalseConverter : IValueConverter
     {

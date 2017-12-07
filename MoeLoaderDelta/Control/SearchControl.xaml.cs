@@ -26,8 +26,8 @@ namespace MoeLoaderDelta
 
             sb = (Storyboard)FindResource("searching");
 
-            txtSearch.ToolTip = "按下Delete键可删除当前的搜索词"
-                + Environment.NewLine + "按下Shift+Delete键可删除全部搜索过的词";
+            txtSearch.ToolTip = "按下Delete鍵可刪除當前的搜尋詞"
+                + Environment.NewLine + "按下Shift+Delete鍵可刪除全部搜尋過的詞";
 
             //sb.Begin(path, true);
             //sb.Pause();
@@ -65,7 +65,7 @@ namespace MoeLoaderDelta
         private LinkedList<string> usedItems = new LinkedList<string>();
 
         /// <summary>
-        /// 最近搜索过的词
+        /// 最近搜尋過的詞
         /// </summary>
         public string[] UsedItems
         {
@@ -73,12 +73,12 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 添加搜索过的词
+        /// 添加搜尋過的詞
         /// </summary>
         /// <param name="word"></param>
         public void AddUsedItem(string word)
         {
-            if (word != null && word.Trim().Length > 0 && !usedItems.Contains(word) && word != "搜索")
+            if (word != null && word.Trim().Length > 0 && !usedItems.Contains(word) && word != "搜尋")
             {
                 if (usedItems.Count > 30)
                     usedItems.RemoveLast();
@@ -90,13 +90,13 @@ namespace MoeLoaderDelta
         {
             if (SiteManager.Instance.Sites.Count > 0 && !SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
             {
-                txtSearch.Items.Add(new SearchItem() { Name = "该站点无关键词自动提示", Count = null, Enabled = false });
+                txtSearch.Items.Add(new SearchItem() { Name = "該站點無關鍵字自動提示", Count = null, Enabled = false });
             }
-            txtSearch.Items.Add(new SearchItem() { Name = "------------------最近搜索的关键词------------------", Count = null, Enabled = false });
+            txtSearch.Items.Add(new SearchItem() { Name = "------------------最近搜尋的關鍵字------------------", Count = null, Enabled = false });
             foreach (string item in usedItems)
                 txtSearch.Items.Add(new SearchItem() { Name = item, Count = null });
 
-            //重载搜索列表时滚动到顶部
+            //重載搜尋列表時滾動到頂部
             PopupScroll.ScrollToTop();
         }
 

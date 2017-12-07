@@ -4,8 +4,8 @@ using System.Windows.Controls;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 常用转换器的静态引用
-    /// 使用实例：Converter={x:Static local:XConverter.TrueToFalseConverter}
+    /// 常用轉換器的靜態引用
+    /// 使用實例：Converter={x:Static local:XConverter.TrueToFalseConverter}
     /// </summary>
     public sealed class XConverter
     {

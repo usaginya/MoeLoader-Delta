@@ -117,7 +117,7 @@
             FontWeight="Bold"
             Foreground="Black"
             Style="{StaticResource glowT}"
-            Text="可以拖放下载列表文件至此">
+            Text="可以拖放下載列表檔案至此">
             <!--<TextBlock.BitmapEffect>
 	        	<OuterGlowBitmapEffect GlowSize="10" Opacity="0.6" GlowColor="White" />
 	      	</TextBlock.BitmapEffect>-->
@@ -147,29 +147,29 @@
                     <MenuItem
                         x:Name="itmSelAll"
                         Click="itmSelAll_Click"
-                        Header="全选(_A)"
+                        Header="全選(_A)"
                         IsEnabled="True" />
                     <MenuItem
                         x:Name="itmSelInvert"
                         Click="itmSelInvert_Click"
-                        Header="反选(_U)"
+                        Header="反選(_U)"
                         IsEnabled="True" />
                     <Separator />
                     <MenuItem
                         x:Name="itmLst"
                         Click="itmLst_Click"
-                        Header="导出下载列表(_L)"
+                        Header="導出下載列表(_L)"
                         IsEnabled="False" />
                     <MenuItem
                         x:Name="itmCopy"
                         Click="itmCopy_Click"
-                        Header="复制地址(_C)"
+                        Header="複製地址(_C)"
                         IsEnabled="False" />
                     <Separator />
                     <MenuItem
                         x:Name="itmRetry"
                         Click="itmRetry_Click"
-                        Header="重试(_R)"
+                        Header="重試(_R)"
                         IsEnabled="False" />
                     <MenuItem
                         x:Name="itmStop"
@@ -185,50 +185,50 @@
                     <MenuItem
                         x:Name="itmDeleteFile"
                         Click="itmDeleteFile_Click"
-                        Header="任务和文件一起删除(_X)"
+                        Header="任務和檔案一起刪除(_X)"
                         IsEnabled="False" />
                     <Separator />
                     <MenuItem
                         x:Name="itmRetryAll"
                         Click="itmRetryAll_Click"
-                        Header="重试所有任务(_T)"
+                        Header="重試所有任務(_T)"
                         IsEnabled="False" />
                     <MenuItem
                         x:Name="itmStopAll"
                         Click="itmStopAll_Click"
-                        Header="停止所有任务(_G)"
+                        Header="停止所有任務(_G)"
                         IsEnabled="False" />
                     <MenuItem
                         x:Name="itmDeleteAll"
                         Click="itmDeleteAll_Click"
-                        Header="清空所有任务(_V)"
+                        Header="清空所有任務(_V)"
                         IsEnabled="False" />
                     <Separator />
                     <MenuItem
                         x:Name="itmClearDled"
                         Click="itmClearDled_Click"
-                        Header="清除已成功的任务(_E)" />
-                    <MenuItem Header="清除已失败的任务(_F)">
-                        <MenuItem Click="itmClearDled_Click_1" Header="清除所有失败任务(_1)" />
-                        <MenuItem Click="itmClearDled_Click_2" Header="仅清除已取消和已存在的任务(_2)" />
+                        Header="清除已成功的任務(_E)" />
+                    <MenuItem Header="清除已失敗的任務(_F)">
+                        <MenuItem Click="itmClearDled_Click_1" Header="清除所有失敗任務(_1)" />
+                        <MenuItem Click="itmClearDled_Click_2" Header="僅清除已取消和已存在的任務(_2)" />
                     </MenuItem>
                     <Separator />
-                    <!--<MenuItem Header="同时下载数量(_T)">
+                    <!--<MenuItem Header="同時下載數量(_T)">
                         <MenuItem x:Name="itm1" Header="1" IsCheckable="True" Checked="itm1_Checked"/>
                         <MenuItem x:Name="itm2" Header="2" IsCheckable="True" Checked="itm1_Checked"/>
                         <MenuItem x:Name="itm3" Header="3" IsCheckable="True" Checked="itm1_Checked"/>
                         <MenuItem x:Name="itm4" Header="4" IsCheckable="True" Checked="itm1_Checked"/>
                         <MenuItem x:Name="itm5" Header="5" IsCheckable="True" Checked="itm1_Checked"/>
                     </MenuItem>-->
-                    <!--<MenuItem Header="图片保存设置(_O)">-->
-                    <!--<MenuItem x:Name="itmSaveLocation" Header="设置图片保存位置(_1)" Click="itmSaveLocation_Click"/>-->
-                    <MenuItem Click="itmOpenSave_Click" Header="打开图片保存位置(_O)" />
-                    <!--<MenuItem x:Name="itmSepSave" Header="分站点存放(_3)" IsCheckable="True" ToolTip="不同站点图片保存至相应子目录"/>-->
+                    <!--<MenuItem Header="圖片儲存設定(_O)">-->
+                    <!--<MenuItem x:Name="itmSaveLocation" Header="設定圖片儲存位置(_1)" Click="itmSaveLocation_Click"/>-->
+                    <MenuItem Click="itmOpenSave_Click" Header="打開圖片儲存位置(_O)" />
+                    <!--<MenuItem x:Name="itmSepSave" Header="分站點存放(_3)" IsCheckable="True" ToolTip="不同站點圖片儲存至相應子目錄"/>-->
                     <!--</MenuItem>-->
                     <Separator />
                     <MenuItem
                         x:Name="itmAutoClose"
-                        Header="完成后自动关机(_N)"
+                        Header="完成後自動關機(_N)"
                         IsCheckable="True" />
                 </ContextMenu>
             </ListBox.ContextMenu>
@@ -246,7 +246,7 @@
                 Margin="3,1,0,0"
                 HorizontalAlignment="Left"
                 Foreground="Black"
-                Text="无任务"
+                Text="無任務"
                 TextWrapping="Wrap"
                 d:LayoutOverrides="Height" />
         </Border>

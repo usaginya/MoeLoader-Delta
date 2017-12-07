@@ -9,7 +9,7 @@ namespace MoeLoaderDelta
     {
 
         /// <summary>
-        /// 查找字节数组,失败未找到返回-1
+        /// 尋找位元組數組,失敗未找到返回-1
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="search"></param>
@@ -31,7 +31,7 @@ namespace MoeLoaderDelta
 
 
         /// <summary> 
-        /// MemoryStream 保存到文件
+        /// MemoryStream 儲存到檔案
         /// </summary> 
         public static void MemoryStreamToFile(MemoryStream stream, string fileName)
         {
@@ -42,14 +42,14 @@ namespace MoeLoaderDelta
             fs.Close();
         }
 
-        #region image数据保存
+        #region image資料儲存
         public enum ImageFormat { JPG, BMP, PNG, GIF }
         /// <summary>
-        /// 将图片保存到文件
+        /// 將圖片儲存到檔案
         /// </summary>
         /// <param name="bitmap">BitmapSource</param>
-        /// <param name="format">图像类型</param>
-        /// <param name="fileName">保存文件名</param>
+        /// <param name="format">圖像類型</param>
+        /// <param name="fileName">儲存檔案名</param>
         public static void ImageToFile(BitmapSource bitmap, ImageFormat format, string fileName)
         {
             BitmapEncoder encoder;
@@ -80,11 +80,11 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 将图片保存到文件
+        /// 將圖片儲存到檔案
         /// </summary>
         /// <param name="bitmap">BitmapSource</param>
-        /// <param name="format">图像类型</param>
-        /// <param name="fileName">保存文件名</param>
+        /// <param name="format">圖像類型</param>
+        /// <param name="fileName">儲存檔案名</param>
         public static void ImageToFile(BitmapSource bitmap, string format, string fileName)
         {
             ImageFormat ifo = ImageFormat.JPG;

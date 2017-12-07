@@ -4,11 +4,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-// 有关程序集的一般信息由以下
-// 控制。更改这些特性值可修改
-// 与程序集关联的信息。
+// 有關程式集的一般訊息由以下
+// 控制。更改這些特性值可修改
+// 與程式集關聯的訊息。
 [assembly: AssemblyTitle("MoeToNew")]
-[assembly: AssemblyDescription("MoeLoaderΔ 更新程序")]
+[assembly: AssemblyDescription("MoeLoaderΔ 更新程式")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Moekai")]
 [assembly: AssemblyProduct("MoeToNew")]
@@ -16,42 +16,41 @@ using System.Windows;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-//将 ComVisible 设置为 false 将使此程序集中的类型
-//对 COM 组件不可见。  如果需要从 COM 访问此程序集中的类型，
-//请将此类型的 ComVisible 特性设置为 true。
+//將 ComVisible 設定為 false 將使此程式集中的類型
+//對 COM 元件不可見。  如果需要從 COM 訪問此程式集中的類型，
+//請將此類型的 ComVisible 特性設定為 true。
 [assembly: ComVisible(false)]
 
-//若要开始生成可本地化的应用程序，请
-//<PropertyGroup> 中的 .csproj 文件中
-//例如，如果您在源文件中使用的是美国英语，
-//使用的是美国英语，请将 <UICulture> 设置为 en-US。  然后取消
-//对以下 NeutralResourceLanguage 特性的注释。  更新
-//以下行中的“en-US”以匹配项目文件中的 UICulture 设置。
+//若要開始生成可本地化的應用程式，請
+//<PropertyGroup> 中的 .csproj 檔案中
+//例如，如果您在源檔案中使用的是美國英語，
+//使用的是美國英語，請將 <UICulture> 設定為 en-US。  然後取消
+//對以下 NeutralResourceLanguage 特性的註釋。  更新
+//以下行中的"en-US"以匹配項目檔案中的 UICulture 設定。
 
 //[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.Satellite)]
 
 
 [assembly: ThemeInfo(
-    ResourceDictionaryLocation.None, //主题特定资源词典所处位置
-                                     //(当资源未在页面
-                                     //或应用程序资源字典中找到时使用)
-    ResourceDictionaryLocation.SourceAssembly //常规资源词典所处位置
-                                              //(当资源未在页面
-                                              //、应用程序或任何主题专用资源字典中找到时使用)
+    ResourceDictionaryLocation.None, //主題特定資源詞典所處位置
+                                     //(當資源未在頁面
+                                     //或應用程式資源字典中找到時使用)
+    ResourceDictionaryLocation.SourceAssembly //一般資源詞典所處位置
+                                              //(當資源未在頁面
+                                              //、應用程式或任何主題專用資源字典中找到時使用)
 )]
 
 
-// 程序集的版本信息由下列四个值组成: 
+// 程式集的版本訊息由下列四個值組成: 
 //
 //      主版本
 //      次版本
-//      生成号
-//      修订号
+//      生成號
+//      修訂號
 //
-//可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
-// 方法是按如下所示使用“*”: :
+//可以指定所有這些值，也可以使用「生成號」和「修訂號」的預設值，
+// 方法是按如下所示使用「*」: :
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.1.6.2")]
 [assembly: AssemblyFileVersion("1.1.6.2")]
 [assembly: Guid("e2bde952-d0e3-4173-840b-7f35600025d6")]
-

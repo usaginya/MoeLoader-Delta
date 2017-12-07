@@ -39,7 +39,7 @@ namespace SitePack
 
             if (keyWord.Length > 0)
             {
-                //http://worldcosplay.net/api/photo/search?page=2&rows=48&q=%E5%90%8A%E5%B8%A6%E8%A2%9C%E5%A4%A9%E4%BD%BF
+                //http://worldcosplay.net/api/photo/search?page=2&rows=48&q=吊帶襪天使
                 url = SiteUrl + "/api/photo/search?page=" + page + "&rows=" + count + "&q=" + keyWord;
             }
 
@@ -90,7 +90,7 @@ namespace SitePack
             int width = 0, height = 0;
             try
             {
-                //缩略图的尺寸 175级别 大图 740级别
+                //縮圖的尺寸 175級別 大圖 740級別
                 width = int.Parse(twidth);
                 height = int.Parse(theight);
                 if (width > height)
