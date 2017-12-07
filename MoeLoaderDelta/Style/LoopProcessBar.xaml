@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:MoeLoaderDelta">
 
     <SolidColorBrush x:Key="TextForeground" Color="White" />
-    <!--  注意：该样式的ProgressBar的最大值为1，且DataContext必须设置为IAsynNotify,BorderThickness控制环的大小  -->
+    <!--  注意：該樣式的ProgressBar的最大值為1，且DataContext必須設定為IAsynNotify,BorderThickness控制環的大小  -->
     <Style x:Key="LoopProcessBar" TargetType="{x:Type ProgressBar}">
         <Setter Property="Background" Value="#FFC8DFEA" />
         <Setter Property="Margin" Value="5" />
@@ -32,7 +32,7 @@
                             Height="{TemplateBinding Height}"
                             Margin="{TemplateBinding Margin}"
                             SnapsToDevicePixels="True">
-                            <!--  背景环  -->
+                            <!--  背景環  -->
                             <ed:Arc
                                 x:Name="arcOuter"
                                 Margin="{TemplateBinding Margin}"
@@ -42,7 +42,7 @@
                                 Opacity="0.6"
                                 StartAngle="0"
                                 Stretch="None" />
-                            <!--  值-环  -->
+                            <!--  值-環  -->
                             <ed:Arc
                                 x:Name="arcValue"
                                 Margin="{TemplateBinding Margin}"

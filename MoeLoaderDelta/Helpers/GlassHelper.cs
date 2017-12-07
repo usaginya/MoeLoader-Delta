@@ -8,7 +8,7 @@ using System.Windows.Interop;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 用于Aero效果及Win32窗口相关操作
+    /// 用於Aero效果及Win32視窗相關操作
     /// </summary>
 	public class GlassHelper
     {
@@ -162,7 +162,7 @@ namespace MoeLoaderDelta
         //[DllImport("user32.dll")]
         //private static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, int uFlags);
 
-        ////进行禁用后必须进行界面的刷新，否则禁用状态不会立即显示在界面上。
+        ////進行禁用後必須進行介面的刷新，否則禁用狀態不會立即顯示在介面上。
         //public static void DisableMaxmizebox(Window window, bool isDisable)
         //{
         //    int GWL_STYLE = -16;
@@ -187,7 +187,7 @@ namespace MoeLoaderDelta
         //    SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_FRAMECHANGED);
         //}
 
-        #region 处理最大化
+        #region 處理最大化
         [StructLayout(LayoutKind.Sequential)]
         internal struct MINMAXINFO
         {
@@ -230,7 +230,7 @@ namespace MoeLoaderDelta
         internal static extern IntPtr MonitorFromWindow(IntPtr handle, int flags);
         #endregion
 
-        #region 关机
+        #region 關機
         [DllImport("User32.dll")]
         private static extern bool ExitWindowsEx(int uFlags, int dwReserved);
 
@@ -259,7 +259,7 @@ namespace MoeLoaderDelta
         private const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
         private const string SE_SHUTDOWN_NAME = "SeShutdownPrivilege";
 
-        //退出类型
+        //退出類型
         public enum ShutdownType
         {
             LogOff = 0,
@@ -268,9 +268,9 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 退出系统
+        /// 退出系統
         /// </summary>
-        /// <param name="type">退出参数</param>
+        /// <param name="type">退出參數</param>
         /// <returns>是否成功</returns>
         public static bool ExitWindows(ShutdownType type)
         {

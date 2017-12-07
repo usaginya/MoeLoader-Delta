@@ -3,12 +3,12 @@
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 下载状态
+    /// 下載狀態
     /// </summary>
     public enum DLStatus { Success, Failed, Cancel, IsHave, DLing, Wait }
 
     /// <summary>
-    /// 下载任务，用于界面绑定
+    /// 下載任務，用於介面綁定
     /// </summary>
     public class DownloadItem : INotifyPropertyChanged
     {
@@ -39,7 +39,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 进度
+        /// 進度
         /// </summary>
         public double Progress
         {
@@ -52,7 +52,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 状态（图形表示）
+        /// 狀態（圖形表示）
         /// </summary>
         public string Status
         {
@@ -79,7 +79,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 状态
+        /// 狀態
         /// </summary>
         public DLStatus StatusE
         {
@@ -116,14 +116,14 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 下载对象
+        /// 下載對象
         /// </summary>
-        /// <param name="fileName">下载时文件名</param>
-        /// <param name="url">下载链接</param>
+        /// <param name="fileName">下載時檔案名</param>
+        /// <param name="url">下載連結</param>
         /// <param name="host">域名</param>
-        /// <param name="author">上传者</param>
-        /// <param name="localName">本地路径文件名</param>
-        /// <param name="localfileName">本地文件名</param>
+        /// <param name="author">上傳者</param>
+        /// <param name="localName">本地路徑檔案名</param>
+        /// <param name="localfileName">本地檔案名</param>
         /// <param name="id">作品ID</param>
         public DownloadItem(string fileName, string url, string host, string author, string localName, string localfileName, int id, bool? noVerify)
         {

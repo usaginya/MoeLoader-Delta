@@ -37,7 +37,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 恢复必要文件
+        /// 恢復必要檔案
         /// </summary>
         private static void RecoveryConfig()
         {

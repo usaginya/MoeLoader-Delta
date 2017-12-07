@@ -7,7 +7,7 @@ using System.Windows.Media;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 设置窗口
+    /// 設定視窗
     /// </summary>
     public partial class OptionWnd : Window
     {
@@ -21,7 +21,7 @@ namespace MoeLoaderDelta
 
             if (!System.IO.File.Exists(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\nofont.txt"))
             {
-                FontFamily = new FontFamily("Microsoft YaHei");
+                FontFamily = new FontFamily("Microsoft JhengHei");
             }
 
             txtProxy.Text = MainWindow.Proxy;
@@ -85,13 +85,13 @@ namespace MoeLoaderDelta
                 cbBgVe.SelectedIndex = 2;
             }
 
-            textNameHelp.ToolTip = "【以下必须是小写英文】\r\n%site 站点名\r\n%id 编号\r\n%tag 标签\r\n%desc 描述\r\n"
-                + "%author 作者名\r\n%date 上载时间\r\n%imgp[3] 图册页数[页数总长度(补0)]\r\n\r\n"
-                + "<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】\r\n"
-                + "表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题\r\n"
-               + "建议把裁剪符号写在 标签%tag 或 描述%desc 后面";
+            textNameHelp.ToolTip = "【以下必須是小寫英文】\r\n%site 站點名\r\n%id 編號\r\n%tag 標籤\r\n%desc 描述\r\n"
+                + "%author 作者名\r\n%date 上載時間\r\n%imgp[3] 圖冊頁數[頁數總長度(補0)]\r\n\r\n"
+                + "<!< 裁剪符號【注意裁剪符號 <!< 只能有一個】\r\n"
+                + "表示從 <!< 左邊所有名稱進行過長裁剪、避免路徑過長問題\r\n"
+               + "建議把裁剪符號寫在 標籤%tag 或 描述%desc 後面";
 
-            #region 文件名规则格式按钮绑定
+            #region 檔案名規則格式按鈕綁定
             FNRsite.Click += new RoutedEventHandler(FNRinsert);
             FNRid.Click += new RoutedEventHandler(FNRinsert);
             FNRtag.Click += new RoutedEventHandler(FNRinsert);
@@ -108,13 +108,13 @@ namespace MoeLoaderDelta
             txtSaveLocation.Text = txtSaveLocation.Text.Trim();
             if (txtSaveLocation.Text.Length < 3)
             {
-                MessageBox.Show("存储位置目录不正确，请重新设置", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("存儲位置目錄不正確，請重新設定", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!System.IO.Directory.Exists(txtSaveLocation.Text))
             {
                 MessageBoxResult rsl = MessageBox.Show(this, txtSaveLocation.Text +
-                    " 目录不存在，要创建它吗？", MainWindow.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    " 目錄不存在，要創建它嗎？", MainWindow.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (rsl == MessageBoxResult.Yes)
                 {
                     System.IO.Directory.CreateDirectory(txtSaveLocation.Text);
@@ -143,7 +143,7 @@ namespace MoeLoaderDelta
                 }
                 if (!right)
                 {
-                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式",
+                    MessageBox.Show(this, "代理地址格式不正確，應類似於 127.0.0.1:1080 形式",
                         MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -322,7 +322,7 @@ namespace MoeLoaderDelta
         {
             System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog
             {
-                Description = "当前保存位置: " + txtSaveLocation.Text,
+                Description = "當前儲存位置: " + txtSaveLocation.Text,
                 SelectedPath = txtSaveLocation.Text
             };
 
@@ -339,7 +339,7 @@ namespace MoeLoaderDelta
 
         private void TextBlock_MouseDown_1(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(this, "将图片文件重命名为 bg.png 或 bg.jpg 后放入 MoeLoaderDelta.exe 所在目录，重启 MoeLoader Δ 即可",
+            MessageBox.Show(this, "將圖片檔案重新命名為 bg.png 或 bg.jpg 後放入 MoeLoaderDelta.exe 所在目錄，重啟 MoeLoader Δ 即可",
                 MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -349,7 +349,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 插入格式到规则文本框
+        /// 插入格式到規則文字框
         /// </summary>
         private void FNRinsert(object sender, RoutedEventArgs e)
         {

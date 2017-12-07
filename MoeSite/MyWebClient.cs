@@ -10,12 +10,12 @@ namespace MoeLoaderDelta
     //public class Calculagraph
     //{
     //    /// <summary>
-    //    /// 时间到事件
+    //    /// 時間到事件
     //    /// </summary>
     //    public event TimeoutCaller TimeOver;
 
     //    /// <summary>
-    //    /// 开始时间
+    //    /// 開始時間
     //    /// </summary>
     //    private DateTime _startTime;
     //    private TimeSpan _timeout = new TimeSpan(0, 0, 10);
@@ -23,9 +23,9 @@ namespace MoeLoaderDelta
     //    object _userdata;
 
     //    /// <summary>
-    //    /// 计时器构造方法
+    //    /// 計時器構造方法
     //    /// </summary>
-    //    /// <param name="userdata">计时结束时回调的用户数据</param>
+    //    /// <param name="userdata">計時結束時回調的使用者資料</param>
     //    public Calculagraph(object userdata)
     //    {
     //        TimeOver += new TimeoutCaller(OnTimeOver);
@@ -33,7 +33,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 超时退出
+    //    /// 超時退出
     //    /// </summary>
     //    /// <param name="userdata"></param>
     //    public virtual void OnTimeOver(object userdata)
@@ -42,7 +42,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 过期时间(秒)
+    //    /// 過期時間(秒)
     //    /// </summary>
     //    public int Timeout
     //    {
@@ -59,7 +59,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 是否已经开始计时
+    //    /// 是否已經開始計時
     //    /// </summary>
     //    public bool HasStarted
     //    {
@@ -70,7 +70,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 开始计时
+    //    /// 開始計時
     //    /// </summary>
     //    public void Start()
     //    {
@@ -82,7 +82,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 重置
+    //    /// 重設
     //    /// </summary>
     //    public void Reset()
     //    {
@@ -90,7 +90,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 停止计时
+    //    /// 停止計時
     //    /// </summary>
     //    public void Stop()
     //    {
@@ -98,7 +98,7 @@ namespace MoeLoaderDelta
     //    }
 
     //    /// <summary>
-    //    /// 检查是否过期
+    //    /// 檢查是否過期
     //    /// </summary>
     //    /// <returns></returns>
     //    private bool checkTimeout()
@@ -110,7 +110,7 @@ namespace MoeLoaderDelta
     //    {
     //        try
     //        {
-    //            //循环检测是否过期
+    //            //循環檢測是否過期
     //            while (_hasStarted && !checkTimeout())
     //            {
     //                Thread.Sleep(1000);
@@ -126,14 +126,14 @@ namespace MoeLoaderDelta
     //}
 
     /// <summary>
-    /// 过期时回调委托
+    /// 過期時回調委託
     /// </summary>
     /// <param name="userdata"></param>
     //public delegate void TimeoutCaller(object userdata);
     */
 
     /// <summary>
-    /// 带有超时的WebClient
+    /// 帶有超時的WebClient
     /// </summary>
     public class MyWebClient : WebClient
     {
@@ -141,17 +141,17 @@ namespace MoeLoaderDelta
         private int _timeOut = 30;
 
         /// <summary>
-        /// 构造WebClient
+        /// 構造WebClient
         /// </summary>
         public MyWebClient()
         {
-            //最大连接数512
+            //最大連接數512
             ServicePointManager.DefaultConnectionLimit = 512;
-            Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
+            Headers["User-Agent"] = "Googlebot-Image/1.0";
         }
 
         /// <summary>
-        /// 过期时间 in second
+        /// 過期時間 in second
         /// </summary>
         public int Timeout
         {
@@ -168,7 +168,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 重写GetWebRequest，添加WebRequest对象超时时间
+        /// 重寫GetWebRequest，添加WebRequest對象超時時間
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
@@ -181,7 +181,7 @@ namespace MoeLoaderDelta
         }
 
         ///// <summary>
-        ///// 带过期计时的下载
+        ///// 帶過期計時的下載
         ///// </summary>
         //public void DownloadFileAsyncWithTimeout(Uri address, string fileName, object userToken)
         //{
@@ -198,22 +198,22 @@ namespace MoeLoaderDelta
         //}
 
         ///// <summary>
-        ///// WebClient下载过程事件，接收到数据时引发
+        ///// WebClient下載過程事件，接收到資料時引發
         ///// </summary>
         ///// <param name="sender"></param>
         ///// <param name="e"></param>
         //void CNNWebClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         //{
-        //    _timer.Reset();//重置计时器
+        //    _timer.Reset();//重設計時器
         //}
 
         ///// <summary>
-        ///// 计时器过期
+        ///// 計時器過期
         ///// </summary>
         ///// <param name="userdata"></param>
         //void _timer_TimeOver(object userdata)
         //{
-        //    this.CancelAsync();//取消下载
+        //    this.CancelAsync();//取消下載
         //}
     }
 }

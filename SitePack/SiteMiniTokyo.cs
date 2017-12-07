@@ -37,8 +37,8 @@ namespace SitePack
             get
             {
                 if (type == WALL)
-                    return "搜索壁纸";
-                return "搜索扫描图";
+                    return "搜尋壁紙";
+                return "搜尋掃描圖";
             }
         }
         //public string Referer { get { return null; } }
@@ -96,11 +96,11 @@ namespace SitePack
 
             if (keyWord.Length > 0)
             {
-                //先使用关键词搜索，然后HTTP 303返回实际地址
+                //先使用關鍵字搜尋，然後HTTP 303返回實際地址
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
+                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "GET";
@@ -108,14 +108,14 @@ namespace SitePack
                 req.AllowAutoRedirect = false;
                 WebResponse rsp = req.GetResponse();
                 //http://www.minitokyo.net/Haruhi+Suzumiya
-                //HTTP 303然后返回实际地址
+                //HTTP 303然後返回實際地址
                 string location = rsp.Headers["Location"];
                 rsp.Close();
                 if (location != null && location.Length > 0)
                 {
-                    //非完整地址，需要前缀
+                    //非完整地址，需要前綴
                     url = SiteUrl + location;
-                    //再次访问，得到真实列表页地址...
+                    //再次訪問，得到真實列表頁地址...
                     string html = web.DownloadString(url);
                     //http://browse.minitokyo.net/gallery?tid=2112&amp;index=1 WALL
                     //http://browse.minitokyo.net/gallery?tid=2112&amp;index=3 SCAN
@@ -129,13 +129,13 @@ namespace SitePack
                     {
                         url = html.Substring(urlIndex, html.IndexOf('"', urlIndex) - urlIndex - 1) + "3";
                     }
-                    //http://browse.minitokyo.net/gallery?tid=2112&amp%3Bindex=1&order=id&display=extensive
+                    //http://browse.minitokyo.net/gallery?tid=2112&amp;index=1&order=id&display=extensive
                     url += "&order=id&display=extensive&page=" + page;
                     url = url.Replace("&amp;", "&");
                 }
                 else
                 {
-                    throw new Exception("搜索失败，请检查您输入的关键词");
+                    throw new Exception("搜尋失敗，請檢查您輸入的關鍵字");
                 }
             }
 
@@ -162,7 +162,7 @@ namespace SitePack
 
                 for (int i = 0; i < imgNodes.Count - 1; i++)
                 {
-                    //最后一个是空的，跳过
+                    //最後一個是空的，跳過
                     HtmlNode imgNode = imgNodes[i];
 
                     string detailUrl = imgNode.SelectSingleNode("a").Attributes["href"].Value;
@@ -195,7 +195,7 @@ namespace SitePack
             }
             catch
             {
-                throw new Exception("没有找到图片哦～ .=ω=");
+                throw new Exception("沒有找到圖片哦～ .=ω=");
             }
         }
 
@@ -273,7 +273,7 @@ namespace SitePack
                 int index = rand.Next(0, user.Length);
                 //http://my.minitokyo.net/login
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://my.minitokyo.net/login");
-                req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
+                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";
@@ -288,12 +288,12 @@ namespace SitePack
                 str.Close();
                 WebResponse rsp = req.GetResponse();
 
-                //HTTP 303然后返回地址 http://www.minitokyo.net/
+                //HTTP 303然後返回地址 http://www.minitokyo.net/
                 sessionId = rsp.Headers.Get("Set-Cookie");
                 //minitokyo_id=376440; expires=Tue, 17-Jul-2012 07:18:32 GMT; path=/; domain=.minitokyo.net, minitokyo_hash=978bb6cb9e0aeac077dcc6032f2e9f3d; expires=Tue, 17-Jul-2012 07:18:32 GMT; path=/; domain=.minitokyo.net
                 if (sessionId == null || !sessionId.Contains("minitokyo_hash"))
                 {
-                    throw new Exception("自动登录失败");
+                    throw new Exception("自動登入失敗");
                 }
                 //minitokyo_id=376440; minitokyo_hash=978bb6cb9e0aeac077dcc6032f2e9f3d
                 int idIndex = sessionId.IndexOf("minitokyo_id");
@@ -306,7 +306,7 @@ namespace SitePack
             catch (System.Net.WebException)
             {
                 //invalid user will encounter 404
-                throw new Exception("自动登录失败");
+                throw new Exception("自動登入失敗");
             }
         }
     }

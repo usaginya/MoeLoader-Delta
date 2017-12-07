@@ -12,7 +12,7 @@ namespace SitePack
 {
     public class SitePixiv : AbstractImageSite
     {
-        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜
+        //標籤, 完整標籤, 作者id, 日榜, 周榜, 月榜
         public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
@@ -38,16 +38,16 @@ namespace SitePack
             get
             {
                 if (srcType == PixivSrcType.Author)
-                    return "搜索作者";
+                    return "搜尋作者";
                 else if (srcType == PixivSrcType.Day)
                     return "本日排行";
                 else if (srcType == PixivSrcType.Week)
-                    return "本周排行";
+                    return "本週排行";
                 else if (srcType == PixivSrcType.Month)
                     return "本月排行";
                 else if (srcType == PixivSrcType.TagFull)
-                    return "搜索完整标签";
-                return "最新作品 & 搜索标签";
+                    return "搜尋完整標籤";
+                return "最新作品 & 搜尋標籤";
             }
         }
         public override string ShortType
@@ -98,7 +98,7 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            //if (page > 1000) throw new Exception("頁碼過大，若需瀏覽更多圖片請使用關鍵字限定範圍");
             Login(proxy);
 
             //http://www.pixiv.net/new_illust.php?p=2
@@ -121,7 +121,7 @@ namespace SitePack
                 int memberId = 0;
                 if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                 {
-                    throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
+                    throw new Exception("必須在關鍵字中指定畫師 id；若需要使用標籤進行搜尋請使用 www.pixiv.net [TAG]");
                 }
                 //member id
                 url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
@@ -176,7 +176,7 @@ namespace SitePack
             }
             catch
             {
-                throw new Exception("没有找到图片哦～ .=ω=");
+                throw new Exception("沒有找到圖片哦～ .=ω=");
             }
 
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
@@ -347,12 +347,12 @@ namespace SitePack
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
 
-                //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫画 6P｜SAI
+                //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫畫 6P｜SAI
                 i.Date = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[1]").InnerText;
-                //总点数
+                //總點數
                 i.Score = int.Parse(doc.DocumentNode.SelectSingleNode("//dd[@class='rated-count']").InnerText);
                 //「カルタ＆わたぬき」/「えれっと」のイラスト [pixiv]
-                //标题中取名字和作者
+                //標題中取名字和作者
                 try
                 {
                     MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
@@ -374,7 +374,7 @@ namespace SitePack
                 catch { }
                 i.OriginalUrl = i.OriginalUrl == "" ? i.JpegUrl : i.OriginalUrl;
 
-                //600×800 or 漫画 6P
+                //600×800 or 漫畫 6P
                 string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
                 try
                 {
@@ -390,7 +390,7 @@ namespace SitePack
                         //i.OriginalUrl = i.SampleUrl.Replace("600x600", "1200x1200");
                         //i.JpegUrl = i.OriginalUrl;
                         //manga list
-                        //漫画 6P
+                        //漫畫 6P
                         string oriul = "";
                         int index = dimension.IndexOf(' ') + 1;
                         string mangaPart = dimension.Substring(index, dimension.IndexOf('P') - index);
@@ -398,7 +398,7 @@ namespace SitePack
                         i.Dimension = "Manga " + mangaCount + "P";
                         for (int j = 0; j < mangaCount; j++)
                         {
-                            //保存漫画时优先下载原图 找不到原图则下jpg
+                            //儲存漫畫時優先下載原圖 找不到原圖則下jpg
                             try
                             {
                                 page = web.DownloadString(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j);
@@ -436,29 +436,29 @@ namespace SitePack
                     string post_key = "";
                     int index = rand.Next(0, user.Length);
 
-                    //请求1 获取post_key
+                    //請求1 獲取post_key
                     data = Sweb.Get("https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index", proxy, Encoding.GetEncoding("UTF-8"));
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
-                        throw new Exception("自动登录失败");
+                        throw new Exception("自動登入失敗");
 
-                    //请求2 POST取登录Cookie
+                    //請求2 POST取登入Cookie
                     data = "pixiv_id=" + user[index]
                         + "&password=" + pass[index]
                         + "&captcha=&g_recaptcha_response=&post_key=" + post_key
-                        + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
+                        + "&source=pc&ref=wwwtop_accounts_index&return_to=http://www.pixiv.net/";
                     data = Sweb.Post("https://accounts.pixiv.net/api/login?lang=zh", data, proxy, Encoding.GetEncoding("UTF-8"));
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (cookie.Length < 9)
-                        throw new Exception("自动登录失败");
+                        throw new Exception("自動登入失敗");
                     else
                         cookie = "pixiv;" + cookie;
                 }
                 catch (Exception e)
                 {
-                    throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
+                    throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或無法連接到遠程伺服器");
                 }
             }
         }

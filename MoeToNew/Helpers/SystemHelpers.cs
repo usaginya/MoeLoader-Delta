@@ -6,9 +6,9 @@ namespace MoeLoaderDelta.Helpers
     {
 
         /// <summary>
-        /// 结束指定进程名的所有进程
+        /// 結束指定進程名的所有進程
         /// </summary>
-        /// <param name="processName">要结束的进程名,不需要.exe后缀</param>
+        /// <param name="processName">要結束的進程名,不需要.exe後綴</param>
         public static void KillProcess(string processName)
         {
             try

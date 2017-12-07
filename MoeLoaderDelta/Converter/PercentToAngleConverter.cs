@@ -8,7 +8,7 @@ using System.Windows.Data;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 百分比转换为角度值
+    /// 百分比轉換為角度值
     /// </summary>
     public class PercentToAngleConverter : IValueConverter
     {

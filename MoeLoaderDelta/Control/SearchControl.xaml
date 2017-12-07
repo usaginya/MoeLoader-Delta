@@ -55,9 +55,9 @@
                                 IsReadOnly="{TemplateBinding IsReadOnly}"
                                 LostFocus="PART_EditableTextBox_LostFocus_1"
                                 Style="{x:Null}"
-                                Tag="输入想要搜索的图片关键字"
+                                Tag="輸入想要搜尋的圖片關鍵字"
                                 Template="{DynamicResource ComboBoxTextBox}"
-                                Text="输入想要搜索的图片关键字"
+                                Text="輸入想要搜尋的圖片關鍵字"
                                 TextChanged="PART_EditableTextBox_TextChanged"
                                 Visibility="Visible" />
 
@@ -161,7 +161,7 @@
                                     Visibility="{Binding Path=Visiable}">
                                     <TextBlock
                                         Foreground="#FFA5A5A5"
-                                        Text="图片数量 "
+                                        Text="圖片數量 "
                                         TextWrapping="NoWrap" />
                                     <TextBlock
                                         Foreground="#FF5151FF"

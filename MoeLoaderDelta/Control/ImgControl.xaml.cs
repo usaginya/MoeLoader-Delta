@@ -11,7 +11,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// Interaction logic for ImgControl.xaml
-    /// 缩略图面板中的图片用户控件
+    /// 縮圖面板中的圖片使用者控制項
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -32,12 +32,12 @@ namespace MoeLoaderDelta
         private HttpWebRequest req;
 
         /// <summary>
-        /// 构造函数
+        /// 建構式
         /// </summary>
-        /// <param name="img">图片</param>
-        /// <param name="index">缩略图位置索引</param>
+        /// <param name="img">圖片</param>
+        /// <param name="index">縮圖位置索引</param>
         /// <param name="referer">需要的Referer</param>
-        /// <param name="supportScore">是否支持分数过滤(Not yet used)</param>
+        /// <param name="supportScore">是否支援分數過濾(Not yet used)</param>
         public ImgControl(Img img, int index, string referer, bool supportScore)
         {
             InitializeComponent();
@@ -82,7 +82,7 @@ namespace MoeLoaderDelta
             //tip.PlacementTarget = preview.Parent as UIElement;
             //TextBlock desc = (tip.Content as Border).Child as TextBlock;
 
-            //下载缩略图
+            //下載縮圖
             //DownloadImg();
 
             if (img.DownloadDetail != null)
@@ -90,7 +90,7 @@ namespace MoeLoaderDelta
                 //need detail
                 LayoutRoot.IsEnabled = false;
                 //isRetrievingDetail = true;
-                chk.Text = "信息未加载";
+                chk.Text = "訊息未載入";
             }
             else
             {
@@ -109,9 +109,9 @@ namespace MoeLoaderDelta
             }
             else
             {
-                //url不可能这么短
+                //url不可能這麼短
                 LayoutRoot.IsEnabled = false;
-                chk.Text = "原始地址无效";
+                chk.Text = "原始地址無效";
                 return;
             }
             score.Text = img.Score.ToString();
@@ -122,9 +122,9 @@ namespace MoeLoaderDelta
             txtDesc.Inlines.Add(" " + img.FileSize);
             txtDesc.ToolTip = img.Id + " " + img.Desc + "\r\n" + img.Author + "\r\n" + type + "  " + img.FileSize + "  " + img.Date;
             //txtDesc.Inlines.Add(new LineBreak());
-            //txtDesc.Inlines.Add("评分: " + img.Score);
+            //txtDesc.Inlines.Add("評分: " + img.Score);
             //txtDesc.Inlines.Add(new LineBreak());
-            //txtDesc.Inlines.Add("时间: " + img.Date);
+            //txtDesc.Inlines.Add("時間: " + img.Date);
             isDetailSucc = true;
 
             //ANI ico
@@ -132,7 +132,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 下载图片
+        /// 下載圖片
         /// </summary>
         public void DownloadImg()
         {
@@ -148,14 +148,14 @@ namespace MoeLoaderDelta
                     req = (HttpWebRequest)WebRequest.Create(img.PreviewUrl);
                     req.Proxy = MainWindow.WebProxy;
 
-                    req.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36";
+                    req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
                     if (!string.IsNullOrWhiteSpace(needReferer))
                         //req.Referer = img.PreUrl.Substring(0, img.PreUrl.IndexOf('/', 7) + 1);
                         req.Referer = needReferer;
 
                     req.CookieContainer = Sweb.CookieContainer;
 
-                    //异步下载开始
+                    //非同步下載開始
                     req.BeginGetResponse(new AsyncCallback(RespCallback), req);
                 }
                 catch (Exception ex)
@@ -168,7 +168,7 @@ namespace MoeLoaderDelta
             if (!isDetailSucc && img.DownloadDetail != null)
             {
                 isRetrievingDetail = true;
-                chk.Text = "信息加载中...";
+                chk.Text = "訊息載入中...";
                 System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback((o) =>
                 {
                     try
@@ -192,7 +192,7 @@ namespace MoeLoaderDelta
                         {
                             isRetrievingDetail = false;
                             canRetry = true;
-                            chk.Text = "信息加载失败";
+                            chk.Text = "訊息載入失敗";
                             if (imgLoaded && ImgLoaded != null)
                                 ImgLoaded(index, null);
                         }));
@@ -202,7 +202,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 异步下载结束
+        /// 非同步下載結束
         /// </summary>
         /// <param name="req"></param>
         private void RespCallback(IAsyncResult req)
@@ -265,7 +265,7 @@ namespace MoeLoaderDelta
 
         private void chk_Checked(bool isChecked)
         {
-            //未改变
+            //未改變
             if (this.isChecked == isChecked) return;
 
             if (isChecked)
@@ -284,7 +284,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 停止缩略图加载
+        /// 停止縮圖載入
         /// </summary>
         public void StopLoadImg()
         {
@@ -299,7 +299,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 设置是否选择复选框
+        /// 設定是否選擇複選框
         /// </summary>
         /// <param name="isChecked"></param>
         public bool SetChecked(bool isChecked)
@@ -319,7 +319,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 图像加载完毕
+        /// 圖像載入完畢
         /// </summary>
         public event EventHandler ImgLoaded;
         public event EventHandler checkedChanged;
@@ -332,7 +332,7 @@ namespace MoeLoaderDelta
             {
                 //if (GlassHelper.GetForegroundWindow() == MainWindow.Hwnd)
                 //{
-                //窗口有焦点才进行动画
+                //視窗有焦點才進行動畫
                 preview.Stretch = Stretch.Uniform;
                 System.Windows.Media.Animation.Storyboard sb = FindResource("imgLoaded") as System.Windows.Media.Animation.Storyboard;
                 //sb.Completed += new EventHandler(delegate { preview.Stretch = Stretch.Uniform; });
@@ -355,7 +355,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 加入下载队列
+        /// 加入下載隊列
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -368,7 +368,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 重载缩略图
+        /// 重載縮圖
         /// </summary>
         public void RetryLoad()
         {

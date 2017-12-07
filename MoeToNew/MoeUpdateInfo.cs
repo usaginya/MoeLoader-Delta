@@ -5,14 +5,14 @@ using System.Web.Script.Serialization;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 更新信息
+    /// 更新訊息
     /// </summary>
     public class MoeUpdateInfo
     {
         /// <summary>
-        /// 取得更新信息对象
+        /// 取得更新訊息對象
         /// </summary>
-        /// <param name="upjson">更新信息JSON内容</param>
+        /// <param name="upjson">更新訊息JSON內容</param>
         /// <returns></returns>
         public MoeUpdateItem GetMoeUpdateInfo(string upjson)
         {
@@ -28,12 +28,12 @@ namespace MoeLoaderDelta
     }
 
     /// <summary>
-    /// 更新信息对象
+    /// 更新訊息對象
     /// </summary>
     public class MoeUpdateItem
     {
         /// <summary>
-        /// 更新的内容说明
+        /// 更新的內容說明
         /// </summary>
         private string info;
         public string Info
@@ -45,7 +45,7 @@ namespace MoeLoaderDelta
     }
 
     /// <summary>
-    /// 更新文件对象
+    /// 更新檔案對象
     /// </summary>
     public class MoeUpdateFile
     {
@@ -66,7 +66,7 @@ namespace MoeLoaderDelta
             set { ver = value; }
         }
         /// <summary>
-        /// 状态 up:下载  del:删除
+        /// 狀態 up:下載  del:刪除
         /// </summary>
         public string State
         {

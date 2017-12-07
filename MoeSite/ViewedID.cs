@@ -6,27 +6,27 @@ using System.Text;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 管理浏览过的图片id
+    /// 管理瀏覽過的圖片id
     /// </summary>
     public class ViewedID
     {
         /// <summary>
-        /// 曾经浏览的id范围集合
+        /// 曾經瀏覽的id範圍集合
         /// </summary>
         private List<IdRange> viewedIds = new List<IdRange>();
 
         /// <summary>
-        /// 本次浏览的id集合
+        /// 本次瀏覽的id集合
         /// </summary>
         private List<int> viewingIds = new List<int>();
 
         /// <summary>
-        /// 曾经浏览过的最大的id
+        /// 曾經瀏覽過的最大的id
         /// </summary>
         private int viewedBiggestId;
 
         /// <summary>
-        /// 是否曾经浏览过
+        /// 是否曾經瀏覽過
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -41,7 +41,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 曾经浏览过的最大的id
+        /// 曾經瀏覽過的最大的id
         /// </summary>
         public int ViewedBiggestId
         {
@@ -50,7 +50,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 本次正在浏览的id
+        /// 本次正在瀏覽的id
         /// </summary>
         /// <param name="id"></param>
         public void AddViewingId(int id)
@@ -59,13 +59,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 从字符串加载已浏览过的id
+        /// 從字串載入已瀏覽過的id
         /// </summary>
         /// <param name="rangeStr"></param>
         public void AddViewedRange(string rangeStr)
         {
             //16311....16317,16320....16340
-            //编号,范围长度,... 16311,6;3,20;
+            //編號,範圍長度,... 16311,6;3,20;
             if (rangeStr.Contains(','))
             {
                 string[] parts = rangeStr.Split(';');
@@ -94,7 +94,7 @@ namespace MoeLoaderDelta
             }
             else if (rangeStr.Length > 0)
             {
-                //向前兼容配置文件
+                //向前相容設定檔案
                 int id = int.Parse(rangeStr);
                 viewedIds.Add(new IdRange(0, id, true));
                 viewedBiggestId = id;
@@ -102,15 +102,15 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 使用游程编码压缩进行存储
+        /// 使用遊程編碼壓縮排行存儲
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            //编号,范围长度,... 16311,6;8,20;
+            //編號,範圍長度,... 16311,6;8,20;
             List<int> temp = new List<int>();
             IdRange firstPart = new IdRange(0, 0, true);
-            //融合并排序
+            //融合併排序
             //temp.AddRange(viewedIds);
             foreach (IdRange idr in viewedIds)
             {
@@ -123,15 +123,15 @@ namespace MoeLoaderDelta
 
             //string firstPartStr = firstPart.Start + "," + firstPart.Range + ";";
 
-            //压缩
+            //壓縮
             if (temp.Count > 1)
             {
-                //超过该数量时向第一部分合并
+                //超過該數量時向第一部分合併
                 const int MAX_ID = 1000;
                 int startIndex = 0;
                 if (temp.Count > MAX_ID)
                 {
-                    //大于上限时归并至第一部分
+                    //大於上限時歸併至第一部分
                     firstPart.Range = temp[temp.Count - MAX_ID - 1];
                     startIndex = temp.Count - MAX_ID;
                 }
@@ -144,7 +144,7 @@ namespace MoeLoaderDelta
                 {
                     if (i < temp.Count - 1)
                     {
-                        //跳过重复的
+                        //跳過重複的
                         if (temp[i] == temp[i + 1])
                             continue;
                     }
@@ -156,7 +156,7 @@ namespace MoeLoaderDelta
                     }
                     else if (temp[i] != last)
                     {
-                        //遇到不连续点且非重复
+                        //遇到不連續點且非重複
                         sb.Append((last - lastTrim) + "," + range + ";");
                         lastTrim = last + range;
                         last = temp[i];
@@ -175,7 +175,7 @@ namespace MoeLoaderDelta
 
         ///////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// 一个范围
+        /// 一個範圍
         /// </summary>
         private class IdRange
         {
@@ -183,12 +183,12 @@ namespace MoeLoaderDelta
             public int Range;
 
             /// <summary>
-            /// 是否第一部分（较长）
+            /// 是否第一部分（較長）
             /// </summary>
             public bool isFirst;
 
             /// <summary>
-            /// 在此范围内
+            /// 在此範圍內
             /// </summary>
             /// <param name="id"></param>
             /// <returns></returns>

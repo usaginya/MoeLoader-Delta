@@ -13,7 +13,7 @@ using Image = System.Windows.Controls.Image;
 namespace MoeLoaderDelta.Control
 {
     /// <summary>
-    /// 支持GIF动画图片播放的图片控件，GIF图片源GIFSource
+    /// 支援GIF動畫圖片播放的圖片控制項，GIF圖片源GIFSource
     /// </summary>
     public class AnimatedGIF : Image
     {
@@ -21,7 +21,7 @@ namespace MoeLoaderDelta.Control
             "GIFSource", typeof(object), typeof(AnimatedGIF), new PropertyMetadata(OnSourcePropertyChanged));
 
         /// <summary>
-        /// GIF图片源，支持相对路径、绝对路径、Steam
+        /// GIF圖片源，支援相對路徑、絕對路徑、Steam
         /// </summary>
         public object GIFSource
         {
@@ -33,10 +33,10 @@ namespace MoeLoaderDelta.Control
         internal BitmapSource BitmapSource;
         public delegate void FrameUpdatedEventHandler();
 
-        //gif宽和高
+        //gif寬和高
         private static double imgw = double.NaN, imgh = double.NaN;
 
-        //========= 封装 ==========
+        //========= 封裝 ==========
         public double PixelWidth
         {
             get
@@ -117,7 +117,7 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 属性更改处理事件
+        /// 屬性更改處理事件
         /// </summary>
         private static void OnSourcePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
         {
@@ -133,11 +133,11 @@ namespace MoeLoaderDelta.Control
             object source = gif.GIFSource;
             if (source == null) return;
 
-            //根据类型处理
+            //根據類型處理
             string sourcetype = source.GetType().ToSafeString();
             if (sourcetype.Contains("System.String"))
             {
-                //文件路径
+                //檔案路徑
                 string path = source.ToSafeString();
                 if (path.IsInvalid()) return;
                 if (!Path.IsPathRooted(path))
@@ -158,7 +158,7 @@ namespace MoeLoaderDelta.Control
             }
             else
             {
-                //无效
+                //無效
                 throw new Exception("Unsupported Stream");
             }
 
@@ -167,7 +167,7 @@ namespace MoeLoaderDelta.Control
             gif.StartAnimate();
         }
         /// <summary>
-        /// 从Bitmap取得BitmapSource
+        /// 從Bitmap取得BitmapSource
         /// </summary>
         /// <param name="bmap">Bitmap</param>
         /// <param name="bimg">BitmapSource</param>
@@ -191,14 +191,14 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 取当前GIF宽度高度
+        /// 取當前GIF寬度高度
         /// </summary>
         /// <param name="gif">AnimatedGIF</param>
-        /// <param name="width">宽</param>
+        /// <param name="width">寬</param>
         /// <param name="height">高</param>
         public static void GetWidthHeight(AnimatedGIF gif, ref double width, ref double height)
         {
-            //通过Drawing.Image取宽高
+            //透過Drawing.Image取寬高
             Bitmap gb = gif.Bitmap;
             MemoryStream ms = new MemoryStream();
             gb.Save(ms, gb.RawFormat);

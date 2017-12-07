@@ -6,11 +6,11 @@ using System.Xml;
 namespace SitePack
 {
     /// <summary>
-    /// Booru系站点
+    /// Booru系站點
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
-        //缩略图大小
+        //縮圖大小
         //private const int SWIDTH = 150;
         //private const int SHEIGHT = 150;
         //private const int LWIDTH = 300;
