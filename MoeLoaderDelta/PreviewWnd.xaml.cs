@@ -11,6 +11,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media.Animation;
 using MoeLoaderDelta.Control;
 using System.IO;
+using System.Linq;
 
 namespace MoeLoaderDelta
 {
@@ -328,10 +329,9 @@ namespace MoeLoaderDelta
             foreach (int iid in imgs.Values)
             {
                 PreviewImg pi = (imgGrid.Children[iid] as ScrollViewer).Content as PreviewImg;
-                foreach (System.Net.HttpWebRequest req in pi.Reqs.Values)
-                {
-                    req.Abort();
-                }
+                var dicSort = from pireq in pi.Reqs orderby pireq.Value descending select pireq;
+                foreach (KeyValuePair<int, System.Net.HttpWebRequest> req in dicSort)
+                    req.Value.Abort();
                 pi.Reqs.Clear();
             }
             imgs.Clear();
@@ -345,7 +345,7 @@ namespace MoeLoaderDelta
                 {
                     //启动回收
                     System.Threading.Thread.Sleep(2000);
-                    System.GC.Collect();
+                    GC.Collect();
                 })
              )).Start();
         }
