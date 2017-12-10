@@ -155,7 +155,8 @@ namespace MoeLoaderDelta
             {
                 request = WebRequest.Create(url) as HttpWebRequest;
                 request.UserAgent = UA;
-                request.ContentType = MimeMapping.GetMimeMapping(url);
+                request.ContentType = "application/x-www-form-urlencoded";
+                //request.ContentType = MimeMapping.GetMimeMapping(url);
                 request.Proxy = proxy;
                 request.Method = "POST";
                 request.KeepAlive = true;
