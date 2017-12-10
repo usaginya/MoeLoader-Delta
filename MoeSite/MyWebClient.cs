@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading;
-using System.Text;
 
 namespace MoeLoaderDelta
 {
@@ -147,7 +144,7 @@ namespace MoeLoaderDelta
         {
             //最大连接数512
             ServicePointManager.DefaultConnectionLimit = 512;
-            Headers["User-Agent"] = "Googlebot-Image/1.0";
+            Headers["User-Agent"] = SessionClient.DefUA;
         }
 
         /// <summary>

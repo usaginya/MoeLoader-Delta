@@ -85,6 +85,8 @@ namespace SitePack
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
         private Random rand = new Random();
+        private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
 
@@ -180,7 +182,7 @@ namespace SitePack
             }
 
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            { 
+            {
                 if (tagNode == null)
                 {
                     return imgs;
@@ -194,7 +196,7 @@ namespace SitePack
             //Tag search js-mount-point-search-related-tags Json
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
-                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;","\"");
+                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
                 object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
                 foreach (object o in array)
                 {
@@ -208,7 +210,7 @@ namespace SitePack
                         id = obj["illustId"].ToString();
                         detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                     }
-                    if(obj["url"] != null)
+                    if (obj["url"] != null)
                     {
                         previewUrl = obj["url"].ToString();
                     }
@@ -429,30 +431,36 @@ namespace SitePack
                 try
                 {
                     HtmlDocument hdoc = new HtmlDocument();
-                    SessionClient Sweb = new SessionClient();
 
                     cookie = "";
-                    string data = "";
-                    string post_key = "";
+                    string
+                        data = "",
+                        post_key = "",
+                        loginpost = "https://accounts.pixiv.net/api/login?lang=zh",
+                        loginurl = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index";
+
                     int index = rand.Next(0, user.Length);
 
                     //请求1 获取post_key
-                    data = Sweb.Get("https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index", proxy, Encoding.GetEncoding("UTF-8"));
+                    data = Sweb.Get(loginurl, proxy, "UTF-8");
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
                         throw new Exception("自动登录失败");
 
                     //请求2 POST取登录Cookie
+                    shc.Referer = Referer;
                     data = "pixiv_id=" + user[index]
                         + "&password=" + pass[index]
                         + "&captcha=&g_recaptcha_response=&post_key=" + post_key
                         + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
-                    data = Sweb.Post("https://accounts.pixiv.net/api/login?lang=zh", data, proxy, Encoding.GetEncoding("UTF-8"));
+                    data = Sweb.Post(loginpost, data, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
-                    if (cookie.Length < 9)
-                        throw new Exception("自动登录失败");
+                    if (data.Contains("400"))
+                        throw new Exception(data);
+                    else if (cookie.Length < 9)
+                        throw new Exception("自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }

@@ -15,6 +15,8 @@ namespace SitePack
     /// </summary>
     class SiteYuriimg : AbstractImageSite
     {
+        private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private static string cookie = "";
         private string user = "mluser1";
         private string pass = "ml1yuri";
@@ -143,56 +145,40 @@ namespace SitePack
             {
                 try
                 {
-                    HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create("http://yuriimg.com/account/login");
-                    HttpWebResponse postResponse;
+                    string loginUrl = "http://yuriimg.com/account/login";
 
-                    // 生成边界符
-                    string boundary = "---------------" + DateTime.Now.Ticks.ToString("x");
-                    // post数据中的边界符
-                    string pboundary = "--" + boundary;
-                    // 最后的结束符
-                    string endBoundary = "--" + boundary + "--\r\n";
-                    // post数据
-                    string postData = pboundary + "\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n"
+                    /*HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+                    HttpWebResponse postResponse;*/
+
+                    /*
+                     * 开始边界符
+                     * 分隔边界符
+                     * 结束边界符
+                     * Post数据
+                     */
+                    string
+                        boundary = "---------------" + DateTime.Now.Ticks.ToString("x"),
+                        pboundary = "--" + boundary,
+                        endBoundary = "--" + boundary + "--\r\n",
+                        postData = pboundary + "\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n"
                         + user + "\r\n" + pboundary
                         + "\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n"
                         + pass + "\r\n" + endBoundary;
 
-                    // 设置属性
-                    postRequest.Proxy = proxy;
-                    postRequest.Method = "POST";
-                    postRequest.Timeout = 8000;
-                    postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                    postRequest.Accept = "application/json";
-                    postRequest.Headers.Add("Accept-Language", "en-US,en;q=0.5");
-                    postRequest.Headers.Add("Accept-Encoding", "gzip, deflate");
-                    postRequest.ContentType = "multipart/form-data; boundary=" + boundary;
-                    //postRequest.Headers.Add("Cookie", cookie);
-                    postRequest.Referer = "http://yuriimg.com/account/login";
-                    postRequest.KeepAlive = true;
-                    postRequest.AllowAutoRedirect = false;
-                    //postRequest.CookieContainer = cookieContainer;
-                    postRequest.AutomaticDecompression = DecompressionMethods.GZip;
-                    // 上传post数据
-                    byte[] bt_postData = Encoding.UTF8.GetBytes(postData);
-                    postRequest.ContentLength = bt_postData.Length;
-                    Stream writeStream = postRequest.GetRequestStream();
-                    writeStream.Write(bt_postData, 0, bt_postData.Length);
-                    writeStream.Close();
+                    string retData = "";
 
-                    //获取响应
-                    postResponse = (HttpWebResponse)postRequest.GetResponse();
-                    Stream responseStream = postResponse.GetResponseStream();
-                    string resData = "";
-                    StreamReader resSR = new StreamReader(responseStream, Encoding.UTF8);
+                    cookie = "";
+                    shc.Referer = Referer;
+                    shc.AllowAutoRedirect = false;
+                    shc.Accept = SessionHeadersValue.AcceptAppJson;
+                    shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
+                    shc.ContentType = SessionHeadersValue.ContentTypeFormData + "; boundary=" + boundary;
+                    shc.AutomaticDecompression = DecompressionMethods.GZip;
 
-                    resData = resSR.ReadToEnd();
-                    resSR.Close();
-                    responseStream.Close();
+                    retData = Sweb.Post(loginUrl, postData, proxy, "UTF-8", shc);
+                    cookie = Sweb.GetURLCookies(SiteUrl);
 
-                    cookie = postResponse.Headers["Set-Cookie"];
-
-                    if (resData.Contains("-2"))
+                    if (retData.Contains("-2"))
                     {
                         throw new Exception("密码错误");
                     }
@@ -212,7 +198,7 @@ namespace SitePack
             string date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
             if (date.Contains("时前"))
             {
-                date =DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
+                date = DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }
             else if (date.Contains("天前"))
             {
