@@ -11,7 +11,7 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 171203
+    /// Fixed 171210
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
@@ -25,9 +25,12 @@ namespace SitePack
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
 
-            string pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&tags={0}&pid={1}", keyWord, (page-1)*42);
+            //string pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&tags={0}&pid={1}", keyWord, (page-1)*42);
+            string pageUrl;
             if (keyWord.Length == 0)
-                pageUrl = pageUrl.Substring(0, pageUrl.Length - 6);
+                pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}", (page - 1) * 42);
+            else
+                pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&tags={0}&pid={1}", keyWord, (page - 1) * 42);
             MyWebClient client = new MyWebClient { Proxy = proxy, Encoding = Encoding.UTF8 };
             string pageString = client.DownloadString(pageUrl);
             client.Dispose();
@@ -42,19 +45,21 @@ namespace SitePack
             HtmlNodeCollection previewNodes = document.DocumentNode.SelectNodes("//div[@class=\"thumbnail-preview\"]");
             if (previewNodes == null)
                 return list;
-            foreach(HtmlNode node in previewNodes)
+            foreach (HtmlNode node in previewNodes)
             {
                 HtmlNode node1 = node.SelectSingleNode("./span/a");
-                HtmlNode node2 = node1.SelectSingleNode("img");
+                HtmlNode node2 = node1.SelectSingleNode("./img");
                 string detailUrl = FormattedImgUrl(node1.Attributes["href"].Value);
-                //string desc = node2.Attributes["title"].Value.Substring(node2.InnerText.IndexOf(' ') + 1, node2.InnerText.LastIndexOf("  ") - node2.InnerText.IndexOf(' ') - 1).Trim();
+                string desc = Regex.Match(node1.InnerHtml, "(?<=title=\" ).*?(?=  score)").Value;
                 Img item = new Img()
                 {
-                    //Desc = desc,
-                    //Id = Convert.ToInt32(Regex.Match(node1.Attributes["id"].Value, @"^\d*$").Value),
-                    //Tags = desc,
+                    Desc = desc,
+                    Tags = desc,
+                    Id = Convert.ToInt32(Regex.Match(node1.Attributes["id"].Value, @"\d+").Value),
                     DetailUrl = detailUrl,
-                    PreviewUrl = FormattedImgUrl(node2.Attributes["data-original"].Value)
+                    PreviewUrl = node2.Attributes["data-original"].Value
+                    //PreviewUrl = node1.InnerHtml.Substring(node1.InnerHtml.IndexOf("original=\"") + 10,
+                    //        node1.InnerHtml.IndexOf("\" src") - node1.InnerHtml.IndexOf("original=\"") - 10)
                 };
                 item.DownloadDetail = (i, p) =>
                 {
@@ -62,36 +67,36 @@ namespace SitePack
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(html);
                     HtmlNodeCollection liNodes = doc.DocumentNode.SelectNodes("//li");
-                    HtmlNode imgData = doc.DocumentNode.SelectSingleNode("//img[@id=\"image\"]");
+                    HtmlNode imgData = doc.DocumentNode.SelectSingleNode("//*[@id=\"image\"]");
                     if (imgData != null)
                     {
                         i.Width = Convert.ToInt32(imgData.Attributes["data-original-width"].Value);
                         i.Height = Convert.ToInt32(imgData.Attributes["data-original-height"].Value);
-                        i.Tags = imgData.Attributes["alt"].Value;
                         i.SampleUrl = imgData.Attributes["src"].Value;
                     }
                     foreach (HtmlNode n in liNodes)
                     {
-                        if (n.InnerText.Contains("Id"))
-                            i.Id = Convert.ToInt32(Regex.Match(n.InnerText, @"^\d*$").Value);
                         if (n.InnerText.Contains("Posted"))
-                            i.Date = n.InnerHtml.Substring(n.InnerHtml.IndexOf(' ') + 1, n.InnerHtml.IndexOf("<br") - n.InnerHtml.IndexOf(' ') - 1);
+                            i.Date = n.InnerText.Substring(n.InnerText.IndexOf("ed: ") + 3, n.InnerText.IndexOf(" by") - n.InnerText.IndexOf("d: ") - 3);
                         if (n.InnerHtml.Contains("by"))
-                            i.Author = n.SelectSingleNode(".//a").InnerText;
+                            i.Author = n.InnerText.Substring(n.InnerText.LastIndexOf(' ') + 1, n.InnerText.Length - n.InnerText.LastIndexOf(' ') - 1);
                         if (n.InnerText.Contains("Source"))
-                            i.Source = n.SelectSingleNode(".//a").Attributes["href"].Value;
-
+                            i.Source = n.SelectSingleNode("//*[@rel=\"nofollow\"]").Attributes["href"].Value;
+                        if (n.InnerText.Contains("Rating") && n.InnerText.Contains("Safe"))
+                            i.IsExplicit = false;
+                        else if (n.InnerText.Contains("Rating"))
+                            i.IsExplicit = true;
                         if (n.InnerText.Contains("Rating") && n.InnerText.Contains("Safe"))
                             i.IsExplicit = false;
                         else if (n.InnerText.Contains("Rating"))
                             i.IsExplicit = true;
 
                         if (n.InnerText.Contains("Score"))
-                            i.Score = Convert.ToInt32(n.SelectSingleNode(".//span").InnerText);
+                            i.Score = Convert.ToInt32(n.SelectSingleNode("./span").InnerText);
                         if (n.InnerHtml.Contains("Original"))
                         {
-                            i.OriginalUrl = n.SelectSingleNode(".//a").Attributes["href"].Value;
-                            i.JpegUrl = n.SelectSingleNode(".//a").Attributes["href"].Value;
+                            i.OriginalUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
+                            i.JpegUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
                         }
                     }
                 };
