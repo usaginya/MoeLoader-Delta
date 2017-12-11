@@ -63,12 +63,16 @@ namespace SitePack
                 url = "https://iapi.sankakucomplex.com/post/index.json?login=" + tempuser
                     + "&password_hash=" + temppass + "&appkey=" + tempappkey + "&page=" + page + "&limit=" + count;
             }
+            else return null;
 
             if (keyWord.Length > 0)
             {
                 url += "&tags=" + keyWord;
             }
-            pageString = Sweb.Get(url, proxy, "UTF-8", ua);
+            shc.UserAgent = ua;
+            shc.Accept = SessionHeadersValue.AcceptAppJson;
+            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+            pageString = Sweb.Get(url, proxy, "UTF-8", shc);
 
             return pageString;
         }
@@ -89,13 +93,8 @@ namespace SitePack
 
             //https://chan.sankakucomplex.com/tag/autosuggest?tag=*****&locale=en
             string url = string.Format("https://" + sitePrefix + ".sankakucomplex.com/tag/autosuggest?tag={0}", word);
-            MyWebClient web = new MyWebClient();
-            web.Timeout = 8;
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
-            web.Headers[HttpRequestHeader.Cookie] = cookie;
-
-            string json = web.DownloadString(url);
+            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+            string json = Sweb.Get(url, proxy, "UTF-8", shc);
             object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
             string name = "", count = "";
 
@@ -157,6 +156,8 @@ namespace SitePack
                     //Post登录取Cookie
                     shc.UserAgent = ua;
                     shc.Referer = Referer;
+                    shc.Accept = SessionHeadersValue.AcceptAppJson;
+                    shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
                     Sweb.Post("https://" + subdomain + ".sankakucomplex.com/user/authenticate.json", post, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies("https://" + subdomain + ".sankakucomplex.com");
 

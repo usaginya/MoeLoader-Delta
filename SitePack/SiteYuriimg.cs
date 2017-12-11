@@ -6,7 +6,6 @@ using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Linq;
 using System.Net;
-using System.IO;
 
 namespace SitePack
 {
@@ -36,25 +35,24 @@ namespace SitePack
             string url = SiteUrl + "/post/" + page + ".html";
             // string url = "http://yuriimg.com/show/ge407xd5o.jpg";
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
-            web.Headers["Cookie"] = cookie;
-
             if (keyWord.Length > 0)
             {
                 //http://yuriimg.com/search/index/tags/?/p/?.html
                 url = SiteUrl + "/search/index/tags/" + keyWord + "/p/" + page + ".html";
             }
-            string pageString = web.DownloadString(url);
-            web.Dispose();
+
+            shc.Remove("Accept-Ranges");
+            shc.Accept = SessionHeadersValue.AcceptTextHtml;
+            shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
 
             return pageString;
         }
 
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-
+            shc.Add("Accept-Ranges", "bytes");
+            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
             List<Img> list = new List<Img>();
 
             HtmlDocument dococument = new HtmlDocument();
@@ -85,12 +83,7 @@ namespace SitePack
 
                 item.DownloadDetail = (i, p) =>
                 {
-
-                    MyWebClient web = new MyWebClient();
-                    web.Proxy = p;
-                    web.Encoding = Encoding.UTF8;
-                    web.Headers["Cookie"] = cookie;
-                    string html = web.DownloadString(i.DetailUrl);
+                    string html = Sweb.Get(i.DetailUrl, proxy, "UTF-8", shc);
 
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(html);
@@ -147,9 +140,6 @@ namespace SitePack
                 {
                     string loginUrl = "http://yuriimg.com/account/login";
 
-                    /*HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-                    HttpWebResponse postResponse;*/
-
                     /*
                      * 开始边界符
                      * 分隔边界符
@@ -174,6 +164,7 @@ namespace SitePack
                     shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
                     shc.ContentType = SessionHeadersValue.ContentTypeFormData + "; boundary=" + boundary;
                     shc.AutomaticDecompression = DecompressionMethods.GZip;
+                    shc.Remove("Accept-Ranges");
 
                     retData = Sweb.Post(loginUrl, postData, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
