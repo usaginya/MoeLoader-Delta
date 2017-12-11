@@ -351,7 +351,7 @@ namespace MoeLoaderDelta
                             #region 創建下載
                             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(nowDLfile.Url);
                             req.Proxy = WebRequest.DefaultWebProxy;
-                            req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                            req.UserAgent = SessionClient.DefUA;
                             req.AllowAutoRedirect = true;
 
                             HttpWebResponse res = (HttpWebResponse)req.GetResponse();

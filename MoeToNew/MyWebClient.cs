@@ -9,14 +9,15 @@ namespace MoeLoaderDelta
     public class MyWebClient : WebClient
     {
         //private Calculagraph _timer;
-        private int _timeOut = 30;
+        private int _timeOut = 25;
 
         /// <summary>
         /// 構造WebClient
         /// </summary>
         public MyWebClient()
         {
-            Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+            Headers["User-Agent"] = SessionClient.DefUA;
+            ServicePointManager.DefaultConnectionLimit = 30;
         }
 
         /// <summary>
@@ -30,7 +31,7 @@ namespace MoeLoaderDelta
             }
             set
             {
-                if (value <= 0)
+                if (value < 1)
                     _timeOut = 10;
                 _timeOut = value;
             }
@@ -46,6 +47,9 @@ namespace MoeLoaderDelta
             HttpWebRequest request = (HttpWebRequest)base.GetWebRequest(address);
             request.Timeout = 1000 * Timeout;
             request.ReadWriteTimeout = 1000 * Timeout;
+            request.ServicePoint.Expect100Continue = false;
+            request.ServicePoint.UseNagleAlgorithm = false;
+            request.ServicePoint.ConnectionLimit = int.MaxValue;
             return request;
         }
     }

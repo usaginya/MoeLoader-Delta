@@ -25,7 +25,7 @@ namespace SitePack
 
         public override bool IsSupportCount { get { return false; } } //fixed 24
         public override bool IsSupportScore { get { return false; } }
-       // public override bool IsSupportRes { get { return false; } }
+        // public override bool IsSupportRes { get { return false; } }
         public override bool IsSupportTag { get { return true; } }
         //public bool IsSupportRes { get { return true; } }
         //public bool IsSupportPreview { get { return true; } }
@@ -78,7 +78,7 @@ namespace SitePack
             else
             {
                 url = string.IsNullOrWhiteSpace(keyWord) ? url : beforeUrl + "?p=" + page;
-                pageString = Sweb.Get(url, proxy, Encoding.UTF8);
+                pageString = Sweb.Get(url, proxy, SiteUrl, "UTF-8");
             }
 
             return pageString;
@@ -134,7 +134,7 @@ namespace SitePack
             List<TagItem> re = new List<TagItem>();
 
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
-            string txt = Sweb.Get(url, proxy, Encoding.UTF8);
+            string txt = Sweb.Get(url, proxy, SiteUrl, "UTF-8");
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -203,9 +203,9 @@ namespace SitePack
                     Sweb.Post(
                         "https://www.zerochan.net/login",
                         "ref=%2F&login=Login&name=" + user[index] + "&password=" + pass[index],
-                        proxy, Encoding.GetEncoding("UTF-8"));
+                        proxy, SiteUrl, "UTF-8");
 
-                    cookie = Sweb.GetURLCookies("https://www.zerochan.net");
+                    cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("z_hash"))
                         throw new Exception("登入失敗");

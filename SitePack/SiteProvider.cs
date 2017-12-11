@@ -54,10 +54,11 @@ namespace SitePack
                 "https://safebooru.org/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
                 "safebooru.org", "safebooru", null, true, BooruProcessor.SourceType.XML));
 
-            sites.Add(new SiteBooru(
-                "https://gelbooru.com/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
-                "https://gelbooru.com/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
-                "gelbooru.com", "gelbooru", null, true, BooruProcessor.SourceType.XML));
+            //sites.Add(new SiteBooru(
+            //    "https://gelbooru.com/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
+            //    "https://gelbooru.com/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
+            //    "gelbooru.com", "gelbooru", null, true, BooruProcessor.SourceType.XML));
+            sites.Add(new SiteGelbooru());
 
             sites.Add(new SiteEshuu(1)); //tag
             sites.Add(new SiteEshuu(3)); //artist

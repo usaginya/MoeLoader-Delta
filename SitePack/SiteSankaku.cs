@@ -11,6 +11,7 @@ namespace SitePack
     public class SiteSankaku : AbstractImageSite
     {
         private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private Random rand = new Random();
         private string[] user = { "girltmp", "mload006", "mload107", "mload482", "mload367", "mload876", "mload652", "mload740", "mload453", "mload263", "mload395" };
         private string[] pass = { "girlis2018", "moel006", "moel107", "moel482", "moel367", "moel876", "moel652", "moel740", "moel453", "moel263", "moel395" };
@@ -67,7 +68,7 @@ namespace SitePack
             {
                 url += "&tags=" + keyWord;
             }
-            pageString = Sweb.Get(url, proxy, Encoding.UTF8, ua);
+            pageString = Sweb.Get(url, proxy, "UTF-8", ua);
 
             return pageString;
         }
@@ -154,10 +155,9 @@ namespace SitePack
                     string post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
 
                     //Post登入取Cookie
-                    Sweb.Post(
-                        "https://" + subdomain + ".sankakucomplex.com/user/authenticate.json",
-                        post, proxy, Encoding.GetEncoding("UTF-8"), ua
-                        );
+                    shc.UserAgent = ua;
+                    shc.Referer = Referer;
+                    Sweb.Post("https://" + subdomain + ".sankakucomplex.com/user/authenticate.json", post, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies("https://" + subdomain + ".sankakucomplex.com");
 
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))

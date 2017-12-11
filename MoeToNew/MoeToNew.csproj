@@ -124,6 +124,12 @@
   <ItemGroup>
     <None Include="Resources\HtmlTextBlock.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
+      <Project>{D25819AA-59F6-4193-9071-F638F85FFCCF}</Project>
+      <Name>MoeSite</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

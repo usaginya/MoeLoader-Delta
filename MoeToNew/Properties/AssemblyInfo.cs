@@ -54,3 +54,4 @@ using System.Windows;
 [assembly: AssemblyVersion("1.1.6.2")]
 [assembly: AssemblyFileVersion("1.1.6.2")]
 [assembly: Guid("e2bde952-d0e3-4173-840b-7f35600025d6")]
+

@@ -306,8 +306,6 @@ namespace MoeLoaderDelta
                 res = sc.GetWebResponse(
                     task.Url,
                     MainWindow.WebProxy,
-                    20000,
-                    20000,
                     task.NeedReferer
                     );
 
@@ -442,9 +440,9 @@ namespace MoeLoaderDelta
 
                             downloadItemsDic[task.Url].Progress = 100.0;
                             downloadItemsDic[task.Url].StatusE = DLStatus.Success;
-                            downloadItemsDic[task.Url].Size = (downed > 1048576
-                            ? (downed / 1048576.0).ToString("0.00MB")
-                            : (downed / 1024.0).ToString("0.00KB"));
+                            //downloadItemsDic[task.Url].Size = (downed > 1048576
+                            //? (downed / 1048576.0).ToString("0.00MB")
+                            //: (downed / 1024.0).ToString("0.00KB"));
                             numSaved++;
                         }
                     }

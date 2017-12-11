@@ -110,7 +110,7 @@ namespace SitePack
 
             string url = SiteUrl + "/pictures/autocomplete_tag";
             System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-            req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+            req.UserAgent = SessionClient.DefUA;
             req.Proxy = proxy;
             req.Headers["Cookie"] = sessionId;
             req.Timeout = 8000;
@@ -246,7 +246,7 @@ namespace SitePack
                 int index = rand.Next(0, user.Length);
                 //http://mjv-art.org/login/submit
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(SiteUrl + "/login/submit");
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                req.UserAgent = SessionClient.DefUA;
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";
