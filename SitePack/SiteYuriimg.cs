@@ -134,7 +134,7 @@ namespace SitePack
         private void Login(IWebProxy proxy)
         {
             //第二次上传账户密码,使cookie可以用于登录
-            if (!cookie.Contains("otome_"))
+            if (!cookie.Contains("otome_") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
             {
                 try
                 {

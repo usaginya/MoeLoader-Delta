@@ -11,7 +11,7 @@ namespace SitePack
 {
     public class SiteZeroChan : AbstractImageSite
     {
-        public override string SiteUrl { get { return "http://www.zerochan.net"; } }
+        public override string SiteUrl { get { return "http://www.zerochan.net"; }}
         public override string SiteName
         {
             get

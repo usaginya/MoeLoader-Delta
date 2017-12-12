@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Text.RegularExpressions;
@@ -418,7 +417,7 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") || !cookie.Contains("token="))
+            if (!cookie.Contains("pixiv") || !cookie.Contains("token=") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
             {
                 try
                 {
