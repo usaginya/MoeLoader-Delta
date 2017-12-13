@@ -306,8 +306,6 @@ namespace MoeLoaderDelta
                 res = sc.GetWebResponse(
                     task.Url,
                     MainWindow.WebProxy,
-                    20000,
-                    20000,
                     task.NeedReferer
                     );
 

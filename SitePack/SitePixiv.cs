@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
 using System.Text.RegularExpressions;
@@ -85,6 +84,8 @@ namespace SitePack
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
         private Random rand = new Random();
+        private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
 
@@ -103,11 +104,6 @@ namespace SitePack
 
             //http://www.pixiv.net/new_illust.php?p=2
             string url = SiteUrl + "/new_illust.php?p=" + page;
-
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Headers["Cookie"] = cookie;
-            web.Encoding = Encoding.UTF8;
 
             if (keyWord.Length > 0)
             {
@@ -139,8 +135,10 @@ namespace SitePack
                 url = SiteUrl + "/ranking.php?mode=monthly&p=" + page;
             }
 
-            string pageString = web.DownloadString(url);
-            web.Dispose();
+            shc.Remove("X-Requested-With");
+            shc.Remove("Accept-Ranges");
+            shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
 
             return pageString;
         }
@@ -180,7 +178,7 @@ namespace SitePack
             }
 
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            { 
+            {
                 if (tagNode == null)
                 {
                     return imgs;
@@ -194,7 +192,7 @@ namespace SitePack
             //Tag search js-mount-point-search-related-tags Json
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
-                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;","\"");
+                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
                 object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
                 foreach (object o in array)
                 {
@@ -208,7 +206,7 @@ namespace SitePack
                         id = obj["illustId"].ToString();
                         detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                     }
-                    if(obj["url"] != null)
+                    if (obj["url"] != null)
                     {
                         previewUrl = obj["url"].ToString();
                     }
@@ -269,15 +267,12 @@ namespace SitePack
                 Dictionary<string, object> tag = new Dictionary<string, object>();
 
                 string url = string.Format(SiteUrl + "/rpc/cps.php?keyword={0}", word);
-                MyWebClient web = new MyWebClient();
-                web.Timeout = 8;
-                web.Proxy = proxy;
-                web.Encoding = Encoding.UTF8;
-                web.Headers["Cookie"] = cookie;
-                web.Headers["Referer"] = referer;
-                web.Headers.Add("X-Requested-With", "XMLHttpRequest");
 
-                string json = web.DownloadString(url);
+                shc.Referer = referer;
+                shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                shc.Add("X-Requested-With", "XMLHttpRequest");
+                shc.Remove("Accept-Ranges");
+                string json = Sweb.Get(url, proxy, "UTF-8", shc);
 
                 object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
 
@@ -296,6 +291,9 @@ namespace SitePack
 
         private Img GenerateImg(string detailUrl, string preview_url, string id)
         {
+            shc.Add("Accept-Ranges", "bytes");
+            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+
             int intId = int.Parse(id);
 
             if (!detailUrl.StartsWith("http") && !detailUrl.StartsWith("/"))
@@ -335,12 +333,7 @@ namespace SitePack
             img.DownloadDetail = new DetailHandler((i, p) =>
             {
                 //retrieve details
-                MyWebClient web = new MyWebClient();
-                web.Proxy = p;
-                web.Encoding = Encoding.UTF8;
-                web.Headers["Cookie"] = cookie;
-                web.Headers["Referer"] = Referer;
-                string page = web.DownloadString(i.DetailUrl);
+                string page = Sweb.Get(i.DetailUrl, p, "UTF-8", shc);
 
                 Regex reg = new Regex(@"^「(?<Desc>.*?)」/「(?<Author>.*?)」");
                 HtmlDocument doc = new HtmlDocument();
@@ -401,7 +394,7 @@ namespace SitePack
                             //保存漫画时优先下载原图 找不到原图则下jpg
                             try
                             {
-                                page = web.DownloadString(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, "UTF-8", shc);
                                 ds.LoadHtml(page);
                                 oriul = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                                 img.OrignalUrlList.Add(oriul);
@@ -424,35 +417,46 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") || !cookie.Contains("token="))
+            if (!cookie.Contains("pixiv") || !cookie.Contains("token=") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
             {
                 try
                 {
                     HtmlDocument hdoc = new HtmlDocument();
-                    SessionClient Sweb = new SessionClient();
 
                     cookie = "";
-                    string data = "";
-                    string post_key = "";
+                    string
+                        data = "",
+                        post_key = "",
+                        loginpost = "https://accounts.pixiv.net/api/login?lang=zh",
+                        loginurl = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index";
+
                     int index = rand.Next(0, user.Length);
 
+                    shc.Referer = Referer;
+                    shc.Remove("X-Requested-With");
+                    shc.Remove("Accept-Ranges");
+                    shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+
                     //请求1 获取post_key
-                    data = Sweb.Get("https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index", proxy, Encoding.GetEncoding("UTF-8"));
+                    data = Sweb.Get(loginurl, proxy, "UTF-8", shc);
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
                         throw new Exception("自动登录失败");
 
                     //请求2 POST取登录Cookie
+                    shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
                     data = "pixiv_id=" + user[index]
                         + "&password=" + pass[index]
                         + "&captcha=&g_recaptcha_response=&post_key=" + post_key
                         + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
-                    data = Sweb.Post("https://accounts.pixiv.net/api/login?lang=zh", data, proxy, Encoding.GetEncoding("UTF-8"));
+                    data = Sweb.Post(loginpost, data, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
-                    if (cookie.Length < 9)
-                        throw new Exception("自动登录失败");
+                    if (data.Contains("400"))
+                        throw new Exception(data);
+                    else if (cookie.Length < 9)
+                        throw new Exception("自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }

@@ -112,7 +112,7 @@ namespace SitePack
 
                 //e-shuushuu需要将关键词转换为tag id，然后进行搜索
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+                req.UserAgent = SessionClient.DefUA;
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";

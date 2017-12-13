@@ -11,35 +11,64 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 171210
+    /// Fixed 171213
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
-        
-        public override string SiteUrl { get { return "https://gelbooru.com"; } }
+        private bool APImode;
+        private SiteBooru booru;
+        //private SessionClient Sweb = new SessionClient();
+        public override string SiteUrl { get { return "https://gelbooru.com"; }}
         public override string SiteName { get { return "gelbooru.com"; } }
         public override string ShortName { get { return "gelbooru"; } }
         public override string ShortType { get { return ""; } }
-        public override bool IsSupportCount { get { return false; } }
-        
+        //public override bool IsSupportCount { get { return false; } }
+
+        public SiteGelbooru()
+        {
+            booru = new SiteBooru(
+                SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}"
+                , SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
+                , SiteName, ShortName, Referer, false, BooruProcessor.SourceType.XML);
+        }
+
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
+            // API
+            string pageString = booru.GetPageString(page, count, keyWord, proxy);
+            if (pageString.Contains("<post"))
+            {
+                APImode = true;
+                return pageString;
+            }
 
-            //string pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&tags={0}&pid={1}", keyWord, (page-1)*42);
-            string pageUrl;
-            if (keyWord.Length == 0)
-                pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}", (page - 1) * 42);
-            else
-                pageUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&tags={0}&pid={1}", keyWord, (page - 1) * 42);
-            MyWebClient client = new MyWebClient { Proxy = proxy, Encoding = Encoding.UTF8 };
-            string pageString = client.DownloadString(pageUrl);
-            client.Dispose();
+            // Html
+            booru.siteUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
+            booru.siteUrl = keyWord.Length < 1 ? booru.siteUrl.Substring(0, booru.siteUrl.Length - 6) : booru.siteUrl;
+            pageString = booru.GetPageString(page, 0, keyWord, proxy);
             return pageString;
         }
+
         //tags https://gelbooru.com/index.php?page=tags&s=list&tags=kanto*
+        /// <summary>
+        /// API only
+        /// </summary>
+        public override List<TagItem> GetTags(string word, IWebProxy proxy)
+        {
+            return booru.GetTags(word, proxy);
+        }
+
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
             List<Img> list = new List<Img>();
+            //API
+            if (APImode)
+            {
+                list = booru.GetImages(pageString, proxy);
+                if (list.Count > 0) return list;
+            }
+
+            //Html
             HtmlDocument document = new HtmlDocument();
             document.LoadHtml(pageString);
             HtmlNodeCollection previewNodes = document.DocumentNode.SelectNodes("//div[@class=\"thumbnail-preview\"]");
@@ -113,12 +142,13 @@ namespace SitePack
                 if (prUrl.Contains("&amp;"))
                     prUrl = prUrl.Replace("&amp;", "&");
                 return prUrl;
-
             }
             catch
             {
                 return prUrl;
             }
         }
-    }   
+
+
+    }
 }
