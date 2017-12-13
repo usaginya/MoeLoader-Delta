@@ -210,6 +210,8 @@ namespace MoeLoaderDelta
              * "file_url":"http://yuinyan.imouto.org/image/1550bb8d9fa4e1ee7903ee103459f69a/moe 163698 amio swimsctor_trace.png",
              * "id":163698,"parent_id":null,"actual_preview_width":300,"creator_id":70875}) */
 
+            if (string.IsNullOrWhiteSpace(pageString)) return;
+
             //當前字串位置
             int index = 0;
 
@@ -304,7 +306,7 @@ namespace MoeLoaderDelta
         /// <param name="sub">標記 (nv 不驗證完整性)</param>
         private void ProcessXML(string url, string pageString, List<Img> imgs, string sub)
         {
-
+            if (string.IsNullOrWhiteSpace(pageString)) return;
             XmlDocument xmlDoc = new XmlDocument();
             try
             {
@@ -400,6 +402,7 @@ namespace MoeLoaderDelta
         /// <param name="sub">站點標記</param>
         private void ProcessJSON(string url, string pageString, List<Img> imgs, string sub)
         {
+            if (string.IsNullOrWhiteSpace(pageString)) return;
             object[] array = (new JavaScriptSerializer()).DeserializeObject(pageString) as object[];
             foreach (object o in array)
             {

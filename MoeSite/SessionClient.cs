@@ -1,5 +1,5 @@
 ﻿/*
- * version 1.5
+ * version 1.6
  * by YIU
  * Create 2017-1-6
  * Last     2017-12-11
@@ -145,7 +145,6 @@ namespace MoeLoaderDelta
         /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
         /// <param name="rwtimeout">讀寫流超時ReadWriteTimeout</param>
-        /// <param name="timeout">超時時間</param>
         /// <param name="shc">Headers</param>
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, int rwtimeout, SessionHeadersCollection shc)
@@ -178,6 +177,27 @@ namespace MoeLoaderDelta
             shc.Timeout = 20000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
             return GetWebResponse(url, proxy, shc.Timeout, shc);
+        }
+
+        /// <summary>
+        /// Create HttpWebRequest
+        /// </summary>
+        /// <param name="url">網址</param>
+        /// <param name="proxy">代理</param>
+        /// <param name="shc">Headers</param>
+        /// <returns>HttpWebRequest</returns>
+        public HttpWebRequest CreateWebRequest(string url, IWebProxy proxy, SessionHeadersCollection shc)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            try
+            {
+                SetHeader(request, url, proxy, shc);
+
+                request.CookieContainer = m_Cookie;
+                request.ReadWriteTimeout = 20000;
+            }
+            catch { }
+            return request;
         }
 
         //########################################################################################
