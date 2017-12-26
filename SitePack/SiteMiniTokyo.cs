@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MoeLoaderDelta;
@@ -57,10 +56,13 @@ namespace SitePack
         private Random rand = new Random();
         //scans wallpapers
         private string type;
-        private string sessionId;
+        private string cookie;
 
         private const string WALL = "wallpapers";
         private const string SCAN = "scans";
+
+        SessionClient Sweb = new SessionClient();
+        SessionHeadersCollection shc = new SessionHeadersCollection();
 
         /// <summary>
         /// minitokyo site
@@ -72,6 +74,10 @@ namespace SitePack
                 this.type = WALL;
             else
                 this.type = SCAN;
+
+            shc.Referer = SiteUrl;
+            shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
+            shc.AutomaticDecompression = DecompressionMethods.GZip;
         }
 
         /// <summary>
@@ -82,65 +88,31 @@ namespace SitePack
         //    return GetImages(GetPageString(page, count, keyWord, proxy), maskScore, maskRes, lastViewed, maskViewed, proxy, showExplicit);
         //}
 
-        public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             Login(proxy);
 
             //http://gallery.minitokyo.net/scans?order=id&display=extensive&page=2
-            string url = "http://gallery.minitokyo.net/" + type + "?order=id&display=extensive&page=" + page;
+            string url = "http://gallery.minitokyo.net/" + type + "?order=id&display=extensive&page=" + page, pageString;
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Headers["Cookie"] = sessionId;
-            web.Encoding = Encoding.UTF8;
+            shc.Accept = SessionHeadersValue.AcceptTextHtml;
+            shc.ContentType = SessionHeadersValue.AcceptTextHtml;
 
             if (keyWord.Length > 0)
             {
-                //先使用關鍵字搜尋，然後HTTP 303返回實際地址
+                //先使用關鍵字搜尋，Referer返回實際地址
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                req.Proxy = proxy;
-                req.Timeout = 8000;
-                req.Method = "GET";
-                //prevent 303 See Other
-                req.AllowAutoRedirect = false;
-                WebResponse rsp = req.GetResponse();
-                //http://www.minitokyo.net/Haruhi+Suzumiya
-                //HTTP 303然後返回實際地址
-                string location = rsp.Headers["Location"];
-                rsp.Close();
-                if (location != null && location.Length > 0)
-                {
-                    //非完整地址，需要前綴
-                    url = SiteUrl + location;
-                    //再次訪問，得到真實列表頁地址...
-                    string html = web.DownloadString(url);
-                    //http://browse.minitokyo.net/gallery?tid=2112&amp;index=1 WALL
-                    //http://browse.minitokyo.net/gallery?tid=2112&amp;index=3 SCAN
-                    //http://browse.minitokyo.net/gallery?tid=2112&index=1&order=id
-                    int urlIndex = html.IndexOf("http://browse.minitokyo.net/gallery?tid=");
-                    if (type == WALL)
-                    {
-                        url = html.Substring(urlIndex, html.IndexOf('"', urlIndex) - urlIndex - 1) + "1";
-                    }
-                    else
-                    {
-                        url = html.Substring(urlIndex, html.IndexOf('"', urlIndex) - urlIndex - 1) + "3";
-                    }
-                    //http://browse.minitokyo.net/gallery?tid=2112&amp;index=1&order=id&display=extensive
-                    url += "&order=id&display=extensive&page=" + page;
-                    url = url.Replace("&amp;", "&");
-                }
-                else
-                {
-                    throw new Exception("搜尋失敗，請檢查您輸入的關鍵字");
-                }
+                pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+
+                int urlIndex = pageString.IndexOf("http://browse.minitokyo.net/gallery?tid=");
+
+                url = pageString.Substring(urlIndex, pageString.IndexOf('"', urlIndex) - urlIndex - 1) + (type.Contains(WALL) ? "1" : "3");
+                url += "&order=id&display=extensive&page=" + page;
+                url = url.Replace("&amp;", "&");
             }
 
-            string pageString = web.DownloadString(url);
-            web.Dispose();
+            pageString = Sweb.Get(url, proxy, "UTF-8", shc);
 
             return pageString;
         }
@@ -246,13 +218,11 @@ namespace SitePack
             List<TagItem> re = new List<TagItem>();
 
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
-            MyWebClient web = new MyWebClient();
-            web.Timeout = 8;
-            web.Proxy = proxy;
-            web.Headers["Cookie"] = sessionId;
-            web.Encoding = Encoding.UTF8;
 
-            string txt = web.DownloadString(url);
+            shc.Accept = SessionHeadersValue.AcceptTextHtml;
+            shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+
+            string txt = Sweb.Get(url, proxy, "UTF-8", shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -267,43 +237,23 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            if (sessionId != null) return;
+            if (!string.IsNullOrWhiteSpace(cookie) && cookie.Contains("minitokyo")) return;
             try
             {
                 int index = rand.Next(0, user.Length);
-                //http://my.minitokyo.net/login
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://my.minitokyo.net/login");
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                req.Proxy = proxy;
-                req.Timeout = 8000;
-                req.Method = "POST";
-                //prevent 303 See Other
-                req.AllowAutoRedirect = false;
+                string loginurl = "http://my.minitokyo.net/login";
+                string postDat = "username=" + user[index] + "&password=" + pass[index];
 
-                byte[] buf = Encoding.UTF8.GetBytes("username=" + user[index] + "&password=" + pass[index]);
-                req.ContentType = "application/x-www-form-urlencoded";
-                req.ContentLength = buf.Length;
-                System.IO.Stream str = req.GetRequestStream();
-                str.Write(buf, 0, buf.Length);
-                str.Close();
-                WebResponse rsp = req.GetResponse();
-
-                //HTTP 303然後返回地址 http://www.minitokyo.net/
-                sessionId = rsp.Headers.Get("Set-Cookie");
-                //minitokyo_id=376440; expires=Tue, 17-Jul-2012 07:18:32 GMT; path=/; domain=.minitokyo.net, minitokyo_hash=978bb6cb9e0aeac077dcc6032f2e9f3d; expires=Tue, 17-Jul-2012 07:18:32 GMT; path=/; domain=.minitokyo.net
-                if (sessionId == null || !sessionId.Contains("minitokyo_hash"))
+                shc.Accept = SessionHeadersValue.AcceptAppJson;
+                shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
+                Sweb.Post(loginurl, postDat, proxy, "UTF-8", shc);
+                cookie = Sweb.GetURLCookies(SiteUrl);
+                if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("minitokyo_hash"))
                 {
                     throw new Exception("自動登入失敗");
                 }
-                //minitokyo_id=376440; minitokyo_hash=978bb6cb9e0aeac077dcc6032f2e9f3d
-                int idIndex = sessionId.IndexOf("minitokyo_id");
-                string idstr = sessionId.Substring(idIndex, sessionId.IndexOf(';', idIndex) + 2 - idIndex);
-                idIndex = sessionId.IndexOf("minitokyo_hash");
-                string hashstr = sessionId.Substring(idIndex, sessionId.IndexOf(';', idIndex) - idIndex);
-                sessionId = idstr + hashstr;
-                rsp.Close();
             }
-            catch (System.Net.WebException)
+            catch (WebException)
             {
                 //invalid user will encounter 404
                 throw new Exception("自動登入失敗");

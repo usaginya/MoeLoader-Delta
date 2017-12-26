@@ -1,4 +1,4 @@
-# MoeLoader-Delta
+﻿# MoeLoader-Delta
 > From https://github.com/esonic/moe-loader-v7
 
 > From https://github.com/usaginya/MoeLoader-Delta
@@ -7,72 +7,72 @@
 
 ## About MoeLoader Δ
 
-MoeLoader Δ 是以 MoeLoader 图片浏览和收集工具延续的一个非官方编译版本
+MoeLoader Δ 是以 MoeLoader 圖片瀏覽和收集工具延續的一個非官方編譯版本
 
-此版本由 YIU 进行更新，MoeLoader 原作者是 esonic
+此版本由 YIU 進行更新，MoeLoader 原作者是 esonic
 
 AoiAizawa 不定期繁體中文化及小修改
 
-MoeLoader Δ 在 2016-12-25 诞生，至今修复了原程序大量BUG并增强了功能
+MoeLoader Δ 在 2016-12-25 誕生，至今修復了原程式大量BUG並增強了功能
 
 
 GitHub: https://github.com/usaginya/MoeLoader-Delta
 
-MoeLoader Δ 预览：http://usaginya.lofter.com/post/1d56d69b_d6b14fd
+MoeLoader Δ 預覽：http://usaginya.lofter.com/post/1d56d69b_d6b14fd
 
-[下载 MoeLoader Δ 更新\安装 程序](https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe)
+[下載 MoeLoader Δ 更新\安裝 程式](https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/Apps/MoeToNew.exe)
 
 
 
-### 其它说明    Other
+### 其它說明    Other
 
-代理模式选择
+代理模式選擇
 
-[使用IE代理] 可自动根据系统代理进行搜索
+[使用IE代理] 可自動根據系統代理進行搜尋
 
-[自定义] 代理地址格式为     代理IP:代理端口 
+[自訂] 代理地址格式為     代理IP:代理埠 
 
 ***
 
 ## Original Readme
 
-MoeLoader是一个基于WPF的图片浏览、收集工具。
+MoeLoader是一個基於WPF的圖片瀏覽、收集工具。
 
-MoeLoader官网(已失效): http://moeloader.sinaapp.com/
+MoeLoader官網(已失效): http://moeloader.sinaapp.com/
 
-如何开发自定义站点：
+如何開發自訂站點：
 
-1. 使用Visual Studio创建Class Library类型的项目，将项目属性中的默认命名空间设置为SitePack；
+1. 使用Visual Studio創建Class Library類型的項目，將項目屬性中的預設命名空間設定為SitePack；
 
-2. 为项目添加引用，将MoeLoader文件夹中的MoeSite.dll添加到引用中；
+2. 為項目添加引用，將MoeLoader資料夾中的MoeSite.dll添加到引用中；
 
-3. 添加一个类，继承MoeLoader.AbstractImageSite（假设该类命名为SiteSampleImgSite）；
+3. 添加一個類，繼承MoeLoader.AbstractImageSite（假設該類命名為SiteSampleImgSite）；
 
-4. 为SiteSampleImgSite类实现必选的SiteUrl、SiteName、ShortName（假设为sis）、GetImages、GetPageString属性和方法；
+4. 為SiteSampleImgSite類實現必選的SiteUrl、SiteName、ShortName（假設為sis）、GetImages、GetPageString屬性和方法；
 
-5. 添加一个类，命名空间为SitePack，类声明为public class SiteProvider，在该类中添加方法public List<MoeLoader.ImageSite> SiteList()，在该方法中返回含有SiteSampleImgSite类实例的List；
+5. 添加一個類，命名空間為SitePack，類聲明為public class SiteProvider，在該類中添加方法public List<MoeLoader.ImageSite> SiteList()，在該方法中返回含有SiteSampleImgSite類實例的List；
 
-6. 在项目中添加一个文件夹，命名为image，在其中添加一个分辨率为16*16的ico图标文件，重命名为sis.ico（与上面设置的ShortName相同），在它的属性中将Build Action设置为Embedded Resource；
+6. 在項目中添加一個資料夾，命名為image，在其中添加一個解析度為16*16的ico圖示檔案，重新命名為sis.ico（與上面設置的ShortName相同），在它的屬性中將Build Action設定為Embedded Resource；
 
-7. 生成项目，将编译好的类库dll文件重命名为SitePackXXX.dll的形式（例如SitePackExt.dll），将重命名后的dll文件放到MoeLoader.exe所在的目录下；
+7. 生成項目，將編譯好的類庫dll檔案重新命名為SitePackXXX.dll的形式（例如SitePackExt.dll），將重新命名後的dll檔案放到MoeLoader.exe所在的目錄下；
 
-8. 运行MoeLoader，享受你新添加的站点！
+8. 執行MoeLoader，享受你新添加的站點！
 
-PS. 关于MoeLoader接口中的AbstractImageSite、Img类详细使用信息，请参考MoeLoader源代码中的注释；
+PS. 關於MoeLoader介面中的AbstractImageSite、Img類詳細使用訊息，請參考MoeLoader原始碼中的註釋；
 
-PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我联系](https://github.com/esonic)
+PS2. 若希望將自訂的站點加入MoeLoader正式版本中，請[與我聯繫](https://github.com/esonic)
 
-下载自定义站点示例项目： https://code.google.com/p/moe-loader-v7/downloads/detail?name=SitePackSample.7z
+下載自訂站點範例項目： https://code.google.com/p/moe-loader-v7/downloads/detail?name=SitePackSample.7z
 
 ------
 
-### 支持的图片站点：
+### 支援的圖片站點：
 
 * [yande.re](https://yande.re) (萌妹)
 * [konachan.com](https://konachan.com)
 * [danbooru.donmai.us](https://danbooru.donmai.us)
 * [behoimi.org](http://behoimi.org) (三次元)
-* [idol.sankakucomplex.com](https://idol.sankakucomplex.com) (三次元)(在 SitePacks 目录中新建 18x.txt 可见)
+* [idol.sankakucomplex.com](https://idol.sankakucomplex.com) (三次元)(在 SitePacks 目錄中建立 18x.txt 可見)
 * [chan.sankakucomplex.com](https://chan.sankakucomplex.com)
 * [safebooru.org](http://safebooru.org)
 * [gelbooru.com](https://gelbooru.com)
@@ -80,7 +80,7 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 * www.zerochan.net
 * [mjv-art.org](https://anime-pictures.net)
 * [worldcosplay.net](https://worldcosplay.net) (三次元)
-* www.pixiv.net (标签\完全标签搜索、画师搜索、日、周、月排行榜)
-* www.minitokyo.net (桌面壁纸、扫描图)
-* [lolibooru.moe](https://lolibooru.moe) (萝莉)
+* www.pixiv.net (標籤\完全標籤搜尋、畫師搜尋、日、周、月排行榜)
+* www.minitokyo.net (桌面壁紙 、 掃描圖)
+* [lolibooru.moe](https://lolibooru.moe) (蘿莉)
 * [yuriimg.com](http://yuriimg.com) (百合)

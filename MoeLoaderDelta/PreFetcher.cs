@@ -8,8 +8,10 @@ namespace MoeLoaderDelta
 {
     class PreFetcher
     {
+        
         private PreFetcher() { }
         private static PreFetcher fetcher;
+        private IWebProxy proxy = MainWindow.WebProxy;
         public static PreFetcher Fetcher
         {
             get
@@ -94,17 +96,24 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    preFetchedPage = site.GetPageString(page, count, word, MainWindow.WebProxy);
+                    preFetchedPage = site.GetPageString(page, count, word, proxy);
                     prePage = page;
                     preCount = count;
                     preWord = word;
                     preSite = site;
-                    List<Img> imgs = site.GetImages(preFetchedPage, MainWindow.WebProxy);
+                    List<Img> imgs = site.GetImages(preFetchedPage, proxy);
 
                     //獲得所有圖片列表後回饋得到的數量
                     PreListLoaded(imgs.Count, null);
                     if (imgs.Count < 1)
                         return;
+
+                    SessionClient sweb = new SessionClient();
+                    SessionHeadersCollection shc = new SessionHeadersCollection();
+                    shc.Accept = null;
+                    shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+                    shc.Add("Accept-Ranges", "bytes");
+                    shc.Referer = site.Referer;
 
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);
@@ -121,14 +130,7 @@ namespace MoeLoaderDelta
                     int cacheCount = CachedImgCount < imgs.Count ? CachedImgCount : imgs.Count;
                     for (int i = 0; i < cacheCount; i++)
                     {
-                        HttpWebRequest req = WebRequest.Create(imgs[i].PreviewUrl) as HttpWebRequest;
-                        imgReqs.Add(req);
-                        req.Proxy = MainWindow.WebProxy;
-
-                        req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                        req.Referer = site.Referer;
-
-                        WebResponse res = req.GetResponse();
+                        WebResponse res = sweb.GetWebResponse(imgs[i].PreviewUrl,proxy,9000,shc);
                         System.IO.Stream str = res.GetResponseStream();
 
                         if (!preFetchedImg.ContainsKey(imgs[i].PreviewUrl))
@@ -199,9 +201,9 @@ namespace MoeLoaderDelta
         //            {
         //                System.Net.HttpWebRequest req = System.Net.WebRequest.Create(imgs[i].PreUrl) as System.Net.HttpWebRequest;
         //                imgReqs.Add(req);
-        //                req.Proxy = MainWindow.WebProxy;
+        //                req.Proxy = proxy;
 
-        //                req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
+        //                req.UserAgent = SessionClient.DefUA;
         //                req.Referer = MainWindow.IsNeedReferer(imgs[i].PreUrl);
 
         //                System.Net.WebResponse res = req.GetResponse();

@@ -28,7 +28,9 @@ namespace MoeLoaderDelta
         private bool imgLoaded = false;
         private bool isChecked = false;
 
+        
         private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private HttpWebRequest req;
 
         /// <summary>
@@ -44,6 +46,9 @@ namespace MoeLoaderDelta
             needReferer = referer;
             this.img = img;
             this.index = index;
+            shc.Add("Accept-Ranges", "bytes");
+            shc.Referer = referer;
+            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
                 //statusBorder.Background = new SolidColorBrush(Color.FromArgb(0xCC, 0xFE, 0xE2, 0xE2));
@@ -145,15 +150,8 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    req = (HttpWebRequest)WebRequest.Create(img.PreviewUrl);
+                    req = Sweb.CreateWebRequest(img.PreviewUrl, MainWindow.WebProxy, shc);
                     req.Proxy = MainWindow.WebProxy;
-
-                    req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36";
-                    if (!string.IsNullOrWhiteSpace(needReferer))
-                        //req.Referer = img.PreUrl.Substring(0, img.PreUrl.IndexOf('/', 7) + 1);
-                        req.Referer = needReferer;
-
-                    req.CookieContainer = Sweb.CookieContainer;
 
                     //非同步下載開始
                     req.BeginGetResponse(new AsyncCallback(RespCallback), req);
@@ -218,7 +216,7 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapDecoder.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.Default).Frames[0];
+                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
                 }));
             }
             catch (Exception ex)

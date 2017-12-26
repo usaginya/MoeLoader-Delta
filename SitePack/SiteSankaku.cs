@@ -10,11 +10,13 @@ namespace SitePack
 {
     public class SiteSankaku : AbstractImageSite
     {
+        private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private Random rand = new Random();
         private string[] user = { "girltmp", "mload006", "mload107", "mload482", "mload367", "mload876", "mload652", "mload740", "mload453", "mload263", "mload395" };
         private string[] pass = { "girlis2018", "moel006", "moel107", "moel482", "moel367", "moel876", "moel652", "moel740", "moel453", "moel263", "moel395" };
-        private string sitePrefix, tempuser, temppass, tempappkey, ua;
+        private string sitePrefix, tempuser, temppass, tempappkey, ua, pageurl;
         private static string cookie = "";
 
         public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
@@ -23,7 +25,7 @@ namespace SitePack
         public override string ShortType { get { return ""; } }
         public override bool IsSupportScore { get { return false; } }
         public override bool IsSupportCount { get { return true; } }
-        public override string Referer { get { return "https://" + sitePrefix + ".sankakucomplex.com/post/show/12345"; } }
+        public override string Referer { get { return SiteUrl + "/post/show/12345"; } }
         public override string SubReferer { get { return "*"; } }
 
         /// <summary>
@@ -44,42 +46,23 @@ namespace SitePack
         /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            string url = "", pageString = "";
             if (sitePrefix == "chan")
             {
                 ua = "SCChannelApp/2.3 (Android; black)";
-                Login(proxy);
-
-                url = "https://capi.sankakucomplex.com/post/index.json?login=" + tempuser + "&password_hash="
-                    + temppass + "&appkey=" + tempappkey + "&page=" + page + "&limit=" + count;
             }
             else if (sitePrefix == "idol")
             {
                 ua = "SCChannelApp/2.3 (Android; idol)";
-                Login(proxy);
-                //https://iapi.sankakucomplex.com/post/index.json?login=使用者名稱&password_hash=SHA1(salt密碼)&appkey=(APPKey)&tags=(搜尋內容)&page=2&limit=2
-
-                url = "https://iapi.sankakucomplex.com/post/index.json?login=" + tempuser
-                    + "&password_hash=" + temppass + "&appkey=" + tempappkey + "&page=" + page + "&limit=" + count;
             }
+            else return null;
 
-            if (keyWord.Length > 0)
-            {
-                url += "&tags=" + keyWord;
-            }
-            pageString = Sweb.Get(url, proxy, Encoding.UTF8, ua);
-
-            return pageString;
+            Login(proxy);
+            return booru.GetPageString(page, count, keyWord, proxy);
         }
 
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-            List<Img> imgs = new List<Img>();
-
-            BooruProcessor nowSession = new BooruProcessor(BooruProcessor.SourceType.JSONSku);
-            imgs = nowSession.ProcessPage(Referer, pageString);
-
-            return imgs;
+            return booru.GetImages(pageString, proxy);
         }
 
         public override List<TagItem> GetTags(string word, IWebProxy proxy)
@@ -87,14 +70,9 @@ namespace SitePack
             List<TagItem> re = new List<TagItem>();
 
             //https://chan.sankakucomplex.com/tag/autosuggest?tag=*****&locale=en
-            string url = string.Format("https://" + sitePrefix + ".sankakucomplex.com/tag/autosuggest?tag={0}", word);
-            MyWebClient web = new MyWebClient();
-            web.Timeout = 8;
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
-            web.Headers[HttpRequestHeader.Cookie] = cookie;
-
-            string json = web.DownloadString(url);
+            string url = string.Format(SiteUrl + "/tag/autosuggest?tag={0}", word);
+            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+            string json = Sweb.Get(url, proxy, "UTF-8", shc);
             object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
             string name = "", count = "";
 
@@ -140,9 +118,9 @@ namespace SitePack
         /// <param name="proxy"></param>
         private void Login(IWebProxy proxy)
         {
-            string subdomain = sitePrefix.Substring(0, 1) + "api";
+            string subdomain = sitePrefix.Substring(0, 1) + "api", loginhost = "https://" + subdomain + ".sankakucomplex.com";
 
-            if (!cookie.Contains(subdomain + ".sankaku"))
+            if (!cookie.Contains(subdomain + ".sankaku") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(loginhost)))
             {
                 try
                 {
@@ -154,17 +132,25 @@ namespace SitePack
                     string post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
 
                     //Post登入取Cookie
-                    Sweb.Post(
-                        "https://" + subdomain + ".sankakucomplex.com/user/authenticate.json",
-                        post, proxy, Encoding.GetEncoding("UTF-8"), ua
-                        );
-                    cookie = Sweb.GetURLCookies("https://" + subdomain + ".sankakucomplex.com");
+                    shc.UserAgent = ua;
+                    shc.Referer = Referer;
+                    shc.Accept = SessionHeadersValue.AcceptAppJson;
+                    shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
+                    Sweb.Post(loginhost + "/ user/authenticate.json", post, proxy, "UTF-8", shc);
+                    cookie = Sweb.GetURLCookies(loginhost);
 
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))
                         throw new Exception("獲取登入Cookie失敗");
                     else
                         cookie = subdomain + ".sankaku;" + cookie;
 
+
+                    pageurl = loginhost+"/post/index.json?login=" + tempuser + "&password_hash="
+                        + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";
+
+                    //登入成功才能初始化Booru類型站點
+                    shc.Referer = Referer;
+                    booru = new SiteBooru(pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONSku, shc);
                 }
                 catch (Exception e)
                 {
