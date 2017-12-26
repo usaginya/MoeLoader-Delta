@@ -1337,8 +1337,7 @@ namespace MoeLoaderDelta
         private void txtNum_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            if (txt.Text.Length == 0)
-                return;
+            if (txt.Text.Length == 0) return;
             try
             {
                 num = int.Parse(txtNum.Text);
@@ -1362,6 +1361,9 @@ namespace MoeLoaderDelta
             {
                 num = int.Parse(txtNum.Text);
                 page = int.Parse(txtPage.Text);
+
+                num = num > 0 ? num : 1;
+                page = page > 0 ? page : 1;
 
                 txtNum.Text = num.ToString();
                 txtPage.Text = page.ToString();
@@ -1511,8 +1513,8 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ((ImgControl)imgPanel.Children[i]).RetryLoad();
-                StartPreLoad();
             }
+            StartPreLoad();
         }
 
         /// <summary>

@@ -26,6 +26,8 @@ namespace MoeLoaderDelta.Control
         //图片信息结构
         private Img img;
         //网络请求组
+        private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private Dictionary<int, HttpWebRequest> reqs = new Dictionary<int, HttpWebRequest>();
         private Stream strs;
         //图片是否载入完成
@@ -40,35 +42,19 @@ namespace MoeLoaderDelta.Control
         #region ==== 封装 =======
         public Dictionary<int, HttpWebRequest> Reqs
         {
-            get
-            {
-                return reqs;
-            }
-
-            set
-            {
-                reqs = value;
-            }
+            get { return reqs; }
+            set { reqs = value; }
         }
 
         public bool ImgLoaded
         {
-            get
-            {
-                return imgloaded;
-            }
+            get { return imgloaded; }
         }
 
         public bool isZoom
         {
-            get
-            {
-                return iszoom;
-            }
-            set
-            {
-                iszoom = value;
-            }
+            get { return iszoom; }
+            set { iszoom = value; }
         }
 
         /// <summary>
@@ -77,23 +63,13 @@ namespace MoeLoaderDelta.Control
         /// </summary>
         public string ImgType
         {
-            get
-            {
-                return imgType;
-            }
+            get { return imgType; }
         }
 
         public Stream Strs
         {
-            get
-            {
-                return strs;
-            }
-
-            set
-            {
-                strs = value;
-            }
+            get { return strs; }
+            set { strs = value; }
         }
         #endregion
 
@@ -121,15 +97,12 @@ namespace MoeLoaderDelta.Control
             try
             {
                 #region 创建请求数据
-                SessionClient ss = new SessionClient();
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.Proxy = MainWindow.WebProxy;
-                req.UserAgent = SessionClient.DefUA;
-                req.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
-                if (needReferer != null)
-                    req.Referer = needReferer;
-                req.AllowAutoRedirect = true;
-                req.CookieContainer = ss.CookieContainer;
+                shc.Add("Accept-Ranges", "bytes");
+                shc.Referer = needReferer;
+                shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+                shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
+                shc.AutomaticDecompression = DecompressionMethods.GZip;
+                HttpWebRequest req = Sweb.CreateWebRequest(url, MainWindow.WebProxy,shc);
 
                 //将请求加入请求组
                 reqs.Add(id, req);
