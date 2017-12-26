@@ -18,8 +18,8 @@ namespace SitePack
         //public override bool IsSupportPreview { get { return true; } }
         public override bool IsSupportTag { get { return false; } }
 
-        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(175, 175); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(175, 175); } }
+        //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(175, 175); } }
+        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(180, 180); } }
 
         /// <summary>
         /// worldcosplay.net site
@@ -60,7 +60,7 @@ namespace SitePack
             //"http://image.worldcosplay.net/uploads/26450/8b6438c21db2b1402f63427d0ef8983a85969d0a-175.jpg","is_small":0,"created_at":"2012-04-16 21:03",
             //"thumbnail_height":"175","good_cnt":"0","monthly_view_cnt":"0","url":"http://worldcosplay.net/photo/279556/","id":"279556","weekly_view_cnt":"0"}}]}
             object[] imgList = ((new System.Web.Script.Serialization.JavaScriptSerializer()).DeserializeObject(pageString) as Dictionary<string, object>)["list"] as object[];
-            for (int i = 0; i < imgList.Length && i < 8; i++)
+            for (int i = 0; i < imgList.Length; i++)
             {
                 Dictionary<string, object> tag = imgList[i] as Dictionary<string, object>;
                 Dictionary<string, object> chara = tag["character"] as Dictionary<string, object>;

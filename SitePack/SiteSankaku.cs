@@ -34,6 +34,7 @@ namespace SitePack
         public SiteSankaku(string prefix)
         {
             sitePrefix = prefix;
+            CookieRestore();
         }
 
         /// <summary>
@@ -112,6 +113,18 @@ namespace SitePack
         }
 
         /// <summary>
+        /// 还原Cookie
+        /// </summary>
+        private void CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if (!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
+        /// <summary>
         /// 这破站用API需要登录！(╯‵□′)╯︵┻━┻
         /// 两个图站的账号还不通用(╯‵□′)╯︵┻━┻
         /// </summary>
@@ -120,7 +133,7 @@ namespace SitePack
         {
             string subdomain = sitePrefix.Substring(0, 1) + "api", loginhost = "https://" + subdomain + ".sankakucomplex.com";
 
-            if (!cookie.Contains(subdomain + ".sankaku") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(loginhost)))
+            if (!cookie.Contains(subdomain + ".sankaku"))
             {
                 try
                 {

@@ -124,7 +124,7 @@ namespace MoeLoaderDelta
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         internal string namePatter = DefaultPatter;
 
-        internal double bgOp = 0.3;
+        internal double bgOp = 0.5;
         internal ImageBrush bgImg = null;
         internal Stretch bgSt = Stretch.None;
         internal AlignmentX bgHe = AlignmentX.Right;
@@ -175,6 +175,8 @@ namespace MoeLoaderDelta
             {
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
+
+            //SessionClient.ReadCookiesFromFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
@@ -2400,6 +2402,8 @@ namespace MoeLoaderDelta
                 }
             }
             catch { }
+
+            //SessionClient.WriteCookiesToFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
             GC.Collect();
             GC.WaitForPendingFinalizers();

@@ -28,6 +28,11 @@ namespace SitePack
         public override bool IsSupportTag { get { return false; } }
         public override string SubReferer { get { return ShortName; } }
 
+        public SiteYuriimg()
+        {
+            CookieRestore();
+        }
+
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             Login(proxy);
@@ -131,10 +136,22 @@ namespace SitePack
             return idOut;
         }
 
+        /// <summary>
+        /// 还原Cookie
+        /// </summary>
+        private void  CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if(!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
         private void Login(IWebProxy proxy)
         {
             //第二次上传账户密码,使cookie可以用于登录
-            if (!cookie.Contains("otome_") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
+            if (!cookie.Contains("otome_"))
             {
                 try
                 {

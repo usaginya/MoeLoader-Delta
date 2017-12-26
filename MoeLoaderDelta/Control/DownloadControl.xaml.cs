@@ -514,7 +514,7 @@ namespace MoeLoaderDelta
         {
             if (downloadItems.Count > 0)
             {
-                double percent = (double)(downloadItems.Count - numLeft - webs.Count) / (double)downloadItems.Count * 100.0;
+                double percent = (downloadItems.Count - numLeft - webs.Count) / (double)downloadItems.Count * 100.0;
 
                 Win7TaskBar.ChangeProcessValue(MainWindow.Hwnd, (uint)percent);
 
