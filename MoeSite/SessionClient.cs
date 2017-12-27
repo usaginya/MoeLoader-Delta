@@ -2,7 +2,7 @@
  * version 1.6
  * by YIU
  * Create 2017-1-6
- * Last     2017-12-11
+ * Last     2017-12-26
  */
 
 using System;
@@ -11,6 +11,7 @@ using System.Net;
 using System.IO;
 using System.Web;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace MoeLoaderDelta
 {
@@ -49,7 +50,7 @@ namespace MoeLoaderDelta
 
         public SessionClient()
         {
-            ServicePointManager.DefaultConnectionLimit = 30;
+            ServicePointManager.DefaultConnectionLimit = 60;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)
@@ -67,7 +68,7 @@ namespace MoeLoaderDelta
             request.ContentType = shc.ContentType.Contains("auto") ? MimeMapping.GetMimeMapping(url) : shc.ContentType;
             request.ServicePoint.Expect100Continue = false;
             request.ServicePoint.UseNagleAlgorithm = false;
-            request.ServicePoint.ConnectionLimit = 65536;
+            request.ServicePoint.ConnectionLimit = int.MaxValue;
 
             return request;
         }
@@ -298,13 +299,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取CookieContainer中指定站點Cookies
+        /// 取此CookieContainer中指定站點Cookies
         /// </summary>
         /// <param name="url">域名</param>
         /// <returns></returns>
         public string GetURLCookies(string url)
         {
-            return _GetUrlCookies(url, m_Cookie);
+            return m_Cookie.GetCookieHeader(new Uri(url));
         }
 
         /// <summary>
@@ -315,7 +316,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public string GetURLCookies(string url, CookieContainer cc)
         {
-            return _GetUrlCookies(url, cc);
+            return cc.GetCookieHeader(new Uri(url));
         }
 
         /// <summary>
@@ -326,6 +327,55 @@ namespace MoeLoaderDelta
         public string GetCookieValue(string CookieKey)
         {
             return _GetCookieValue(CookieKey, m_Cookie, 1);
+        }
+
+        /// <summary>
+        /// 寫出指定CookieContainer到檔案
+        /// </summary>
+        /// <param name="file">檔案儲存路徑</param>
+        /// <param name="cc">CookieContainer</param>
+        public static void WriteCookiesToFile(string file, CookieContainer cc)
+        {
+            using (Stream stream = File.Create(file))
+            {
+                try
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, cc);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message);
+                }
+            }
+        }
+        /// <summary>
+        /// 寫出當前CookieContainer到檔案
+        /// </summary>
+        /// <param name="file">檔案儲存路徑</param>
+        public static void WriteCookiesToFile(string file)
+        {
+            WriteCookiesToFile(file, m_Cookie);
+        }
+
+        /// <summary>
+        /// 從檔案讀入Cookies
+        /// </summary>
+        /// <param name="file">Cookies檔案</param>
+        public static void ReadCookiesFromFile(string file)
+        {
+            try
+            {
+                using (Stream stream = File.Open(file, FileMode.Open))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    m_Cookie = (CookieContainer)formatter.Deserialize(stream);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         /// <summary>
@@ -374,13 +424,21 @@ namespace MoeLoaderDelta
                         foreach (Cookie c1 in colCookies) lstCookies.Add(c1);
                 }
 
-                string ret = "";
+                string ret = "", uri = "";
                 switch (mode)
                 {
                     default:
                         foreach (Cookie cookie in lstCookies)
                         {
+                            if (uri != cookie.Domain)
+                            {
+                                uri = cookie.Domain;
+                                ret += string.IsNullOrWhiteSpace(ret) ? "" : "$";
+                                ret += uri + ";";
+                            }
+
                             ret += cookie.Name + "=" + cookie.Value + ";";
+
                         }
                         break;
                     case 1:
@@ -398,32 +456,6 @@ namespace MoeLoaderDelta
             {
                 return e.Message;
             }
-        }
-
-        /// <summary>
-        /// 私有取指定URL的Cookies
-        /// </summary>
-        /// <param name="url">域名</param>
-        /// <param name="cc">CookieContainer</param>
-        /// <returns></returns>
-        private static string _GetUrlCookies(string url, CookieContainer cc)
-        {
-            CookieCollection cs = cc.GetCookies(new Uri(url));
-            string ret = "";
-
-            foreach (Cookie c in cs)
-            {
-                if (ret == "")
-                {
-                    ret += c.Name + "=" + c.Value;
-                }
-                else
-                {
-                    ret += ";" + c.Name + "=" + c.Value;
-                }
-            }
-
-            return ret;
         }
 
     }
