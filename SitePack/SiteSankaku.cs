@@ -149,7 +149,7 @@ namespace SitePack
                     shc.Referer = Referer;
                     shc.Accept = SessionHeadersValue.AcceptAppJson;
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                    Sweb.Post(loginhost + "/ user/authenticate.json", post, proxy, "UTF-8", shc);
+                    Sweb.Post(loginhost + "/user/authenticate.json", post, proxy, "UTF-8", shc);
                     cookie = Sweb.GetURLCookies(loginhost);
 
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))

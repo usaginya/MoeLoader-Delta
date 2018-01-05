@@ -29,7 +29,7 @@ namespace SitePack
             booru = new SiteBooru(
                 SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}"
                 , SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
-                , SiteName, ShortName, Referer, false, BooruProcessor.SourceType.XML);
+                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
