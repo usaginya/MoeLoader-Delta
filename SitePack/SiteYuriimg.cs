@@ -27,6 +27,7 @@ namespace SitePack
         public override string Referer { get { return "http://yuriimg.com"; } }
         public override bool IsSupportTag { get { return false; } }
         public override string SubReferer { get { return ShortName; } }
+        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(250, 250); } }
 
         public SiteYuriimg()
         {
