@@ -11,7 +11,7 @@ namespace SitePack
 {
     public class SiteZeroChan : AbstractImageSite
     {
-        public override string SiteUrl { get { return "http://www.zerochan.net"; }}
+        public override string SiteUrl { get { return "http://www.zerochan.net"; } }
         public override string SiteName
         {
             get
@@ -35,6 +35,7 @@ namespace SitePack
         public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(240, 240); } }
 
         private SessionClient Sweb = new SessionClient();
+        private SessionHeadersCollection shc = new SessionHeadersCollection();
         private string[] user = { "zerouser1" };
         private string[] pass = { "zeropass" };
         private string cookie = "", beforeWord = "", beforeUrl = "";
@@ -45,6 +46,7 @@ namespace SitePack
         /// </summary>
         public SiteZeroChan()
         {
+            CookieRestore();
         }
 
 
@@ -77,8 +79,9 @@ namespace SitePack
             }
             else
             {
+                shc.Referer = beforeUrl;
                 url = string.IsNullOrWhiteSpace(keyWord) ? url : beforeUrl + "?p=" + page;
-                pageString = Sweb.Get(url, proxy, SiteUrl, "UTF-8");
+                pageString = Sweb.Get(url, proxy, "UTF-8", shc);
             }
 
             return pageString;
@@ -132,9 +135,10 @@ namespace SitePack
         {
             //http://www.zerochan.net/suggest?q=tony&limit=8
             List<TagItem> re = new List<TagItem>();
-
+            
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
-            string txt = Sweb.Get(url, proxy, SiteUrl, "UTF-8");
+            shc.Referer = url;
+            string txt = Sweb.Get(url, proxy, "UTF-8",shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -193,6 +197,18 @@ namespace SitePack
             return img;
         }
 
+        /// <summary>
+        /// 還原Cookie
+        /// </summary>
+        private void CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if (!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
         private void Login(IWebProxy proxy)
         {
             if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("zeroc"))
@@ -200,10 +216,13 @@ namespace SitePack
                 try
                 {
                     int index = rand.Next(0, user.Length);
+                    string loginurl = "https://www.zerochan.net/login";
+
+                    shc.Referer = loginurl;
                     Sweb.Post(
-                        "https://www.zerochan.net/login",
+                        loginurl,
                         "ref=%2F&login=Login&name=" + user[index] + "&password=" + pass[index],
-                        proxy, SiteUrl, "UTF-8");
+                        proxy, "utf-8", shc);
 
                     cookie = Sweb.GetURLCookies(SiteUrl);
 

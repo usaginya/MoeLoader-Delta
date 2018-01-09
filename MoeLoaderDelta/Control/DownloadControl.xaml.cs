@@ -514,7 +514,7 @@ namespace MoeLoaderDelta
         {
             if (downloadItems.Count > 0)
             {
-                double percent = (double)(downloadItems.Count - numLeft - webs.Count) / (double)downloadItems.Count * 100.0;
+                double percent = (downloadItems.Count - numLeft - webs.Count) / (double)downloadItems.Count * 100.0;
 
                 Win7TaskBar.ChangeProcessValue(MainWindow.Hwnd, (uint)percent);
 
@@ -682,7 +682,7 @@ namespace MoeLoaderDelta
         private void ExecuteDownloadListTask(DLWorkMode dlworkmode)
         {
             bool delitemfile = false;
-            int selectcs = 0;
+            int selectcs;
             List<DownloadItem> selected = new List<DownloadItem>();
             if (dlworkmode == DLWorkMode.RetryAll || dlworkmode == DLWorkMode.StopAll || dlworkmode == DLWorkMode.RemoveAll)
             {
@@ -692,7 +692,6 @@ namespace MoeLoaderDelta
                     DownloadItem item = (DownloadItem)o;
                     selected.Add(item);
                 }
-                selectcs = selected.Count;
             }
             else
             {
@@ -702,6 +701,7 @@ namespace MoeLoaderDelta
                     selected.Add(item);
                 }
             }
+            selectcs = selected.Count;
 
             string lpath = "";
             DirectoryInfo di;

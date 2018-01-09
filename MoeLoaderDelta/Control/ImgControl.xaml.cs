@@ -47,6 +47,7 @@ namespace MoeLoaderDelta
             this.img = img;
             this.index = index;
             shc.Add("Accept-Ranges", "bytes");
+            shc.Accept = null;
             shc.Referer = referer;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
@@ -216,7 +217,7 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
+                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
                 }));
             }
             catch (Exception ex)

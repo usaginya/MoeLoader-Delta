@@ -63,7 +63,7 @@ namespace SitePack
         }
 
         public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(250, 200); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(250, 200); } }
+        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(180, 180); } }
 
         private int type = 1;
         /// <summary>

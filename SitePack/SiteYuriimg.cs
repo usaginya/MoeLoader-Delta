@@ -27,6 +27,12 @@ namespace SitePack
         public override string Referer { get { return "http://yuriimg.com"; } }
         public override bool IsSupportTag { get { return false; } }
         public override string SubReferer { get { return ShortName; } }
+        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(250, 250); } }
+
+        public SiteYuriimg()
+        {
+            CookieRestore();
+        }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
@@ -131,10 +137,22 @@ namespace SitePack
             return idOut;
         }
 
+        /// <summary>
+        /// 還原Cookie
+        /// </summary>
+        private void  CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if(!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
         private void Login(IWebProxy proxy)
         {
             //第二次上傳帳戶密碼,使cookie可以用於登入
-            if (!cookie.Contains("otome_") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
+            if (!cookie.Contains("otome_"))
             {
                 try
                 {
