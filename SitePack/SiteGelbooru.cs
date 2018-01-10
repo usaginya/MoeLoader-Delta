@@ -18,7 +18,7 @@ namespace SitePack
         private bool APImode;
         private SiteBooru booru;
         //private SessionClient Sweb = new SessionClient();
-        public override string SiteUrl { get { return "https://gelbooru.com"; }}
+        public override string SiteUrl { get { return "https://gelbooru.com"; } }
         public override string SiteName { get { return "gelbooru.com"; } }
         public override string ShortName { get { return "gelbooru"; } }
         public override string ShortType { get { return ""; } }
@@ -29,7 +29,7 @@ namespace SitePack
             booru = new SiteBooru(
                 SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}"
                 , SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
-                , SiteName, ShortName, Referer, false, BooruProcessor.SourceType.XML);
+                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -43,6 +43,7 @@ namespace SitePack
             }
 
             // Html
+            APImode = false;
             booru.siteUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
             booru.siteUrl = keyWord.Length < 1 ? booru.siteUrl.Substring(0, booru.siteUrl.Length - 6) : booru.siteUrl;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
@@ -65,10 +66,12 @@ namespace SitePack
             if (APImode)
             {
                 list = booru.GetImages(pageString, proxy);
-                if (list.Count > 0) return list;
+                return list;
             }
 
             //Html
+            if (pageString.Length < 20) { throw new Exception(pageString); }
+            if (!pageString.Contains("<html")) return list;
             HtmlDocument document = new HtmlDocument();
             document.LoadHtml(pageString);
             HtmlNodeCollection previewNodes = document.DocumentNode.SelectNodes("//div[@class=\"thumbnail-preview\"]");

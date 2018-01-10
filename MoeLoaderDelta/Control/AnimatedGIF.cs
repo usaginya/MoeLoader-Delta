@@ -83,7 +83,14 @@ namespace MoeLoaderDelta.Control
         /// </summary>
         public void StartAnimate()
         {
-            ImageAnimator.Animate(Bitmap, OnFrameChanged);
+            if (ImageAnimator.CanAnimate(Bitmap))
+                ImageAnimator.Animate(Bitmap, OnFrameChanged);
+            else
+            {
+                if (BitmapSource != null)
+                    BitmapSource.Freeze();
+                Source = BitmapSource;
+            }
         }
 
         /// <summary>

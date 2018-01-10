@@ -95,6 +95,7 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType)
         {
             this.srcType = srcType;
+            CookieRestore();
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -415,9 +416,21 @@ namespace SitePack
             return img;
         }
 
+        /// <summary>
+        /// 还原Cookie
+        /// </summary>
+        private void CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if (!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") || !cookie.Contains("token=") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
+            if (!cookie.Contains("pixiv") && !cookie.Contains("token="))
             {
                 try
                 {

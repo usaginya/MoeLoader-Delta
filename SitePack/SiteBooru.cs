@@ -89,6 +89,7 @@ namespace SitePack
         private void SetHeaders(BooruProcessor.SourceType srcType)
         {
             shc.Referer = referer;
+            shc.Timeout = 20000;
             shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
             shc.AutomaticDecompression = System.Net.DecompressionMethods.GZip;
 
