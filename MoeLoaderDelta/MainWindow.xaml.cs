@@ -2275,10 +2275,11 @@ namespace MoeLoaderDelta
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
+           /* OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
             Storyboard std = Resources["ClosedStoryboard"] as Storyboard;
             std.Completed += delegate { Close(); };
-            std.Begin();
+            std.Begin();*/
+            Close();
         }
 
         /// <summary>
