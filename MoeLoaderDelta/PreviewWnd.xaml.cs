@@ -543,7 +543,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].Source);
+                Clipboard.SetText(descs[selectedId].Source.Replace("\n", ""));
             }
             catch (Exception) { }
         }

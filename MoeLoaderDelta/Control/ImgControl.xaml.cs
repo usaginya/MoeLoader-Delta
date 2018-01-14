@@ -445,7 +445,7 @@ namespace MoeLoaderDelta
             //source
             try
             {
-                Clipboard.SetText(img.Source);
+                Clipboard.SetText(img.Source.Replace("\r\n", ""));
             }
             catch { }
         }
