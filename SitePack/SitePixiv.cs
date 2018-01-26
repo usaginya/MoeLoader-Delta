@@ -172,16 +172,18 @@ namespace SitePack
             HtmlNode tagNode = null;
             if (srcType == PixivSrcType.Pid)
             {
-                if (doc.DocumentNode.SelectSingleNode("//h2[@class='error-title']") == null)
+                //if (doc.DocumentNode.SelectSingleNode("//h2[@class='error-title']") == null)
+                if (pageString.Length < 20)
                 {
                     string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
-                    string id = previewUrl.Substring(previewUrl.LastIndexOf("/")+1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/")-1);
+                    string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
                     string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
                     Img img = GenerateImg(detailUrl, previewUrl, id);
                     if (img != null) imgs.Add(img);
                     return imgs;
                 }
-                else throw new Exception(doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[1]/p[1])").InnerText);
+                else throw new Exception(pageString);
+                //else throw new Exception(doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[1]/p[1])").InnerText);
             }
             else
             {
