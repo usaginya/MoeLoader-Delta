@@ -69,6 +69,7 @@ namespace MoeLoaderDelta
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
+        private string SearchWord = "";
 
         //private Color backColor;
         //internal bool isAero = true;
@@ -124,7 +125,7 @@ namespace MoeLoaderDelta
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         internal string namePatter = DefaultPatter;
 
-        internal double bgOp = 0.3;
+        internal double bgOp = 0.5;
         internal ImageBrush bgImg = null;
         internal Stretch bgSt = Stretch.None;
         internal AlignmentX bgHe = AlignmentX.Right;
@@ -175,6 +176,8 @@ namespace MoeLoaderDelta
             {
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
+
+            //SessionClient.ReadCookiesFromFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
@@ -949,6 +952,8 @@ namespace MoeLoaderDelta
                 {
                     //记录当前页面
                     lastPage = realPage;
+                    //使用搜索框关键字搜索
+                    SearchWord = searchControl.Text;
 
                     //由点击搜索按钮触发，所以使用界面上的设定
                     realNum = num;
@@ -964,16 +969,15 @@ namespace MoeLoaderDelta
 
                 //nowSelectedIndex = comboBoxIndex;
 
-                statusText.Text = "与伺服器通迅，请稍候...";
+                statusText.Text = "正在搜索.. " + SearchWord;
 
-                if (searchControl.Text.Length != 0)
+                if (SearchWord.Length != 0)
                 {
                     //一次最近搜索词
-                    searchControl.AddUsedItem(searchControl.Text);
+                    searchControl.AddUsedItem(SearchWord);
                 }
 
                 showExplicit = !itmxExplicit.IsChecked;
-                string word = searchControl.Text;
                 //string url = PrepareUrl(realPage);
                 //nowSession = new ImgSrcProcessor(MaskInt, MaskRes, url, SrcType, LastViewed, MaskViewed);
                 //nowSession.processComplete += new EventHandler(ProcessHTML_processComplete);
@@ -988,14 +992,14 @@ namespace MoeLoaderDelta
                     {
                         //prefetch
                         string pageString = PreFetcher.Fetcher.GetPreFetchedPage(
-                            realPage, realNum, Uri.EscapeDataString(word), SiteManager.Instance.Sites[nowSelectedIndex]);
+                            realPage, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
                         if (pageString != null)
                         {
                             imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy);
                         }
                         else
                         {
-                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(word), WebProxy);
+                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
                         }
 
                         //过滤图片列表
@@ -1061,7 +1065,7 @@ namespace MoeLoaderDelta
         {
             PreFetcher.Fetcher.PreListLoaded += Fetcher_PreListLoaded;
             PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum,
-                Uri.EscapeDataString(searchControl.Text), SiteManager.Instance.Sites[nowSelectedIndex]);
+                Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
         }
 
         public int MaskInt
@@ -1092,7 +1096,7 @@ namespace MoeLoaderDelta
             get
             {
                 bool mask = false;
-                Dispatcher.Invoke(new VoidDel(delegate { mask = itmMaskViewed.IsChecked && searchControl.Text.Length == 0; })); return mask;
+                Dispatcher.Invoke(new VoidDel(delegate { mask = itmMaskViewed.IsChecked && SearchWord.Length == 0; })); return mask;
             }
         }
         public ViewedID LastViewed
@@ -1156,10 +1160,12 @@ namespace MoeLoaderDelta
                 viewedC = imgs[imgs.Count - 1].Id - LastViewed.ViewedBiggestId;
             }
             catch { }
-            if (viewedC < 5 || searchControl.Text.Length > 0)
+            string strSW = SearchWord.Length > 0 ? "，" + SearchWord : "";
+            if (viewedC < 5 || SearchWord.Length > 0)
                 statusText.Text = "加载完毕，取得 " + imgs.Count + " 张图片";
             else
-                statusText.Text = "加载完毕，取得 " + imgs.Count + " 张图片 (剩余约 " + viewedC + " 张未浏览)";
+                statusText.Text = "加载完毕，取得 " + imgs.Count + " 张图片(剩余约 " + viewedC + " 张未浏览)";
+            statusText.Text += strSW;
 
             //statusText.Text = "搜索完成！取得 " + imgs.Count + " 张图片信息 (上次浏览至 " + viewedIds[nowSelectedIndex].ViewedBiggestId + " )";
             txtGet.Text = "搜索";
@@ -1952,7 +1958,8 @@ namespace MoeLoaderDelta
                 toggleDownload.IsChecked = true;
             toggleDownload_Click(null, null);
 
-            Thread thread = new Thread(new ThreadStart(delegate {
+            Thread thread = new Thread(new ThreadStart(delegate
+            {
                 DownloadThread();
             }));
             thread.IsBackground = true;
@@ -2268,21 +2275,10 @@ namespace MoeLoaderDelta
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            (new Thread(
-                    new ThreadStart(delegate ()
-                    {
-                        //启动回收
-                        GC.Collect();
-                        //删除临时目录
-                        string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
-                        if (Directory.Exists(tmpath))
-                            try
-                            {
-                                Directory.Delete(tmpath, true);
-                            }
-                            catch { }
-                    })
-            )).Start();
+           /* OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
+            Storyboard std = Resources["ClosedStoryboard"] as Storyboard;
+            std.Completed += delegate { Close(); };
+            std.Begin();*/
             Close();
         }
 
@@ -2400,6 +2396,14 @@ namespace MoeLoaderDelta
                 }
             }
             catch { }
+
+            //删除临时目录
+            string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
+            if (Directory.Exists(tmpath))
+                try { Directory.Delete(tmpath, true); }
+                catch { }
+
+            //SessionClient.WriteCookiesToFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
             GC.Collect();
             GC.WaitForPendingFinalizers();

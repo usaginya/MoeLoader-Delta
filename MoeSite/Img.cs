@@ -76,18 +76,20 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 图片来源
         /// </summary>
-        public string Source { set; get; }
+        private string source;
+        public string Source
+        {
+            get { return StringLineBreak(HttpUtility.HtmlDecode(source), 64); }
+            set { source = value; }
+        }
 
-        private string desc;
         /// <summary>
         /// 图片描述
         /// </summary>
+        private string desc;
         public string Desc
         {
-            get
-            {
-                return StringLineBreak(HttpUtility.HtmlDecode (desc), 64);
-            }
+            get { return StringLineBreak(HttpUtility.HtmlDecode(desc), 64); }
             set { desc = value; }
         }
 
@@ -132,10 +134,7 @@ namespace MoeLoaderDelta
         private string author;
         public string Author
         {
-            get
-            {
-                return HttpUtility.HtmlDecode(author);
-            }
+            get { return HttpUtility.HtmlDecode(author); }
             set { author = value; }
         }
 

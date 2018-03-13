@@ -11,8 +11,8 @@ namespace SitePack
 {
     public class SitePixiv : AbstractImageSite
     {
-        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜
-        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month }
+        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month ,Pid}
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -29,6 +29,8 @@ namespace SitePack
                     return "www.pixiv.net [Month]";
                 else if (srcType == PixivSrcType.TagFull)
                     return "www.pixiv.net [TagFull]";
+                else if (srcType == PixivSrcType.Pid)
+                    return "www.pixiv.net [IllustId]";
                 return "www.pixiv.net [Tag]";
             }
         }
@@ -46,6 +48,8 @@ namespace SitePack
                     return "本月排行";
                 else if (srcType == PixivSrcType.TagFull)
                     return "搜索完整标签";
+                else if (srcType == PixivSrcType.Pid)
+                    return "搜索作品id";
                 return "最新作品 & 搜索标签";
             }
         }
@@ -63,6 +67,8 @@ namespace SitePack
                     return "[M]";
                 else if (srcType == PixivSrcType.TagFull)
                     return "[TF]";
+                else if (srcType == PixivSrcType.Pid)
+                    return "[PID]";
                 return "[T]";
             }
         }
@@ -95,46 +101,57 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType)
         {
             this.srcType = srcType;
+            CookieRestore();
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            string url = null;
             Login(proxy);
-
-            //http://www.pixiv.net/new_illust.php?p=2
-            string url = SiteUrl + "/new_illust.php?p=" + page;
-
-            if (keyWord.Length > 0)
+            if (srcType == PixivSrcType.Pid)
             {
-                //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2
-                url = SiteUrl + "/search.php?s_mode=s_tag"
-                    + (srcType == PixivSrcType.TagFull ? "_full" : "")
-                + "&word=" + keyWord + "&order=date_d&p=" + page;
-            }
-            if (srcType == PixivSrcType.Author)
-            {
-                int memberId = 0;
-                if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
+                if (keyWord.Length > 0 && Regex.Match(keyWord,@"^[0-9]+$").Success)
                 {
-                    throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
+                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + keyWord ;
                 }
-                //member id
-                url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
+                else throw new Exception("请输入图片id");
             }
-            else if (srcType == PixivSrcType.Day)
-            {
-                url = SiteUrl + "/ranking.php?mode=daily&p=" + page;
-            }
-            else if (srcType == PixivSrcType.Week)
-            {
-                url = SiteUrl + "/ranking.php?mode=weekly&p=" + page;
-            }
-            else if (srcType == PixivSrcType.Month)
-            {
-                url = SiteUrl + "/ranking.php?mode=monthly&p=" + page;
-            }
+            else
+            { 
+                //http://www.pixiv.net/new_illust.php?p=2
+                url = SiteUrl + "/new_illust.php?p=" + page;
 
+                if (keyWord.Length > 0)
+                {
+                    //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2
+                    url = SiteUrl + "/search.php?s_mode=s_tag"
+                        + (srcType == PixivSrcType.TagFull ? "_full" : "")
+                    + "&word=" + keyWord + "&order=date_d&p=" + page;
+                }
+                if (srcType == PixivSrcType.Author)
+                {
+                    int memberId = 0;
+                    if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
+                    {
+                        throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
+                    }
+                    //member id
+                    url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
+                }
+                else if (srcType == PixivSrcType.Day)
+                {
+                    url = SiteUrl + "/ranking.php?mode=daily&p=" + page;
+                }
+                else if (srcType == PixivSrcType.Week)
+                {
+                    url = SiteUrl + "/ranking.php?mode=weekly&p=" + page;
+                }
+                else if (srcType == PixivSrcType.Month)
+                {
+                    url = SiteUrl + "/ranking.php?mode=monthly&p=" + page;
+                }
+            }
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
@@ -153,101 +170,119 @@ namespace SitePack
             //retrieve all elements via xpath
             HtmlNodeCollection nodes = null;
             HtmlNode tagNode = null;
-            try
+            if (srcType == PixivSrcType.Pid)
             {
-                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+                //if (doc.DocumentNode.SelectSingleNode("//h2[@class='error-title']") == null)
+                if (pageString.Length < 20)
                 {
-                    tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
-                    //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
-                }
-                else if (srcType == PixivSrcType.Author)
-                {
-                    nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
-                }
-                //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
-                //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
-                else
-                {
-                    //ranking
-                    nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
-                }
-            }
-            catch
-            {
-                throw new Exception("没有找到图片哦～ .=ω=");
-            }
-
-            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            {
-                if (tagNode == null)
-                {
-                    return imgs;
-                }
-            }
-            else if (nodes == null)
-            {
-                return imgs;
-            }
-
-            //Tag search js-mount-point-search-related-tags Json
-            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            {
-                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
-                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
-                foreach (object o in array)
-                {
-                    Dictionary<string, object> obj = o as Dictionary<string, object>;
-                    string
-                        detailUrl = "",
-                        previewUrl = "",
-                        id = "";
-                    if (obj["illustId"] != null)
-                    {
-                        id = obj["illustId"].ToString();
-                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
-                    }
-                    if (obj["url"] != null)
-                    {
-                        previewUrl = obj["url"].ToString();
-                    }
+                    string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
+                    string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
+                    string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
                     Img img = GenerateImg(detailUrl, previewUrl, id);
                     if (img != null) imgs.Add(img);
+                    return imgs;
                 }
+                else throw new Exception(pageString);
+                //else throw new Exception(doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[1]/p[1])").InnerText);
             }
             else
             {
-                foreach (HtmlNode imgNode in nodes)
+                try
                 {
-                    try
+                    if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                     {
-                        HtmlNode anode = imgNode.SelectSingleNode("a");
-                        if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
+                        tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
+                        //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                    }
+                    else if (srcType == PixivSrcType.Author)
+                    {
+                        nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
+                    }
+                    //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
+                    //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
+                    else
+                    {
+                        //ranking
+                        nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
+                    }
+                }
+                catch
+                {
+                    throw new Exception("没有找到图片哦～ .=ω=");
+                }
+
+                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+                {
+                    if (tagNode == null)
+                    {
+                        return imgs;
+                    }
+                }
+                else if (nodes == null)
+                {
+                    return imgs;
+                }
+
+                //Tag search js-mount-point-search-related-tags Json
+                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+                {
+                    string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
+                    object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
+                    foreach (object o in array)
+                    {
+                        Dictionary<string, object> obj = o as Dictionary<string, object>;
+                        string
+                            detailUrl = "",
+                            previewUrl = "",
+                            id = "";
+                        if (obj["illustId"] != null)
                         {
-                            anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
+                            id = obj["illustId"].ToString();
+                            detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                         }
-                        //details will be extracted from here
-                        //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
-                        string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
-                        string previewUrl = "";
-                        previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
-
-                        if (previewUrl.ToLower().Contains("images/common"))
-                            previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
-
-                        if (previewUrl.Contains('?'))
-                            previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
-
-                        //extract id from detail url
-                        //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
-                        string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
-                        id = id.Substring(id.IndexOf('=') + 1);
-
+                        if (obj["url"] != null)
+                        {
+                            previewUrl = obj["url"].ToString();
+                        }
                         Img img = GenerateImg(detailUrl, previewUrl, id);
                         if (img != null) imgs.Add(img);
                     }
-                    catch
+                }
+                else
+                {
+                    foreach (HtmlNode imgNode in nodes)
                     {
-                        //int i = 0;
+                        try
+                        {
+                            HtmlNode anode = imgNode.SelectSingleNode("a");
+                            if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
+                            {
+                                anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
+                            }
+                            //details will be extracted from here
+                            //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
+                            string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
+                            string previewUrl = "";
+                            previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
+
+                            if (previewUrl.ToLower().Contains("images/common"))
+                                previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
+
+                            if (previewUrl.Contains('?'))
+                                previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
+
+                            //extract id from detail url
+                            //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
+                            string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
+                            id = id.Substring(id.IndexOf('=') + 1);
+
+                            Img img = GenerateImg(detailUrl, previewUrl, id);
+                            if (img != null) imgs.Add(img);
+                        }
+                        catch
+                        {
+                            //int i = 0;
+                        }
                     }
                 }
             }
@@ -415,9 +450,21 @@ namespace SitePack
             return img;
         }
 
+        /// <summary>
+        /// 还原Cookie
+        /// </summary>
+        private void CookieRestore()
+        {
+            if (!string.IsNullOrWhiteSpace(cookie)) return;
+
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            if (!string.IsNullOrWhiteSpace(ck))
+                cookie = ck;
+        }
+
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") || !cookie.Contains("token=") || string.IsNullOrWhiteSpace(Sweb.GetURLCookies(SiteUrl)))
+            if (!cookie.Contains("pixiv") && !cookie.Contains("token="))
             {
                 try
                 {
