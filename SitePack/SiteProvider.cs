@@ -77,6 +77,7 @@ namespace SitePack
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid));
 
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));
