@@ -12,7 +12,7 @@ namespace SitePack
     public class SitePixiv : AbstractImageSite
     {
         //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id
-        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month ,Pid}
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -111,14 +111,14 @@ namespace SitePack
             Login(proxy);
             if (srcType == PixivSrcType.Pid)
             {
-                if (keyWord.Length > 0 && Regex.Match(keyWord,@"^[0-9]+$").Success)
+                if (keyWord.Length > 0 && Regex.Match(keyWord, @"^[0-9]+$").Success)
                 {
-                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + keyWord ;
+                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + keyWord;
                 }
                 else throw new Exception("请输入图片id");
             }
             else
-            { 
+            {
                 //http://www.pixiv.net/new_illust.php?p=2
                 url = SiteUrl + "/new_illust.php?p=" + page;
 
@@ -173,7 +173,7 @@ namespace SitePack
             if (srcType == PixivSrcType.Pid)
             {
                 //if (doc.DocumentNode.SelectSingleNode("//h2[@class='error-title']") == null)
-                if (pageString.Length < 20)
+                if (pageString.Length > 20)
                 {
                     string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
                     string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
@@ -458,8 +458,7 @@ namespace SitePack
             if (!string.IsNullOrWhiteSpace(cookie)) return;
 
             string ck = Sweb.GetURLCookies(SiteUrl);
-            if (!string.IsNullOrWhiteSpace(ck))
-                cookie = ck;
+            cookie = string.IsNullOrWhiteSpace(ck) ? ck : cookie;
         }
 
         private void Login(IWebProxy proxy)
