@@ -39,10 +39,8 @@ namespace SitePack
             //    "http://wakku.to/tag/index.xml?limit={0}&order=count&name={1}",
             //    "wakku.to", "wakku", null, false, BooruProcessor.SourceType.XML));
 
-            //sites.Add(new SiteBooru(
-            //    "http://nekobooru.net/post/index.xml?page={0}&limit={1}&tags={2}",
-            //    "http://nekobooru.net/tag/index.xml?limit={0}&order=count&name={1}",
-            //    "nekobooru.net", "nekobooru", null, false, BooruProcessor.SourceType.XML));
+            if (ecchimode)
+                sites.Add(new SiteATFBooru());
 
             if (ecchimode)
                 sites.Add(new SiteSankaku("idol"));

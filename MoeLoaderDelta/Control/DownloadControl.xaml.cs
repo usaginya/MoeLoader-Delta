@@ -372,16 +372,12 @@ namespace MoeLoaderDelta
             }
             finally
             {
-                try
-                {
-                    if (fs != null)
-                        fs.Close();
-                    if (str != null)
-                        str.Close();
-                    if (res != null)
-                        res.Close();
-                }
-                catch { }
+                if (fs != null)
+                    fs.Close();
+                if (str != null)
+                    str.Close();
+                if (res != null)
+                    res.Close();
             }
 
             if (task.IsStop)

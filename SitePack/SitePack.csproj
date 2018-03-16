@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SiteATFBooru.cs" />
     <Compile Include="SiteDanbooru.cs" />
     <Compile Include="SiteGelbooru.cs" />
     <Compile Include="SiteMiniTokyo.cs" />
@@ -106,6 +107,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="image\yuriimg.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="image\atfbooru.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
