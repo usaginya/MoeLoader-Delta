@@ -182,12 +182,12 @@ namespace SitePack
                     string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
 
                     int mangaCount = 0;
-                    if (doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText.Length !=0)
+                    if (doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText.Length <3)
                     {
                         string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
                         mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
                     }
-                    for (int i = 0; i < mangaCount ; i++)
+                    for (int i = 0; i < mangaCount +1 ; i++)
                     {
                         Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString()+"_"), id);
                         if (img != null) imgs.Add(img);
