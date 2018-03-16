@@ -15,7 +15,6 @@ namespace SitePack
         //http://donmai.us/post?page={0}&limit={1}&tags={2}
         public override string SiteName { get { return "danbooru.donmai.us"; } }
         public override string ShortName { get { return "donmai"; } }
-        public override string ShortType { get { return ""; } }
 
         public override bool IsSupportTag { get { return false; } }
 
@@ -52,7 +51,7 @@ namespace SitePack
                 HtmlNode node2 = node.SelectSingleNode("a");
                 HtmlNode node3 = node2.SelectSingleNode("img");
 
-                string detailUrl = SiteUrl + node2.Attributes["href"].Value;
+                string detailUrl = FormattedImgUrl(node2.Attributes["href"].Value);
 
                 Img item = new Img()
                 {
@@ -63,11 +62,11 @@ namespace SitePack
                     IsExplicit = node.Attributes["data-rating"].Value == "e",
                     Tags = node.Attributes["data-tags"].Value,
                     Width = Convert.ToInt32(node.Attributes["data-width"].Value),
-                    PreviewUrl = SiteUrl + node3.Attributes["src"].Value,
+                    PreviewUrl = FormattedImgUrl(node3.Attributes["src"].Value),
                     DetailUrl = detailUrl
                 };
 
-                
+
                 item.DownloadDetail = (i, p) =>
                 {
                     string html = new MyWebClient { Proxy = p, Encoding = Encoding.UTF8 }.DownloadString(i.DetailUrl);
@@ -88,7 +87,7 @@ namespace SitePack
                             if (n1.InnerText.Contains("Size:"))
                             {
                                 haveurl = true;
-                                i.OriginalUrl = SiteUrl + n1.SelectSingleNode(".//a").Attributes["href"].Value;
+                                i.OriginalUrl = FormattedImgUrl(n1.SelectSingleNode(".//a").Attributes["href"].Value);
                                 i.JpegUrl = i.OriginalUrl;
                                 i.FileSize = n1.SelectSingleNode(".//a").InnerText;
                                 i.Dimension = n1.InnerText.Substring(n1.InnerText.IndexOf('(') + 1, n1.InnerText.LastIndexOf(')') - n1.InnerText.IndexOf('(') - 1);
@@ -104,16 +103,32 @@ namespace SitePack
                         {
                             iszip = true;
                             HtmlNode n2 = n.SelectSingleNode("//section[@id='image-container']");
-                            i.OriginalUrl = SiteUrl + n2.Attributes["data-large-file-url"].Value;
+                            i.OriginalUrl = FormattedImgUrl(n2.Attributes["data-large-file-url"].Value);
                             i.JpegUrl = i.OriginalUrl;
                         }
                     }
-                    i.SampleUrl = iszip ? i.JpegUrl : SiteUrl + doc.DocumentNode.SelectSingleNode("//img[@id='image']").Attributes["src"].Value;
+                    i.SampleUrl = iszip ? i.JpegUrl : FormattedImgUrl(doc.DocumentNode.SelectSingleNode("//img[@id='image']").Attributes["src"].Value);
                 };
                 list.Add(item);
             }
-            
+
             return list;
+        }
+
+        private string FormattedImgUrl(string prUrl)
+        {
+            try
+            {
+                if (prUrl.StartsWith("/"))
+                    prUrl = SiteUrl + prUrl;
+                if (prUrl.Contains("&amp;"))
+                    prUrl = prUrl.Replace("&amp;", "&");
+                return prUrl;
+            }
+            catch
+            {
+                return prUrl;
+            }
         }
     }
 }

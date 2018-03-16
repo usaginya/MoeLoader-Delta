@@ -22,7 +22,6 @@ namespace SitePack
         public override string SiteUrl { get { return "https://gelbooru.com"; } }
         public override string SiteName { get { return "gelbooru.com"; } }
         public override string ShortName { get { return "gelbooru"; } }
-        public override string ShortType { get { return ""; } }
         //public override bool IsSupportCount { get { return false; } }
 
         public SiteGelbooru()
