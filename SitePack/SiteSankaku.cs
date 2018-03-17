@@ -22,7 +22,6 @@ namespace SitePack
         public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
         public override string SiteName { get { return sitePrefix + ".sankakucomplex.com"; } }
         public override string ShortName { get { return (sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku"); } }
-        public override string ShortType { get { return ""; } }
         public override bool IsSupportScore { get { return false; } }
         public override bool IsSupportCount { get { return true; } }
         public override string Referer { get { return SiteUrl + "/post/show/12345"; } }

@@ -2,7 +2,7 @@
  * version 1.6
  * by YIU
  * Create 2017-1-6
- * Last     2017-12-26
+ * Last     2018-3-16
  */
 
 using System;
@@ -521,7 +521,7 @@ namespace MoeLoaderDelta
             AllowAutoRedirect = true;
             AutomaticDecompression = DecompressionMethods.None;
             ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-            KeepAlive = true;
+            KeepAlive = false;
             Referer = null;
             Timeout = 9000;
             UserAgent = SessionClient.DefUA;
@@ -566,7 +566,7 @@ namespace MoeLoaderDelta
         public string ContentType { get; set; }
 
         /// <summary>
-        ///  True
+        ///  False
         /// </summary>
         public bool KeepAlive { get; set; }
 

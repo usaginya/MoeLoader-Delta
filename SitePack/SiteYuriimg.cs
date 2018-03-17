@@ -22,7 +22,6 @@ namespace SitePack
         public override string SiteUrl { get { return "http://yuriimg.com"; } }
         public override string ShortName { get { return "yuriimg"; } }
         public override string SiteName { get { return "yuriimg.com"; } }
-        public override string ShortType { get { return ""; } }
         public override bool IsSupportCount { get { return false; } }
         public override string Referer { get { return "http://yuriimg.com"; } }
         public override bool IsSupportTag { get { return false; } }

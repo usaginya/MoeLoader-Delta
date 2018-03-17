@@ -202,6 +202,13 @@ namespace MoeLoaderDelta.Control
                     {
                         Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "缓冲失败"); }), e);
                     }
+                    finally
+                    {
+                        if (req != null)
+                        {
+                            req.AsyncWaitHandle.Close(); 
+                        }
+                    }
                 }), this);
             }
             catch (Exception ex2)

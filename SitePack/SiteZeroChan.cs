@@ -20,7 +20,6 @@ namespace SitePack
             }
         }
         public override string ShortName { get { return "zerochan"; } }
-        public override string ShortType { get { return ""; } }
         //public string Referer { get { return null; } }
 
         public override bool IsSupportCount { get { return false; } } //fixed 24
