@@ -6,6 +6,7 @@ using MoeLoaderDelta;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 using System.Net;
+using System.Text;
 
 namespace SitePack
 {
@@ -171,129 +172,128 @@ namespace SitePack
             //retrieve all elements via xpath
             HtmlNodeCollection nodes = null;
             HtmlNode tagNode = null;
-            if (srcType == PixivSrcType.Pid)
-            {
-                if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
-                {
-                    tempPage = pageString;
-                    string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
-                    string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
-                    string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
 
-                    int mangaCount = 0;
-                    if (doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText.Length <3)
-                    {
-                        string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
-                        mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
-                    }
-                    for (int i = 0; i < mangaCount +1 ; i++)
-                    {
-                        Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString()+"_"), id);
-                        if (img != null) imgs.Add(img);
-                    }
-                    return imgs;
-                    
-                }
-                else throw new Exception("该作品已被删除，或作品ID不存在。");
-            }
-            else
+            try
             {
-                try
-                {
-                    if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-                    {
-                        tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
-                        //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
-                    }
-                    else if (srcType == PixivSrcType.Author)
-                    {
-                        nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
-                    }
-                    //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
-                    //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
-                    else
-                    {
-                        //ranking
-                        nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
-                    }
-                }
-                catch
-                {
-                    throw new Exception("没有找到图片哦～ .=ω=");
-                }
-
                 if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                 {
-                    if (tagNode == null)
+                    tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
+                    //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                }
+                else if (srcType == PixivSrcType.Author)
+                {
+                    nodes = doc.DocumentNode.SelectSingleNode("//ul[@class='_image-items']").SelectNodes("li");
+                }
+                //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
+                //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
+                else if (srcType == PixivSrcType.Pid)
+                {
+                    if(!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
+                        tempPage = pageString;
+                        string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
+                        string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
+                        string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
+
+                        int mangaCount = 0;
+                        string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
+                        if (dimension.EndsWith("P"))
+                            mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
+                        for (int i = 0; i < mangaCount; i++)
+                        {
+                            Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString() + "_"), id);
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append("P");
+                            sb.Append(i.ToString());
+                            img.Dimension = sb.ToString();
+                            if (img != null) imgs.Add(img);
+                        }
                         return imgs;
                     }
-                }
-                else if (nodes == null)
-                {
-                    return imgs;
-                }
-
-                //Tag search js-mount-point-search-related-tags Json
-                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-                {
-                    string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
-                    object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
-                    foreach (object o in array)
-                    {
-                        Dictionary<string, object> obj = o as Dictionary<string, object>;
-                        string
-                            detailUrl = "",
-                            previewUrl = "",
-                            id = "";
-                        if (obj["illustId"] != null)
-                        {
-                            id = obj["illustId"].ToString();
-                            detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
-                        }
-                        if (obj["url"] != null)
-                        {
-                            previewUrl = obj["url"].ToString();
-                        }
-                        Img img = GenerateImg(detailUrl, previewUrl, id);
-                        if (img != null) imgs.Add(img);
-                    }
+                    else throw new Exception("该作品已被删除，或作品ID不存在");
                 }
                 else
                 {
-                    foreach (HtmlNode imgNode in nodes)
+                    //ranking
+                    nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
+                }
+            }
+            catch
+            {
+                throw new Exception("没有找到图片哦～ .=ω=");
+            }
+
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            {
+                if (tagNode == null)
+                {
+                    return imgs;
+                }
+            }
+            else if (nodes == null)
+            {
+                return imgs;
+            }
+
+            //Tag search js-mount-point-search-related-tags Json
+            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            {
+                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
+                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
+                foreach (object o in array)
+                {
+                    Dictionary<string, object> obj = o as Dictionary<string, object>;
+                    string
+                        detailUrl = "",
+                        previewUrl = "",
+                        id = "";
+                    if (obj["illustId"] != null)
                     {
-                        try
+                        id = obj["illustId"].ToString();
+                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
+                    }
+                    if (obj["url"] != null)
+                    {
+                        previewUrl = obj["url"].ToString();
+                    }
+                    Img img = GenerateImg(detailUrl, previewUrl, id);
+                    if (img != null) imgs.Add(img);
+                }
+            }
+            else
+            {
+                foreach (HtmlNode imgNode in nodes)
+                {
+                    try
+                    {
+                        HtmlNode anode = imgNode.SelectSingleNode("a");
+                        if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
                         {
-                            HtmlNode anode = imgNode.SelectSingleNode("a");
-                            if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week)
-                            {
-                                anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
-                            }
-                            //details will be extracted from here
-                            //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
-                            string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
-                            string previewUrl = "";
-                            previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
-
-                            if (previewUrl.ToLower().Contains("images/common"))
-                                previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
-
-                            if (previewUrl.Contains('?'))
-                                previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
-
-                            //extract id from detail url
-                            //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
-                            string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
-                            id = id.Substring(id.IndexOf('=') + 1);
-
-                            Img img = GenerateImg(detailUrl, previewUrl, id);
-                            if (img != null) imgs.Add(img);
+                            anode = imgNode.SelectSingleNode(".//div[@class='ranking-image-item']").SelectSingleNode("a");
                         }
-                        catch
-                        {
-                            //int i = 0;
-                        }
+                        //details will be extracted from here
+                        //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
+                        string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
+                        string previewUrl = "";
+                        previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
+
+                        if (previewUrl.ToLower().Contains("images/common"))
+                            previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
+
+                        if (previewUrl.Contains('?'))
+                            previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
+
+                        //extract id from detail url
+                        //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
+                        string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
+                        id = id.Substring(id.IndexOf('=') + 1);
+
+                        Img img = GenerateImg(detailUrl, previewUrl, id);
+                        if (img != null) imgs.Add(img);
+                    }
+                    catch
+                    {
+                        //int i = 0;
                     }
                 }
             }
@@ -400,7 +400,7 @@ namespace SitePack
                 {
                     MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.PreviewUrl,@"_.+(?=_)").Value;
+                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.PreviewUrl, @"_.+(?=_)").Value;
                     else
                         i.Desc = mc[0].Groups["Desc"].Value;
                     i.Author = mc[0].Groups["Author"].Value;
@@ -411,13 +411,13 @@ namespace SitePack
                 //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
                 if (srcType == PixivSrcType.Pid)
                 {
-                    i.SampleUrl = i.PreviewUrl.Replace("600x600", "150x150");
+                    i.SampleUrl = i.PreviewUrl.Replace("150x150","600x600");
                 }
                 else
                 {
                     i.SampleUrl = doc.DocumentNode.SelectSingleNode("//div[@class='works_display']").SelectSingleNode(".//img").Attributes["src"].Value;
                     i.PreviewUrl = i.SampleUrl.Replace("600x600", "150x150");
-                }   
+                }
                 i.SampleUrl = i.SampleUrl.Replace("600x600", "1200x1200");
                 i.JpegUrl = i.SampleUrl;
                 try
@@ -448,12 +448,11 @@ namespace SitePack
                         int index = dimension.IndexOf(' ') + 1;
                         string mangaPart = dimension.Substring(index, dimension.IndexOf('P') - index);
                         int mangaCount = int.Parse(mangaPart);
-                        i.Dimension = "Manga " + mangaCount + "P";
                         if (srcType == PixivSrcType.Pid)
                         {
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl,@"(?<=_p).+(?=_)").Value, p, "UTF-8", shc);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, "UTF-8", shc);
                                 ds.LoadHtml(page);
                                 i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                             }
@@ -461,6 +460,7 @@ namespace SitePack
                         }
                         else
                         {
+                            i.Dimension = "Manga " + mangaCount + "P";
                             for (int j = 0; j < mangaCount; j++)
                             {
                                 //保存漫画时优先下载原图 找不到原图则下jpg
