@@ -152,7 +152,6 @@ namespace SitePack
                 {
                     url = SiteUrl + "/ranking.php?mode=monthly&p=" + page;
                 }
-                tempPage = null;
             }
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
