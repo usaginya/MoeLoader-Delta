@@ -12,7 +12,6 @@ namespace SitePack
         public override string SiteUrl { get { return "https://anime-pictures.net"; } }
         public override string SiteName { get { return "anime-pictures.net"; } }
         public override string ShortName { get { return "mjv-art"; } }
-        public override string ShortType { get { return ""; } }
         //public string Referer { get { return null; } }
 
         public override bool IsSupportCount { get { return false; } } //fixed 60

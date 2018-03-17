@@ -372,16 +372,12 @@ namespace MoeLoaderDelta
             }
             finally
             {
-                try
-                {
-                    if (fs != null)
-                        fs.Close();
-                    if (str != null)
-                        str.Close();
-                    if (res != null)
-                        res.Close();
-                }
-                catch { }
+                if (fs != null)
+                    fs.Close();
+                if (str != null)
+                    str.Close();
+                if (res != null)
+                    res.Close();
             }
 
             if (task.IsStop)
@@ -681,8 +677,7 @@ namespace MoeLoaderDelta
         //============================== Menu Function ===================================
         private void ExecuteDownloadListTask(DLWorkMode dlworkmode)
         {
-            bool delitemfile = false;
-            int selectcs;
+            int selectcs, delitemfile = 0;
             List<DownloadItem> selected = new List<DownloadItem>();
             if (dlworkmode == DLWorkMode.RetryAll || dlworkmode == DLWorkMode.StopAll || dlworkmode == DLWorkMode.RemoveAll)
             {
@@ -759,16 +754,18 @@ namespace MoeLoaderDelta
                     case DLWorkMode.Del:
                     case DLWorkMode.Remove:
                     case DLWorkMode.RemoveAll:
-                        if (dlworkmode == DLWorkMode.Del && !delitemfile)
+                        if (dlworkmode == DLWorkMode.Del && delitemfile < 1)
                         {
                             if (MessageBox.Show("QwQ 真的要把任务和文件一起删除么？",
                                 MainWindow.ProgramName,
                                 MessageBoxButton.YesNo,
                                 MessageBoxImage.Warning) == MessageBoxResult.No)
-                            { break; }
+                            { delitemfile = 2; }
                             else
-                            { delitemfile = true; }
+                            { delitemfile = 1; }
                         }
+                        if (delitemfile > 1)
+                            break;
 
                         if (item.StatusE == DLStatus.DLing)
                         {

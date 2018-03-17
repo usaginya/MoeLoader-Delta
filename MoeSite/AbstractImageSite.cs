@@ -34,7 +34,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点的搜索方式短名称，用于显示在下拉表标题上
         /// </summary>
-        public abstract string ShortType { get; }
+        public virtual string ShortType { get { return ""; } }
 
         /// <summary>
         /// 向该站点发起请求时需要伪造的Referer，若不需要则保持null

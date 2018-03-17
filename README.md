@@ -80,3 +80,4 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 * www.minitokyo.net (桌面壁纸 、 扫描图)
 * [lolibooru.moe](https://lolibooru.moe) (萝莉)
 * [yuriimg.com](http://yuriimg.com) (百合)
+* [atfbooru.ninja](http://atfbooru.ninja) (萝莉(幼))
