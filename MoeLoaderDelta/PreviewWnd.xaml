@@ -98,14 +98,14 @@
             <Grid.ContextMenu>
                 <ContextMenu>
                     <MenuItem
-                        Click="Button_Click_1"
-                        Header="保存(_S)"
-                        ToolTip="保存预览图至下载文件夹" />
-                    <Separator />
-                    <MenuItem
                         Click="MenuItem_Click"
                         Header="复制预览图(_C)"
                         ToolTip="复制的预览图可粘贴到聊天窗口、图片编辑器和文件" />
+                    <Separator />
+                    <MenuItem
+                        Click="Button_Click_1"
+                        Header="保存(_S)"
+                        ToolTip="保存预览图至下载文件夹" />
                     <Separator />
                     <MenuItem
                         Click="MenuItem_Click_2"

@@ -18,6 +18,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for PreviewWnd.xaml
     /// 预览窗口
+    /// Fixed 20180326
     /// </summary>
     public partial class PreviewWnd : Window
     {
@@ -161,7 +162,7 @@ namespace MoeLoaderDelta
                 });
 
                 //开始下载图片
-                prei.DownloadImg(img.Id, img.SampleUrl, needReferer);
+                prei.DownloadImg(needReferer);
 
                 if (selectedId == 0)
                 {

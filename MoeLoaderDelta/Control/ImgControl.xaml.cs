@@ -28,7 +28,7 @@ namespace MoeLoaderDelta
         private bool imgLoaded = false;
         private bool isChecked = false;
 
-        
+
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private HttpWebRequest req;
@@ -446,6 +446,16 @@ namespace MoeLoaderDelta
             try
             {
                 Clipboard.SetText(img.Source.Replace("\r\n", ""));
+            }
+            catch { }
+        }
+
+        private void txtDesc_Click_copyid(object sender, RoutedEventArgs e)
+        {
+            //id
+            try
+            {
+                Clipboard.SetText(img.Id.ToSafeString());
             }
             catch { }
         }

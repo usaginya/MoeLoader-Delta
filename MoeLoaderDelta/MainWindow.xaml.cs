@@ -1368,8 +1368,8 @@ namespace MoeLoaderDelta
                 num = int.Parse(txtNum.Text);
                 page = int.Parse(txtPage.Text);
 
-                num = num > 0 ? num : 1;
-                page = page > 0 ? page : 1;
+                num = num > 0 ? (num > 600 ? 600 : num) : 1;
+                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
 
                 txtNum.Text = num.ToString();
                 txtPage.Text = page.ToString();
@@ -1396,7 +1396,7 @@ namespace MoeLoaderDelta
 
         private void numUp_Click(object sender, RoutedEventArgs e)
         {
-            if (num < 500)
+            if (num < 600)
                 txtNum.Text = (num + 1).ToString();
         }
 

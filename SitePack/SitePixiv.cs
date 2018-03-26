@@ -188,7 +188,7 @@ namespace SitePack
                 //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
                 else if (srcType == PixivSrcType.Pid)
                 {
-                    if(!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
+                    if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
                         tempPage = pageString;
                         string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
@@ -199,7 +199,7 @@ namespace SitePack
                         string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
                         if (dimension.EndsWith("P"))
                             mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
-                        for (int i = 0; i < mangaCount ; i++)
+                        for (int i = 0; i < mangaCount; i++)
                         {
                             Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString() + "_"), id);
                             StringBuilder sb = new StringBuilder();
@@ -411,7 +411,7 @@ namespace SitePack
                 //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
                 if (srcType == PixivSrcType.Pid)
                 {
-                    i.SampleUrl = i.PreviewUrl.Replace("150x150","600x600");
+                    i.SampleUrl = i.PreviewUrl.Replace("150x150", "600x600");
                 }
                 else
                 {

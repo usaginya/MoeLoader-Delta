@@ -117,7 +117,7 @@ namespace SitePack
                 //先加前一个，再加后一个  范围都是00-49
                 //string folder = (id % 2500 % 50).ToString("00") + "/" + (id % 2500 / 50).ToString("00");
                 string sample_url = previewUrl.Replace("240", "600");
-                string fileUrl = "http://static.zerochan.net" + previewUrl.Substring(previewUrl.IndexOf('/', 8)).Replace("240", "full");
+                string fileUrl = imgNode.SelectSingleNode("p//img").ParentNode.Attributes["href"].Value;
                 string title = imgHref.Attributes["title"].Value;
                 string dimension = title.Substring(0, title.IndexOf(' '));
                 string fileSize = title.Substring(title.IndexOf(' ')).Trim();
@@ -134,10 +134,10 @@ namespace SitePack
         {
             //http://www.zerochan.net/suggest?q=tony&limit=8
             List<TagItem> re = new List<TagItem>();
-            
+
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
             shc.Referer = url;
-            string txt = Sweb.Get(url, proxy, "UTF-8",shc);
+            string txt = Sweb.Get(url, proxy, "UTF-8", shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
