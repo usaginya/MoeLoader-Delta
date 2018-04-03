@@ -1,5 +1,6 @@
 ﻿using MoeLoaderDelta;
 using System.Collections.Generic;
+using System.Web.Script.Serialization;
 using System.Xml;
 
 namespace SitePack
@@ -137,36 +138,64 @@ namespace SitePack
             List<TagItem> re = new List<TagItem>();
             if (string.IsNullOrWhiteSpace(tagUrl)) return re;
 
-            string url = string.Format(tagUrl, 8, word);
-
-            shc.Accept = SessionHeadersValue.AcceptTextXml;
-            shc.ContentType = SessionHeadersValue.AcceptAppXml;
-            string xml = Sweb.Get(url, proxy, "UTF-8", shc);
-
-
-            //<?xml version="1.0" encoding="UTF-8"?>
-            //<tags type="array">
-            //  <tag type="3" ambiguous="false" count="955" name="neon_genesis_evangelion" id="270"/>
-            //  <tag type="3" ambiguous="false" count="335" name="angel_beats!" id="26272"/>
-            //  <tag type="3" ambiguous="false" count="214" name="galaxy_angel" id="243"/>
-            //  <tag type="3" ambiguous="false" count="58" name="wrestle_angels_survivor_2" id="34664"/>
-            //</tags>
-
-            if (!xml.Contains("<tag")) return re;
-
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(xml.ToString());
-
-            XmlElement root = (XmlElement)(xmlDoc.SelectSingleNode("tags")); //root
-
-            foreach (XmlNode node in root.ChildNodes)
+            if (tagUrl.Contains("autocomplete.json"))
             {
-                XmlElement tag = (XmlElement)node;
+                string url = string.Format(tagUrl, word);
+                shc.Accept = SessionHeadersValue.AcceptAppJson;
+                url = Sweb.Get(url, proxy, "UTF-8", shc);
 
-                string name = tag.GetAttribute("name");
-                string count = tag.GetAttribute("count");
+                // [{"id":null,"name":"idolmaster_cinderella_girls","post_count":54050,"category":3,"antecedent_name":"cinderella_girls"},
+                // {"id":null,"name":"cirno","post_count":24486,"category":4,"antecedent_name":null}]
 
-                re.Add(new TagItem() { Name = name, Count = count });
+                object[] jsonobj = (new JavaScriptSerializer()).DeserializeObject(url) as object[];
+
+                foreach (Dictionary<string, object> o in jsonobj)
+                {
+                    string name = "", count = "";
+                    if (o.ContainsKey("name"))
+                        name = o["name"].ToString();
+                    if (o.ContainsKey("post_count"))
+                        count = o["post_count"].ToString();
+                    re.Add(new TagItem()
+                    {
+                        Name = name,
+                        Count = count
+                    });
+                }
+            }
+            else
+            {
+                string url = string.Format(tagUrl, 8, word);
+
+                shc.Accept = SessionHeadersValue.AcceptTextXml;
+                shc.ContentType = SessionHeadersValue.AcceptAppXml;
+                string xml = Sweb.Get(url, proxy, "UTF-8", shc);
+
+
+                //<?xml version="1.0" encoding="UTF-8"?>
+                //<tags type="array">
+                //  <tag type="3" ambiguous="false" count="955" name="neon_genesis_evangelion" id="270"/>
+                //  <tag type="3" ambiguous="false" count="335" name="angel_beats!" id="26272"/>
+                //  <tag type="3" ambiguous="false" count="214" name="galaxy_angel" id="243"/>
+                //  <tag type="3" ambiguous="false" count="58" name="wrestle_angels_survivor_2" id="34664"/>
+                //</tags>
+
+                if (!xml.Contains("<tag")) return re;
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(xml.ToString());
+
+                XmlElement root = (XmlElement)(xmlDoc.SelectSingleNode("tags")); //root
+
+                foreach (XmlNode node in root.ChildNodes)
+                {
+                    XmlElement tag = (XmlElement)node;
+
+                    string name = tag.GetAttribute("name");
+                    string count = tag.GetAttribute("count");
+
+                    re.Add(new TagItem() { Name = name, Count = count });
+                }
             }
 
             return re;

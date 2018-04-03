@@ -23,7 +23,7 @@ namespace MoeLoaderDelta
         public string OriginalUrl { get; set; }
 
         /// <summary>
-        /// 缩略图地址
+        /// 预览图地址，尺寸位于原图与缩略图之间
         /// </summary>
         public string PreviewUrl { get; set; }
 
@@ -44,7 +44,7 @@ namespace MoeLoaderDelta
         public int Height { get; set; }
 
         /// <summary>
-        /// 预览图地址，尺寸位于原图与缩略图之间
+        /// 缩略图地址
         /// </summary>
         public string SampleUrl { get; set; }
 

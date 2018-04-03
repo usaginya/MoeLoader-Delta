@@ -23,11 +23,10 @@ namespace SitePack
                 "https://konachan.com/tag.xml?limit={0}&order=count&name={1}",
                 "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XML));
 
-            //sites.Add(new SiteBooru(
-            //    "http://donmai.us/post?page={0}&limit={1}&tags={2}",
-            //    "http://donmai.us/tag/index.xml?limit={0}&order=count&name={1}",
-            //    "danbooru.donmai.us", "donmai", null, false, BooruProcessor.SourceType.HTML));
-            sites.Add(new SiteDanbooru());
+            sites.Add(new SiteBooru(
+                    "https://danbooru.donmai.us/posts.json?page={0}&limit={1}&tags={2}",
+                    "https://danbooru.donmai.us/tags/autocomplete.json?search%5Bname_matches%5D={0}",
+                    "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON));
 
             sites.Add(new SiteBooru(
                 "http://behoimi.org/post/index.xml?page={0}&limit={1}&tags={2}",
@@ -39,18 +38,14 @@ namespace SitePack
             //    "http://wakku.to/tag/index.xml?limit={0}&order=count&name={1}",
             //    "wakku.to", "wakku", null, false, BooruProcessor.SourceType.XML));
 
-            if (ecchimode)
-                sites.Add(new SiteATFBooru());
-
+            sites.Add(new SiteSankaku("chan"));
             if (ecchimode)
                 sites.Add(new SiteSankaku("idol"));
 
-            sites.Add(new SiteSankaku("chan"));
-
             sites.Add(new SiteBooru(
-                "https://safebooru.org/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
-                "https://safebooru.org/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
-                "safebooru.org", "safebooru", null, true, BooruProcessor.SourceType.XML));
+            "https://safebooru.org/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
+            "https://safebooru.org/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}",
+            "safebooru.org", "safebooru", null, true, BooruProcessor.SourceType.XML));
 
             //sites.Add(new SiteBooru(
             //    "https://gelbooru.com/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
@@ -80,13 +75,23 @@ namespace SitePack
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));
 
-            if (ecchimode)
-                sites.Add(new SiteLargeBooru(
-                "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
-                "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
-                "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
-
             sites.Add(new SiteYuriimg());
+
+            if (ecchimode)
+            {
+                sites.Add(new SiteLargeBooru(
+                    "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
+                    "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
+                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+
+                sites.Add(new SiteBooru(
+                    "https://atfbooru.ninja/posts.json?page={0}&limit={1}&tags={2}",
+                    "https://atfbooru.ninja/tags/autocomplete.json?search%5Bname_matches%5D={0}",
+                    "atfbooru.ninja", "atfbooru", "https://atfbooru.ninja/", false, BooruProcessor.SourceType.JSON));
+
+                sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));
+                sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Full));
+            }
 
             return sites;
         }

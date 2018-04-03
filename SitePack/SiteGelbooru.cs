@@ -133,10 +133,7 @@ namespace SitePack
                         if (n.InnerText.Contains("Score"))
                             i.Score = Convert.ToInt32(n.SelectSingleNode("./span").InnerText);
                         if (n.InnerHtml.Contains("Original"))
-                        {
-                            i.OriginalUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
-                            i.JpegUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
-                        }
+                            i.OriginalUrl = i.JpegUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
                     }
                 };
                 list.Add(item);

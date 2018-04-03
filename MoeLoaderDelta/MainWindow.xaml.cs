@@ -263,6 +263,9 @@ namespace MoeLoaderDelta
             //itmxExplicit.IsChecked = !showExplicit;
 
             MainW = this;
+
+            //删除上次临时目录
+            DelTempDirectory();
         }
 
         void menuItem_Click(object sender, RoutedEventArgs e)
@@ -2346,6 +2349,17 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 删除临时缓存目录
+        /// </summary>
+        private void DelTempDirectory()
+        {
+            string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
+            if (Directory.Exists(tmpath))
+                try { Directory.Delete(tmpath, true); }
+                catch { }
+        }
+
+        /// <summary>
         /// 关闭程序
         /// </summary>
         private void Window_Closed(object sender, EventArgs e)
@@ -2396,12 +2410,6 @@ namespace MoeLoaderDelta
                 }
             }
             catch { }
-
-            //删除临时目录
-            string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
-            if (Directory.Exists(tmpath))
-                try { Directory.Delete(tmpath, true); }
-                catch { }
 
             //SessionClient.WriteCookiesToFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
