@@ -79,7 +79,7 @@ namespace SitePack
                     IsExplicit = false,
                     Tags = tags,
                     Desc = tags,
-                    PreviewUrl = imgNode.Attributes["data-original"].Value,
+                    SampleUrl = imgNode.Attributes["data-original"].Value,
                     //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
                     Id = StringToInt(imgNode.Attributes["id"].Value),
                     DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,
@@ -105,19 +105,18 @@ namespace SitePack
                     {
                         i.Source = Regex.Match(nodeHtml, @"(?<=源地址).*?(?=</p>)").Value.Trim();
                     }
-                    i.SampleUrl = doc.DocumentNode.SelectSingleNode("//figure[@class=\'show-image\']/img").Attributes["src"].Value;
+                    i.PreviewUrl = doc.DocumentNode.SelectSingleNode("//figure[@class=\'show-image\']/img").Attributes["src"].Value;
                     if (Regex.Matches(imgDownNode.OuterHtml, "href").Count > 1)
                     {
                         i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a[1]").Attributes["href"].Value;
-                        i.JpegUrl = i.OriginalUrl;
                         i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a[1]").InnerText, @"(?<=().*?(?=))").Value;
                     }
                     else
                     {
                         i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a").Attributes["href"].Value;
-                        i.JpegUrl = i.OriginalUrl;
                         i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a").InnerText, @"(?<=().*?(?=))").Value;
                     }
+                    i.JpegUrl = i.PreviewUrl.Length > 0 ? i.PreviewUrl : i.OriginalUrl;
                 };
                 list.Add(item);
             }
@@ -139,12 +138,12 @@ namespace SitePack
         /// <summary>
         /// 还原Cookie
         /// </summary>
-        private void  CookieRestore()
+        private void CookieRestore()
         {
             if (!string.IsNullOrWhiteSpace(cookie)) return;
 
             string ck = Sweb.GetURLCookies(SiteUrl);
-            if(!string.IsNullOrWhiteSpace(ck))
+            if (!string.IsNullOrWhiteSpace(ck))
                 cookie = ck;
         }
 

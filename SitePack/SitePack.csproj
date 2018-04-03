@@ -49,6 +49,9 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -60,8 +63,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SiteATFBooru.cs" />
-    <Compile Include="SiteDanbooru.cs" />
     <Compile Include="SiteGelbooru.cs" />
     <Compile Include="SiteKawaiinyan.cs" />
     <Compile Include="SiteMiniTokyo.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="SiteMjvArt.cs" />
     <Compile Include="SitePixiv.cs" />
     <Compile Include="SiteProvider.cs" />
+    <Compile Include="SiteRule34.cs" />
     <Compile Include="SiteSankaku.cs" />
     <Compile Include="SiteWCosplay.cs" />
     <Compile Include="SiteYuriimg.cs" />
@@ -111,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="image\atfbooru.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="image\rule34.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

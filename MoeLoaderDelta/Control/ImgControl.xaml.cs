@@ -49,6 +49,7 @@ namespace MoeLoaderDelta
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
             shc.Referer = referer;
+            shc.Timeout = 10000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
@@ -142,16 +143,16 @@ namespace MoeLoaderDelta
         /// </summary>
         public void DownloadImg()
         {
-            if (PreFetcher.Fetcher.PreFetchedImg(img.PreviewUrl) != null)
+            if (PreFetcher.Fetcher.PreFetchedImg(img.SampleUrl) != null)
             {
-                preview.Source = PreFetcher.Fetcher.PreFetchedImg(img.PreviewUrl);
+                preview.Source = PreFetcher.Fetcher.PreFetchedImg(img.SampleUrl);
                 //preview.Source = BitmapDecoder.Create(PreFetcher.Fetcher.PreFetchedImg(img.PreUrl), BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
             }
             else
             {
                 try
                 {
-                    req = Sweb.CreateWebRequest(img.PreviewUrl, MainWindow.WebProxy, shc);
+                    req = Sweb.CreateWebRequest(img.SampleUrl, MainWindow.WebProxy, shc);
                     req.Proxy = MainWindow.WebProxy;
 
                     //异步下载开始
@@ -166,6 +167,7 @@ namespace MoeLoaderDelta
 
             if (!isDetailSucc && img.DownloadDetail != null)
             {
+                canRetry = true;
                 isRetrievingDetail = true;
                 chk.Text = "信息加载中...";
                 System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback((o) =>
@@ -217,12 +219,13 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
+                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.OnDemand);
+                    canRetry = false;
                 }));
             }
             catch (Exception ex)
             {
-                Program.Log(ex, "Download preview failed");
+                Program.Log(ex, "Download sample failed");
                 Dispatcher.Invoke(new UIdelegate(delegate (object sender) { StopLoadImg(); }), "");
             }
         }
@@ -412,20 +415,20 @@ namespace MoeLoaderDelta
 
         private void txtDesc_Click_3(object sender, RoutedEventArgs e)
         {
-            //sample
+            //预览图
             try
             {
-                Clipboard.SetText(img.SampleUrl);
+                Clipboard.SetText(img.PreviewUrl);
             }
             catch { }
         }
 
         private void txtDesc_Click_4(object sender, RoutedEventArgs e)
         {
-            //preview
+            //缩略图
             try
             {
-                Clipboard.SetText(img.PreviewUrl);
+                Clipboard.SetText(img.SampleUrl);
             }
             catch { }
         }

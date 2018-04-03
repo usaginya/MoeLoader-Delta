@@ -123,7 +123,7 @@ namespace SitePack
                 string fileSize = title.Substring(title.IndexOf(' ')).Trim();
                 string tags = imgHref.Attributes["alt"].Value;
 
-                Img img = GenerateImg(fileUrl, previewUrl, sample_url, dimension, tags.Trim(), fileSize, id);
+                Img img = GenerateImg(fileUrl, sample_url, previewUrl, dimension, tags.Trim(), fileSize, id);
                 if (img != null) imgs.Add(img);
             }
 
@@ -150,7 +150,7 @@ namespace SitePack
             return re;
         }
 
-        private Img GenerateImg(string file_url, string preview_url, string sample_url, string dimension, string tags, string file_size, int id)
+        private Img GenerateImg(string file_url, string sample_url, string preview_url, string dimension, string tags, string file_size, int id)
         {
             //int intId = int.Parse(id.Substring(1));
 
@@ -166,8 +166,8 @@ namespace SitePack
             //convert relative url to absolute
             if (file_url.StartsWith("/"))
                 file_url = SiteUrl + file_url;
-            if (preview_url.StartsWith("/"))
-                preview_url = SiteUrl + preview_url;
+            if (sample_url.StartsWith("/"))
+                sample_url = SiteUrl + sample_url;
 
             Img img = new Img()
             {

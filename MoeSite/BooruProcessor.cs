@@ -229,8 +229,8 @@ namespace MoeLoaderDelta
                 Dictionary<string, object> obj = (new JavaScriptSerializer()).DeserializeObject(item) as Dictionary<string, object>;
 
                 string sample = "";
-                if (obj.ContainsKey("sample_url"))
-                    sample = obj["sample_url"].ToString();
+                if (obj.ContainsKey("preview_url"))
+                    sample = obj["preview_url"].ToString();
 
                 int file_size = 0;
                 try
@@ -244,10 +244,10 @@ namespace MoeLoaderDelta
                 if (obj.ContainsKey("created_at"))
                     created_at = obj["created_at"].ToString();
 
-                string preview_url = obj["preview_url"].ToString();
+                string preview_url = obj["sample_url"].ToString();
                 string file_url = obj["file_url"].ToString();
 
-                string jpeg_url = file_url;
+                string jpeg_url = preview_url.Length > 0 ? preview_url : file_url;
                 if (obj.ContainsKey("jpeg_url"))
                     jpeg_url = obj["jpeg_url"].ToString();
 
@@ -340,16 +340,16 @@ namespace MoeLoaderDelta
                 if (post.HasAttribute("created_at"))
                     created_at = post.GetAttribute("created_at");
 
-                string preview_url = post.GetAttribute("preview_url");
+                string preview_url = post.GetAttribute("sample_url");
                 string file_url = post.GetAttribute("file_url");
 
-                string jpeg_url = file_url;
+                string jpeg_url = preview_url.Length > 0 ? preview_url : file_url;
                 if (post.HasAttribute("jpeg_url"))
                     jpeg_url = post.GetAttribute("jpeg_url");
 
                 string sample = file_url;
-                if (post.HasAttribute("sample_url"))
-                    sample = post.GetAttribute("sample_url");
+                if (post.HasAttribute("preview_url"))
+                    sample = post.GetAttribute("preview_url");
 
                 string tags = post.GetAttribute("tags");
                 string id = post.GetAttribute("id");
@@ -432,6 +432,8 @@ namespace MoeLoaderDelta
                 //Õ∂∏Â’ﬂ
                 if (obj.ContainsKey("author") && obj["author"] != null)
                     author = obj["author"].ToString();
+                else if (obj.ContainsKey("uploader_name") && obj["uploader_name"] != null)
+                    author = obj["uploader_name"].ToString();
 
                 //Õº∆¨¿¥‘¥
                 if (obj.ContainsKey("source") && obj["source"] != null)
@@ -440,8 +442,16 @@ namespace MoeLoaderDelta
                 //‘≠ÕºøÌ∏ﬂ width height
                 try
                 {
-                    width = int.Parse(obj["width"].ToString().Trim());
-                    height = int.Parse(obj["height"].ToString().Trim());
+                    if (obj.ContainsKey("width") && obj["width"] != null)
+                    {
+                        width = int.Parse(obj["width"].ToString().Trim());
+                        height = int.Parse(obj["height"].ToString().Trim());
+                    }
+                    else if (obj.ContainsKey("image_width") && obj["image_width"] != null)
+                    {
+                        width = int.Parse(obj["image_width"].ToString().Trim());
+                        height = int.Parse(obj["image_height"].ToString().Trim());
+                    }
                 }
                 catch { }
 
@@ -482,22 +492,23 @@ namespace MoeLoaderDelta
                 }
 
                 //Àı¬‘Õº
-                if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
-                    sample = obj["sample_url"].ToString();
+                if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
+                    sample = obj["preview_url"].ToString();
+                else if (obj.ContainsKey("preview_file_url") && obj["preview_file_url"] != null)
+                    sample = obj["preview_file_url"].ToString();
 
                 //‘§¿¿Õº
-                if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
-                    preview_url = obj["preview_url"].ToString();
+                if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
+                    preview_url = obj["sample_url"].ToString();
+                else if (obj.ContainsKey("large_file_url") && obj["large_file_url"] != null)
+                    preview_url = obj["large_file_url"].ToString();
 
                 //‘≠Õº
-
                 if (obj.ContainsKey("file_url") && obj["file_url"] != null)
-                {
                     file_url = obj["file_url"].ToString();
-                    jpeg_url = file_url;
-                }
 
                 //JPG
+                jpeg_url = preview_url.Length > 0 ? preview_url : file_url;
                 if (obj.ContainsKey("jpeg_url") && obj["jpeg_url"] != null)
                     jpeg_url = obj["jpeg_url"].ToString();
 
@@ -556,10 +567,10 @@ namespace MoeLoaderDelta
         /// <param name="file_size"></param>
         /// <param name="created_at"></param>
         /// <param name="score"></param>
-        /// <param name="sample"></param>
-        /// <param name="preview_url"></param>
-        /// <param name="file_url"></param>
-        /// <param name="jpeg_url"></param>
+        /// <param name="sample">Àı¬‘Õº</param>
+        /// <param name="preview_url">‘§¿¿Õº</param>
+        /// <param name="file_url">‘≠Õº</param>
+        /// <param name="jpeg_url">jpg</param>
         /// <param name="tags"></param>
         /// <returns></returns>
         private Img GenerateImg(string url, string id, string author,

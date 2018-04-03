@@ -140,11 +140,11 @@ namespace SitePack
                     string detailUrl = imgNode.SelectSingleNode("a").Attributes["href"].Value;
                     string id = detailUrl.Substring(detailUrl.LastIndexOf('/') + 1);
                     HtmlNode imgHref = imgNode.SelectSingleNode(".//img");
-                    string previewUrl = imgHref.Attributes["src"].Value;
+                    string sampleUrl = imgHref.Attributes["src"].Value;
                     //http://static2.minitokyo.net/thumbs/24/25/583774.jpg preview
                     //http://static2.minitokyo.net/view/24/25/583774.jpg   sample
                     //http://static.minitokyo.net/downloads/24/25/583774.jpg   full
-                    string sampleUrl = "http://static2.minitokyo.net/view" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
+                    string previewUrl = "http://static2.minitokyo.net/view" + sampleUrl.Substring(sampleUrl.IndexOf('/', sampleUrl.IndexOf(".net/") + 5));
                     string fileUrl = "http://static.minitokyo.net/downloads" + previewUrl.Substring(previewUrl.IndexOf('/', previewUrl.IndexOf(".net/") + 5));
 
                     // \n\tMasaru -\n\tMasaru \n\tSubmitted by\n\t\tadri24rukiachan\n\t4200x6034, 4 Favorites\n
