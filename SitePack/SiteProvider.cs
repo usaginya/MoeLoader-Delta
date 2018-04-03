@@ -87,6 +87,9 @@ namespace SitePack
                 "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
 
             sites.Add(new SiteYuriimg());
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxO));
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxP));
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxL));
 
             return sites;
         }

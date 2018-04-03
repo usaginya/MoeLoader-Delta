@@ -59,7 +59,7 @@ namespace SitePack
                     Height = Convert.ToInt32(node.Attributes["data-height"].Value),
                     Id = Convert.ToInt32(node.Attributes["data-id"].Value),
                     Author = node.Attributes["data-uploader"].Value,
-                    IsExplicit = node.Attributes["data-rating"].Value == "e",
+                    IsExplicit = node.Attributes["data-rating"].Value == "e" || node.Attributes["data-rating"].Value == "q",
                     Tags = node.Attributes["data-tags"].Value,
                     Width = Convert.ToInt32(node.Attributes["data-width"].Value),
                     PreviewUrl = FormattedImgUrl(node3.Attributes["src"].Value),
