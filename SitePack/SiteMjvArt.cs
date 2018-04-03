@@ -79,7 +79,7 @@ namespace SitePack
                 string detailUrl = anode.Attributes["href"].Value;
                 //eg. Anime picture 2000x3246 withblack hair,brown eyes
                 string title = anode.Attributes["title"].Value;
-                string previewUrl = anode.SelectSingleNode("picture/source/img").Attributes["src"].Value;
+                string sampleUrl = anode.SelectSingleNode("picture/source/img").Attributes["src"].Value;
 
                 //extract id from detail url
                 string id = Regex.Match(detailUrl.Substring(detailUrl.LastIndexOf('/') + 1), @"\d+").Value;
@@ -93,7 +93,7 @@ namespace SitePack
                 //tags = title.Substring(title.IndexOf(' ', index) + 1);
                 //}
 
-                Img img = GenerateImg(detailUrl, previewUrl, dimension, tags.Trim(), id);
+                Img img = GenerateImg(detailUrl, sampleUrl, dimension, tags.Trim(), id);
                 if (img != null) imgs.Add(img);
             }
 
@@ -139,7 +139,7 @@ namespace SitePack
             return re;
         }
 
-        private Img GenerateImg(string detailUrl, string preview_url, string dimension, string tags, string id)
+        private Img GenerateImg(string detailUrl, string sample_url, string dimension, string tags, string id)
         {
             int intId = int.Parse(id);
 
@@ -154,7 +154,7 @@ namespace SitePack
 
             //convert relative url to absolute
             detailUrl = FormattedImgUrl(SiteUrl, detailUrl);
-            preview_url = FormattedImgUrl(SiteUrl, preview_url);
+            sample_url = FormattedImgUrl(SiteUrl, sample_url);
 
             Img img = new Img()
             {
@@ -164,8 +164,8 @@ namespace SitePack
                 Id = intId,
                 //JpegUrl = preview_url,
                 //OriginalUrl = preview_url,
-                PreviewUrl = preview_url,
-                //SampleUrl = preview_url,
+                //PreviewUrl = preview_url,
+                SampleUrl = sample_url,
                 //Score = 0,
                 Width = width,
                 Height = height,
@@ -204,7 +204,7 @@ namespace SitePack
                 //retrieve img node
                 HtmlNode imgnode = doc.DocumentNode.SelectSingleNode("//div[@id='big_preview_cont']");
                 string jpgUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a").Attributes["href"].Value);
-                string sampleUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a/picture/source/img").Attributes["src"].Value);
+                string previewUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a/picture/source/img").Attributes["src"].Value);
 
                 i.Tags = imgnode.SelectSingleNode("a/picture/source/img").Attributes["alt"].Value;
                 StringBuilder sb = new StringBuilder(i.Tags);
@@ -231,7 +231,7 @@ namespace SitePack
                 i.Date = date;
                 i.FileSize = fileSize;
                 i.JpegUrl = jpgUrl;
-                i.SampleUrl = sampleUrl;
+                i.PreviewUrl = previewUrl;
             });
 
             return img;

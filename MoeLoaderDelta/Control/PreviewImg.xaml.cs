@@ -104,7 +104,7 @@ namespace MoeLoaderDelta.Control
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
                 shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
                 shc.AutomaticDecompression = DecompressionMethods.GZip;
-                HttpWebRequest req = Sweb.CreateWebRequest(reTry ? img.OriginalUrl : img.SampleUrl, MainWindow.WebProxy, shc);
+                HttpWebRequest req = Sweb.CreateWebRequest(reTry ? img.JpegUrl : img.PreviewUrl, MainWindow.WebProxy, shc);
 
                 //将请求加入请求组
                 reqs.Add(img.Id, req);
@@ -209,11 +209,11 @@ namespace MoeLoaderDelta.Control
                     }
                     catch (WebException e)
                     {
-                        if (re.Value.Address.AbsoluteUri.Contains(img.SampleUrl))
+                        if (re.Value.Address.AbsoluteUri.Contains(img.PreviewUrl))
                         {
                             if (req != null)
                                 req.AsyncWaitHandle.Close();
-                            StopLoadImg(re.Key, false, "缓冲容错中");
+                            StopLoadImg(re.Key, false, "容错缓冲中");
                             DownloadImg(re.Value.Referer, true);
                         }
                         else
