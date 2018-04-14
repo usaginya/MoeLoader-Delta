@@ -92,7 +92,10 @@ namespace SitePack
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Full));
             }
-
+            sites.Add(new SiteYuriimg());
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxO));
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxP));
+            sites.Add(new SiteKawaiinyan(SiteKawaiinyan.KawaiiSrcType.TagPxL));
             return sites;
         }
     }
