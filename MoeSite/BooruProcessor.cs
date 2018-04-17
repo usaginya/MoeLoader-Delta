@@ -630,7 +630,7 @@ namespace MoeLoaderDelta
                 Height = height,
                 Id = intId,
                 Author = author == "" ? "UnkwnAuthor" : author,
-                IsExplicit = score.StartsWith("E"),
+                IsExplicit = score.StartsWith("E") || score.StartsWith("Q"),
                 JpegUrl = jpeg_url,
                 OriginalUrl = file_url,
                 PreviewUrl = preview_url,
