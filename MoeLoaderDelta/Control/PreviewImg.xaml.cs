@@ -16,6 +16,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// PreviewImg.xaml 的交互逻辑
     /// by YIU
+    /// Fixed 20180326
     /// </summary>
     public partial class PreviewImg : UserControl
     {
@@ -92,7 +93,8 @@ namespace MoeLoaderDelta.Control
         /// <summary>
         /// 下载图片
         /// </summary>
-        public void DownloadImg(int id, string url, string needReferer)
+        /// <param name="reTry">重试</param>
+        public void DownloadImg(string needReferer, bool reTry)
         {
             try
             {
@@ -102,20 +104,27 @@ namespace MoeLoaderDelta.Control
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
                 shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
                 shc.AutomaticDecompression = DecompressionMethods.GZip;
-                HttpWebRequest req = Sweb.CreateWebRequest(url, MainWindow.WebProxy,shc);
+                HttpWebRequest req = Sweb.CreateWebRequest(reTry ? img.JpegUrl : img.PreviewUrl, MainWindow.WebProxy, shc);
 
                 //将请求加入请求组
-                reqs.Add(id, req);
+                reqs.Add(img.Id, req);
                 #endregion
 
                 //异步下载开始
-                req.BeginGetResponse(new AsyncCallback(RespCallback), new KeyValuePair<int, HttpWebRequest>(id, req));
+                req.BeginGetResponse(new AsyncCallback(RespCallback), new KeyValuePair<int, HttpWebRequest>(img.Id, req));
             }
             catch (Exception ex)
             {
                 Program.Log(ex, "Download sample failed");
-                StopLoadImg(id, true, "创建下载失败");
+                StopLoadImg(img.Id, true, "创建下载失败");
             }
+        }
+        /// <summary>
+        /// 下载图片
+        /// </summary>
+        public void DownloadImg(string needReferer)
+        {
+            DownloadImg(needReferer, false);
         }
 
         /// <summary>
@@ -200,14 +209,20 @@ namespace MoeLoaderDelta.Control
                     }
                     catch (WebException e)
                     {
-                        Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "缓冲失败"); }), e);
+                        if (re.Value.Address.AbsoluteUri.Contains(img.PreviewUrl))
+                        {
+                            if (req != null)
+                                req.AsyncWaitHandle.Close();
+                            StopLoadImg(re.Key, false, "容错缓冲中");
+                            DownloadImg(re.Value.Referer, true);
+                        }
+                        else
+                            Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "缓冲失败"); }), e);
                     }
                     finally
                     {
                         if (req != null)
-                        {
-                            req.AsyncWaitHandle.Close(); 
-                        }
+                            req.AsyncWaitHandle.Close();
                     }
                 }), this);
             }

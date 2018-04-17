@@ -117,13 +117,13 @@ namespace SitePack
                 //先加前一个，再加后一个  范围都是00-49
                 //string folder = (id % 2500 % 50).ToString("00") + "/" + (id % 2500 / 50).ToString("00");
                 string sample_url = previewUrl.Replace("240", "600");
-                string fileUrl = "http://static.zerochan.net" + previewUrl.Substring(previewUrl.IndexOf('/', 8)).Replace("240", "full");
+                string fileUrl = imgNode.SelectSingleNode("p//img").ParentNode.Attributes["href"].Value;
                 string title = imgHref.Attributes["title"].Value;
                 string dimension = title.Substring(0, title.IndexOf(' '));
                 string fileSize = title.Substring(title.IndexOf(' ')).Trim();
                 string tags = imgHref.Attributes["alt"].Value;
 
-                Img img = GenerateImg(fileUrl, previewUrl, sample_url, dimension, tags.Trim(), fileSize, id);
+                Img img = GenerateImg(fileUrl, sample_url, previewUrl, dimension, tags.Trim(), fileSize, id);
                 if (img != null) imgs.Add(img);
             }
 
@@ -134,10 +134,10 @@ namespace SitePack
         {
             //http://www.zerochan.net/suggest?q=tony&limit=8
             List<TagItem> re = new List<TagItem>();
-            
+
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
             shc.Referer = url;
-            string txt = Sweb.Get(url, proxy, "UTF-8",shc);
+            string txt = Sweb.Get(url, proxy, "UTF-8", shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -150,7 +150,7 @@ namespace SitePack
             return re;
         }
 
-        private Img GenerateImg(string file_url, string preview_url, string sample_url, string dimension, string tags, string file_size, int id)
+        private Img GenerateImg(string file_url, string sample_url, string preview_url, string dimension, string tags, string file_size, int id)
         {
             //int intId = int.Parse(id.Substring(1));
 
@@ -166,8 +166,8 @@ namespace SitePack
             //convert relative url to absolute
             if (file_url.StartsWith("/"))
                 file_url = SiteUrl + file_url;
-            if (preview_url.StartsWith("/"))
-                preview_url = SiteUrl + preview_url;
+            if (sample_url.StartsWith("/"))
+                sample_url = SiteUrl + sample_url;
 
             Img img = new Img()
             {

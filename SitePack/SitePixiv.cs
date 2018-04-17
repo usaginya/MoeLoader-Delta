@@ -188,18 +188,18 @@ namespace SitePack
                 //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
                 else if (srcType == PixivSrcType.Pid)
                 {
-                    if(!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
+                    if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
                         tempPage = pageString;
                         string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
                         string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
-                        string detailUrl = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + id;
+                        string detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
 
                         int mangaCount = 1;
                         string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
                         if (dimension.EndsWith("P"))
                             mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
-                        for (int i = 0; i < mangaCount ; i++)
+                        for (int i = 0; i < mangaCount; i++)
                         {
                             Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString() + "_"), id);
                             StringBuilder sb = new StringBuilder();
@@ -367,8 +367,8 @@ namespace SitePack
                 Id = intId,
                 //JpegUrl = fileUrl,
                 //OriginalUrl = fileUrl,
-                PreviewUrl = preview_url,
-                //SampleUrl = sampleUrl,
+                //PreviewUrl = preview_url,
+                SampleUrl = preview_url,
                 //Score = 0,
                 //Width = width,
                 //Height = height,
@@ -411,15 +411,15 @@ namespace SitePack
                 //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
                 if (srcType == PixivSrcType.Pid)
                 {
-                    i.SampleUrl = i.PreviewUrl.Replace("150x150","600x600");
+                    i.PreviewUrl = i.PreviewUrl.Replace("150x150", "600x600");
                 }
                 else
                 {
-                    i.SampleUrl = doc.DocumentNode.SelectSingleNode("//div[@class='works_display']").SelectSingleNode(".//img").Attributes["src"].Value;
-                    i.PreviewUrl = i.SampleUrl.Replace("600x600", "150x150");
+                    i.PreviewUrl = doc.DocumentNode.SelectSingleNode("//div[@class='works_display']").SelectSingleNode(".//img").Attributes["src"].Value;
+                    i.PreviewUrl = i.PreviewUrl.Replace("600x600", "150x150");
                 }
-                i.SampleUrl = i.SampleUrl.Replace("600x600", "1200x1200");
-                i.JpegUrl = i.SampleUrl;
+                i.PreviewUrl = i.PreviewUrl.Replace("600x600", "1200x1200");
+                i.JpegUrl = i.PreviewUrl;
                 try
                 {
                     i.OriginalUrl = doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[2]/div").SelectSingleNode(".//img").Attributes["data-src"].Value;

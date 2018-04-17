@@ -263,6 +263,9 @@ namespace MoeLoaderDelta
             //itmxExplicit.IsChecked = !showExplicit;
 
             MainW = this;
+
+            //删除上次临时目录
+            DelTempDirectory();
         }
 
         void menuItem_Click(object sender, RoutedEventArgs e)
@@ -1368,8 +1371,8 @@ namespace MoeLoaderDelta
                 num = int.Parse(txtNum.Text);
                 page = int.Parse(txtPage.Text);
 
-                num = num > 0 ? num : 1;
-                page = page > 0 ? page : 1;
+                num = num > 0 ? (num > 600 ? 600 : num) : 1;
+                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
 
                 txtNum.Text = num.ToString();
                 txtPage.Text = page.ToString();
@@ -1396,7 +1399,7 @@ namespace MoeLoaderDelta
 
         private void numUp_Click(object sender, RoutedEventArgs e)
         {
-            if (num < 500)
+            if (num < 600)
                 txtNum.Text = (num + 1).ToString();
         }
 
@@ -2346,6 +2349,17 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 删除临时缓存目录
+        /// </summary>
+        private void DelTempDirectory()
+        {
+            string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
+            if (Directory.Exists(tmpath))
+                try { Directory.Delete(tmpath, true); }
+                catch { }
+        }
+
+        /// <summary>
         /// 关闭程序
         /// </summary>
         private void Window_Closed(object sender, EventArgs e)
@@ -2396,12 +2410,6 @@ namespace MoeLoaderDelta
                 }
             }
             catch { }
-
-            //删除临时目录
-            string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
-            if (Directory.Exists(tmpath))
-                try { Directory.Delete(tmpath, true); }
-                catch { }
 
             //SessionClient.WriteCookiesToFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 

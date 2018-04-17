@@ -11,11 +11,10 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 180112
+    /// Fixed 180326
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
-        private bool APImode;
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
@@ -27,23 +26,23 @@ namespace SitePack
         public SiteGelbooru()
         {
             booru = new SiteBooru(
-                SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}"
-                , SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
+                "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
                 , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
+        }
+
+        private bool GetAPImode(string pageString)
+        {
+            return pageString.Contains("<post");
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             // API
+            booru.siteUrl = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
             string pageString = booru.GetPageString(page, count, keyWord, proxy);
-            if (pageString.Contains("<post"))
-            {
-                APImode = true;
-                return pageString;
-            }
+            if (GetAPImode(pageString)) return pageString;
 
             // Html
-            APImode = false;
             booru.siteUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
             booru.siteUrl = keyWord.Length < 1 ? booru.siteUrl.Substring(0, booru.siteUrl.Length - 6) : booru.siteUrl;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
@@ -79,7 +78,7 @@ namespace SitePack
         {
             List<Img> list = new List<Img>();
             //API
-            if (APImode)
+            if (GetAPImode(pageString))
             {
                 list = booru.GetImages(pageString, proxy);
                 return list;
@@ -87,7 +86,7 @@ namespace SitePack
 
             //Html
             if (pageString.Length < 20) { throw new Exception(pageString); }
-            if (!pageString.Contains("<html")) return list;
+            if (!pageString.Contains("<body")) return list;
             HtmlDocument document = new HtmlDocument();
             document.LoadHtml(pageString);
             HtmlNodeCollection previewNodes = document.DocumentNode.SelectNodes("//div[@class=\"thumbnail-preview\"]");
@@ -134,10 +133,7 @@ namespace SitePack
                         if (n.InnerText.Contains("Score"))
                             i.Score = Convert.ToInt32(n.SelectSingleNode("./span").InnerText);
                         if (n.InnerHtml.Contains("Original"))
-                        {
-                            i.OriginalUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
-                            i.JpegUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
-                        }
+                            i.OriginalUrl = i.JpegUrl = n.SelectSingleNode("./a").Attributes["href"].Value;
                     }
                 };
                 list.Add(item);
