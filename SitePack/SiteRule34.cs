@@ -59,6 +59,7 @@ namespace SitePack
         {
             this.srcType = srcType;
             booru = new SiteBooru(
+                SiteUrl,
                 SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
                 SiteUrl + "/autocomplete.php?q={0}",
                  SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);

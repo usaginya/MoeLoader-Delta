@@ -75,6 +75,11 @@ namespace MoeLoaderDelta
         bool IsSupportRes { get; }
 
         /// <summary>
+        /// 是否显示分辨率，若为false则在缩略图分辨率处显示标签
+        /// </summary>
+        bool IsShowRes { get; }
+
+        /// <summary>
         /// 是否支持预览图，若为false则缩略图上无查看预览图的按钮
         /// </summary>
         bool IsSupportPreview { get; }

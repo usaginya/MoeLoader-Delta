@@ -20,6 +20,7 @@ namespace SitePack
         /// eg. http://yande.re/post/index.xml?page={0}&limit={1}&tags={2}
         /// </summary>
         public string siteUrl;
+        public string Url;
         /// <summary>
         /// eg. http://yande.re/tag/index.xml?limit={0}&order=count&name={1}
         /// </summary>
@@ -37,15 +38,17 @@ namespace SitePack
         /// Booru Site
         /// </summary>
         /// <param name="siteUrl">站点解析地址</param>
+        /// <param name="url">图库服务器地址</param>
         /// <param name="tagUrl">tag自动提示地址</param>
         /// <param name="siteName">站点名</param>
         /// <param name="shortName">站点短名</param>
         /// <param name="referer">引用地址</param>
         /// <param name="needMinus">页码是否从0开始</param>
         /// <param name="srcType">解析类型</param>
-        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, string referer,
+        public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, string referer,
             bool needMinus, BooruProcessor.SourceType srcType)
         {
+            this.Url = url;
             this.siteName = siteName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
@@ -61,15 +64,17 @@ namespace SitePack
         /// Use after successful login
         /// </summary>
         /// <param name="siteUrl">站点解析地址</param>
+        /// <param name="url">图库服务器地址</param>
         /// <param name="tagUrl">tag自动提示地址</param>
         /// <param name="siteName">站点名</param>
         /// <param name="shortName">站点短名</param>
         /// <param name="needMinus">页码是否从0开始</param>
         /// <param name="srcType">解析类型</param>
         /// <param name="shc">Headers</param>
-        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, bool needMinus,
+        public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, bool needMinus,
             BooruProcessor.SourceType srcType, SessionHeadersCollection shc)
         {
+            this.Url = url;
             this.siteName = siteName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
@@ -80,7 +85,7 @@ namespace SitePack
             this.shc = shc;
         }
 
-        public override string SiteUrl { get { return siteUrl.Substring(0, siteUrl.IndexOf('/', 8)); } }
+        public override string SiteUrl { get { return siteUrl; } }
         public override string SiteName { get { return siteName; } }
         public override string ShortName { get { return shortName; } }
         public override string ShortType { get { return shortType; } }
@@ -90,7 +95,7 @@ namespace SitePack
         private void SetHeaders(BooruProcessor.SourceType srcType)
         {
             shc.Referer = referer;
-            shc.Timeout = 20000;
+            shc.Timeout = 12000;
             shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
             shc.AutomaticDecompression = System.Net.DecompressionMethods.GZip;
 
@@ -117,9 +122,9 @@ namespace SitePack
         {
             string url;
             if (count > 0)
-                url = string.Format(siteUrl, needMinus ? page - 1 : page, count, keyWord);
+                url = string.Format(Url, needMinus ? page - 1 : page, count, keyWord);
             else
-                url = string.Format(siteUrl, needMinus ? page - 1 : page, keyWord);
+                url = string.Format(Url, needMinus ? page - 1 : page, keyWord);
 
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
@@ -130,7 +135,7 @@ namespace SitePack
         public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
         {
             BooruProcessor nowSession = new BooruProcessor(srcType);
-            return nowSession.ProcessPage(siteUrl, pageString);
+            return nowSession.ProcessPage(siteUrl, Url, pageString);
         }
 
         public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)

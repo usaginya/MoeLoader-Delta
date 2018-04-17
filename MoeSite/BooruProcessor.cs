@@ -10,7 +10,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点
-    /// Fixed 20180407
+    /// Fixed 180417
     /// </summary>
     public class BooruProcessor
     {
@@ -161,32 +161,32 @@ namespace MoeLoaderDelta
         /// <param name="url">页面地址</param>
         /// <param name="pageString">页面源代码</param>
         /// <returns></returns>
-        public List<Img> ProcessPage(string url, string pageString)
+        public List<Img> ProcessPage(string siteUrl, string url, string pageString)
         {
             List<Img> imgs = new List<Img>();
 
             switch (type)
             {
                 case SourceType.HTML:
-                    ProcessHTML(url, pageString, imgs, "");
+                    ProcessHTML(siteUrl, url, pageString, imgs, "");
                     break;
                 case SourceType.JSON:
-                    ProcessJSON(url, pageString, imgs, "");
+                    ProcessJSON(siteUrl, url, pageString, imgs, "");
                     break;
                 case SourceType.JSONSku:
-                    ProcessJSON(url, pageString, imgs, "sku");
+                    ProcessJSON(siteUrl, url, pageString, imgs, "sku");
                     break;
                 case SourceType.XML:
-                    ProcessXML(url, pageString, imgs, "");
+                    ProcessXML(siteUrl, url, pageString, imgs, "");
                     break;
                 case SourceType.HTMLNV:
-                    ProcessHTML(url, pageString, imgs, "nv");
+                    ProcessHTML(siteUrl, url, pageString, imgs, "nv");
                     break;
                 case SourceType.JSONNV:
-                    ProcessJSON(url, pageString, imgs, "nv");
+                    ProcessJSON(siteUrl, url, pageString, imgs, "nv");
                     break;
                 case SourceType.XMLNV:
-                    ProcessXML(url, pageString, imgs, "nv");
+                    ProcessXML(siteUrl, url, pageString, imgs, "nv");
                     break;
             }
 
@@ -196,11 +196,12 @@ namespace MoeLoaderDelta
         /// <summary>
         /// HTML 格式信息
         /// </summary>
+        /// <param name="siteUrl">站点链接</param>
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
         /// <param name="sub">标记 (nv 不验证完整性)</param>
-        private void ProcessHTML(string url, string pageString, List<Img> imgs, string sub)
+        private void ProcessHTML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             /* Post.register({"jpeg_height":1200,"sample_width":1333,"md5":"1550bb8d9fa4e1ee7903ee103459f69a","created_at":{"n":666146000,"json_class":"Time","s":1290715184},
              * "status":"active","jpeg_file_size":215756,"sample_height":1000,"score":4,"sample_url":"http://yuinyan.imouto.org/sample/1550bb8d9fa4e459f69a/moe%20163698%20sample.jpg",
@@ -290,7 +291,7 @@ namespace MoeLoaderDelta
 
                 bool noVerify = sub.Length == 2 && sub.Contains("nv");
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
+                Img img = GenerateImg(siteUrl, url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
                 #endregion
 
@@ -301,11 +302,12 @@ namespace MoeLoaderDelta
         /// <summary>
         /// XML 格式信息
         /// </summary>
+        /// <param name="siteUrl"></param>
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
         /// <param name="sub">标记 (nv 不验证完整性)</param>
-        private void ProcessXML(string url, string pageString, List<Img> imgs, string sub)
+        private void ProcessXML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
             XmlDocument xmlDoc = new XmlDocument();
@@ -389,7 +391,7 @@ namespace MoeLoaderDelta
                 //jpeg_url = file_url;
                 bool noVerify = sub.Length == 2 && sub.Contains("nv");
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
+                Img img = GenerateImg(siteUrl, url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
             }
         }
@@ -397,11 +399,12 @@ namespace MoeLoaderDelta
         /// <summary>
         /// JSON format
         /// </summary>
+        /// <param name="siteUrl"></param>
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
         /// <param name="sub">站点标记</param>
-        private void ProcessJSON(string url, string pageString, List<Img> imgs, string sub)
+        private void ProcessJSON(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
             object[] array = (new JavaScriptSerializer()).DeserializeObject(pageString) as object[];
@@ -555,7 +558,7 @@ namespace MoeLoaderDelta
 
                 bool noVerify = sub.Length == 2 && sub.Contains("nv");
 
-                Img img = GenerateImg(url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
+                Img img = GenerateImg(siteUrl, url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
             }
         }
@@ -563,6 +566,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 生成 Img 对象
         /// </summary>
+        /// <param name="siteUrl">主站点</param>
         /// <param name="url"></param>
         /// <param name="id"></param>
         /// <param name="author"></param>
@@ -578,7 +582,7 @@ namespace MoeLoaderDelta
         /// <param name="jpeg_url">jpg</param>
         /// <param name="tags"></param>
         /// <returns></returns>
-        private Img GenerateImg(string url, string id, string author,
+        private Img GenerateImg(string siteUrl, string url, string id, string author,
             string src, int width, int height, int file_size, string created_at,
             string score, string sample, string preview_url, string file_url, string jpeg_url, string tags, bool noVerify)
         {
@@ -617,10 +621,9 @@ namespace MoeLoaderDelta
             }
             #endregion
 
-            string host = url.Substring(0, url.IndexOf('/', 8));
-            string detailUrl = host + "/post/show/" + id;
+            string detailUrl = siteUrl + "/post/show/" + id;
             if (url.Contains("index.php"))
-                detailUrl = host + "/index.php?page=post&s=view&id=" + id;
+                detailUrl = siteUrl + "/index.php?page=post&s=view&id=" + id;
 
             Img img = new Img()
             {

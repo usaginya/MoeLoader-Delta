@@ -26,7 +26,7 @@ namespace SitePack
         public SiteGelbooru()
         {
             booru = new SiteBooru(
-                "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
+                SiteUrl, "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
                 , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
         }
 

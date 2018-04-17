@@ -748,10 +748,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(
-                        imgs[i], i,
-                        SiteManager.Instance.Sites[nowSelectedIndex].Referer,
-                        SiteManager.Instance.Sites[nowSelectedIndex].IsSupportScore);
+                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
