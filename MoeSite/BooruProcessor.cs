@@ -10,6 +10,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点
+    /// Fixed 20180407
     /// </summary>
     public class BooruProcessor
     {
@@ -546,6 +547,10 @@ namespace MoeLoaderDelta
                     {
                         tags = obj["tags"].ToString();
                     }
+                }
+                else if (obj.ContainsKey("tag_string") && obj["tag_string"] != null)
+                {
+                    tags = obj["tag_string"].ToString();
                 }
 
                 bool noVerify = sub.Length == 2 && sub.Contains("nv");

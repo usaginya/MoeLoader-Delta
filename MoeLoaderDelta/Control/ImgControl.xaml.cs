@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
 namespace MoeLoaderDelta
@@ -49,7 +50,7 @@ namespace MoeLoaderDelta
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
             shc.Referer = referer;
-            shc.Timeout = 10000;
+            shc.Timeout = 8000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
@@ -117,6 +118,7 @@ namespace MoeLoaderDelta
             else
             {
                 //url不可能这么短
+                LRShadow.Opacity = 1;
                 LayoutRoot.IsEnabled = false;
                 chk.Text = "原始地址无效";
                 return;
@@ -191,6 +193,7 @@ namespace MoeLoaderDelta
                         Program.Log(ex, "Download img detail failed");
                         Dispatcher.Invoke(new VoidDel(() =>
                         {
+                            LRShadow.Opacity = 1;
                             isRetrievingDetail = false;
                             canRetry = true;
                             chk.Text = "信息加载失败";
@@ -219,7 +222,7 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.OnDemand);
+                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
                     canRetry = false;
                 }));
             }
@@ -378,7 +381,7 @@ namespace MoeLoaderDelta
             {
                 //itmRetry.IsEnabled = false;
                 canRetry = false;
-                preview.Opacity = 0;
+                preview.Opacity = LRShadow.Opacity = 0;
                 preview.Stretch = Stretch.None;
                 lt.Visibility = Visibility.Visible;
                 preview.Source = null;

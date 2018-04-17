@@ -133,6 +133,9 @@
     </UserControl.Triggers>
 
     <Grid x:Name="LayoutRoot">
+        <Grid.Effect>
+            <DropShadowEffect x:Name="LRShadow" Color="#FFFF4444" Direction="0" ShadowDepth="0" BlurRadius="30" Opacity="0"/>
+        </Grid.Effect>
         <!--<Border Margin="0" BorderBrush="#CC7A7A7A" BorderThickness="1" CornerRadius="3"/>-->
         <!--<Border Width="80" Height="25" BorderBrush="#7F5F5F5F" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#99FFFFFF" CornerRadius="3">-->
         <!--<CheckBox x:Name="chk" Margin="6,0,0,0" VerticalAlignment="Bottom" Height="19" Content="2222 x 2222" HorizontalAlignment="Left" ToolTip="选中该图片" Style="{DynamicResource CheckBoxStyle1}"/>-->
@@ -209,7 +212,7 @@
                 Margin="5,0,0,3"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                FontFamily="Arial"
+                FontFamily="Microsoft YaHei"
                 FontSize="14.667"
                 Foreground="White"
                 Text="9 x 9">
