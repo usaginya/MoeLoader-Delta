@@ -748,10 +748,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(
-                        imgs[i], i,
-                        SiteManager.Instance.Sites[nowSelectedIndex].Referer,
-                        SiteManager.Instance.Sites[nowSelectedIndex].IsSupportScore);
+                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -1446,7 +1443,7 @@ namespace MoeLoaderDelta
 
             //排除不支持预览的格式
             string supportformat = "jpg jpeg png bmp gif";
-            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].SampleUrl.Substring(imgs[index].SampleUrl.LastIndexOf('.') + 1));
+            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1));
             if (!supportformat.Contains(ext))
             {
                 MessageBox.Show(this, "未支持" + ext + "格式的预览显示，请下载后使用其它程序方式打开文件预览",
@@ -1901,10 +1898,10 @@ namespace MoeLoaderDelta
                         url = img.JpegUrl;
                         break;
                     case AddressType.Pre:
-                        url = img.SampleUrl;
+                        url = img.PreviewUrl;
                         break;
                     case AddressType.Small:
-                        url = img.PreviewUrl;
+                        url = img.SampleUrl;
                         break;
                 }
                 List<string> urls = new List<string>();

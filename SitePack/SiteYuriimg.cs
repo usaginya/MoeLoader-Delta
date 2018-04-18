@@ -11,6 +11,7 @@ namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
+    /// Last change 180417
     /// </summary>
     class SiteYuriimg : AbstractImageSite
     {
@@ -79,7 +80,7 @@ namespace SitePack
                     IsExplicit = false,
                     Tags = tags,
                     Desc = tags,
-                    SampleUrl = imgNode.Attributes["data-original"].Value,
+                    SampleUrl = imgNode.Attributes["data-original"].Value.Replace("!single","!320px"),
                     //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
                     Id = StringToInt(imgNode.Attributes["id"].Value),
                     DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,

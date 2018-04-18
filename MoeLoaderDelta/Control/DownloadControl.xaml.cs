@@ -1135,7 +1135,9 @@ namespace MoeLoaderDelta
                 }
 
             }
-            catch { }
+            catch {
+                System.Diagnostics.Process.Start(saveLocation);
+            }
         }
 
         /// <summary>

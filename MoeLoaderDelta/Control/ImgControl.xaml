@@ -115,6 +115,22 @@
                 <SplineDoubleKeyFrame KeyTime="00:00:00.3000000" Value="1" />
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
+        <Storyboard x:Key="hideFail">
+            <DoubleAnimationUsingKeyFrames
+                BeginTime="00:00:00"
+                Storyboard.TargetName="effectFail"
+                Storyboard.TargetProperty="Opacity">
+                <SplineDoubleKeyFrame KeyTime="00:00:00.3" Value="0" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="showFail">
+            <DoubleAnimationUsingKeyFrames
+                BeginTime="00:00:00"
+                Storyboard.TargetName="effectFail"
+                Storyboard.TargetProperty="Opacity">
+                <SplineDoubleKeyFrame KeyTime="00:00:00.5" Value="1" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
 
     </UserControl.Resources>
     <UserControl.Triggers>
@@ -133,6 +149,15 @@
     </UserControl.Triggers>
 
     <Grid x:Name="LayoutRoot">
+        <Grid.Effect>
+            <DropShadowEffect
+                x:Name="effectFail"
+                BlurRadius="20"
+                Direction="0"
+                Opacity="0"
+                ShadowDepth="0"
+                Color="#FFFF4444" />
+        </Grid.Effect>
         <!--<Border Margin="0" BorderBrush="#CC7A7A7A" BorderThickness="1" CornerRadius="3"/>-->
         <!--<Border Width="80" Height="25" BorderBrush="#7F5F5F5F" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#99FFFFFF" CornerRadius="3">-->
         <!--<CheckBox x:Name="chk" Margin="6,0,0,0" VerticalAlignment="Bottom" Height="19" Content="2222 x 2222" HorizontalAlignment="Left" ToolTip="选中该图片" Style="{DynamicResource CheckBoxStyle1}"/>-->
@@ -206,13 +231,15 @@
                 Opacity="0.6" />
             <TextBlock
                 x:Name="chk"
+                MaxHeight="19"
                 Margin="5,0,0,3"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                FontFamily="Arial"
+                FontFamily="Microsoft YaHei"
                 FontSize="14.667"
                 Foreground="White"
-                Text="9 x 9">
+                Text="9 x 9"
+                TextTrimming="CharacterEllipsis">
                 <!--CheckBox.Effect>
                 <DropShadowEffect BlurRadius="1" ShadowDepth="1.3" Direction="270" Color="#FFCCDAF1" Opacity="1"/>
             </CheckBox.Effect-->

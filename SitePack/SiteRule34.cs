@@ -59,6 +59,7 @@ namespace SitePack
         {
             this.srcType = srcType;
             booru = new SiteBooru(
+                SiteUrl,
                 SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}",
                 SiteUrl + "/autocomplete.php?q={0}",
                  SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
@@ -67,8 +68,8 @@ namespace SitePack
             sb.Append("-starit -horizontal_cloaca -animal_genitalia -princess_zelda -legoman -soul_calibur -soulcalibur -spiderman");
             sb.Append("-spiderman_(series) -gardevoir -dragon_ball -dragon_ball_z -buttplug -labor -zwijgen -my_little_pony -army");
             sb.Append("-nintendo -family_guy -alien -butt_grab -halo_(series) -justmegabenewell -sangheili -mammal -madeline_fenton");
-            sb.Append("-onigrift -widowmaker -mastodon -mmjsoh -iontoon -zootopia -torbj?rn -noill -canine -dragon -sonic_(series)");
-            sb.Append("-phillipthe2 -sims_4 -dota -bull_(noill) -gats -adventure_time -undertale -xmen -disney -alyssa_bbw -pernalonga");
+            sb.Append("-onigrift -widowmaker -mastodon -mmjsoh -iontoon -zootopia -torbj?rn -noill -canine -dragon -sonic_(series) -blood");
+            sb.Append("-phillipthe2 -sims_4 -dota -bull_(noill) -gats -adventure_time -undertale -xmen -disney -alyssa_bbw -pernalonga -bones");
             sb.Append("-mark -dexter's_laboratory -camp_lazlo -male_only -steven_universe -bara -princess_peach -super_mario_bros. -athorment");
             sb.Append("-male_focus -autofellatio -llortor -super_saiyan -aka6 -resident_evil -street_fighter -avian -dc -haydee -world_of_warcraft");
             sb.Append("-scalie -male_pov -animal_humanoid -kirby_(series) -mcarson -huge_cock -dickgirl -rasmustheowl -velma_dinkley -irispoplar");

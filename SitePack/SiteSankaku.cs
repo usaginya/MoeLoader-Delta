@@ -157,12 +157,12 @@ namespace SitePack
                         cookie = subdomain + ".sankaku;" + cookie;
 
 
-                    pageurl = loginhost+"/post/index.json?login=" + tempuser + "&password_hash="
+                    pageurl = loginhost + "/post/index.json?login=" + tempuser + "&password_hash="
                         + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";
 
                     //登录成功才能初始化Booru类型站点
                     shc.Referer = Referer;
-                    booru = new SiteBooru(pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONSku, shc);
+                    booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONSku, shc);
                 }
                 catch (Exception e)
                 {
