@@ -60,7 +60,7 @@ namespace SitePack
             {
                 string url = string.Format(SiteUrl + "/index.php?page=autocomplete&term={0}", word);
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
-                url = Sweb.Get(url, proxy, "UTF-8", shc);
+                url = Sweb.Get(url, proxy, shc);
 
                 object[] jsonobj = (new JavaScriptSerializer()).DeserializeObject(url) as object[];
 

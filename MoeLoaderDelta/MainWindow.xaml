@@ -863,16 +863,28 @@
                     Value="1" />
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
-        <!--<Storyboard x:Key="ClosedStoryboard" Storyboard.TargetName="Window">
-            <DoubleAnimation From="1" To="0" Duration="0:0:.1" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"/>
-            <DoubleAnimation From="1" To="0" Duration="0:0:.1" BeginTime="0:0:.1" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"/>
-            <ColorAnimation To="#00000000" Duration="0" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"/>
+        <Storyboard x:Key="ClosedStoryboard" Storyboard.TargetName="Window">
+            <DoubleAnimation
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"
+                From="1"
+                To="0"
+                Duration="0:0:.1" />
+            <DoubleAnimation
+                BeginTime="0:0:.1"
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"
+                From="1"
+                To="0"
+                Duration="0:0:.1" />
+            <ColorAnimation
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"
+                To="#00000000"
+                Duration="0" />
         </Storyboard>
         <LinearGradientBrush x:Key="ClosedBrush" StartPoint="0,1" EndPoint="1,0">
-            <GradientStop Color="#FF000000" Offset="0"/>
-            <GradientStop Color="#FF000000" Offset="1"/>
-            <GradientStop Color="#FF000000" Offset="1"/>
-        </LinearGradientBrush>-->
+            <GradientStop Offset="0" Color="#FF000000" />
+            <GradientStop Offset="1" Color="#FF000000" />
+            <GradientStop Offset="1" Color="#FF000000" />
+        </LinearGradientBrush>
     </Window.Resources>
     <Window.Triggers>
         <EventTrigger RoutedEvent="Mouse.MouseEnter" SourceName="txtSetting">
@@ -887,25 +899,37 @@
         <EventTrigger RoutedEvent="Mouse.MouseLeave" SourceName="txtHelp">
             <StopStoryboard BeginStoryboardName="OnMouseEnter3_BeginStoryboard" />
         </EventTrigger>
-        <!--<EventTrigger RoutedEvent="Loaded">
+        <EventTrigger RoutedEvent="Loaded">
             <EventTrigger.Actions>
                 <BeginStoryboard>
                     <Storyboard>
-                        <DoubleAnimation From="1" To="0" Duration="0:0:.2" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"/>
-                        <DoubleAnimation From="1" To="0" Duration="0:0:.2" BeginTime="0:0:.2" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"/>
-                        <ColorAnimation To="#FF000000" Duration="0" Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"/>
+                        <DoubleAnimation
+                            Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"
+                            From="1"
+                            To="0"
+                            Duration="0:0:.15" />
+                        <DoubleAnimation
+                            BeginTime="0:0:.15"
+                            Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"
+                            From="1"
+                            To="0"
+                            Duration="0:0:.15" />
+                        <ColorAnimation
+                            Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"
+                            To="#FF000000"
+                            Duration="0" />
                     </Storyboard>
                 </BeginStoryboard>
             </EventTrigger.Actions>
-        </EventTrigger>-->
+        </EventTrigger>
     </Window.Triggers>
-    <!--<Window.OpacityMask>
+    <Window.OpacityMask>
         <LinearGradientBrush StartPoint="1,1" EndPoint="0,0">
-            <GradientStop Color="#00000000" Offset="0"/>
-            <GradientStop Color="#00000000" Offset="1"/>
-            <GradientStop Color="#FF000000" Offset="1"/>
+            <GradientStop Offset="0" Color="#00000000" />
+            <GradientStop Offset="1" Color="#00000000" />
+            <GradientStop Offset="1" Color="#FF000000" />
         </LinearGradientBrush>
-    </Window.OpacityMask>-->
+    </Window.OpacityMask>
     <Border
         x:Name="containerB"
         Background="WhiteSmoke"

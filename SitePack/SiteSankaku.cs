@@ -72,7 +72,7 @@ namespace SitePack
             //https://chan.sankakucomplex.com/tag/autosuggest?tag=*****&locale=en
             string url = string.Format(SiteUrl + "/tag/autosuggest?tag={0}", word);
             shc.ContentType = SessionHeadersValue.AcceptAppJson;
-            string json = Sweb.Get(url, proxy, "UTF-8", shc);
+            string json = Sweb.Get(url, proxy, shc);
             object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
             string name = "", count = "";
 
@@ -148,7 +148,7 @@ namespace SitePack
                     shc.Referer = Referer;
                     shc.Accept = SessionHeadersValue.AcceptAppJson;
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                    Sweb.Post(loginhost + "/user/authenticate.json", post, proxy, "UTF-8", shc);
+                    Sweb.Post(loginhost + "/user/authenticate.json", post, proxy, shc);
                     cookie = Sweb.GetURLCookies(loginhost);
 
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))

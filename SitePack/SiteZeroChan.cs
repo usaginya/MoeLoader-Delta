@@ -80,7 +80,7 @@ namespace SitePack
             {
                 shc.Referer = beforeUrl;
                 url = string.IsNullOrWhiteSpace(keyWord) ? url : beforeUrl + "?p=" + page;
-                pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+                pageString = Sweb.Get(url, proxy, shc);
             }
 
             return pageString;
@@ -137,7 +137,7 @@ namespace SitePack
 
             string url = SiteUrl + "/suggest?limit=8&q=" + word;
             shc.Referer = url;
-            string txt = Sweb.Get(url, proxy, "UTF-8", shc);
+            string txt = Sweb.Get(url, proxy, shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -221,7 +221,7 @@ namespace SitePack
                     Sweb.Post(
                         loginurl,
                         "ref=%2F&login=Login&name=" + user[index] + "&password=" + pass[index],
-                        proxy, "utf-8", shc);
+                        proxy, shc);
 
                     cookie = Sweb.GetURLCookies(SiteUrl);
 

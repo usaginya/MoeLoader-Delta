@@ -103,7 +103,7 @@ namespace SitePack
                 //先使用关键词搜索，Referer返回实际地址
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
-                pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+                pageString = Sweb.Get(url, proxy, shc);
 
                 int urlIndex = pageString.IndexOf("http://browse.minitokyo.net/gallery?tid=");
 
@@ -112,7 +112,7 @@ namespace SitePack
                 url = url.Replace("&amp;", "&");
             }
 
-            pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+            pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
         }
@@ -222,7 +222,7 @@ namespace SitePack
             shc.Accept = SessionHeadersValue.AcceptTextHtml;
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
 
-            string txt = Sweb.Get(url, proxy, "UTF-8", shc);
+            string txt = Sweb.Get(url, proxy, shc);
 
             string[] lines = txt.Split(new char[] { '\n' });
             for (int i = 0; i < lines.Length && i < 8; i++)
@@ -246,7 +246,7 @@ namespace SitePack
 
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
                 shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                Sweb.Post(loginurl, postDat, proxy, "UTF-8", shc);
+                Sweb.Post(loginurl, postDat, proxy, shc);
                 cookie = Sweb.GetURLCookies(SiteUrl);
                 if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("minitokyo_hash"))
                 {

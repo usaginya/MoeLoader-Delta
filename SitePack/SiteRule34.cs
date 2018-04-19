@@ -97,7 +97,7 @@ namespace SitePack
             {
                 string url = string.Format(booru.tagUrl, word);
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
-                url = Sweb.Get(url, proxy, "UTF-8", shc);
+                url = Sweb.Get(url, proxy, shc);
 
                 JArray jobj = (JArray)JsonConvert.DeserializeObject(url);
                 string tmpname;

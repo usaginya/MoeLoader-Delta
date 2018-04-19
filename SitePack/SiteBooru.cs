@@ -1,4 +1,5 @@
 ﻿using MoeLoaderDelta;
+using System;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
 using System.Xml;
@@ -7,6 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
+    /// Last 20180419
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -120,16 +122,43 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
         {
-            string url;
+            string url, pagestr;
+            int tmpID;
+
+            SetHeaderType(srcType);
+            page = needMinus ? page - 1 : page;
+            pagestr = Convert.ToString(needMinus ? page - 1 : page);
+
+            //Danbooru 1000+ page
+            switch (shortName)
+            {
+                case "donmai":
+                case "atfbooru":
+                    if (page > 1000)
+                    {
+                        //取得1000页最后ID
+                        List<Img> tmpimgs = GetImages(
+                                Sweb.Get(
+                                    string.Format(Url, 1000, count, keyWord)
+                                , proxy, shc)
+                            , proxy);
+
+                        tmpID = tmpimgs[tmpimgs.Count - 1].Id;
+
+                        tmpID -= (page - 1001) * count;
+                        pagestr = "b" + tmpID;
+                    }
+                    break;
+            }
+
             if (count > 0)
-                url = string.Format(Url, needMinus ? page - 1 : page, count, keyWord);
+                url = string.Format(Url, pagestr, count, keyWord);
             else
-                url = string.Format(Url, needMinus ? page - 1 : page, keyWord);
+                url = string.Format(Url, pagestr, keyWord);
 
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
-            SetHeaderType(srcType);
-            return Sweb.Get(url, proxy, "UTF-8", shc);
+            return Sweb.Get(url, proxy, shc);
         }
 
         public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
@@ -147,7 +176,7 @@ namespace SitePack
             {
                 string url = string.Format(tagUrl, word);
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
-                url = Sweb.Get(url, proxy, "UTF-8", shc);
+                url = Sweb.Get(url, proxy, shc);
 
                 // [{"id":null,"name":"idolmaster_cinderella_girls","post_count":54050,"category":3,"antecedent_name":"cinderella_girls"},
                 // {"id":null,"name":"cirno","post_count":24486,"category":4,"antecedent_name":null}]
@@ -174,8 +203,7 @@ namespace SitePack
 
                 shc.Accept = SessionHeadersValue.AcceptTextXml;
                 shc.ContentType = SessionHeadersValue.AcceptAppXml;
-                string xml = Sweb.Get(url, proxy, "UTF-8", shc);
-
+                string xml = Sweb.Get(url, proxy, shc);
 
                 //<?xml version="1.0" encoding="UTF-8"?>
                 //<tags type="array">

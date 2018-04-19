@@ -91,7 +91,7 @@ namespace SitePack
                 url += "&orient=p&page=" + page;
             else if (srcType == KawaiiSrcType.TagPxL)
                 url += "&orient=l&page=" + page;
-            string pageString = Sweb.Get(url, proxy, "UTF-8");
+            string pageString = Sweb.Get(url, proxy);
             return pageString;
         }
 
