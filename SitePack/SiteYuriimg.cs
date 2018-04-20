@@ -127,17 +127,17 @@ namespace SitePack
 
         private int StringToInt(string id)
         {
-            string str = id.Trim();                            // 去掉字符串首尾处的空格
-            char[] charBuf = str.ToArray();                    // 将字符串转换为字符数组
+            string str = id.Trim();                            // 去掉字串首尾處的空格
+            char[] charBuf = str.ToArray();                    // 將字串轉換為字元數組
             ASCIIEncoding charToASCII = new ASCIIEncoding();
-            byte[] TxdBuf = new byte[charBuf.Length];          // 定义发送缓冲区；
+            byte[] TxdBuf = new byte[charBuf.Length];          // 定義發送緩衝區；
             TxdBuf = charToASCII.GetBytes(charBuf);
             int idOut = BitConverter.ToInt32(TxdBuf, 0);
             return idOut;
         }
 
         /// <summary>
-        /// 还原Cookie
+        /// 還原Cookie
         /// </summary>
         private void CookieRestore()
         {
@@ -150,7 +150,7 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
-            //第二次上传账户密码,使cookie可以用于登录
+            //第二次上傳帳戶密碼,使cookie可以用於登入
             if (!cookie.Contains("otome_"))
             {
                 try
@@ -158,10 +158,10 @@ namespace SitePack
                     string loginUrl = "http://yuriimg.com/account/login";
 
                     /*
-                     * 开始边界符
-                     * 分隔边界符
-                     * 结束边界符
-                     * Post数据
+                     * 開始邊界符
+                     * 分隔邊界符
+                     * 結束邊界符
+                     * Post資料
                      */
                     string
                         boundary = "---------------" + DateTime.Now.Ticks.ToString("x"),
@@ -188,23 +188,23 @@ namespace SitePack
 
                     if (retData.Contains("-2"))
                     {
-                        throw new Exception("密码错误");
+                        throw new Exception("密碼錯誤");
                     }
                     else if ((!cookie.Contains("otome_")))
                     {
-                        throw new Exception("登录时出错");
+                        throw new Exception("登入時出錯");
                     }
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自动登录失败");
+                    throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自動登入失敗");
                 }
             }
         }
         private string TimeConvert(string html)
         {
             string date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
-            if (date.Contains("时前"))
+            if (date.Contains("時前"))
             {
                 date = DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
             }

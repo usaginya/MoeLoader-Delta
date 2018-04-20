@@ -6,7 +6,7 @@ using System.Windows.Data;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 获取Thickness固定值double
+    /// 獲取Thickness固定值double
     /// </summary>
     public class ThicknessToDoubleConverter : IValueConverter
     {

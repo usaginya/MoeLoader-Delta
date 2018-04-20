@@ -12,29 +12,29 @@ namespace MoeLoaderDelta
         public static bool is_debug = false;
 
         /// <summary>
-        /// 允许多重启动参数
+        /// 允許多重啟動參數
         /// </summary>
         private const string multipleRunArg = "(=ω=)mRun";
 
         /// <summary>
-        /// 无需更新启动参数
+        /// 無需更新啟動參數
         /// </summary>
         private const string noUpdateArg = "⁄(⁄⁄•⁄ω⁄•⁄⁄)⁄NoUpdate";
 
         /// <summary>
-        /// 更新程序名
+        /// 更新程式名
         /// </summary>
         private const string UpdateAppName = "MoeToNew";
 
         private const string UpdateAppEXEName = UpdateAppName + ".exe";
 
         /// <summary>
-        /// 更新文件暂存目录
+        /// 更新檔案暫存目錄
         /// </summary>
         private const string updateTmpPath = "NewMoeLoader";
 
         /// <summary>
-        /// 更新程序需要的dll
+        /// 更新程式需要的dll
         /// </summary>
         private const string UpdateAppDll = "HtmlTextBlock.dll";
 
@@ -79,7 +79,7 @@ namespace MoeLoaderDelta
                     }
                     else
                     {
-                        //从更新程序启动
+                        //從更新程式啟動
                         Process.Start(UpdateAppEXEName);
                         Process.GetCurrentProcess().Kill();
                     }
@@ -115,7 +115,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 恢复配置文件
+        /// 恢復設定檔案
         /// </summary>
         private static void RecoveryConfig()
         {
@@ -131,7 +131,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 替换新的更新程序
+        /// 取代新的更新程式
         /// </summary>
         private static void ReplaceUpdateApp()
         {
@@ -146,7 +146,7 @@ namespace MoeLoaderDelta
                 File.Move(NewUpdate, UpdateAppEXEName);
             }
 
-            //删除空目录
+            //刪除空目錄
             try
             {
                 DirectoryInfo di = new DirectoryInfo(updateTmpPath);
@@ -157,7 +157,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 删除更新程序用的多余文件 减少硬盘容量占用
+        /// 刪除更新程式用的多餘檔案 減少硬碟容量占用
         /// </summary>
         private static void DelRedundantFile()
         {

@@ -13,13 +13,13 @@ namespace MoeLoaderDelta
 {
 
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// MainWindow.xaml 的交互邏輯
     /// 2017-5-10       by YIU
     /// </summary>
     public partial class MtoNWindow : Window
     {
         /// <summary>
-        /// 此更新程序文件名
+        /// 此更新程式檔案名
         /// </summary>
         private string UpdateAppName = Path.GetFileName(Assembly.GetEntryAssembly().Location);
 
@@ -29,37 +29,37 @@ namespace MoeLoaderDelta
         private bool haveUpdate = false;
 
         /// <summary>
-        /// 更新状态 0检查更新 1正在更新 2更新完成
+        /// 更新狀態 0檢查更新 1正在更新 2更新完成
         /// </summary>
         private int UpdateState = 0;
 
         /// <summary>
-        /// 更新列表信息
+        /// 更新列表訊息
         /// </summary>
         private MoeUpdateItem UpdateInfo;
 
         /// <summary>
-        /// 需要更新的文件列表
+        /// 需要更新的檔案列表
         /// </summary>
         private List<MoeUpdateFile> UpdateFiles = new List<MoeUpdateFile>();
 
         /// <summary>
-        /// 需要更新的文件表信息
+        /// 需要更新的檔案表訊息
         /// </summary>
         private string UpdateFilesInfo = "";
 
         /// <summary>
-        /// 更新文件暂存目录
+        /// 更新檔案暫存目錄
         /// </summary>
         private const string updateTmpPath = "NewMoeLoader";
 
         /// <summary>
-        /// 无更新运行MoeLoader(根据 MoeLoaderDelta 中 Program.cs 启动参数决定)
+        /// 無更新執行MoeLoader(根據 MoeLoaderDelta 中 Program.cs 啟動參數決定)
         /// </summary>
         private const string noUpdateRunMLD = "⁄(⁄⁄•⁄ω⁄•⁄⁄)⁄NoUpdate";
 
         /// <summary>
-        /// 更新信息地址
+        /// 更新訊息地址
         /// </summary>
         private const string updateInfoUrl = "https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/update.json";
 
@@ -90,7 +90,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 绑定事件
+        /// 綁定事件
         /// </summary>
         private void BindUIEvent()
         {
@@ -106,7 +106,7 @@ namespace MoeLoaderDelta
         #endregion
 
         /// <summary>
-        /// html文本框载入后绑定事件
+        /// html文字框載入後綁定事件
         /// </summary>
         private void HtmlTextBlock_Loaded(object sender, RoutedEventArgs e)
         {
@@ -114,7 +114,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// html文本框点击链接时事件
+        /// html文字框點擊連結時事件
         /// </summary>
         private void Hyperlink_Click(object sender, RoutedEventArgs e)
         {
@@ -134,19 +134,19 @@ namespace MoeLoaderDelta
         #endregion
 
         /// <summary>
-        /// 检查更新
+        /// 檢查更新
         /// </summary>
         /// <returns>是否有更新</returns>
         private bool CreateUpdate()
         {
 
-            #region 取更新信息
+            #region 取更新訊息
             MyWebClient web = new MyWebClient();
             web.Proxy = WebRequest.DefaultWebProxy;
             string updatejson = web.DownloadString(updateInfoUrl);
             #endregion
 
-            #region 匹配文件并添加到更新列表
+            #region 匹配檔案並添加到更新列表
             string localFile = "";
 
             if (string.IsNullOrWhiteSpace(updatejson))
@@ -181,12 +181,12 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 显示更新窗口
+        /// 顯示更新視窗
         /// </summary>
         private void ShowUpdate()
         {
             string line = new string('-', 40);
-            htmltb.Html = UpdateInfo.Info + "[br][br][b]" + line + " 以下是更新的内容 " + line + "[/b][br][br]" + UpdateFilesInfo;
+            htmltb.Html = UpdateInfo.Info + "[br][br][b]" + line + " 以下是更新的內容 " + line + "[/b][br][br]" + UpdateFilesInfo;
             Visibility = Visibility.Visible;
         }
 
@@ -230,7 +230,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 运行MoeLoaderDelta
+        /// 執行MoeLoaderDelta
         /// </summary>
         private void RunMoeLoader(string arg)
         {
@@ -246,7 +246,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 结束MoeLoaderDelta
+        /// 結束MoeLoaderDelta
         /// </summary>
         private void KillMoeLoader()
         {
@@ -254,7 +254,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 开始更新
+        /// 開始更新
         /// </summary>
         private void StartUpdate()
         {
@@ -275,14 +275,14 @@ namespace MoeLoaderDelta
             }
             #endregion
 
-            #region 更新处理(包括更新结束)
+            #region 更新處理(包括更新結束)
             DownloadFile();
             #endregion
 
         }
 
         /// <summary>
-        /// 从更新缓存中替换新文件
+        /// 從更新快取中取代新檔案
         /// </summary>
         private void ReplaceNewFile()
         {
@@ -293,10 +293,10 @@ namespace MoeLoaderDelta
 
 
         /// <summary>
-        /// 按顺序下载更新列表中的文件(回调)
+        /// 按順序下載更新列表中的檔案(回調)
         /// </summary>
-        /// <param name="FileListCount">更新列表文件总数</param>
-        /// <param name="FileListIndex">当前下载更新列表中的文件索引</param>
+        /// <param name="FileListCount">更新列表檔案總數</param>
+        /// <param name="FileListIndex">當前下載更新列表中的檔案索引</param>
         private void DownloadFile(int FileListCount, int FileListIndex)
         {
             if (FileListIndex < FileListCount && UpdateState == 1)
@@ -309,7 +309,7 @@ namespace MoeLoaderDelta
                     switch (nowDLfile.State)
                     {
                         case "del":
-                            #region 删除信息显示
+                            #region 刪除訊息顯示
                             Dispatcher.Invoke(new Action(delegate
                             {
                                 pbSingleTxt.Text = "移除 " + nowDLfile.Name;
@@ -317,12 +317,12 @@ namespace MoeLoaderDelta
                             }));
                             #endregion
 
-                            #region 删除指定文件
+                            #region 刪除指定檔案
                             string nowPath = RepairPath(nowDLfile.Path);
                             File.Delete(nowPath + nowDLfile.Name);
                             try
                             {
-                                //删除空目录
+                                //刪除空目錄
                                 DirectoryInfo di = new DirectoryInfo(nowPath);
                                 if (di.GetFiles().Length + di.GetDirectories().Length < 1)
                                     Directory.Delete(nowPath);
@@ -333,22 +333,22 @@ namespace MoeLoaderDelta
                             Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
                             Thread.Sleep(666);
 
-                            //处理下一个文件
+                            //處理下一個檔案
                             DownloadFile(FileListCount, ++FileListIndex);
                             break;
 
                         default:
-                            #region 下载信息显示
+                            #region 下載訊息顯示
                             Dispatcher.Invoke(new Action(delegate
                             {
-                                pbSingleTxt.Text = "获取 " + nowDLfile.Name;
+                                pbSingleTxt.Text = "獲取 " + nowDLfile.Name;
                                 pbSingle.Value = 0;
                                 pbSingleSpeed.Text = "(0.00 KB/s";
                                 pbSingleSpeed.Visibility = pbSingleVal.Visibility = Visibility.Visible;
                             }));
                             #endregion
 
-                            #region 创建下载
+                            #region 創建下載
                             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(nowDLfile.Url);
                             req.Proxy = WebRequest.DefaultWebProxy;
                             req.UserAgent = SessionClient.DefUA;
@@ -356,7 +356,7 @@ namespace MoeLoaderDelta
 
                             HttpWebResponse res = (HttpWebResponse)req.GetResponse();
 
-                            //响应长度
+                            //響應長度
                             double reslength = res.ContentLength;
 
                             string tmpDLPath = updateTmpPath + "\\" + RepairPath(nowDLfile.Path);
@@ -369,14 +369,14 @@ namespace MoeLoaderDelta
                             Stream fileStr = new FileStream(tmpDLPath + nowDLfile.Name, FileMode.Create);
                             #endregion
 
-                            #region 开始线程下载文件
-                            //限制线程最大数
+                            #region 開始執行緒下載檔案
+                            //限制執行緒最大數
                             ThreadPool.SetMaxThreads(2, 2);
 
                             ThreadPool.QueueUserWorkItem((o) =>
                             {
                                 byte[] buffer = new byte[1024];
-                                double progressBarValue = 0; //进度预置
+                                double progressBarValue = 0; //進度預置
 
                                 DateTime last = DateTime.Now;
                                 int realReadLen = str.Read(buffer, 0, buffer.Length);
@@ -411,7 +411,7 @@ namespace MoeLoaderDelta
                                 Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
                                 Thread.Sleep(666);
 
-                                //下载完成一个文件后回调下载下一个
+                                //下載完成一個檔案後回調下載下一個
                                 DownloadFile(FileListCount, ++FileListIndex);
                             }, null);
                             #endregion
@@ -431,7 +431,7 @@ namespace MoeLoaderDelta
                 }
             }
 
-            #region 更新结束
+            #region 更新結束
             if (FileListIndex >= FileListCount && UpdateState == 1)
             {
                 Dispatcher.Invoke(new Action(delegate
@@ -440,27 +440,27 @@ namespace MoeLoaderDelta
                     DownloadStateUI.Visibility = Visibility.Hidden;
                     btnY.Tag = "y";
                     btnY.IsEnabled = true;
-                    btnY.Content = "重启完成更新";
+                    btnY.Content = "重啟完成更新";
                     btnN.Content = "退出更新";
                 }));
             }
             #endregion
         }
         /// <summary>
-        /// 按顺序下载更新列表中的文件
+        /// 按順序下載更新列表中的檔案
         /// </summary>
         private void DownloadFile()
         {
-            //从列表中第1个开始索引为0
+            //從列表中第1個開始索引為0
             DownloadFile(UpdateFiles.Count, 0);
         }
 
 
         /// <summary>
-        /// 刷新下载状态
+        /// 刷新下載狀態
         /// </summary>
-        /// <param name="downloaded">已下载进度</param>
-        /// <param name="speed">下载速度</param>
+        /// <param name="downloaded">已下載進度</param>
+        /// <param name="speed">下載速度</param>
         private delegate void ProgressBarDelegate(double downloaded, double speed);
         private void RefreshDownload(double downloaded, double speed)
         {
@@ -475,7 +475,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 更新程序结束
+        /// 更新程式結束
         /// </summary>
         private void UpdateEnd()
         {
@@ -486,9 +486,9 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 修复格式不正确的文件路径
+        /// 修復格式不正確的檔案路徑
         /// </summary>
-        /// <param name="path">路径</param>
+        /// <param name="path">路徑</param>
         private string RepairPath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))

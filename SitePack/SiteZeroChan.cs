@@ -66,7 +66,7 @@ namespace SitePack
                 }
                 catch
                 {
-                    throw new Exception("搜索失败，请检查您输入的关键词");
+                    throw new Exception("搜尋失敗，請檢查您輸入的關鍵字");
                 }
 
                 StreamReader sr = new StreamReader(rsp.GetResponseStream(), Encoding.UTF8);
@@ -101,7 +101,7 @@ namespace SitePack
             }
             catch
             {
-                throw new Exception("没有搜索到图片");
+                throw new Exception("沒有搜尋到圖片");
             }
 
             foreach (HtmlNode imgNode in nodes)
@@ -114,7 +114,7 @@ namespace SitePack
                 //http://s3.zerochan.net/Morgiana.240.1355397.jpg   preview
                 //http://s3.zerochan.net/Morgiana.600.1355397.jpg    sample
                 //http://static.zerochan.net/Morgiana.full.1355397.jpg   full
-                //先加前一个，再加后一个  范围都是00-49
+                //先加前一個，再加後一個  範圍都是00-49
                 //string folder = (id % 2500 % 50).ToString("00") + "/" + (id % 2500 / 50).ToString("00");
                 string sample_url = previewUrl.Replace("240", "600");
                 string fileUrl = imgNode.SelectSingleNode("p//img").ParentNode.Attributes["href"].Value;
@@ -197,7 +197,7 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 还原Cookie
+        /// 還原Cookie
         /// </summary>
         private void CookieRestore()
         {
@@ -226,7 +226,7 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("z_hash"))
-                        throw new Exception("登录失败");
+                        throw new Exception("登入失敗");
                     else
                         cookie = "zeroc;" + cookie;
 
@@ -234,7 +234,7 @@ namespace SitePack
                 catch (WebException)
                 {
                     //invalid user will encounter 404
-                    throw new Exception("访问服务器失败");
+                    throw new Exception("訪問伺服器失敗");
                 }
             }
         }

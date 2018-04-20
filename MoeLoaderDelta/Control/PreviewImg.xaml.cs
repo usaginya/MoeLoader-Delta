@@ -14,33 +14,33 @@ using System.Windows.Media.Imaging;
 namespace MoeLoaderDelta.Control
 {
     /// <summary>
-    /// PreviewImg.xaml 的交互逻辑
+    /// PreviewImg.xaml 的交互邏輯
     /// by YIU
     /// Fixed 20180326
     /// </summary>
     public partial class PreviewImg : UserControl
     {
 
-        //======== 私有变量 =========
-        //预览窗口
+        //======== 私有變數 =========
+        //預覽視窗
         private PreviewWnd prew;
-        //图片信息结构
+        //圖片訊息結構
         private Img img;
-        //网络请求组
+        //網路請求組
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private Dictionary<int, HttpWebRequest> reqs = new Dictionary<int, HttpWebRequest>();
         private Stream strs;
-        //图片是否载入完成
+        //圖片是否載入完成
         private bool imgloaded;
-        //是否缩放
+        //是否縮放
         private bool iszoom;
-        //预览图类型
+        //預覽圖類型
         private string imgType;
-        //用于静态图片格式转化
+        //用於靜態圖片格式轉化
         Dictionary<string, ImageFormat> imgf = new Dictionary<string, ImageFormat>();
 
-        #region ==== 封装 =======
+        #region ==== 封裝 =======
         public Dictionary<int, HttpWebRequest> Reqs
         {
             get { return reqs; }
@@ -59,7 +59,7 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 预览图类型
+        /// 預覽圖類型
         /// bmp, jpg, png, gif, webm, mpeg, zip, rar, 7z
         /// </summary>
         public string ImgType
@@ -74,8 +74,8 @@ namespace MoeLoaderDelta.Control
         }
         #endregion
 
-        //======= 委托 =======
-        //进度条数值
+        //======= 委託 =======
+        //進度條數值
         private delegate void ProgressBarSetter(double value);
 
         public PreviewImg(PreviewWnd prew, Img img)
@@ -91,14 +91,14 @@ namespace MoeLoaderDelta.Control
 
 
         /// <summary>
-        /// 下载图片
+        /// 下載圖片
         /// </summary>
-        /// <param name="reTry">重试</param>
+        /// <param name="reTry">重試</param>
         public void DownloadImg(string needReferer, bool reTry)
         {
             try
             {
-                #region 创建请求数据
+                #region 創建請求資料
                 shc.Add("Accept-Ranges", "bytes");
                 shc.Referer = needReferer;
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
@@ -106,21 +106,21 @@ namespace MoeLoaderDelta.Control
                 shc.AutomaticDecompression = DecompressionMethods.GZip;
                 HttpWebRequest req = Sweb.CreateWebRequest(reTry ? img.JpegUrl : img.PreviewUrl, MainWindow.WebProxy, shc);
 
-                //将请求加入请求组
+                //將請求加入請求組
                 reqs.Add(img.Id, req);
                 #endregion
 
-                //异步下载开始
+                //非同步下載開始
                 req.BeginGetResponse(new AsyncCallback(RespCallback), new KeyValuePair<int, HttpWebRequest>(img.Id, req));
             }
             catch (Exception ex)
             {
                 Program.Log(ex, "Download sample failed");
-                StopLoadImg(img.Id, true, "创建下载失败");
+                StopLoadImg(img.Id, true, "創建下載失敗");
             }
         }
         /// <summary>
-        /// 下载图片
+        /// 下載圖片
         /// </summary>
         public void DownloadImg(string needReferer)
         {
@@ -128,7 +128,7 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 异步下载
+        /// 非同步下載
         /// </summary>
         /// <param name="req"></param>
         private void RespCallback(IAsyncResult req)
@@ -140,30 +140,30 @@ namespace MoeLoaderDelta.Control
                 {
                     try
                     {
-                        //取响应数据
+                        //取響應資料
                         HttpWebResponse res = (HttpWebResponse)re.Value.EndGetResponse(req);
                         string resae = res.Headers[HttpResponseHeader.ContentEncoding];
                         Stream str = res.GetResponseStream();
 
-                        //响应长度
+                        //響應長度
                         double reslength = res.ContentLength, restmplength = 0;
 
 
-                        //获取数据更新进度条
+                        //獲取資料更新進度條
                         ThreadPool.QueueUserWorkItem((obj) =>
                         {
-                            //缓冲块长度
+                            //緩衝塊長度
                             byte[] buffer = new byte[1024];
-                            //读到的字节长度
+                            //讀到的位元組長度
                             int realReadLen = str.Read(buffer, 0, 1024);
-                            //进度条字节进度
+                            //進度條位元組進度
                             long progressBarValue = 0;
                             double progressSetValue = 0;
-                            //内存流字节组
+                            //記憶體流位元組組
                             byte[] data = null;
                             MemoryStream ms = new MemoryStream();
 
-                            //写流数据并更新进度条
+                            //寫流資料並更新進度條
                             while (realReadLen > 0)
                             {
                                 ms.Write(buffer, 0, realReadLen);
@@ -184,23 +184,23 @@ namespace MoeLoaderDelta.Control
                                 }
                                 catch
                                 {
-                                    Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, "数据中止"); }), "");
+                                    Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, "資料中止"); }), "");
                                     return;
                                 }
                             }
 
                             data = ms.ToArray();
 
-                            //解压gzip
+                            //解壓gzip
                             if (resae != null && resae.Contains("gzip", StringComparison.OrdinalIgnoreCase))
                             {
                                 ungzip(ref data);
                             }
 
-                            //将字节组转为流
+                            //將位元組組轉為流
                             ms = new MemoryStream(data);
 
-                            //读完数据传递图片流并显示
+                            //讀完資料傳遞圖片流並顯示
                             Dispatcher.Invoke(new UIdelegate(delegate (object sende) { AssignImg(ms, re.Key); }), "");
 
                             str.Dispose();
@@ -213,11 +213,11 @@ namespace MoeLoaderDelta.Control
                         {
                             if (req != null)
                                 req.AsyncWaitHandle.Close();
-                            StopLoadImg(re.Key, false, "容错缓冲中");
+                            StopLoadImg(re.Key, false, "容錯緩衝中");
                             DownloadImg(re.Value.Referer, true);
                         }
                         else
-                            Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "缓冲失败"); }), e);
+                            Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "緩衝失敗"); }), e);
                     }
                     finally
                     {
@@ -229,23 +229,23 @@ namespace MoeLoaderDelta.Control
             catch (Exception ex2)
             {
                 Program.Log(ex2, "Download sample failed");
-                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { StopLoadImg(re.Key, true, "下载失败"); }), ex2);
+                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { StopLoadImg(re.Key, true, "下載失敗"); }), ex2);
             }
         }
 
         /// <summary>
-        /// 解压gzip
+        /// 解壓gzip
         /// </summary>
-        /// <param name="data">字节组</param>
+        /// <param name="data">位元組組</param>
         /// <returns></returns>
         private static byte[] ungzip(ref byte[] data)
         {
             try
             {
-                MemoryStream js = new MemoryStream();                       // 解压后的流   
-                MemoryStream ms = new MemoryStream(data);                   // 用于解压的流   
+                MemoryStream js = new MemoryStream();                       // 解壓後的流   
+                MemoryStream ms = new MemoryStream(data);                   // 用於解壓的流   
                 GZipStream g = new GZipStream(ms, CompressionMode.Decompress);
-                byte[] buffer = new byte[5120];                                // 5K缓冲区      
+                byte[] buffer = new byte[5120];                                // 5K緩衝區      
                 int l = g.Read(buffer, 0, 5120);
                 while (l > 0)
                 {
@@ -268,7 +268,7 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 设进度条进度值
+        /// 設進度條進度值
         /// </summary>
         /// <param name="value"></param>
         private void SetProgressBar(double value)
@@ -276,18 +276,18 @@ namespace MoeLoaderDelta.Control
             pdload.Value = value;
         }
 
-        #region 停止加载预览图
+        #region 停止載入預覽圖
         /// <summary>
-        /// 停止加载
+        /// 停止載入
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="Failed">是否失败</param>
-        /// <param name="FMsg">失败提示</param>
+        /// <param name="Failed">是否失敗</param>
+        /// <param name="FMsg">失敗提示</param>
         public void StopLoadImg(int id, bool Failed, string FMsg)
         {
             try
             {
-                //清理请求数据
+                //清理請求資料
                 if (reqs.ContainsKey(id))
                 {
                     if (reqs[id] != null)
@@ -317,10 +317,10 @@ namespace MoeLoaderDelta.Control
             }
         }
         /// <summary>
-        /// 停止加载2
+        /// 停止載入2
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="FMsg">失败提示</param>
+        /// <param name="FMsg">失敗提示</param>
         public void StopLoadImg(int id, string FMsg)
         {
             StopLoadImg(id, false, FMsg);
@@ -328,29 +328,29 @@ namespace MoeLoaderDelta.Control
         #endregion
 
         /// <summary>
-        /// 显示预览
+        /// 顯示預覽
         /// </summary>
-        /// <param name="str">各种Stream</param>
+        /// <param name="str">各種Stream</param>
         /// <param name="key">img.ID</param>
         private void AssignImg(Stream str, int key)
         {
-            //流下载完毕
+            //流下載完畢
             try
             {
-                //提取图片规格类型
+                //提取圖片規格類型
                 string type = GetImgType(str);
                 imgType = type;
 
-                //记录Stream
+                //記錄Stream
                 strs = str;
 
-                //分显示容器
+                //分顯示容器
                 switch (type)
                 {
                     case "bmp":
                     case "jpg":
                     case "png":
-                        //静态图片格式转化
+                        //靜態圖片格式轉化
                         System.Drawing.Image dimg = System.Drawing.Image.FromStream(str);
                         MemoryStream ms = new MemoryStream();
                         dimg.Save(ms, imgf[type]);
@@ -360,7 +360,7 @@ namespace MoeLoaderDelta.Control
                         bi.EndInit();
                         ms.Close();
 
-                        //创建静态图片控件
+                        //創建靜態圖片控制項
                         Image img = new Image()
                         {
                             Source = bi,
@@ -370,12 +370,12 @@ namespace MoeLoaderDelta.Control
                             Margin = new Thickness() { Top = 0, Right = 0, Bottom = 0, Left = 0 }
                         };
 
-                        //将预览控件加入布局
+                        //將預覽控制項加入布局
                         prewimg.Children.Add(img);
                         break;
 
                     case "gif":
-                        //创建GIF动图控件
+                        //創建GIF動圖控制項
                         AnimatedGIF gif = new AnimatedGIF()
                         {
                             GIFSource = str,
@@ -384,23 +384,23 @@ namespace MoeLoaderDelta.Control
                             StretchDirection = StretchDirection.Both
                         };
 
-                        //将预览控件加入布局
+                        //將預覽控制項加入布局
                         prewimg.Children.Add(gif);
                         break;
 
                     default:
-                        //未支持预览的格式
-                        Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, "不支持" + type); }), "");
+                        //未支援預覽的格式
+                        Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, "不支援" + type); }), "");
                         return;
                 }
 
-                //选中的预览图显示出来
+                //選中的預覽圖顯示出來
                 if (key == prew.SelectedId)
                 {
                     Visibility = Visibility.Visible;
                 }
 
-                //隐藏进度条
+                //隱藏進度條
                 ProgressPlate.Visibility = Visibility.Hidden;
 
                 ImgZoom(true);
@@ -409,16 +409,16 @@ namespace MoeLoaderDelta.Control
             catch (Exception ex1)
             {
                 Program.Log(ex1, "Read sample img failed");
-                Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, true, "读取数据失败"); }), ex1);
+                Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, true, "讀取資料失敗"); }), ex1);
             }
         }
 
-        #region 设置图片缩放
+        #region 設定圖片縮放
         /// <summary>
-        /// 设置图片缩放
+        /// 設定圖片縮放
         /// </summary>
-        /// <param name="zoom">true自适应</param>
-        /// <param name="begin">首次显示</param>
+        /// <param name="zoom">true自適應</param>
+        /// <param name="begin">首次顯示</param>
         public void ImgZoom(bool zoom, bool begin)
         {
             if (imgType == null) return;
@@ -428,7 +428,7 @@ namespace MoeLoaderDelta.Control
             bool isani = false;
 
             UIElement imgui = prewimg.Children[0];
-            //分类型取值
+            //分類型取值
             switch (imgType)
             {
                 case "bmp":
@@ -489,18 +489,18 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 设置图片缩放首次模式自适应
+        /// 設定圖片縮放首次模式自適應
         /// </summary>
         public void ImgZoom(bool begin) { ImgZoom(true, begin); }
 
         /// <summary>
-        /// 设置图片缩放到自适应
+        /// 設定圖片縮放到自適應
         /// </summary>
         public void ImgZoom() { ImgZoom(true, false); }
         #endregion
 
         /// <summary>
-        /// 简单的获取图片类型，失败返回空
+        /// 簡單的獲取圖片類型，失敗返回空
         /// </summary>
         /// <param name="str">Stream</param>
         /// <returns>bmp,jpg,png,gif,webm,mpeg,zip,rar,7z</returns>
@@ -508,7 +508,7 @@ namespace MoeLoaderDelta.Control
         {
             if (str == null) return "";
 
-            //由自带对象判断类型
+            //由自帶對象判斷類型
             ImageFormat dwimgformat = System.Drawing.Image.FromStream(str).RawFormat;
             if (dwimgformat.Equals(ImageFormat.Bmp))
             {
@@ -528,8 +528,8 @@ namespace MoeLoaderDelta.Control
                 return "gif";
             }
 
-            //如果对象无法判断就取文件头字节判断
-            //图片类型特征字节
+            //如果對象無法判斷就取檔案頭位元組判斷
+            //圖片類型特徵位元組
             Dictionary<string, string> itype = new Dictionary<string, string>();
             itype.Add("bmp", "424D");
             itype.Add("jpg", "FFD8");
@@ -541,7 +541,7 @@ namespace MoeLoaderDelta.Control
             itype.Add("rar", "52617221");
             itype.Add("7z", "377ABCAF271C");
 
-            //取数据头一部分
+            //取資料頭一部分
             byte[] head = DataConverter.LocalStreamToByte(str, 32);
             //找出符合的格式
             foreach (string type in itype.Keys)

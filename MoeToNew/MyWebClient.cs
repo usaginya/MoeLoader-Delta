@@ -4,7 +4,7 @@ using System.Net;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 带有超时的WebClient
+    /// 帶有超時的WebClient
     /// </summary>
     public class MyWebClient : WebClient
     {
@@ -12,7 +12,7 @@ namespace MoeLoaderDelta
         private int _timeOut = 25;
 
         /// <summary>
-        /// 构造WebClient
+        /// 構造WebClient
         /// </summary>
         public MyWebClient()
         {
@@ -21,7 +21,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 过期时间 in second
+        /// 過期時間 in second
         /// </summary>
         public int Timeout
         {
@@ -38,7 +38,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 重写GetWebRequest，添加WebRequest对象超时时间
+        /// 重寫GetWebRequest，添加WebRequest對象超時時間
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>

@@ -38,9 +38,9 @@ namespace SitePack
             get
             {
                 if (srcType == Rule34srcType.Filter)
-                    return "过滤排除部分欧美风格等作品";
+                    return "過濾排除部分歐美風格等作品";
                 else
-                    return "可获得完整的搜索结果";
+                    return "可獲得完整的搜尋結果";
             }
         }
         public override string ShortType

@@ -6,7 +6,7 @@ using System.Reflection;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 管理站点定义
+    /// 管理站點定義
     /// </summary>
     public class SiteManager
     {
@@ -19,7 +19,7 @@ namespace MoeLoaderDelta
 
             string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.TopDirectoryOnly);
 
-            #region 保证有基本站点包路径
+            #region 保證有基本站點包路徑
             if (dlls.Length < 1)
             {
                 List<string> dlll = new List<string>();
@@ -49,7 +49,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 站点定义管理者
+        /// 站點定義管理者
         /// </summary>
         public static SiteManager Instance
         {
@@ -64,7 +64,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 站点集合
+        /// 站點集合
         /// </summary>
         public List<ImageSite> Sites
         {

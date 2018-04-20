@@ -64,7 +64,7 @@
             button1.Name = "button1";
             button1.Size = new System.Drawing.Size(75, 21);
             button1.TabIndex = 0;
-            button1.Text = "关闭";
+            button1.Text = "關閉";
             button1.UseVisualStyleBackColor = true;
             // 
             // textBox1
@@ -88,7 +88,7 @@
             label1.Size = new System.Drawing.Size(587, 12);
             label1.TabIndex = 2;
             label1.Text = "非常抱歉，" + MainWindow.ProgramName
-                + "遇到致命错误需要关闭，您可以将下面显示的错误信息发送至 degdod@qq.com 以报告该问题。";
+                + "遇到致命錯誤需要關閉，您可以將下面顯示的錯誤訊息發送至 degdod@qq.com 以報告該問題。";
             // 
             // pictureBox1
             // 

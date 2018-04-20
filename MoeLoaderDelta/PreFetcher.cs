@@ -24,7 +24,7 @@ namespace MoeLoaderDelta
 
         private static int cacheimgcount = 6;
         /// <summary>
-        /// 缓存的图片数量,最大20,最少1
+        /// 快取的圖片數量,最大20,最少1
         /// </summary>
         public static int CachedImgCount
         {
@@ -43,13 +43,13 @@ namespace MoeLoaderDelta
             }
         }
 
-        //预先加载的url
+        //預先載入的url
         //public string PreFetchUrl { get; set; }
         private int prePage, preCount;
         private string preWord;
         private ImageSite preSite;
         private string preFetchedPage;
-        //预加载的页面内容
+        //預載入的頁面內容
         public string GetPreFetchedPage(int page, int count, string word, ImageSite site)
         {
             if (page == prePage && count == preCount && word == preWord && site == preSite)
@@ -59,14 +59,14 @@ namespace MoeLoaderDelta
             else return null;
         }
 
-        //预加载的缩略图
+        //預載入的縮圖
         private Dictionary<string, ImageSource> preFetchedImg = new Dictionary<string, ImageSource>(CachedImgCount);
 
         /// <summary>
-        /// 预加载的缩略图
+        /// 預載入的縮圖
         /// </summary>
-        /// <param name="url">缩略图url</param>
-        /// <returns>缩略图，或者 null 若未加载</returns>
+        /// <param name="url">縮圖url</param>
+        /// <returns>縮圖，或者 null 若未載入</returns>
         public ImageSource PreFetchedImg(string url)
         {
             if (preFetchedImg.ContainsKey(url))
@@ -78,14 +78,14 @@ namespace MoeLoaderDelta
         private List<HttpWebRequest> imgReqs = new List<HttpWebRequest>(CachedImgCount);
 
         /// <summary>
-        /// 反馈图片列表预加载完成事件,用于判断是否有下一页
+        /// 回饋圖片列表預載入完成事件,用於判斷是否有下一頁
         /// return imgCount
         /// </summary>
         public event EventHandler PreListLoaded;
 
         /// <summary>
         /// do in a separate thread
-        /// 下载缩略图线程
+        /// 下載縮圖執行緒
         /// </summary>
         /// <param name="page"></param>
         /// <param name="count"></param>
@@ -103,7 +103,7 @@ namespace MoeLoaderDelta
                     preSite = site;
                     List<Img> imgs = site.GetImages(preFetchedPage, proxy);
 
-                    //获得所有图片列表后反馈得到的数量
+                    //獲得所有圖片列表後回饋得到的數量
                     PreListLoaded(imgs.Count, null);
                     if (imgs.Count < 1)
                         return;
@@ -118,7 +118,7 @@ namespace MoeLoaderDelta
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);
 
-                    //预加载缩略图
+                    //預載入縮圖
                     foreach (HttpWebRequest req1 in imgReqs)
                     {
                         if (req1 != null) req1.Abort();
@@ -147,7 +147,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 异步下载结束
+        /// 非同步下載結束
         /// </summary>
         /// <param name="req"></param>
         //private void RespCallback(IAsyncResult re)
@@ -160,7 +160,7 @@ namespace MoeLoaderDelta
         //        //PreFetchedPage = sr.ReadToEnd();
         //        //PreFetchUrl = (string)re.AsyncState;
 
-        //        //预加载缩略图
+        //        //預載入縮圖
         //        foreach (System.Net.HttpWebRequest req1 in imgReqs)
         //        {
         //            if (req1 != null) req1.Abort();

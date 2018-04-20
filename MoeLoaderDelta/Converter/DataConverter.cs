@@ -12,10 +12,10 @@ namespace MoeLoaderDelta
     public class DataConverter
     {
         /// <summary>
-        /// 本地Stream转一段字节数组
+        /// 本地Stream轉一段位元組數組
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="length">指定转换长度</param>
+        /// <param name="length">指定轉換長度</param>
         /// <returns></returns>
         public static byte[] LocalStreamToByte(Stream stream, long length)
         {
@@ -26,7 +26,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 十六进制字符串转字节数组
+        /// 十六進位制字串轉位元組數組
         /// </summary>
         /// <param name="hexString"></param>
         /// <returns></returns>

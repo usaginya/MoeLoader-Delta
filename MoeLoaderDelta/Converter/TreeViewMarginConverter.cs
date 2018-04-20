@@ -8,7 +8,7 @@ using System.Windows.Media;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 计算树节点的左缩进位置
+    /// 計算樹節點的左縮排位置
     /// </summary>
     public class TreeViewMarginConverter : IValueConverter
     {

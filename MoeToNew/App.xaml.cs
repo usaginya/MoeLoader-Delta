@@ -6,7 +6,7 @@ using System.Windows.Input;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// App.xaml 的交互逻辑
+    /// App.xaml 的交互邏輯
     /// </summary>
     public partial class App : Application
     {

@@ -7,12 +7,12 @@ using System.Xml;
 namespace SitePack
 {
     /// <summary>
-    /// Booru系站点
+    /// Booru系站點
     /// Last 20180419
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
-        //缩略图大小
+        //縮圖大小
         //private const int SWIDTH = 150;
         //private const int SHEIGHT = 150;
         //private const int LWIDTH = 300;
@@ -39,14 +39,14 @@ namespace SitePack
         /// <summary>
         /// Booru Site
         /// </summary>
-        /// <param name="siteUrl">站点解析地址</param>
-        /// <param name="url">图库服务器地址</param>
-        /// <param name="tagUrl">tag自动提示地址</param>
-        /// <param name="siteName">站点名</param>
-        /// <param name="shortName">站点短名</param>
+        /// <param name="siteUrl">站為什麼析地址</param>
+        /// <param name="url">圖庫伺服器地址</param>
+        /// <param name="tagUrl">tag自動提示地址</param>
+        /// <param name="siteName">站點名</param>
+        /// <param name="shortName">站點短名</param>
         /// <param name="referer">引用地址</param>
-        /// <param name="needMinus">页码是否从0开始</param>
-        /// <param name="srcType">解析类型</param>
+        /// <param name="needMinus">頁碼是否從0開始</param>
+        /// <param name="srcType">解析類型</param>
         public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, string referer,
             bool needMinus, BooruProcessor.SourceType srcType)
         {
@@ -65,13 +65,13 @@ namespace SitePack
         /// <summary>
         /// Use after successful login
         /// </summary>
-        /// <param name="siteUrl">站点解析地址</param>
-        /// <param name="url">图库服务器地址</param>
-        /// <param name="tagUrl">tag自动提示地址</param>
-        /// <param name="siteName">站点名</param>
-        /// <param name="shortName">站点短名</param>
-        /// <param name="needMinus">页码是否从0开始</param>
-        /// <param name="srcType">解析类型</param>
+        /// <param name="siteUrl">站為什麼析地址</param>
+        /// <param name="url">圖庫伺服器地址</param>
+        /// <param name="tagUrl">tag自動提示地址</param>
+        /// <param name="siteName">站點名</param>
+        /// <param name="shortName">站點短名</param>
+        /// <param name="needMinus">頁碼是否從0開始</param>
+        /// <param name="srcType">解析類型</param>
         /// <param name="shc">Headers</param>
         public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, bool needMinus,
             BooruProcessor.SourceType srcType, SessionHeadersCollection shc)
@@ -136,7 +136,7 @@ namespace SitePack
                 case "atfbooru":
                     if (page > 1000)
                     {
-                        //取得1000页最后ID
+                        //取得1000頁最後ID
                         List<Img> tmpimgs = GetImages(
                                 Sweb.Get(
                                     string.Format(Url, 1000, count, keyWord)

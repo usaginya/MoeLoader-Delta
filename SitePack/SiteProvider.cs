@@ -27,7 +27,7 @@ namespace SitePack
             sites.Add(new SiteBooru(
                     "https://danbooru.donmai.us",
                     "https://danbooru.donmai.us/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://danbooru.donmai.us/tags/autocomplete.json?search%5Bname_matches%5D={0}",
+                    "https://danbooru.donmai.us/tags/autocomplete.json?search[name_matches]={0}",
                     "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON));
 
             sites.Add(new SiteBooru(
@@ -92,7 +92,7 @@ namespace SitePack
                 sites.Add(new SiteBooru(
                     "https://atfbooru.ninja",
                     "https://atfbooru.ninja/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://atfbooru.ninja/tags/autocomplete.json?search%5Bname_matches%5D={0}",
+                    "https://atfbooru.ninja/tags/autocomplete.json?search[name_matches]={0}",
                     "atfbooru.ninja", "atfbooru", "https://atfbooru.ninja/", false, BooruProcessor.SourceType.JSON));
 
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));

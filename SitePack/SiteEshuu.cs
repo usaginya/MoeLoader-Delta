@@ -27,12 +27,12 @@ namespace SitePack
             get
             {
                 if (type == 1)
-                    return "搜索标签";
+                    return "搜尋標籤";
                 else if (type == 2)
-                    return "搜索来源";
+                    return "搜尋來源";
                 else if (type == 3)
-                    return "搜索画师";
-                else return "搜索角色";
+                    return "搜尋畫師";
+                else return "搜尋角色";
             }
         }
         public override string ShortName { get { return "e-shu"; } }
@@ -110,7 +110,7 @@ namespace SitePack
                     data = "tags=&source=&char=" + keyWord + "&artist=&postcontent=&txtposter=";
                 }
 
-                //e-shuushuu需要将关键词转换为tag id，然后进行搜索
+                //e-shuushuu需要將關鍵字轉換為tag id，然後進行搜尋
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
                 req.UserAgent = SessionClient.DefUA;
                 req.Proxy = proxy;
@@ -126,17 +126,17 @@ namespace SitePack
                 str.Close();
                 System.Net.WebResponse rsp = req.GetResponse();
                 //http://e-shuushuu.net/search/results/?tags=2
-                //HTTP 303然后返回实际地址
+                //HTTP 303然後返回實際地址
                 string location = rsp.Headers["Location"];
                 rsp.Close();
                 if (location != null && location.Length > 0)
                 {
-                    //非完整地址，需要前缀
+                    //非完整地址，需要前綴
                     url = rsp.Headers["Location"] + "&page=" + page;
                 }
                 else
                 {
-                    throw new Exception("没有搜索到关键词相关的图片（每个关键词前后需要加双引号如 \"sakura\"））");
+                    throw new Exception("沒有搜尋到關鍵字相關的圖片（每個關鍵字前後需要加雙引號如 \"sakura\"））");
                 }
             }
 

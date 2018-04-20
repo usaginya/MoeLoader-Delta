@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
@@ -9,7 +9,7 @@ using System.Web;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// ´¦ÀíBooruÀàĞÍÕ¾µã
+    /// è™•ç†Boorué¡å‹ç«™é»
     /// Fixed 180417
     /// </summary>
     public class BooruProcessor
@@ -23,7 +23,7 @@ namespace MoeLoaderDelta
         private SourceType type;
 
         /// <summary>
-        /// ´¦ÀíÀàĞÍ
+        /// è™•ç†é¡å‹
         /// </summary>
         public enum SourceType
         {
@@ -58,9 +58,9 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// »ñÈ¡Í¼Æ¬Ô´ĞÅÏ¢
+        /// ç²å–åœ–ç‰‡æºè¨Šæ¯
         /// </summary>
-        /// <param name="type">´¦ÀíÀàĞÍ</param>
+        /// <param name="type">è™•ç†é¡å‹</param>
         public BooruProcessor(SourceType type)
         {
             //this.mask = mask;
@@ -147,7 +147,7 @@ namespace MoeLoaderDelta
         //    //{
         //    //if (!stop)
         //    //{
-        //    //MessageBox.Show(null, "»ñÈ¡Í¼Æ¬Óöµ½´íÎó: " + e.Message, "Moe Loader", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //    //MessageBox.Show(null, "ç²å–åœ–ç‰‡é‡åˆ°éŒ¯èª¤: " + e.Message, "Moe Loader", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         //    //if (processComplete != null)
         //    //processComplete(null, null);
         //    //}
@@ -156,10 +156,10 @@ namespace MoeLoaderDelta
         */
 
         /// <summary>
-        /// ÌáÈ¡Ò³ÃæÖĞµÄÍ¼Æ¬ĞÅÏ¢
+        /// æå–é é¢ä¸­çš„åœ–ç‰‡è¨Šæ¯
         /// </summary>
-        /// <param name="url">Ò³ÃæµØÖ·</param>
-        /// <param name="pageString">Ò³ÃæÔ´´úÂë</param>
+        /// <param name="url">é é¢åœ°å€</param>
+        /// <param name="pageString">é é¢åŸå§‹ç¢¼</param>
         /// <returns></returns>
         public List<Img> ProcessPage(string siteUrl, string url, string pageString)
         {
@@ -194,27 +194,27 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// HTML ¸ñÊ½ĞÅÏ¢
+        /// HTML æ ¼å¼è¨Šæ¯
         /// </summary>
-        /// <param name="siteUrl">Õ¾µãÁ´½Ó</param>
+        /// <param name="siteUrl">ç«™é»é€£çµ</param>
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
-        /// <param name="sub">±ê¼Ç (nv ²»ÑéÖ¤ÍêÕûĞÔ)</param>
+        /// <param name="sub">æ¨™è¨˜ (nv ä¸é©—è­‰å®Œæ•´æ€§)</param>
         private void ProcessHTML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             /* Post.register({"jpeg_height":1200,"sample_width":1333,"md5":"1550bb8d9fa4e1ee7903ee103459f69a","created_at":{"n":666146000,"json_class":"Time","s":1290715184},
-             * "status":"active","jpeg_file_size":215756,"sample_height":1000,"score":4,"sample_url":"http://yuinyan.imouto.org/sample/1550bb8d9fa4e459f69a/moe%20163698%20sample.jpg",
+             * "status":"active","jpeg_file_size":215756,"sample_height":1000,"score":4,"sample_url":"http://yuinyan.imouto.org/sample/1550bb8d9fa4e459f69a/moe 163698 sample.jpg",
              * "actual_preview_height":225,"author":"paku-paku","has_children":false,"change":758975,"height":1200,"sample_file_size":142868,
              * "preview_url":"http://mio3.imouto.org/data/preview/15/50/1550bb8d9fa4e1ee7903ee103459f69a.jpg","tags":"akiyama_mio bikini k-on! swimsuits transparent_png vector_trace",
-             * "source":"","width":1600,"rating":"s","jpeg_url":"http://yuinyan.imouto.org/jpeg/1550bb8d9fa4e1ee7903ee103459f69a/moe%20163698%20msuitst_png%20vector_trace.jpg",
+             * "source":"","width":1600,"rating":"s","jpeg_url":"http://yuinyan.imouto.org/jpeg/1550bb8d9fa4e1ee7903ee103459f69a/moe 163698 msuitst_png vector_trace.jpg",
              * "preview_width":150,"file_size":113055,"jpeg_width":1600,"preview_height":113,"is_shown_in_index":true,
-             * "file_url":"http://yuinyan.imouto.org/image/1550bb8d9fa4e1ee7903ee103459f69a/moe%20163698%20amio%20swimsctor_trace.png",
+             * "file_url":"http://yuinyan.imouto.org/image/1550bb8d9fa4e1ee7903ee103459f69a/moe 163698 amio swimsctor_trace.png",
              * "id":163698,"parent_id":null,"actual_preview_width":300,"creator_id":70875}) */
 
             if (string.IsNullOrWhiteSpace(pageString)) return;
 
-            //µ±Ç°×Ö·û´®Î»ÖÃ
+            //ç•¶å‰å­—ä¸²ä½ç½®
             int index = 0;
 
             while (index < pageString.Length)
@@ -225,7 +225,7 @@ namespace MoeLoaderDelta
                 string item = pageString.Substring(index + 14, pageString.IndexOf("})", index) - index - 13);
 
                 #region Analyze json
-                //Ìæ»»ÓĞ¿ÉÄÜ¸ÉÈÅ·ÖÎöµÄ [ ] "
+                //å–ä»£æœ‰å¯èƒ½å¹²æ“¾åˆ†æçš„ [ ] "
                 //item = item.Replace('[', '1').Replace(']', '1').Replace("\\\"", "");
                 //JSONObject obj = JSONConvert.DeserializeObject(item);
                 Dictionary<string, object> obj = (new JavaScriptSerializer()).DeserializeObject(item) as Dictionary<string, object>;
@@ -300,13 +300,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// XML ¸ñÊ½ĞÅÏ¢
+        /// XML æ ¼å¼è¨Šæ¯
         /// </summary>
         /// <param name="siteUrl"></param>
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
-        /// <param name="sub">±ê¼Ç (nv ²»ÑéÖ¤ÍêÕûĞÔ)</param>
+        /// <param name="sub">æ¨™è¨˜ (nv ä¸é©—è­‰å®Œæ•´æ€§)</param>
         private void ProcessXML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
@@ -403,7 +403,7 @@ namespace MoeLoaderDelta
         /// <param name="url"></param>
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
-        /// <param name="sub">Õ¾µã±ê¼Ç</param>
+        /// <param name="sub">ç«™é»æ¨™è¨˜</param>
         private void ProcessJSON(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
@@ -426,24 +426,24 @@ namespace MoeLoaderDelta
                 int width = 0, height = 0, file_size = 0;
                 bool skin_parm;
 
-                //ÓòÃû
+                //åŸŸå
                 host = url.Substring(0, url.IndexOf('/', 8));
 
-                //Í¼Æ¬ID
+                //åœ–ç‰‡ID
                 if (obj["id"] != null)
                     id = obj["id"].ToString();
 
-                //Í¶¸åÕß
+                //æŠ•ç¨¿è€…
                 if (obj.ContainsKey("author") && obj["author"] != null)
                     author = obj["author"].ToString();
                 else if (obj.ContainsKey("uploader_name") && obj["uploader_name"] != null)
                     author = obj["uploader_name"].ToString();
 
-                //Í¼Æ¬À´Ô´
+                //åœ–ç‰‡ä¾†æº
                 if (obj.ContainsKey("source") && obj["source"] != null)
                     source = obj["source"].ToString();
 
-                //Ô­Í¼¿í¸ß width height
+                //åŸåœ–å¯¬é«˜ width height
                 try
                 {
                     if (obj.ContainsKey("width") && obj["width"] != null)
@@ -459,7 +459,7 @@ namespace MoeLoaderDelta
                 }
                 catch { }
 
-                //ÎÄ¼ş´óĞ¡
+                //æª”æ¡ˆå¤§å°
                 try
                 {
                     if (obj.ContainsKey("file_size") && obj["file_size"] != null)
@@ -467,7 +467,7 @@ namespace MoeLoaderDelta
                 }
                 catch { }
 
-                //ÉÏ´«Ê±¼ä
+                //ä¸Šå‚³æ™‚é–“
                 if (obj.ContainsKey("created_at") && obj["created_at"] != null)
                 {
                     if (sub == "sku")
@@ -482,7 +482,7 @@ namespace MoeLoaderDelta
                     }
                 }
 
-                //ÆÀ¼¶ºÍÆÀ·Ö
+                //è©•ç´šå’Œè©•åˆ†
                 if (obj.ContainsKey("rating") && obj["rating"] != null)
                 {
                     score = "Safe ";
@@ -495,19 +495,19 @@ namespace MoeLoaderDelta
                         score += obj["total_score"].ToString();
                 }
 
-                //ËõÂÔÍ¼
+                //ç¸®åœ–
                 if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
                     sample = obj["preview_url"].ToString();
                 else if (obj.ContainsKey("preview_file_url") && obj["preview_file_url"] != null)
                     sample = obj["preview_file_url"].ToString();
 
-                //Ô¤ÀÀÍ¼
+                //é è¦½åœ–
                 if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
                     preview_url = obj["sample_url"].ToString();
                 else if (obj.ContainsKey("large_file_url") && obj["large_file_url"] != null)
                     preview_url = obj["large_file_url"].ToString();
 
-                //Ô­Í¼
+                //åŸåœ–
                 if (obj.ContainsKey("file_url") && obj["file_url"] != null)
                     file_url = obj["file_url"].ToString();
 
@@ -525,7 +525,7 @@ namespace MoeLoaderDelta
                 jpeg_url = FormattedImgUrl(host, jpeg_url, skin_parm);
 
 
-                //±êÇ©
+                //æ¨™ç±¤
                 if (obj.ContainsKey("tags") && obj["tags"] != null)
                 {
                     if (sub == "sku")
@@ -564,9 +564,9 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Éú³É Img ¶ÔÏó
+        /// ç”Ÿæˆ Img å°è±¡
         /// </summary>
-        /// <param name="siteUrl">Ö÷Õ¾µã</param>
+        /// <param name="siteUrl">ä¸»ç«™é»</param>
         /// <param name="url"></param>
         /// <param name="id"></param>
         /// <param name="author"></param>
@@ -576,9 +576,9 @@ namespace MoeLoaderDelta
         /// <param name="file_size"></param>
         /// <param name="created_at"></param>
         /// <param name="score"></param>
-        /// <param name="sample">ËõÂÔÍ¼</param>
-        /// <param name="preview_url">Ô¤ÀÀÍ¼</param>
-        /// <param name="file_url">Ô­Í¼</param>
+        /// <param name="sample">ç¸®åœ–</param>
+        /// <param name="preview_url">é è¦½åœ–</param>
+        /// <param name="file_url">åŸåœ–</param>
         /// <param name="jpeg_url">jpg</param>
         /// <param name="tags"></param>
         /// <returns></returns>
@@ -649,39 +649,39 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Í¼Æ¬µØÖ·¸ñÊ½»¯
-        /// 2016Äê12ÔÂ¶Ô´øÓòÃûĞÍµØÖ·¸ñÊ½»¯
+        /// åœ–ç‰‡åœ°å€æ ¼å¼åŒ–
+        /// 2016å¹´12æœˆå°å¸¶åŸŸåå‹åœ°å€æ ¼å¼åŒ–
         /// by YIU
         /// </summary>
-        /// <param name="pr_host">Í¼Õ¾ÓòÃû</param>
-        /// <param name="pr_url">Ô¤´¦ÀíµÄURL</param>
-        /// <param name="skin_parameters">²»´¦ÀíÁ´½Ó´øµÄ²ÎÊı</param>
-        /// <returns>´¦ÀíºóµÄÍ¼Æ¬URL</returns>
+        /// <param name="pr_host">åœ–ç«™åŸŸå</param>
+        /// <param name="pr_url">é è™•ç†çš„URL</param>
+        /// <param name="skin_parameters">ä¸è™•ç†é€£çµå¸¶çš„åƒæ•¸</param>
+        /// <returns>è™•ç†å¾Œçš„åœ–ç‰‡URL</returns>
         public static string FormattedImgUrl(string pr_host, string pr_url, bool skin_parameters)
         {
             //System.Diagnostics.Trace.WriteLine("host: " + pr_host);
             try
             {
-                //ÓòÃû´¦Àí - Èç¹ûÓĞ
+                //åŸŸåè™•ç† - å¦‚æœæœ‰
                 if (!string.IsNullOrWhiteSpace(pr_host))
                 {
                     int po = pr_host.IndexOf("//");
                     string phh = pr_host.Substring(0, pr_host.IndexOf(':') + 1);
                     string phu = pr_host.Substring(po, pr_host.Length - po);
 
-                    //µØÖ·ÖĞÓĞÖ÷ÓòÃû È¥µôÖ÷ÓòÃû
+                    //åœ°å€ä¸­æœ‰ä¸»åŸŸå å»æ‰ä¸»åŸŸå
                     if (pr_url.StartsWith(phu))
                         pr_url = pr_host + pr_url.Replace(phu, "");
 
-                    //µØÖ·ÖĞÓĞ×ÓÓòÃû ²¹Íê×ÓÓòÃû
+                    //åœ°å€ä¸­æœ‰å­åŸŸå è£œå®Œå­åŸŸå
                     else if (pr_url.StartsWith("//"))
                         pr_url = phh + pr_url;
 
-                    //µØÖ·Ã»ÓĞÓòÃû ²¹ÍêµØÖ·
+                    //åœ°å€æ²’æœ‰åŸŸå è£œå®Œåœ°å€
                     else if (pr_url.StartsWith("/"))
                         pr_url = pr_host + pr_url;
                 }
-                //¹ıÂËÍ¼Æ¬µØÖ·?ºóµÄÄÚÈİ
+                //éæ¿¾åœ–ç‰‡åœ°å€?å¾Œçš„å…§å®¹
                 if (!skin_parameters && pr_url.Contains("?"))
                     pr_url = pr_url.Substring(0, pr_url.LastIndexOf('?'));
 
@@ -694,11 +694,11 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Í¼Æ¬µØÖ·¸ñÊ½»¯-All
+        /// åœ–ç‰‡åœ°å€æ ¼å¼åŒ–-All
         /// </summary>
-        /// <param name="pr_host">Í¼Õ¾ÓòÃû</param>
-        /// <param name="pr_url">Ô¤´¦ÀíµÄURL</param>
-        /// <returns>´¦ÀíºóµÄÍ¼Æ¬URL</returns>
+        /// <param name="pr_host">åœ–ç«™åŸŸå</param>
+        /// <param name="pr_url">é è™•ç†çš„URL</param>
+        /// <returns>è™•ç†å¾Œçš„åœ–ç‰‡URL</returns>
         public static string FormattedImgUrl(string pr_host, string pr_url)
         {
             return FormattedImgUrl(pr_host, pr_url, false);

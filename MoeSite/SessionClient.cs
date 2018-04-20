@@ -16,7 +16,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// session方式的HttpWeb连接
+    /// session方式的HttpWeb連接
     /// </summary>
     public class SessionClient
     {
@@ -75,36 +75,36 @@ namespace MoeLoaderDelta
         //##############################################################################
         //#############################   GET   #################################################
         /// <summary>
-        /// Get访问,便捷
+        /// Get訪問,便捷
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
-        /// <returns>网页内容</returns>
+        /// <param name="pageEncoding">編碼</param>
+        /// <returns>網頁內容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding)
         {
             return Get(url, proxy, pageEncoding, new SessionHeadersCollection());
         }
 
         /// <summary>
-        /// Get访问,便捷,默认UTF-8编码
+        /// Get訪問,便捷,預設UTF-8編碼
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <returns>网页内容</returns>
+        /// <returns>網頁內容</returns>
         public string Get(string url, IWebProxy proxy)
         {
             return Get(url, proxy, "UTF-8", new SessionHeadersCollection());
         }
 
         /// <summary>
-        /// Get访问,便捷,自定义UA
+        /// Get訪問,便捷,自訂UA
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
+        /// <param name="pageEncoding">編碼</param>
         /// <param name="UA">user-agent</param>
-        /// <returns>网页内容</returns>
+        /// <returns>網頁內容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, string UA)
         {
             SessionHeadersCollection shc = new SessionHeadersCollection();
@@ -113,13 +113,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Get访问
+        /// Get訪問
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
+        /// <param name="pageEncoding">編碼</param>
         /// <param name="shc">Headers</param>
-        /// <returns>网页内容</returns>
+        /// <returns>網頁內容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
             string ret = "";
@@ -152,23 +152,23 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Get访问,默认UTF-8编码
+        /// Get訪問,預設UTF-8編碼
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
         /// <param name="shc">Headers</param>
-        /// <returns>网页内容</returns>
+        /// <returns>網頁內容</returns>
         public string Get(string url, IWebProxy proxy, SessionHeadersCollection shc)
         {
             return Get(url, proxy, "UTF-8", new SessionHeadersCollection());
         }
 
         /// <summary>
-        /// Get Response 取回响应, Please use Close()
+        /// Get Response 取迴響應, Please use Close()
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <param name="rwtimeout">读写流超时ReadWriteTimeout</param>
+        /// <param name="rwtimeout">讀寫流超時ReadWriteTimeout</param>
         /// <param name="shc">Headers</param>
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, int rwtimeout, SessionHeadersCollection shc)
@@ -188,11 +188,11 @@ namespace MoeLoaderDelta
             return reponse;
         }
         /// <summary>
-        /// Get Response 取回响应 Timeout 20s, Please use Close()
+        /// Get Response 取迴響應 Timeout 20s, Please use Close()
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
-        /// <param name="referer">来源</param>
+        /// <param name="referer">來源</param>
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, string referer)
         {
@@ -206,7 +206,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// Create HttpWebRequest
         /// </summary>
-        /// <param name="url">网址</param>
+        /// <param name="url">網址</param>
         /// <param name="proxy">代理</param>
         /// <param name="shc">Headers</param>
         /// <returns>HttpWebRequest</returns>
@@ -228,24 +228,24 @@ namespace MoeLoaderDelta
 
         //#############################   POST   #################################################
         /// <summary>
-        /// Post访问,便捷
+        /// Post訪問,便捷
         /// </summary>
-        /// <param name="url">网址</param>
-        /// <param name="postData">Post数据</param>
+        /// <param name="url">網址</param>
+        /// <param name="postData">Post資料</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
+        /// <param name="pageEncoding">編碼</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding)
         {
             return Post(url, postData, proxy, pageEncoding, new SessionHeadersCollection());
         }
 
         /// <summary>
-        /// Post访问,自定义UA
+        /// Post訪問,自訂UA
         /// </summary>
-        /// <param name="url">网址</param>
-        /// <param name="postData">Post数据</param>
+        /// <param name="url">網址</param>
+        /// <param name="postData">Post資料</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
+        /// <param name="pageEncoding">編碼</param>
         /// <param name="UA">User-Agent</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, string UA)
         {
@@ -255,10 +255,10 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Post访问,默认UTF-8编码
+        /// Post訪問,預設UTF-8編碼
         /// </summary>
-        /// <param name="url">网址</param>
-        /// <param name="postData">Post数据</param>
+        /// <param name="url">網址</param>
+        /// <param name="postData">Post資料</param>
         /// <param name="proxy">代理</param>
         /// <param name="shc">Headers</param>
         public string Post(string url, string postData, IWebProxy proxy, SessionHeadersCollection shc)
@@ -267,12 +267,12 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Post访问
+        /// Post訪問
         /// </summary>
-        /// <param name="url">网址</param>
-        /// <param name="postData">Post数据</param>
+        /// <param name="url">網址</param>
+        /// <param name="postData">Post資料</param>
         /// <param name="proxy">代理</param>
-        /// <param name="pageEncoding">编码</param>
+        /// <param name="pageEncoding">編碼</param>
         /// <param name="shc">Headers</param>
         /// <returns></returns>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
@@ -286,15 +286,15 @@ namespace MoeLoaderDelta
                 SetHeader(request, url, proxy, shc);
 
                 request.Method = "POST";
-                request.CookieContainer = m_Cookie;//设置上次访问页面的Cookie 保持Session
+                request.CookieContainer = m_Cookie;//設定上次訪問頁面的Cookie 保持Session
                 request.ContentLength = bytesToPost.Length;
 
                 Stream requestStream = request.GetRequestStream();
-                requestStream.Write(bytesToPost, 0, bytesToPost.Length);//写入Post数据
+                requestStream.Write(bytesToPost, 0, bytesToPost.Length);//寫入Post資料
                 requestStream.Close();
 
                 response = (HttpWebResponse)request.GetResponse();
-                m_Cookie = request.CookieContainer;//访问后更新Cookie
+                m_Cookie = request.CookieContainer;//訪問後更新Cookie
                 Stream responseStream = response.GetResponseStream();
                 string resData = "";
 
@@ -315,7 +315,7 @@ namespace MoeLoaderDelta
         //########################################################################################
         //#############################   Cookies   #################################################
         /// <summary>
-        /// 取CookieContainer中所有站点Cookies
+        /// 取CookieContainer中所有站點Cookies
         /// </summary>
         /// <returns>全部Cookie值</returns>
         public string GetAllCookies()
@@ -324,7 +324,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取CookieContainer中所有站点Cookies 自定CookieContainer
+        /// 取CookieContainer中所有站點Cookies 自定CookieContainer
         /// </summary>
         /// <param name="cc">CookieContainer</param>
         /// <returns></returns>
@@ -334,7 +334,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取此CookieContainer中指定站点Cookies
+        /// 取此CookieContainer中指定站點Cookies
         /// </summary>
         /// <param name="url">域名</param>
         /// <returns></returns>
@@ -344,7 +344,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取CookieContainer中指定站点Cookies 自定CookieContainer
+        /// 取CookieContainer中指定站點Cookies 自定CookieContainer
         /// </summary>
         /// <param name="url">域名</param>
         /// <param name="cc">CookieContainer</param>
@@ -355,19 +355,19 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取Cookie中键的值 当前访问的网站
+        /// 取Cookie中鍵的值 當前訪問的網站
         /// </summary>
-        /// <param name="CookieKey">Cookie键</param>
-        /// <returns>Cookie键对应值</returns>
+        /// <param name="CookieKey">Cookie鍵</param>
+        /// <returns>Cookie鍵對應值</returns>
         public string GetCookieValue(string CookieKey)
         {
             return _GetCookieValue(CookieKey, m_Cookie, 1);
         }
 
         /// <summary>
-        /// 写出指定CookieContainer到文件
+        /// 寫出指定CookieContainer到檔案
         /// </summary>
-        /// <param name="file">文件保存路径</param>
+        /// <param name="file">檔案儲存路徑</param>
         /// <param name="cc">CookieContainer</param>
         public static void WriteCookiesToFile(string file, CookieContainer cc)
         {
@@ -385,18 +385,18 @@ namespace MoeLoaderDelta
             }
         }
         /// <summary>
-        /// 写出当前CookieContainer到文件
+        /// 寫出當前CookieContainer到檔案
         /// </summary>
-        /// <param name="file">文件保存路径</param>
+        /// <param name="file">檔案儲存路徑</param>
         public static void WriteCookiesToFile(string file)
         {
             WriteCookiesToFile(file, m_Cookie);
         }
 
         /// <summary>
-        /// 从文件读入Cookies
+        /// 從檔案讀入Cookies
         /// </summary>
-        /// <param name="file">Cookies文件</param>
+        /// <param name="file">Cookies檔案</param>
         public static void ReadCookiesFromFile(string file)
         {
             try
@@ -414,20 +414,20 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取Cookie中键的值 自定CookieContainer
+        /// 取Cookie中鍵的值 自定CookieContainer
         /// </summary>
-        /// <param name="CookieKey">Cookie键</param>
-        /// <param name="cc">Cookie集合对象</param>
-        /// <returns>Cookie键对应值</returns>
+        /// <param name="CookieKey">Cookie鍵</param>
+        /// <param name="cc">Cookie集合對象</param>
+        /// <returns>Cookie鍵對應值</returns>
         public string GetCookieValue(string CookieKey, CookieContainer cc)
         {
             return _GetCookieValue(CookieKey, cc, 1);
         }
 
         /// <summary>
-        /// 私有处理Cookie集合的方法 默认取全部Cookie值
+        /// 私有處理Cookie集合的方法 預設取全部Cookie值
         /// </summary>
-        /// <param name="cc">Cookie集合对象</param>
+        /// <param name="cc">Cookie集合對象</param>
         /// <returns></returns>
         private static string _GetCookieValue(CookieContainer cc)
         {
@@ -435,12 +435,12 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 私有处理Cookie集合的方法
+        /// 私有處理Cookie集合的方法
         /// </summary>
-        /// <param name="CookieKey">Cookie键</param>
-        /// <param name="cc">Cookie集合对象</param>
-        /// <param name="mode">处理方式 0取所有站点全部值 1取指定键的值</param>
-        /// <returns>Cookie对应值</returns>
+        /// <param name="CookieKey">Cookie鍵</param>
+        /// <param name="cc">Cookie集合對象</param>
+        /// <param name="mode">處理方式 0取所有站點全部值 1取指定鍵的值</param>
+        /// <returns>Cookie對應值</returns>
         private static string _GetCookieValue(string CookieKey, CookieContainer cc, int mode)
         {
             try
@@ -544,7 +544,7 @@ namespace MoeLoaderDelta
     }
 
     /// <summary>
-    ///  The Ready HeaderCollection Class, 可以直接设置一些常用的Header值
+    ///  The Ready HeaderCollection Class, 可以直接設定一些常用的Header值
     /// </summary>
     public class SessionHeadersCollection : WebHeaderCollection
     {
@@ -586,12 +586,12 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// True 跟随重定向
+        /// True 跟隨重定向
         /// </summary>
         public bool AllowAutoRedirect { get; set; }
 
         /// <summary>
-        /// None 压缩类型
+        /// None 壓縮類型
         /// </summary>
         public DecompressionMethods AutomaticDecompression { get; set; }
 
@@ -606,7 +606,7 @@ namespace MoeLoaderDelta
         public bool KeepAlive { get; set; }
 
         /// <summary>
-        /// 引用页
+        /// 引用頁
         /// </summary>
         public string Referer { get; set; }
 

@@ -99,40 +99,40 @@
                 <ContextMenu>
                     <MenuItem
                         Click="MenuItem_Click"
-                        Header="复制预览图(_C)"
-                        ToolTip="复制的预览图可粘贴到聊天窗口、图片编辑器和文件" />
+                        Header="複製預覽圖(_C)"
+                        ToolTip="複製的預覽圖可貼到聊天視窗、圖片編輯器和檔案" />
                     <Separator />
                     <MenuItem
                         Click="Button_Click_1"
-                        Header="保存(_S)"
-                        ToolTip="保存预览图至下载文件夹" />
+                        Header="儲存(_S)"
+                        ToolTip="儲存預覽圖至下載資料夾" />
                     <Separator />
                     <MenuItem
                         Click="MenuItem_Click_2"
-                        Header="复制原图地址(_O)"
-                        ToolTip="复制原图地址到剪贴板" />
+                        Header="複製原圖地址(_O)"
+                        ToolTip="複製原圖地址到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_6"
-                        Header="复制JPG图地址(_J)"
-                        ToolTip="复制JPG图地址到剪贴板" />
+                        Header="複製JPG圖地址(_J)"
+                        ToolTip="複製JPG圖地址到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_1"
-                        Header="复制预览图地址(_P)"
-                        ToolTip="复制预览图地址到剪贴板" />
+                        Header="複製預覽圖地址(_P)"
+                        ToolTip="複製預覽圖地址到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_3"
-                        Header="复制来源(_R)"
-                        ToolTip="复制来源到剪贴板" />
+                        Header="複製來源(_R)"
+                        ToolTip="複製來源到剪貼簿" />
                     <Separator />
                     <MenuItem
                         Click="MenuItem_Click_4"
-                        Header="复制描述(_D)"
-                        ToolTip="复制标题描述名称到剪贴板" />
+                        Header="複製描述(_D)"
+                        ToolTip="複製標題描述名稱到剪貼簿" />
                     <Separator />
                     <MenuItem
                         Click="MenuItem_Click_5"
-                        Header="打开详情页面(_T)"
-                        ToolTip="打开图片所在详情页面" />
+                        Header="打開詳情頁面(_T)"
+                        ToolTip="打開圖片所在詳情頁面" />
                 </ContextMenu>
             </Grid.ContextMenu>
 
@@ -146,8 +146,8 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Click="Button_Click"
-            ToolTip="关闭该预览图并选中该图">
-            <AccessText Text="选中并关闭(_A)" />
+            ToolTip="關閉該預覽圖並選中該圖">
+            <AccessText Text="選中並關閉(_A)" />
         </Button>
         <Button
             Grid.Row="1"
@@ -157,8 +157,8 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Click="Button1_Click"
-            ToolTip="关闭该预览图">
-            <AccessText Text="关闭(_C)" />
+            ToolTip="關閉該預覽圖">
+            <AccessText Text="關閉(_C)" />
         </Button>
         <Button
             Grid.Row="1"
@@ -168,11 +168,11 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Click="Button_Click_2"
-            ToolTip="鼠标中键点击图片以缩放">
-            <AccessText Text="缩放(_Z)" />
+            ToolTip="滑鼠中鍵點擊圖片以縮放">
+            <AccessText Text="縮放(_Z)" />
         </Button>
-        <!--<Button x:Name="btnSave" HorizontalAlignment="Left" Width="90" Grid.Row="1" VerticalAlignment="Top" Height="28" Margin="10,8,0,0" Click="Button_Click_1" ToolTip="保存预览图至下载文件夹">
-            <AccessText Text="保存(_S)"/>
+        <!--<Button x:Name="btnSave" HorizontalAlignment="Left" Width="90" Grid.Row="1" VerticalAlignment="Top" Height="28" Margin="10,8,0,0" Click="Button_Click_1" ToolTip="儲存預覽圖至下載資料夾">
+            <AccessText Text="儲存(_S)"/>
         </Button>-->
         <Border
             x:Name="brdDesc"
@@ -196,20 +196,20 @@
                 <ContextMenu>
                     <MenuItem
                         Click="MenuItem_Click_2"
-                        Header="复制原图地址(_O)"
-                        ToolTip="复制原图地址到剪贴板" />
+                        Header="複製原圖地址(_O)"
+                        ToolTip="複製原圖地址到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_1"
-                        Header="复制预览图地址(_P)"
-                        ToolTip="复制预览图地址到剪贴板" />
+                        Header="複製預覽圖地址(_P)"
+                        ToolTip="複製預覽圖地址到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_3"
-                        Header="复制来源(_R)"
-                        ToolTip="复制来源到剪贴板" />
+                        Header="複製來源(_R)"
+                        ToolTip="複製來源到剪貼簿" />
                     <MenuItem
                         Click="MenuItem_Click_4"
-                        Header="复制描述(_D)"
-                        ToolTip="复制标题描述名称到剪贴板" />
+                        Header="複製描述(_D)"
+                        ToolTip="複製標題描述名稱到剪貼簿" />
                 </ContextMenu>
             </Border.ContextMenu>
         </Border>

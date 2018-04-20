@@ -36,8 +36,8 @@ namespace SitePack
             get
             {
                 if (type == WALL)
-                    return "搜索壁纸";
-                return "搜索扫描图";
+                    return "搜尋壁紙";
+                return "搜尋掃描圖";
             }
         }
         //public string Referer { get { return null; } }
@@ -100,7 +100,7 @@ namespace SitePack
 
             if (keyWord.Length > 0)
             {
-                //先使用关键词搜索，Referer返回实际地址
+                //先使用關鍵字搜尋，Referer返回實際地址
                 //http://www.minitokyo.net/search?q=haruhi
                 url = SiteUrl + "/search?q=" + keyWord;
                 pageString = Sweb.Get(url, proxy, shc);
@@ -134,7 +134,7 @@ namespace SitePack
 
                 for (int i = 0; i < imgNodes.Count - 1; i++)
                 {
-                    //最后一个是空的，跳过
+                    //最後一個是空的，跳過
                     HtmlNode imgNode = imgNodes[i];
 
                     string detailUrl = imgNode.SelectSingleNode("a").Attributes["href"].Value;
@@ -167,7 +167,7 @@ namespace SitePack
             }
             catch
             {
-                throw new Exception("没有找到图片哦～ .=ω=");
+                throw new Exception("沒有找到圖片哦～ .=ω=");
             }
         }
 
@@ -250,13 +250,13 @@ namespace SitePack
                 cookie = Sweb.GetURLCookies(SiteUrl);
                 if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains("minitokyo_hash"))
                 {
-                    throw new Exception("自动登录失败");
+                    throw new Exception("自動登入失敗");
                 }
             }
             catch (WebException)
             {
                 //invalid user will encounter 404
-                throw new Exception("自动登录失败");
+                throw new Exception("自動登入失敗");
             }
         }
     }

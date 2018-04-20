@@ -25,16 +25,16 @@
         <GroupBox
             Grid.Row="0"
             Margin="5,8,5,2"
-            Header="显示设置">
+            Header="顯示設定">
             <Grid>
-                <!--<CheckBox x:Name="chkAero" HorizontalAlignment="Left" Content="启用Aero效果 (重启程序生效)" IsEnabled="False" Margin="10,13,0,0" VerticalAlignment="Top"/>-->
-                <!--<CheckBox x:Name="chkPos" HorizontalAlignment="Left" Content="关闭时记住窗口大小" Margin="10,39,0,0" VerticalAlignment="Top"/>-->
+                <!--<CheckBox x:Name="chkAero" HorizontalAlignment="Left" Content="啟用Aero效果 (重啟程式生效)" IsEnabled="False" Margin="10,13,0,0" VerticalAlignment="Top"/>-->
+                <!--<CheckBox x:Name="chkPos" HorizontalAlignment="Left" Content="關閉時記住視窗大小" Margin="10,39,0,0" VerticalAlignment="Top"/>-->
                 <TextBlock
                     x:Name="textBlock"
                     Margin="10,13,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="预加载数量" />
+                    Text="預載入數量" />
                 <StackPanel
                     x:Name="stackPanel"
                     Margin="91,5,0,0"
@@ -80,13 +80,13 @@
                     Margin="10,46,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="老板键"
+                    Text="老闆鍵"
                     TextWrapping="Wrap" />
                 <TextBlock
                     Margin="10,78,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="背景图布局"
+                    Text="背景圖布局"
                     TextWrapping="Wrap" />
                 <TextBlock
                     Margin="95,78,0,0"
@@ -135,8 +135,8 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     SelectedIndex="0">
-                    <ComboBoxItem>无</ComboBoxItem>
-                    <ComboBoxItem>缩放</ComboBoxItem>
+                    <ComboBoxItem>無</ComboBoxItem>
+                    <ComboBoxItem>縮放</ComboBoxItem>
                     <ComboBoxItem>填充</ComboBoxItem>
                 </ComboBox>
                 <TextBlock
@@ -154,7 +154,7 @@
         <GroupBox
             Grid.Row="2"
             Margin="5,2"
-            Header="代理设置">
+            Header="代理設定">
             <Grid>
                 <RadioButton
                     x:Name="rtNoProxy"
@@ -171,7 +171,7 @@
                     x:Name="rtCustom"
                     Margin="10,67,0,0"
                     Checked="chkProxy_Click"
-                    Content="自定义" />
+                    Content="自訂" />
                 <TextBox
                     x:Name="txtProxy"
                     Height="20"
@@ -185,13 +185,13 @@
         <GroupBox
             Grid.Row="1"
             Margin="5,2"
-            Header="下载设置">
+            Header="下載設定">
             <Grid>
                 <TextBlock
                     Margin="10,13,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="存储位置" />
+                    Text="存儲位置" />
                 <TextBox
                     x:Name="txtSaveLocation"
                     Height="20"
@@ -205,28 +205,28 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Click="Button_Click_1"
-                    Content="浏览" />
+                    Content="瀏覽" />
                 <CheckBox
                     x:Name="chkSepSave"
                     Margin="200,46,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Click="chkSepSave_Click"
-                    Content="分站点保存"
-                    ToolTip="将图片按站点分目录下载保存" />
+                    Content="分站點儲存"
+                    ToolTip="將圖片按站點分目錄下載儲存" />
                 <CheckBox
                     x:Name="chkSaSave"
                     Margin="294,46,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Content="分上传者"
+                    Content="分上傳者"
                     IsEnabled="False"
-                    ToolTip="在分站点目录下将图片按上传者保存到子目录中" />
+                    ToolTip="在分站點目錄下將圖片按上傳者儲存到子目錄中" />
                 <TextBlock
                     Margin="10,46,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="同时下载数量" />
+                    Text="同時下載數量" />
                 <StackPanel
                     Margin="91,38,0,0"
                     HorizontalAlignment="Left"
@@ -265,7 +265,7 @@
                     Margin="10,76,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Text="文件命名格式"
+                    Text="檔案命名格式"
                     TextWrapping="Wrap" />
                 <TextBlock
                     x:Name="textNameHelp"
@@ -284,7 +284,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%site"
-                    ToolTip="插入 站点 格式" />
+                    ToolTip="插入 站點 格式" />
                 <Button
                     x:Name="FNRid"
                     Margin="136,0,0,24"
@@ -298,7 +298,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%tag"
-                    ToolTip="插入 作品标签 格式" />
+                    ToolTip="插入 作品標籤 格式" />
                 <Button
                     x:Name="FNRdesc"
                     Margin="202,0,0,24"
@@ -319,21 +319,21 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%date"
-                    ToolTip="插入 上载时间 格式" />
+                    ToolTip="插入 上載時間 格式" />
                 <Button
                     x:Name="FNRimgp"
                     Margin="97,0,0,2"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%imgp[n]"
-                    ToolTip="插入 图片页数[补0个数] 格式" />
+                    ToolTip="插入 圖片頁數[補0個數] 格式" />
                 <Button
                     x:Name="FNRcut"
                     Margin="160,0,0,2"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="&lt;!&lt;"
-                    ToolTip="插入 文件名裁剪符 格式" />
+                    ToolTip="插入 檔案名裁剪符 格式" />
             </Grid>
         </GroupBox>
         <TextBlock
@@ -345,7 +345,7 @@
             DataContext="{Binding}"
             Foreground="#FF1F78D6"
             MouseDown="TextBlock_MouseDown"
-            Text="关于 MoeLoader Δ"
+            Text="關於 MoeLoader Δ"
             TextDecorations="Underline" />
         <Button
             Grid.Row="3"
@@ -355,7 +355,7 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Click="Button_Click"
-            Content="确定"
+            Content="確定"
             IsDefault="True" />
         <Button
             Grid.Row="3"
@@ -375,6 +375,6 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Click="Button2_Click"
-            Content="恢复默认" />
+            Content="恢復預設" />
     </Grid>
 </Window>

@@ -24,7 +24,7 @@ namespace MoeLoaderDelta
         public bool noVerify;
         public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id, bool noVerify)
         {
-            //原始后缀名
+            //原始副檔名
             string ext = "";
 
             if (file != null && file != "")
@@ -51,7 +51,7 @@ namespace MoeLoaderDelta
 
     /// <summary>
     /// Interaction logic for DownloadControl.xaml
-    /// 下载面板用户控件
+    /// 下載面板使用者控制項
     /// </summary>
     public partial class DownloadControl : UserControl
     {
@@ -64,9 +64,9 @@ namespace MoeLoaderDelta
         }
 
         public const string DLEXT = ".moe";
-        private const string dlerrtxt = "下载失败下载未完成";
+        private const string dlerrtxt = "下載失敗下載未完成";
 
-        //一个下载任务
+        //一個下載任務
         private class DownloadTask
         {
             public string Url { get; set; }
@@ -76,11 +76,11 @@ namespace MoeLoaderDelta
             public bool NoVerify { get; set; }
 
             /// <summary>
-            /// 下载任务
+            /// 下載任務
             /// </summary>
-            /// <param name="url">目标地址</param>
-            /// <param name="saveLocation">保存位置</param>
-            /// <param name="referer">是否需要伪造Referer</param>
+            /// <param name="url">目標地址</param>
+            /// <param name="saveLocation">儲存位置</param>
+            /// <param name="referer">是否需要偽造Referer</param>
             public DownloadTask(string url, string saveLocation, string referer, bool noVerify)
             {
                 SaveLocation = saveLocation;
@@ -91,19 +91,19 @@ namespace MoeLoaderDelta
             }
         }
 
-        //下载对象
+        //下載對象
         private ObservableCollection<DownloadItem> downloadItems = new ObservableCollection<DownloadItem>();
         public ObservableCollection<DownloadItem> DownloadItems
         {
             get { return downloadItems; }
         }
 
-        //downloadItems的副本，用于快速查找
+        //downloadItems的副本，用於快速尋找
         private Dictionary<string, DownloadItem> downloadItemsDic = new Dictionary<string, DownloadItem>();
 
         private bool isWorking = false;
         /// <summary>
-        /// 是否正在下载
+        /// 是否正在下載
         /// </summary>
         public bool IsWorking
         {
@@ -113,7 +113,7 @@ namespace MoeLoaderDelta
 
         private int numOnce;
         /// <summary>
-        /// 同时下载的任务数量
+        /// 同時下載的任務數量
         /// </summary>
         public int NumOnce
         {
@@ -129,24 +129,24 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 分站点存放
+        /// 分站點存放
         /// </summary>
         public bool IsSepSave { get; set; }
         /// <summary>
-        /// 分上传者存放
+        /// 分上傳者存放
         /// </summary>
         public bool IsSaSave { get; set; }
 
         private static string saveLocation = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         /// <summary>
-        /// 下载的保存位置
+        /// 下載的儲存位置
         /// </summary>
         public static string SaveLocation { get { return saveLocation; } set { saveLocation = value; } }
 
         private int numSaved = 0;
         private int numLeft = 0;
 
-        //正在下载的链接
+        //正在下載的連結
         private Dictionary<string, DownloadTask> webs = new Dictionary<string, DownloadTask>();
 
         public DownloadControl()
@@ -156,13 +156,13 @@ namespace MoeLoaderDelta
             NumOnce = 2;
             IsSepSave = IsSaSave = false;
 
-            downloadStatus.Text = "当前无下载任务";
+            downloadStatus.Text = "當前無下載任務";
 
             dlList.DataContext = this;
         }
 
         /// <summary>
-        /// 添加下载任务
+        /// 添加下載任務
         /// </summary>
         /// <param name="urls"></param>
         public void AddDownload(IEnumerable<MiniDownloadItem> items)
@@ -193,9 +193,9 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 取本地保存目录
+        /// 取本地儲存目錄
         /// </summary>
-        /// <param name="dlitem">下载项</param>
+        /// <param name="dlitem">下載項</param>
         /// <returns></returns>
         private string GetLocalPath(DownloadItem dlitem)
         {
@@ -217,13 +217,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 刷新下载状态
+        /// 刷新下載狀態
         /// </summary>
         private void RefreshList()
         {
             TotalProgressChanged();
 
-            //根据numOnce及正在下载的情况生成下载
+            //根據numOnce及正在下載的情況生成下載
             int downloadingCount = webs.Count;
             for (int j = 0; j < NumOnce - downloadingCount; j++)
             {
@@ -235,12 +235,12 @@ namespace MoeLoaderDelta
                     string file = dlitem.FileName.Replace("\r\n", "");
                     string path = GetLocalPath(dlitem);
 
-                    //检查目录长度
+                    //檢查目錄長度
                     if (path.Length > 248)
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
-                        downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
-                        WriteErrText(url + ": 路径太长");
+                        downloadItems[downloadItems.Count - numLeft].Size = "路徑太長";
+                        WriteErrText(url + ": 路徑太長");
                         j--;
                     }
                     else
@@ -248,12 +248,12 @@ namespace MoeLoaderDelta
                         dlitem.LocalFileName = ReplaceInvalidPathChars(file, path, 0);
                         file = dlitem.LocalName = path + dlitem.LocalFileName;
 
-                        //检查全路径长度
+                        //檢查全路徑長度
                         if (file.Length > 258)
                         {
                             downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
-                            downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
-                            WriteErrText(url + ": 路径太长");
+                            downloadItems[downloadItems.Count - numLeft].Size = "路徑太長";
+                            WriteErrText(url + ": 路徑太長");
                             j--;
                         }
                     }
@@ -261,7 +261,7 @@ namespace MoeLoaderDelta
                     if (File.Exists(file))
                     {
                         downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.IsHave;
-                        downloadItems[downloadItems.Count - numLeft].Size = "已存在跳过";
+                        downloadItems[downloadItems.Count - numLeft].Size = "已存在跳過";
                         j--;
                     }
                     else if (!Directory.Exists(path))
@@ -275,7 +275,7 @@ namespace MoeLoaderDelta
                         DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
                         webs.Add(url, task);
 
-                        //异步下载开始
+                        //非同步下載開始
                         System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Download));
                         thread.Start(task);
                     }
@@ -288,7 +288,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 下载，另一线程
+        /// 下載，另一執行緒
         /// </summary>
         /// <param name="o"></param>
         private void Download(object o)
@@ -309,7 +309,7 @@ namespace MoeLoaderDelta
                     task.NeedReferer
                     );
 
-                /////////开始写入文件
+                /////////開始寫入檔案
                 str = res.GetResponseStream();
                 byte[] bytes = new byte[5120];
                 fs = new FileStream(task.SaveLocation + DLEXT, FileMode.Create);
@@ -342,11 +342,11 @@ namespace MoeLoaderDelta
                 task.IsStop = true;
                 Dispatcher.Invoke(new VoidDel(delegate ()
                 {
-                    //下载失败
+                    //下載失敗
                     if (downloadItemsDic.ContainsKey(task.Url))
                     {
                         downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
-                        downloadItemsDic[task.Url].Size = "下载失败";
+                        downloadItemsDic[task.Url].Size = "下載失敗";
                         WriteErrText(task.Url);
                         WriteErrText(task.SaveLocation);
                         WriteErrText(ex.Message + "\r\n");
@@ -382,7 +382,7 @@ namespace MoeLoaderDelta
 
             if (task.IsStop)
             {
-                //任务被取消
+                //任務被取消
                 Dispatcher.Invoke(new VoidDel(delegate ()
                 {
                     if (downloadItemsDic.ContainsKey(task.Url))
@@ -406,19 +406,19 @@ namespace MoeLoaderDelta
             }
             else
             {
-                //下载成功完成
+                //下載成功完成
                 Dispatcher.Invoke(new VoidDel(delegate ()
                 {
                     try
                     {
                         //DownloadTask task1 = obj as DownloadTask;
 
-                        //判断完整性
+                        //判斷完整性
                         if (!downloadItemsDic[task.Url].NoVerify && 100 - downloadItemsDic[task.Url].Progress > 0.001)
                         {
                             task.IsStop = true;
                             downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
-                            downloadItemsDic[task.Url].Size = "下载未完成";
+                            downloadItemsDic[task.Url].Size = "下載未完成";
                             try
                             {
                                 File.Delete(task.SaveLocation + DLEXT);
@@ -431,7 +431,7 @@ namespace MoeLoaderDelta
                         }
                         else
                         {
-                            //修改后缀名
+                            //修改副檔名
                             File.Move(task.SaveLocation + DLEXT, task.SaveLocation);
 
                             downloadItemsDic[task.Url].Progress = 100.0;
@@ -446,7 +446,7 @@ namespace MoeLoaderDelta
                 }));
             }
 
-            //下载结束
+            //下載結束
             Dispatcher.Invoke(new VoidDel(delegate ()
             {
                 webs.Remove(task.Url);
@@ -465,18 +465,18 @@ namespace MoeLoaderDelta
 
 
         /// <summary>
-        /// 更新状态显示
+        /// 更新狀態顯示
         /// </summary>
         private void RefreshStatus()
         {
             if (webs.Count > 0)
             {
-                downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 正在下载 " + webs.Count;
+                downloadStatus.Text = "已儲存 " + numSaved + " 剩餘 " + numLeft + " 正在下載 " + webs.Count;
             }
             else
             {
                 isWorking = false;
-                downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 下载完毕";
+                downloadStatus.Text = "已儲存 " + numSaved + " 剩餘 " + numLeft + " 下載完畢";
             }
 
             if (downloadItems.Count == 0)
@@ -485,7 +485,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 下载进度发生改变
+        /// 下載進度發生改變
         /// </summary>
         /// <param name="total"></param>
         /// <param name="percent"></param>
@@ -504,7 +504,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 总下载进度，根据下载完成的图片数量计算
+        /// 總下載進度，根據下載完成的圖片數量計算
         /// </summary>
         private void TotalProgressChanged()
         {
@@ -523,13 +523,13 @@ namespace MoeLoaderDelta
                         GlassHelper.FlashWindow(MainWindow.Hwnd, true);
                     }
 
-                    #region 关机
+                    #region 關機
                     if (itmAutoClose.IsChecked)
                     {
-                        //关机
+                        //關機
                         System.Timers.Timer timer = new System.Timers.Timer()
                         {
-                            //20秒后关闭
+                            //20秒後關閉
                             Interval = 20000,
                             Enabled = false,
                             AutoReset = false
@@ -537,7 +537,7 @@ namespace MoeLoaderDelta
                         timer.Elapsed += delegate { GlassHelper.ExitWindows(GlassHelper.ShutdownType.PowerOff); };
                         timer.Start();
 
-                        if (MessageBox.Show("系统将于20秒后自动关闭，若要取消请点击确定", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information) == MessageBoxResult.OK)
+                        if (MessageBox.Show("系統將於20秒後自動關閉，若要取消請點擊確定", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information) == MessageBoxResult.OK)
                         {
                             timer.Stop();
                         }
@@ -552,11 +552,11 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 去掉文件名中的无效字符,如 \ / : * ? " < > | 
+        /// 去掉檔案名中的無效字元,如 \ / : * ? " < > | 
         /// </summary>
-        /// <param name="file">待处理的文件名</param>
-        /// <param name="replace">替换字符</param>
-        /// <returns>处理后的文件名</returns>
+        /// <param name="file">待處理的檔案名</param>
+        /// <param name="replace">取代字元</param>
+        /// <returns>處理後的檔案名</returns>
         public static string ReplaceInvalidPathChars(string file, string replace)
         {
             if (file.IndexOf('?', file.LastIndexOf('.')) > 0)
@@ -570,18 +570,18 @@ namespace MoeLoaderDelta
             return file;
         }
         /// <summary>
-        /// 去掉文件名中的无效字符,如 \ / : * ? " < > | 
+        /// 去掉檔案名中的無效字元,如 \ / : * ? " < > | 
         /// </summary>
         public static string ReplaceInvalidPathChars(string file)
         {
             return ReplaceInvalidPathChars(file, "");
         }
         /// <summary>
-        /// 去掉文件名中无效字符的同时裁剪过长文件名
+        /// 去掉檔案名中無效字元的同時裁剪過長檔案名
         /// </summary>
-        /// <param name="file">文件名</param>
-        /// <param name="path">所在路径</param>
-        /// <param name="any">任何数</param>
+        /// <param name="file">檔案名</param>
+        /// <param name="path">所在路徑</param>
+        /// <param name="any">任何數</param>
         /// <returns></returns>
         public static string ReplaceInvalidPathChars(string file, string path, int any)
         {
@@ -595,7 +595,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 导出lst
+        /// 導出lst
         /// </summary>
         private void itmLst_Click(object sender, RoutedEventArgs e)
         {
@@ -605,14 +605,14 @@ namespace MoeLoaderDelta
                 {
                     DefaultExt = "lst",
                     FileName = "MoeLoaderList.lst",
-                    Filter = "lst文件|*.lst",
+                    Filter = "lst檔案|*.lst",
                     OverwritePrompt = false
                 };
                 if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     string text = "";
                     int success = 0, repeat = 0;
-                    //读存在的lst内容
+                    //讀存在的lst內容
                     string[] flst = null;
                     bool havelst = File.Exists(saveFileDialog1.FileName);
                     bool isexists = false;
@@ -624,7 +624,7 @@ namespace MoeLoaderDelta
 
                     foreach (DownloadItem i in dlList.SelectedItems)
                     {
-                        //查找重复项
+                        //尋找重複項
                         try
                         {
                             isexists = havelst && flst.Any(x => x.Split('|')[2] == i.Host && x.Split('|')[4] == i.Id.ToSafeString());
@@ -633,7 +633,7 @@ namespace MoeLoaderDelta
 
                         if (!isexists)
                         {
-                            //url|文件名|域名|上传者|ID(用于判断重复)|免文件校验
+                            //url|檔案名|域名|上傳者|ID(用於判斷重複)|免檔案校驗
                             text += i.Url
                                 + "|" + i.LocalFileName
                                 + "|" + i.Host
@@ -647,18 +647,18 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", MainWindow.ProgramName,
+                    MessageBox.Show("成功儲存 " + success + " 個地址\r\n" + repeat + " 個地址已在列表中\r\n", MainWindow.ProgramName,
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("保存失败:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("儲存失敗:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         /// <summary>
-        /// 复制地址
+        /// 複製地址
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -683,7 +683,7 @@ namespace MoeLoaderDelta
             {
                 foreach (object o in dlList.Items)
                 {
-                    //转存集合，防止selected改变
+                    //轉存集合，防止selected改變
                     DownloadItem item = (DownloadItem)o;
                     selected.Add(item);
                 }
@@ -756,7 +756,7 @@ namespace MoeLoaderDelta
                     case DLWorkMode.RemoveAll:
                         if (dlworkmode == DLWorkMode.Del && delitemfile < 1)
                         {
-                            if (MessageBox.Show("QwQ 真的要把任务和文件一起删除么？",
+                            if (MessageBox.Show("QwQ 真的要把任務和檔案一起刪除嗎？",
                                 MainWindow.ProgramName,
                                 MessageBoxButton.YesNo,
                                 MessageBoxImage.Warning) == MessageBoxResult.No)
@@ -783,7 +783,7 @@ namespace MoeLoaderDelta
                         downloadItems.Remove(item);
                         downloadItemsDic.Remove(item.Url);
 
-                        //删除文件
+                        //刪除檔案
                         string fname = item.LocalName;
                         if (dlworkmode == DLWorkMode.Del)
                         {
@@ -811,7 +811,7 @@ namespace MoeLoaderDelta
         }
         //================================================================================
         /// <summary>
-        /// 重试
+        /// 重試
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -821,7 +821,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 停止某个任务
+        /// 停止某個任務
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -831,7 +831,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 移除某个任务
+        /// 移除某個任務
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -841,7 +841,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 停止所有下载
+        /// 停止所有下載
         /// </summary>
         public void StopAll()
         {
@@ -854,7 +854,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 清空已成功任务
+        /// 清空已成功任務
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -879,9 +879,9 @@ namespace MoeLoaderDelta
             RefreshStatus();
         }
 
-        #region 遗弃的方法
+        #region 遺棄的方法
         /// <summary>
-        /// 选择保存位置
+        /// 選擇儲存位置
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -889,7 +889,7 @@ namespace MoeLoaderDelta
         //{
         //    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog
         //    {
-        //        Description = "当前保存位置: " + saveLocation,
+        //        Description = "當前儲存位置: " + saveLocation,
         //        SelectedPath = saveLocation
         //    };
 
@@ -899,7 +899,7 @@ namespace MoeLoaderDelta
         //    }
         //}
 
-        //#region 设置同时下载数量
+        //#region 設定同時下載數量
         //public void SetNum(int i)
         //{
         //    if (i == 1)
@@ -987,7 +987,7 @@ namespace MoeLoaderDelta
         #endregion
 
         /// <summary>
-        /// 右键菜单即将打开
+        /// 右鍵選單即將打開
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1018,7 +1018,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 文件拖拽事件
+        /// 檔案拖曳事件
         /// </summary>
         public void UserControl_DragEnter(object sender, DragEventArgs e)
         {
@@ -1035,7 +1035,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 从lst文件添加下载
+        /// 從lst檔案添加下載
         /// </summary>
         /// <param name="fileName"></param>
         public void DownLoadFromFile(string fileName)
@@ -1058,7 +1058,7 @@ namespace MoeLoaderDelta
                     else
                         di.url = parts[0];
 
-                    //文件名
+                    //檔案名
                     if (parts.Length > 1 && parts[1].Trim().Length > 0)
                     {
                         string ext = di.url.Substring(di.url.LastIndexOf('.'), di.url.Length - di.url.LastIndexOf('.'));
@@ -1069,7 +1069,7 @@ namespace MoeLoaderDelta
                     if (parts.Length > 2 && parts[2].Trim().Length > 0)
                         di.host = parts[2];
 
-                    //上传者
+                    //上傳者
                     if (parts.Length > 3 && parts[3].Trim().Length > 0)
                         di.author = parts[3];
 
@@ -1083,7 +1083,7 @@ namespace MoeLoaderDelta
                         catch { }
                     }
 
-                    //免文件校验
+                    //免檔案校驗
                     if (parts.Length > 5 && parts[5].Trim().Length > 0)
                         di.noVerify = parts[5].Contains('v');
 
@@ -1091,13 +1091,13 @@ namespace MoeLoaderDelta
                     items.Add(di);
                 }
 
-                //添加至下载列表
+                //添加至下載列表
                 AddDownload(items);
             }
         }
 
         /// <summary>
-        /// 文件被拖入
+        /// 檔案被拖入
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1110,12 +1110,12 @@ namespace MoeLoaderDelta
             }
             catch (Exception ex)
             {
-                MessageBox.Show("从文件添加下载失败\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("從檔案添加下載失敗\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
         /// <summary>
-        /// 打开保存目录
+        /// 打開儲存目錄
         /// </summary>
         private void itmOpenSave_Click(object sender, RoutedEventArgs e)
         {
@@ -1141,7 +1141,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 双击打开文件
+        /// 雙擊打開檔案
         /// </summary>
         private void grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -1154,7 +1154,7 @@ namespace MoeLoaderDelta
                     {
                         if (!File.Exists(dlItem.LocalName))
                         {
-                            MessageBox.Show("无法打开文件！ 可能已被更名、删除或移动。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show("無法打開檔案！ 可能已被更名、刪除或移動。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             return;
                         }
                         System.Diagnostics.Process.Start(dlItem.LocalName);
@@ -1165,7 +1165,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 清除所有失败任务
+        /// 清除所有失敗任務
         /// </summary>
         private void itmClearDled_Click_1(object sender, RoutedEventArgs e)
         {
@@ -1188,7 +1188,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 仅清除已取消和已存在的任务
+        /// 僅清除已取消和已存在的任務
         /// </summary>
         private void itmClearDled_Click_2(object sender, RoutedEventArgs e)
         {
@@ -1212,7 +1212,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 全选
+        /// 全選
         /// </summary>
         private void itmSelAll_Click(object sender, RoutedEventArgs e)
         {
@@ -1220,7 +1220,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 重试所有任务
+        /// 重試所有任務
         /// </summary>
         private void itmRetryAll_Click(object sender, RoutedEventArgs e)
         {
@@ -1228,7 +1228,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 停止所有任务
+        /// 停止所有任務
         /// </summary>
         private void itmStopAll_Click(object sender, RoutedEventArgs e)
         {
@@ -1236,7 +1236,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 移除所有任务
+        /// 移除所有任務
         /// </summary>
         private void itmDeleteAll_Click(object sender, RoutedEventArgs e)
         {
@@ -1244,7 +1244,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 任务和文件一起删除
+        /// 任務和檔案一起刪除
         /// </summary>
         private void itmDeleteFile_Click(object sender, RoutedEventArgs e)
         {
@@ -1252,13 +1252,13 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 反选.......我能怎么办?我也很复杂啊...
+        /// 反選.......我能怎麼辦?我也很複雜啊...
         /// </summary>
         private void itmSelInvert_Click(object sender, RoutedEventArgs e)
         {
-            //表项总数
+            //表項總數
             int listcount = downloadItems.Count;
-            //选中项的url
+            //選中項的url
             List<string> selurl = new List<string>();
 
             if (listcount < 1)
@@ -1278,7 +1278,7 @@ namespace MoeLoaderDelta
                 selurl.Add(sitem.Url);
             }
 
-            //设置选中
+            //設定選中
             dlList.UnselectAll();
             DownloadItem item = null;
             int selcount = selurl.Count;
@@ -1288,7 +1288,7 @@ namespace MoeLoaderDelta
                 int ii = 0;
                 item = downloadItems[i];
 
-                //遍历是否之前选中
+                //遍歷是否之前選中
                 foreach (string surl in selurl)
                 {
                     ii++;
@@ -1305,7 +1305,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 双击一个表项执行的操作
+        /// 雙擊一個表項執行的操作
         /// </summary>
         private void dlList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -1331,7 +1331,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 当做下载列表快捷键
+        /// 當做下載列錶快捷鍵
         /// </summary>
         private void dlList_KeyDown(object sender, KeyEventArgs e)
         {
@@ -1340,21 +1340,21 @@ namespace MoeLoaderDelta
                 int dlselect = dlList.SelectedItems.Count;
 
                 if (e.Key == Key.U)
-                {   //反选
+                {   //反選
                     itmSelInvert_Click(null, null);
                 }
                 else if (dlselect > 0)
                 {
                     if (e.Key == Key.L)
-                    {//导出下载列表
+                    {//導出下載列表
                         itmLst_Click(null, null);
                     }
                     else if (e.Key == Key.C && dlselect == 1)
-                    {   //复制地址
+                    {   //複製地址
                         itmCopy_Click(null, null);
                     }
                     else if (e.Key == Key.R)
-                    {    //重试
+                    {    //重試
                         itmRetry_Click(null, null);
                     }
                     else if (e.Key == Key.S)
@@ -1366,20 +1366,20 @@ namespace MoeLoaderDelta
                         itmDelete_Click(null, null);
                     }
                     else if (e.Key == Key.X)
-                    {    //和文件一起删除
+                    {    //和檔案一起刪除
                         itmDeleteFile_Click(null, null);
                     }
                 }
                 if (e.Key == Key.G)
-                {   //停止所有任务
+                {   //停止所有任務
                     itmStopAll_Click(null, null);
                 }
                 else if (e.Key == Key.V)
-                {   //清空所有任务
+                {   //清空所有任務
                     itmDeleteAll_Click(null, null);
                 }
                 else if (e.Key == Key.T)
-                {   //重试所有任务
+                {   //重試所有任務
                     itmRetryAll_Click(null, null);
                 }
             }

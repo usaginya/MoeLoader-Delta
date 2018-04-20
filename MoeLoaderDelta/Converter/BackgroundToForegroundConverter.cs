@@ -7,7 +7,7 @@ using System.Windows.Media;
 namespace MoeLoaderDelta
 {
     /// <summary>
-    /// 根据背景色获取前景色。当然也可反着用
+    /// 根據背景色獲取前景色。當然也可反著用
     /// </summary>
     public class BackgroundToForegroundConverter : IValueConverter
     {

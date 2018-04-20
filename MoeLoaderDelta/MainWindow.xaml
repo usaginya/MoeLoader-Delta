@@ -997,58 +997,58 @@
                                             <MenuItem
                                                 x:Name="itmSelectInverse"
                                                 Click="itmSelectInverse_Click"
-                                                Header="反选(_I)"
+                                                Header="反選(_I)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmSelectAll"
                                                 Click="itmSelectAll_Click"
-                                                Header="全选(_A)"
+                                                Header="全選(_A)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmUnSelectAll"
                                                 Click="itmUnSelectAll_Click"
-                                                Header="全不选(_Z)"
+                                                Header="全不選(_Z)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmReload"
                                                 Click="itmReload_Click"
-                                                Header="重试(_R)"
+                                                Header="重試(_R)"
                                                 IsEnabled="False"
-                                                ToolTip="重试加载失败的缩略图" />
+                                                ToolTip="重試載入失敗的縮圖" />
                                             <Separator />
                                             <MenuItem
                                                 x:Name="itmSmallPre"
                                                 Click="itmSmallPre_Click"
-                                                Header="使用小缩略图(_S)"
+                                                Header="使用小縮圖(_S)"
                                                 IsCheckable="True" />
-                                            <MenuItem Header="图片地址类型(_T)" ToolTip="此设置决定导出和下载时使用的图片地址">
+                                            <MenuItem Header="圖片地址類型(_T)" ToolTip="此設定決定導出和下載時使用的圖片地址">
                                                 <MenuItem
                                                     x:Name="itmTypeOri"
                                                     Click="itmTypeOri_Checked"
-                                                    Header="原图(_1)"
+                                                    Header="原圖(_1)"
                                                     IsCheckable="True"
-                                                    ToolTip="使用原图地址(大)" />
+                                                    ToolTip="使用原圖地址(大)" />
                                                 <MenuItem
                                                     x:Name="itmTypeJpg"
                                                     Click="itmTypeOri_Checked"
                                                     Header="JPG格式(_2)"
                                                     IsCheckable="True"
-                                                    ToolTip="优先使用图片的JPG格式地址(较大)" />
+                                                    ToolTip="優先使用圖片的JPG格式地址(較大)" />
                                                 <MenuItem
                                                     x:Name="itmTypePreview"
                                                     Click="itmTypeOri_Checked"
-                                                    Header="预览图(_3)"
+                                                    Header="預覽圖(_3)"
                                                     IsCheckable="True"
-                                                    ToolTip="使用预览图地址(较小)" />
+                                                    ToolTip="使用預覽圖地址(較小)" />
                                                 <MenuItem
                                                     x:Name="itmTypeSmall"
                                                     Click="itmTypeOri_Checked"
-                                                    Header="缩略图(_4)"
+                                                    Header="縮圖(_4)"
                                                     IsCheckable="True"
-                                                    ToolTip="使用缩略图地址(小)" />
+                                                    ToolTip="使用縮圖地址(小)" />
                                             </MenuItem>
-                                            <MenuItem Header="图片筛选(_M)">
-                                                <MenuItem x:Name="itmMaskScore" Header="筛选指定分数">
+                                            <MenuItem Header="圖片篩選(_M)">
+                                                <MenuItem x:Name="itmMaskScore" Header="篩選指定分數">
                                                     <MenuItem
                                                         x:Name="itm0"
                                                         Checked="itm5_Checked"
@@ -1075,7 +1075,7 @@
                                                         Header="30分以上(_5)"
                                                         IsCheckable="True" />
                                                 </MenuItem>
-                                                <MenuItem x:Name="itmMaskRes" Header="筛选指定分辨率">
+                                                <MenuItem x:Name="itmMaskRes" Header="篩選指定解析度">
                                                     <MenuItem
                                                         x:Name="itmx0"
                                                         Checked="itmx5_Checked"
@@ -1106,19 +1106,19 @@
                                                 <Separator />
                                                 <MenuItem
                                                     x:Name="itmMaskViewed"
-                                                    Header="过滤已浏览的图片(_0)"
+                                                    Header="過濾已瀏覽的圖片(_0)"
                                                     IsCheckable="True" />
                                                 <MenuItem
                                                     x:Name="itmxExplicit"
                                                     Click="itmxExplicit_Click"
-                                                    Header="过滤限制级图片(_E)"
+                                                    Header="過濾限制級圖片(_E)"
                                                     IsCheckable="True" />
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem
                                                 x:Name="itmOpenSite"
                                                 Click="itmOpenSite_Click"
-                                                Header="访问站点主页(_W)" />
+                                                Header="訪問站點首頁(_W)" />
                                         </ContextMenu>
                                     </ScrollViewer.ContextMenu>
                                     <WrapPanel x:Name="imgPanel" Margin="20,0,45,0" />
@@ -1130,7 +1130,7 @@
                                     Click="btnPrev_Click"
                                     IsEnabled="False"
                                     Style="{DynamicResource prestyle}"
-                                    ToolTip="上一页"
+                                    ToolTip="上一頁"
                                     Visibility="Hidden">
                                     <Button.Background>
                                         <ImageBrush ImageSource="Images/page.png" Stretch="None" />
@@ -1144,7 +1144,7 @@
                                     IsEnabled="False"
                                     RenderTransformOrigin="0.5,0.5"
                                     Style="{DynamicResource nextstyle}"
-                                    ToolTip="下一页 (Ctrl + → 强制翻页)"
+                                    ToolTip="下一頁 (Ctrl + → 強制翻頁)"
                                     Visibility="Hidden">
                                     <Button.Background>
                                         <ImageBrush ImageSource="Images/page.png" Stretch="None">
@@ -1179,7 +1179,7 @@
                             Click="toggleDownload_Click"
                             RenderTransformOrigin="1,0.5"
                             Style="{DynamicResource ToggleButtonStyle1}"
-                            ToolTip="显示下载面板(按住Ctrl隐藏缩略图)">
+                            ToolTip="顯示下載面板(按住Ctrl隱藏縮圖)">
                             <ToggleButton.RenderTransform>
                                 <TransformGroup>
                                     <ScaleTransform ScaleX="1.2" ScaleY="1.5" />
@@ -1222,7 +1222,7 @@
                                         Margin="0"
                                         Padding="6,0"
                                         Background="White"
-                                        Header="无站点"
+                                        Header="無站點"
                                         Style="{StaticResource SimpleMenuItem}" />
                                 </Menu>
                                 <Grid
@@ -1261,13 +1261,13 @@
                                 BorderBrush="LightGray"
                                 Click="Button_Click"
                                 IsDefault="True"
-                                Tag="搜索图片 (按住Shift键时会用新的搜索设定重新搜索当前页)">
+                                Tag="搜尋圖片 (按住Shift鍵時會用新的搜尋設定重新搜尋當前頁)">
                                 <Grid Width="60" Height="25">
                                     <AccessText
                                         x:Name="txtGet"
                                         Margin="25,5,11,5"
                                         VerticalAlignment="Center"
-                                        Text="搜索" />
+                                        Text="搜尋" />
                                     <Image
                                         x:Name="imgGet"
                                         Margin="4"
@@ -1295,8 +1295,8 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
                             Click="Download_Click"
-                            ToolTip="下载选中的图片">
-                            <AccessText Text="下载(_D)" />
+                            ToolTip="下載選中的圖片">
+                            <AccessText Text="下載(_D)" />
                         </Button>
                         <Button
                             Width="85"
@@ -1305,8 +1305,8 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
                             Click="itmLst_Click"
-                            ToolTip="生成选中图片的下载列表文件">
-                            <AccessText Text="导出列表(_L)" />
+                            ToolTip="生成選中圖片的下載列表檔案">
+                            <AccessText Text="導出列表(_L)" />
                         </Button>
                     </Grid>
 
@@ -1318,8 +1318,8 @@
                         VerticalAlignment="Bottom"
                         Click="togglePram_Click"
                         IsChecked="True"
-                        Tag="隐藏搜索设定"
-                        ToolTip="显示搜索设定" />
+                        Tag="隱藏搜尋設定"
+                        ToolTip="顯示搜尋設定" />
                     <Grid
                         x:Name="grdParam"
                         Width="0"
@@ -1327,14 +1327,14 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Bottom"
                         Opacity="0">
-                        <!--<TextBlock Text="关键词" HorizontalAlignment="Left" Margin="0" d:LayoutOverrides="Height" VerticalAlignment="Center" Style="{StaticResource glowT}"/>-->
+                        <!--<TextBlock Text="關鍵字" HorizontalAlignment="Left" Margin="0" d:LayoutOverrides="Height" VerticalAlignment="Center" Style="{StaticResource glowT}"/>-->
                         <TextBlock
                             x:Name="textBlock"
                             Margin="2,0,0,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Style="{StaticResource glowT}"
-                            Text="起始页码"
+                            Text="起始頁碼"
                             d:LayoutOverrides="Height" />
                         <StackPanel
                             x:Name="stackPanel"
@@ -1342,7 +1342,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
-                            ToolTip="起始页码">
+                            ToolTip="起始頁碼">
                             <TextBox
                                 x:Name="txtPage"
                                 Width="50"
@@ -1380,7 +1380,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Style="{StaticResource glowT}"
-                            Text="每页数量" />
+                            Text="每頁數量" />
                         <StackPanel
                             x:Name="stackPanel1"
                             Width="100"
@@ -1388,7 +1388,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
-                            ToolTip="每页搜索的图片数量">
+                            ToolTip="每頁搜尋的圖片數量">
                             <TextBox
                                 x:Name="txtNum"
                                 Width="50"
@@ -1471,7 +1471,7 @@
                     FontSize="11"
                     MouseDown="TextBlock_MouseDown1"
                     Style="{StaticResource glowT}"
-                    Text="设定"
+                    Text="設定"
                     TextDecorations="Underline" />
                 <TextBlock
                     Margin="28,0,0,0"
@@ -1485,7 +1485,7 @@
                     FontSize="11"
                     MouseDown="TextBlock_MouseDown2"
                     Style="{StaticResource glowT}"
-                    Text="帮助"
+                    Text="幫助"
                     TextDecorations="Underline" />
             </Grid>
 
@@ -1502,7 +1502,7 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Style="{StaticResource glowT}"
-                        Text="输入关键词标签进行图片搜索、无关键词将直接搜索最新图片" />
+                        Text="輸入關鍵字標籤進行圖片搜尋、無關鍵字將直接搜尋最新圖片" />
                     <TextBlock
                         x:Name="siteText"
                         Margin="0,0,290,0"
@@ -1510,7 +1510,7 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Style="{StaticResource glowT}"
-                        Text="当前站点 yande" />
+                        Text="當前站點 yande" />
                     <TextBlock
                         x:Name="pageText"
                         Margin="0,0,170,0"
@@ -1518,7 +1518,7 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Style="{StaticResource glowT}"
-                        Text="当前页码 0" />
+                        Text="當前頁碼 0" />
                     <TextBlock
                         x:Name="selText"
                         Margin="0,0,50,0"
@@ -1526,7 +1526,7 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Style="{StaticResource glowT}"
-                        Text="选中图片 0" />
+                        Text="選中圖片 0" />
                 </Grid>
             </Border>
         </Grid>

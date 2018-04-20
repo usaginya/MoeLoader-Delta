@@ -50,10 +50,10 @@ namespace SitePack
             get
             {
                 if (srcType == KawaiiSrcType.TagPxP)
-                    return "标签|最小分辨率(单值)\r\nPortrait 立绘图";
+                    return "標籤|最小解析度(單值)\r\nPortrait 立繪圖";
                 else if (srcType == KawaiiSrcType.TagPxL)
-                    return "标签|最小分辨率(单值)\r\nLandscape 有风景的图";
-                return "标签|最小分辨率(单值)\r\nOrientation";
+                    return "標籤|最小解析度(單值)\r\nLandscape 有風景的圖";
+                return "標籤|最小解析度(單值)\r\nOrientation";
             }
         }
         public override bool IsSupportCount { get { return false; } }
@@ -100,9 +100,9 @@ namespace SitePack
             List<Img> imgs = new List<Img>();
             string imagesJson = null;
             if (string.IsNullOrWhiteSpace(pageString)) return imgs;
-            //外层Json
+            //外層Json
             JObject jsonObj = JObject.Parse(pageString);
-            //取得images Json 字符串
+            //取得images Json 字串
             if (jsonObj["images"].ToString() != null)
                 imagesJson = jsonObj["images"].ToString();
             if (string.IsNullOrWhiteSpace(imagesJson)) return imgs;
@@ -124,11 +124,11 @@ namespace SitePack
                 preview_url = "",
                 author = "",
                 detailUrl = "";
-                //图片ID
+                //圖片ID
                 if (obj.ContainsKey("id") && obj["id"] != null)
                 {
                     id = obj["id"].ToString();
-                    //图片子站
+                    //圖片子站
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
                     sb.Append("https://");
                     sb.Append((Convert.ToInt32(id) % 10).ToString());
@@ -140,29 +140,29 @@ namespace SitePack
                 //投稿者
                 if (obj.ContainsKey("user_name") && obj["user_name"] != null)
                     author = obj["user_name"].ToString();
-                //图片来源
+                //圖片來源
                 if (obj.ContainsKey("adv_link") && obj["adv_link"] != null)
                     source = obj["adv_link"].ToString();
-                //评级和评分
+                //評級和評分
                 if (obj.ContainsKey("yes") && obj["yes"] != null)
                     if (obj.ContainsKey("no") && obj["no"] != null)
                         score = (Convert.ToInt32(obj["yes"].ToString())
                         - Convert.ToInt32(obj["no"].ToString())).ToString();
-                //标签
+                //標籤
                 if (obj.ContainsKey("tags") && obj["tags"] != null)
                     tags = obj["tags"].ToString();
-                //缩略图 small 显示不全
+                //縮圖 small 顯示不全
                 if (obj.ContainsKey("small") && obj["small"] != null)
                 {
                     sample = subUrl + StringJoinString(id) + "/" + "small." + obj["small"].ToString();
                     //https://kawaiinyan.com/new#i27963.jpg
                     detailUrl = SiteUrl + "/new#i" + id + "." + obj["small"].ToString();
                 }
-                //jpg 预览图
+                //jpg 預覽圖
                 if (obj.ContainsKey("big") && obj["big"] != null)
                     preview_url = jpeg_url = file_url = subUrl + StringJoinString(id) + "/" + "big." + obj["big"].ToString();
 
-                //原图
+                //原圖
                 if (obj.ContainsKey("orig") && obj["orig"] != null)
                     file_url = subUrl + StringJoinString(id) + "/" + "orig." + obj["orig"].ToString();
 

@@ -37,7 +37,7 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 取页面源码 来自官方APP处理方式
+        /// 取頁面原始碼 來自官方APP處理方式
         /// </summary>
         /// <param name="page"></param>
         /// <param name="count"></param>
@@ -112,7 +112,7 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 还原Cookie
+        /// 還原Cookie
         /// </summary>
         private void CookieRestore()
         {
@@ -124,8 +124,8 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 这破站用API需要登录！(╯‵□′)╯︵┻━┻
-        /// 两个图站的账号还不通用(╯‵□′)╯︵┻━┻
+        /// 這破站用API需要登入！(╯‵□′)╯︵┻━┻
+        /// 兩個圖站的帳號還不通用(╯‵□′)╯︵┻━┻
         /// </summary>
         /// <param name="proxy"></param>
         private void Login(IWebProxy proxy)
@@ -143,7 +143,7 @@ namespace SitePack
                     tempappkey = GetSankakuAppkey(tempuser);
                     string post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
 
-                    //Post登录取Cookie
+                    //Post登入取Cookie
                     shc.UserAgent = ua;
                     shc.Referer = Referer;
                     shc.Accept = SessionHeadersValue.AcceptAppJson;
@@ -152,7 +152,7 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(loginhost);
 
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))
-                        throw new Exception("获取登录Cookie失败");
+                        throw new Exception("獲取登入Cookie失敗");
                     else
                         cookie = subdomain + ".sankaku;" + cookie;
 
@@ -160,21 +160,21 @@ namespace SitePack
                     pageurl = loginhost + "/post/index.json?login=" + tempuser + "&password_hash="
                         + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";
 
-                    //登录成功才能初始化Booru类型站点
+                    //登入成功才能初始化Booru類型站點
                     shc.Referer = Referer;
                     booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONSku, shc);
                 }
                 catch (Exception e)
                 {
-                    throw new Exception("自动登录失败: " + e.Message);
+                    throw new Exception("自動登入失敗: " + e.Message);
                 }
             }
         }
 
         /// <summary>
-        /// 计算用于登录等账号操作的AppKey
+        /// 計算用於登入等帳號操作的AppKey
         /// </summary>
-        /// <param name="user">用户名</param>
+        /// <param name="user">使用者名稱</param>
         /// <returns></returns>
         private static string GetSankakuAppkey(string user)
         {
@@ -182,9 +182,9 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 计算密码sha1
+        /// 計算密碼sha1
         /// </summary>
-        /// <param name="password">密码</param>
+        /// <param name="password">密碼</param>
         /// <returns></returns>
         private static string GetSankakuPwHash(string password)
         {
@@ -194,8 +194,8 @@ namespace SitePack
         /// <summary>
         /// SHA1加密
         /// </summary>
-        /// <param name="content">字符串</param>
-        /// <param name="encode">编码</param>
+        /// <param name="content">字串</param>
+        /// <param name="encode">編碼</param>
         /// <returns></returns>
         private static string SHA1(string content, Encoding encode)
         {

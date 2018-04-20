@@ -48,7 +48,7 @@ namespace SitePack
 
             if (keyWord.Length > 0)
             {
-                //http://mjv-art.org/pictures/view_posts/0?search_tag=suzumiya%20haruhi&order_by=date&ldate=0&lang=en
+                //http://mjv-art.org/pictures/view_posts/0?search_tag=suzumiya haruhi&order_by=date&ldate=0&lang=en
                 url = SiteUrl + "/pictures/view_posts/" + (page - 1) + "?search_tag=" + keyWord + "&order_by=date&ldate=0&lang=en";
             }
 
@@ -263,7 +263,7 @@ namespace SitePack
                 //sitelang=en; Max-Age=31104000; Path=/; expires=Sun, 14-Jul-2013 04:15:44 GMT, asian_server=86227259c6ca143cca28b4ffffa1347e73405154e374afaf48434505985a4cca70fd30c4; expires=Tue, 19-Jan-2038 03:14:07 GMT; Path=/
                 if (sessionId == null || !sessionId.Contains("asian_server"))
                 {
-                    throw new Exception("自动登录失败");
+                    throw new Exception("自動登入失敗");
                 }
                 //sitelang=en; asian_server=86227259c6ca143cca28b4ffffa1347e73405154e374afaf48434505985a4cca70fd30c4
                 int idIndex = sessionId.IndexOf("sitelang");
@@ -275,19 +275,19 @@ namespace SitePack
             }
             catch (System.Net.WebException)
             {
-                //throw new Exception("自动登录失败");
+                //throw new Exception("自動登入失敗");
                 sessionId = "";
             }
         }
 
         /// <summary>
-        /// 图片地址格式化
-        /// 2016年12月对带域名型地址格式化
+        /// 圖片地址格式化
+        /// 2016年12月對帶域名型地址格式化
         /// by YIU
         /// </summary>
-        /// <param name="pr_host">图站域名</param>
-        /// <param name="pr_url">预处理的URL</param>
-        /// <returns>处理后的图片URL</returns>
+        /// <param name="pr_host">圖站域名</param>
+        /// <param name="pr_url">預處理的URL</param>
+        /// <returns>處理後的圖片URL</returns>
         private static string FormattedImgUrl(string pr_host, string pr_url)
         {
             try
@@ -300,11 +300,11 @@ namespace SitePack
                 if (pr_url.StartsWith(phu))
                     return pr_host + pr_url.Replace(phu, "");
 
-                //地址中有子域名 补完子域名
+                //地址中有子域名 補完子域名
                 else if (pr_url.StartsWith("//"))
                     return phh + pr_url;
 
-                //地址没有域名 补完地址
+                //地址沒有域名 補完地址
                 else if (pr_url.StartsWith("/"))
                     return pr_host + pr_url;
 
