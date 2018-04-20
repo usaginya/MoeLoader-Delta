@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.6
+ * version 1.7
  * by YIU
- * Create 2017-1-6
- * Last     2018-3-16
+ * Create               20170106
+ * Last Change     20180419
  */
 
 using System;
@@ -87,6 +87,17 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// Get访问,便捷,默认UTF-8编码
+        /// </summary>
+        /// <param name="url">网址</param>
+        /// <param name="proxy">代理</param>
+        /// <returns>网页内容</returns>
+        public string Get(string url, IWebProxy proxy)
+        {
+            return Get(url, proxy, "UTF-8", new SessionHeadersCollection());
+        }
+
+        /// <summary>
         /// Get访问,便捷,自定义UA
         /// </summary>
         /// <param name="url">网址</param>
@@ -138,6 +149,18 @@ namespace MoeLoaderDelta
                 }
             }
             return ret;
+        }
+
+        /// <summary>
+        /// Get访问,默认UTF-8编码
+        /// </summary>
+        /// <param name="url">网址</param>
+        /// <param name="proxy">代理</param>
+        /// <param name="shc">Headers</param>
+        /// <returns>网页内容</returns>
+        public string Get(string url, IWebProxy proxy, SessionHeadersCollection shc)
+        {
+            return Get(url, proxy, "UTF-8", new SessionHeadersCollection());
         }
 
         /// <summary>
@@ -217,7 +240,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// Post访问,便捷,自定义UA
+        /// Post访问,自定义UA
         /// </summary>
         /// <param name="url">网址</param>
         /// <param name="postData">Post数据</param>
@@ -229,6 +252,18 @@ namespace MoeLoaderDelta
             SessionHeadersCollection shc = new SessionHeadersCollection();
             shc.UserAgent = UA;
             return Post(url, postData, proxy, pageEncoding, shc);
+        }
+
+        /// <summary>
+        /// Post访问,默认UTF-8编码
+        /// </summary>
+        /// <param name="url">网址</param>
+        /// <param name="postData">Post数据</param>
+        /// <param name="proxy">代理</param>
+        /// <param name="shc">Headers</param>
+        public string Post(string url, string postData, IWebProxy proxy, SessionHeadersCollection shc)
+        {
+            return Post(url, postData, proxy, "UTF-8", shc);
         }
 
         /// <summary>

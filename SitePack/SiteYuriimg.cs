@@ -50,7 +50,7 @@ namespace SitePack
             shc.Remove("Accept-Ranges");
             shc.Accept = SessionHeadersValue.AcceptTextHtml;
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+            string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
         }
@@ -89,7 +89,7 @@ namespace SitePack
 
                 item.DownloadDetail = (i, p) =>
                 {
-                    string html = Sweb.Get(i.DetailUrl, proxy, "UTF-8", shc);
+                    string html = Sweb.Get(i.DetailUrl, proxy, shc);
 
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(html);
@@ -183,7 +183,7 @@ namespace SitePack
                     shc.AutomaticDecompression = DecompressionMethods.GZip;
                     shc.Remove("Accept-Ranges");
 
-                    retData = Sweb.Post(loginUrl, postData, proxy, "UTF-8", shc);
+                    retData = Sweb.Post(loginUrl, postData, proxy, shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (retData.Contains("-2"))

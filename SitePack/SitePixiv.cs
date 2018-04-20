@@ -162,7 +162,7 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+            string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
         }
@@ -323,7 +323,7 @@ namespace SitePack
                 shc.ContentType = SessionHeadersValue.AcceptAppJson;
                 shc.Add("X-Requested-With", "XMLHttpRequest");
                 shc.Remove("Accept-Ranges");
-                string json = Sweb.Get(url, proxy, "UTF-8", shc);
+                string json = Sweb.Get(url, proxy, shc);
 
                 object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
 
@@ -388,7 +388,7 @@ namespace SitePack
                     page = tempPage;
                 //retrieve details
                 else
-                    page = Sweb.Get(i.DetailUrl, p, "UTF-8", shc);
+                    page = Sweb.Get(i.DetailUrl, p, shc);
 
                 Regex reg = new Regex(@"^「(?<Desc>.*?)」/「(?<Author>.*?)」");
                 HtmlDocument doc = new HtmlDocument();
@@ -449,7 +449,7 @@ namespace SitePack
                         {
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, "UTF-8", shc);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, shc);
                                 ds.LoadHtml(page);
                                 i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                             }
@@ -463,7 +463,7 @@ namespace SitePack
                                 //保存漫画时优先下载原图 找不到原图则下jpg
                                 try
                                 {
-                                    page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, "UTF-8", shc);
+                                    page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, shc);
                                     ds.LoadHtml(page);
                                     oriul = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                                     img.OrignalUrlList.Add(oriul);
@@ -519,7 +519,7 @@ namespace SitePack
                     shc.ContentType = SessionHeadersValue.AcceptTextHtml;
 
                     //请求1 获取post_key
-                    data = Sweb.Get(loginurl, proxy, "UTF-8", shc);
+                    data = Sweb.Get(loginurl, proxy, shc);
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
@@ -531,7 +531,7 @@ namespace SitePack
                         + "&password=" + pass[index]
                         + "&captcha=&g_recaptcha_response=&post_key=" + post_key
                         + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
-                    data = Sweb.Post(loginpost, data, proxy, "UTF-8", shc);
+                    data = Sweb.Post(loginpost, data, proxy, shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (data.Contains("400"))
