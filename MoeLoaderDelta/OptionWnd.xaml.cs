@@ -311,7 +311,8 @@ namespace MoeLoaderDelta
                 + "\r\nMoeLoader ©2008-2013 esonic All rights reserved.\r\n\r\n"
                 + "Δ Version by YIU\r\n"
                 + "Email: degdod@qq.com\r\nSite: http://usaginya.lofter.com/"
-                + "\r\nMoeLoader Δ ©2016-2017 Moekai All rights reserved.\r\n\r\n"
+                + "\r\nMoeLoader Δ ©2016-" + DateTime.Now.Year.ToString()
+                + " Moekai All rights reserved.\r\n\r\n"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
