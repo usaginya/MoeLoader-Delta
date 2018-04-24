@@ -53,5 +53,5 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("7.0.5.2")]
 [assembly: AssemblyFileVersion("7.0.5.2")]
-//[re:繁化姬 dict-decd9082-r643 @ 2018/04/20 10:23:54 | https://zhconvert.org]
+//[re:繁化姬 dict-7c4c39c3-r650 @ 2018/04/24 09:39:12 | https://zhconvert.org]
 [assembly: GuidAttribute("e1b87586-4b7e-4f4a-be97-55d3349ed5a6")]

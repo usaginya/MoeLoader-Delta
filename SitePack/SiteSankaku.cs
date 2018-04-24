@@ -48,7 +48,7 @@ namespace SitePack
         {
             if (sitePrefix == "chan")
             {
-                ua = "SCChannelApp/2.3 (Android; black)";
+                ua = "SCChannelApp/2.4 (Android; black)";
             }
             else if (sitePrefix == "idol")
             {
@@ -130,7 +130,11 @@ namespace SitePack
         /// <param name="proxy"></param>
         private void Login(IWebProxy proxy)
         {
-            string subdomain = sitePrefix.Substring(0, 1) + "api", loginhost = "https://" + subdomain + ".sankakucomplex.com";
+            string subdomain = sitePrefix.Substring(0, 1),
+                loginhost = "https://";
+
+            subdomain += subdomain.Contains("c") ? "api-beta" : "api";
+            loginhost = "https://" + subdomain + ".sankakucomplex.com";
 
             if (!cookie.Contains(subdomain + ".sankaku"))
             {
@@ -141,7 +145,12 @@ namespace SitePack
                     tempuser = user[index];
                     temppass = GetSankakuPwHash(pass[index]);
                     tempappkey = GetSankakuAppkey(tempuser);
-                    string post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
+                    string post = "";
+
+                    if (subdomain.Contains("capi"))
+                        post = "user[name]=" + tempuser + "&user[password]=" + pass[index] + "&appkey=" + tempappkey;
+                    else
+                        post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
 
                     //Post登入取Cookie
                     shc.UserAgent = ua;
@@ -155,7 +164,6 @@ namespace SitePack
                         throw new Exception("獲取登入Cookie失敗");
                     else
                         cookie = subdomain + ".sankaku;" + cookie;
-
 
                     pageurl = loginhost + "/post/index.json?login=" + tempuser + "&password_hash="
                         + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";

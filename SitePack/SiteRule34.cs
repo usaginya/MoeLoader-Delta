@@ -105,7 +105,7 @@ namespace SitePack
                 foreach (JObject jo in jobj)
                 {
                     tmpname = jo["value"].ToString();
-                    if (srcType == Rule34srcType.Filter && !filterTag.Contains(tmpname))
+                    if (srcType == Rule34srcType.Filter && !filterTag.Contains(tmpname) || srcType == Rule34srcType.Full)
                     {
                         re.Add(new TagItem()
                         {

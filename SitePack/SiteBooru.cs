@@ -8,7 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站點
-    /// Last 20180419
+    /// Last 20180421
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -127,7 +127,7 @@ namespace SitePack
 
             SetHeaderType(srcType);
             page = needMinus ? page - 1 : page;
-            pagestr = Convert.ToString(needMinus ? page - 1 : page);
+            pagestr = Convert.ToString(page);
 
             //Danbooru 1000+ page
             switch (shortName)
