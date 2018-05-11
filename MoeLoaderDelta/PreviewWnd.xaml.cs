@@ -29,12 +29,11 @@ namespace MoeLoaderDelta
         private Dictionary<int, Img> descs = new Dictionary<int, Img>();
 
         //主窗口缩略图索引
-        private Dictionary<int, int> oriIndex = new Dictionary<int, int>();
-        private int selectedId;
+        internal Dictionary<int, int> oriIndex = new Dictionary<int, int>();
+        internal int selectedId;
         private int index;
         //上次鼠标的位置
         private int preMX, preMY;
-
         #region === GetSet封装 ===
         public int SelectedId
         {
@@ -158,7 +157,6 @@ namespace MoeLoaderDelta
                     HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                     VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
                 });
-
                 //开始下载图片
                 prei.DownloadImg(needReferer);
 
@@ -166,6 +164,7 @@ namespace MoeLoaderDelta
                 {
                     (btns.Children[btns.Children.Count - 1] as ToggleButton).IsChecked = true;
                 }
+                ChangePreBtnText();
             }
         }
 
@@ -209,6 +208,7 @@ namespace MoeLoaderDelta
                 ScrollViewer tempPreview1 = (imgGrid.Children[imgs[selectedId]] as ScrollViewer);
                 tempPreview1.Visibility = Visibility.Visible;
                 tempPreview1.BeginStoryboard(FindResource("imgShow") as Storyboard);
+                ChangePreBtnText();
 
                 ///////////////////////////////////////////////
                 ////////////////////////////////////////////
@@ -244,7 +244,8 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 选中并关闭
+        /// 选中并关闭 
+        /// 取消选中并关闭
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -719,6 +720,23 @@ namespace MoeLoaderDelta
         private void SwitchNearPreview()
         {
             SwitchNearPreview(0);
+        }
+        /// <summary>
+        /// 用于修改PreviewWnd中的按钮文本
+        /// </summary>
+        private void ChangePreBtnText()
+        {
+            //判断当前浏览的预览图是否选中
+            if (mainW.selected.Contains(oriIndex[selectedId]))
+            {
+                btnClick.ToolTip = "关闭该预览图并取消选中该图";
+                btnClickText.Text = "取消选中并关闭(_A)";
+            }
+            else
+            {
+                btnClick.ToolTip = "关闭该预览图并选中该图";
+                btnClickText.Text = "选中并关闭(_A)";
+            }
         }
 
     }

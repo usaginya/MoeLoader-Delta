@@ -97,8 +97,8 @@ namespace MoeLoaderDelta
         private int nowSelectedIndex = 0;
 
         internal List<Img> imgs;
-        private List<int> selected = new List<int>();
-
+        internal List<int> selected = new List<int>();
+        
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -827,6 +827,7 @@ namespace MoeLoaderDelta
             if (selected.Contains(id))
                 selected.Remove(id);
             else selected.Add(id);
+            ChangePreBtnText();
 
             if (IsShiftDown())
             {
@@ -836,6 +837,7 @@ namespace MoeLoaderDelta
                     bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                     if (enabled && !selected.Contains(i))
                         selected.Add(i);
+                    ChangePreBtnText();
                 }
             }
 
@@ -1464,9 +1466,18 @@ namespace MoeLoaderDelta
 
         public void SelectByIndex(int index)
         {
-            (imgPanel.Children[index] as ImgControl).SetChecked(true);
-            if (!selected.Contains(index))
+            //判断是否选中
+            //(imgPanel.Children[index] as ImgControl).SetChecked(true);
+            if (selected.Contains(index))
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(false);
+                selected.Remove(index);
+            }
+            else
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(true);
                 selected.Add(index);
+            }
         }
 
         /// <summary>
@@ -1477,8 +1488,9 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-
+                
                 imgc.SetChecked(!selected.Contains(i));
+                ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1493,6 +1505,7 @@ namespace MoeLoaderDelta
                 bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                 if (enabled && !selected.Contains(i))
                     selected.Add(i);
+                ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1507,6 +1520,7 @@ namespace MoeLoaderDelta
                 ((ImgControl)imgPanel.Children[i]).SetChecked(false);
                 if (selected.Contains(i))
                     selected.Remove(i);
+                ChangePreBtnText();
             }
             ShowOrHideFuncBtn(true);
         }
@@ -2343,6 +2357,26 @@ namespace MoeLoaderDelta
             sw.Height = cp.ActualHeight + 3;
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
+        }
+        /// <summary>
+        /// 用于修改PreviewWnd中的按钮文本
+        /// </summary>
+        private void ChangePreBtnText()
+        {
+            //判断是否选中
+            if (previewFrm != null)
+            {
+                if (selected.Contains(previewFrm.oriIndex[previewFrm.selectedId]))
+                {
+                    previewFrm.btnClick.ToolTip = "关闭该预览图并取消选中该图";
+                    previewFrm.btnClickText.Text = "取消选中并关闭(_A)";
+                }
+                else
+                {
+                    previewFrm.btnClick.ToolTip = "关闭该预览图并选中该图";
+                    previewFrm.btnClickText.Text = "选中并关闭(_A)";
+                }
+            }
         }
 
         /// <summary>
