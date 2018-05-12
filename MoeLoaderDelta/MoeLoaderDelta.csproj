@@ -149,6 +149,7 @@
     </Compile>
     <Compile Include="Helpers\DataHelpers.cs" />
     <Compile Include="Helpers\SystemHelpers.cs" />
+    <Compile Include="Helpers\unSafeHelper.cs" />
     <Compile Include="PreFetcher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Control\SearchControl.xaml.cs">

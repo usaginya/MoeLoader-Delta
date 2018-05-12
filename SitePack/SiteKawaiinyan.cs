@@ -16,13 +16,13 @@ namespace SitePack
         /// kawaiinyan.com
         /// by ulrevenge
         /// ver 1.0
-        /// last update at 180415
+        /// last change 180417
         /// </summary>
-        
+
         //Tags|Min size,px Orientation Portrait Landscape
-        public enum KawaiiSrcType { TagPxO,TagPxP,TagPxL}
+        public enum KawaiiSrcType { TagPxO, TagPxP, TagPxL }
         public override string SiteUrl { get { return "https://kawaiinyan.com"; } }
-        public override string ShortName{ get{ return "kawaiinyan"; } }
+        public override string ShortName { get { return "kawaiinyan"; } }
         public override string SiteName
         {
             get
@@ -32,6 +32,17 @@ namespace SitePack
                 else if (srcType == KawaiiSrcType.TagPxL)
                     return "kawaiinyan.com [Landscape]";
                 return "kawaiinyan.com [Orientation]";
+            }
+        }
+        public override string ShortType
+        {
+            get
+            {
+                if (srcType == KawaiiSrcType.TagPxP)
+                    return "[P]";
+                else if (srcType == KawaiiSrcType.TagPxL)
+                    return "[L]";
+                return "[O]";
             }
         }
         public override string ToolTip
@@ -46,8 +57,9 @@ namespace SitePack
             }
         }
         public override bool IsSupportCount { get { return false; } }
-        public override bool IsSupportTag { get { return true; } }
+        public override bool IsSupportTag { get { return false; } }
         public override bool IsSupportRes { get { return false; } }
+        public override bool IsShowRes { get { return false; } }
         public SiteKawaiinyan(KawaiiSrcType srcType)
         {
             this.srcType = srcType;
@@ -61,7 +73,7 @@ namespace SitePack
             //https://kawaiinyan.com/new.json?tags=&size=&orient=l
             //https://kawaiinyan.com/new.json?tags=&size=&orient=p
             //https://kawaiinyan.com/new.json?tags=&size=&orient=l&page=2
-            string tag = null,px = null,url =null;
+            string tag = null, px = null, url = null;
             if (keyWord.Contains("|"))
             {
                 tag = keyWord.Split('|')[0];
@@ -71,20 +83,22 @@ namespace SitePack
                 px = keyWord;
             else
                 tag = keyWord;
+
+            url = SiteUrl + "/new.json?tags=" + tag + "&size=" + px;
             if (srcType == KawaiiSrcType.TagPxO)
-                url = SiteUrl + "/new.json?tags=" + tag +"&size=" +px +"&orient=" +"&page=" + page;
+                url += "&orient=&page=" + page;
             else if (srcType == KawaiiSrcType.TagPxP)
-                url = SiteUrl + "/new.json?tags=" + tag + "&size=" + px + "&orient=p" + "&page=" + page;
+                url += "&orient=p&page=" + page;
             else if (srcType == KawaiiSrcType.TagPxL)
-                url = SiteUrl + "/new.json?tags=" + tag + "&size=" + px + "&orient=l" + "&page=" + page;
-            string pageString = Sweb.Get(url, proxy, "UTF-8");
+                url += "&orient=l&page=" + page;
+            string pageString = Sweb.Get(url, proxy);
             return pageString;
         }
 
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
             List<Img> imgs = new List<Img>();
-            string imagesJson =null;
+            string imagesJson = null;
             if (string.IsNullOrWhiteSpace(pageString)) return imgs;
             //外层Json
             JObject jsonObj = JObject.Parse(pageString);
@@ -99,10 +113,11 @@ namespace SitePack
                 Dictionary<string, object> obj = o as Dictionary<string, object>;
 
                 string
-                id = "",
+                id = "0",
+                subUrl = "",
                 tags = "",
                 score = "N/A",
-                source = "",
+                source = "0",
                 sample = "",
                 jpeg_url = "",
                 file_url = "",
@@ -110,43 +125,47 @@ namespace SitePack
                 author = "",
                 detailUrl = "";
                 //图片ID
-                if (obj.ContainsKey("id")&&obj["id"] != null)
+                if (obj.ContainsKey("id") && obj["id"] != null)
+                {
                     id = obj["id"].ToString();
+                    //图片子站
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    sb.Append("https://");
+                    sb.Append((Convert.ToInt32(id) % 10).ToString());
+                    sb.Append(".s.");
+                    sb.Append(ShortName);
+                    sb.Append(".com/i");
+                    subUrl = sb.ToString();
+                }
                 //投稿者
-                if (obj.ContainsKey("user_name") &&obj["user_name"] != null)
+                if (obj.ContainsKey("user_name") && obj["user_name"] != null)
                     author = obj["user_name"].ToString();
                 //图片来源
-                if (obj.ContainsKey("adv_link") &&obj["adv_link"] != null)
+                if (obj.ContainsKey("adv_link") && obj["adv_link"] != null)
                     source = obj["adv_link"].ToString();
                 //评级和评分
-                if (obj.ContainsKey("yes")&&obj["yes"] != null)
+                if (obj.ContainsKey("yes") && obj["yes"] != null)
                     if (obj.ContainsKey("no") && obj["no"] != null)
                         score = (Convert.ToInt32(obj["yes"].ToString())
                         - Convert.ToInt32(obj["no"].ToString())).ToString();
                 //标签
                 if (obj.ContainsKey("tags") && obj["tags"] != null)
                     tags = obj["tags"].ToString();
-                ////预览图 small 显示不全，抛弃
-                //if (obj.ContainsKey("small") && obj["small"] != null)
-                //{
-                //    preview_url = "https://" + (Convert.ToInt32(id) % 10).ToString() + ".s." + ShortName + ".com/i"
-                //        + StringJoinString(id) + "/" + "small." + obj["small"].ToString();
-                //    //https://kawaiinyan.com/new#i27963.jpg
-                //    detailUrl = SiteUrl + "/new#i" + id + "." + obj["small"].ToString();
-                //}
-                //jpg 原图
-                if (obj.ContainsKey("big") && obj["big"] != null)
+                //缩略图 small 显示不全
+                if (obj.ContainsKey("small") && obj["small"] != null)
                 {
-                    preview_url=sample = "https://" + (Convert.ToInt32(id) % 10).ToString() + ".s." + ShortName + ".com/i"
-                        + StringJoinString(id) + "/" + "big." + obj["big"].ToString();
-                    if (obj.ContainsKey("orig") && obj["orig"] == null)
-                    {
-                        jpeg_url = file_url = sample;
-                    }
-                    else
-                        jpeg_url = file_url = "https://" + (Convert.ToInt32(id) % 10).ToString() + ".s." + ShortName + ".com/i"
-                        + StringJoinString(id) + "/" + "orig." + obj["orig"].ToString();
+                    sample = subUrl + StringJoinString(id) + "/" + "small." + obj["small"].ToString();
+                    //https://kawaiinyan.com/new#i27963.jpg
+                    detailUrl = SiteUrl + "/new#i" + id + "." + obj["small"].ToString();
                 }
+                //jpg 预览图
+                if (obj.ContainsKey("big") && obj["big"] != null)
+                    preview_url = jpeg_url = file_url = subUrl + StringJoinString(id) + "/" + "big." + obj["big"].ToString();
+
+                //原图
+                if (obj.ContainsKey("orig") && obj["orig"] != null)
+                    file_url = subUrl + StringJoinString(id) + "/" + "orig." + obj["orig"].ToString();
+
                 Img img = new Img
                 {
                     Desc = tags,
@@ -160,9 +179,8 @@ namespace SitePack
                     Source = source,
                     Tags = tags,
                     DetailUrl = detailUrl,
-
                 };
-                if (img != null) imgs.Add(img);
+                imgs.Add(img);
             }
             return imgs;
 

@@ -1,4 +1,5 @@
 ﻿using MoeLoaderDelta;
+using System;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
 using System.Xml;
@@ -7,6 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
+    /// Last 20180421
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -20,6 +22,7 @@ namespace SitePack
         /// eg. http://yande.re/post/index.xml?page={0}&limit={1}&tags={2}
         /// </summary>
         public string siteUrl;
+        public string Url;
         /// <summary>
         /// eg. http://yande.re/tag/index.xml?limit={0}&order=count&name={1}
         /// </summary>
@@ -37,15 +40,17 @@ namespace SitePack
         /// Booru Site
         /// </summary>
         /// <param name="siteUrl">站点解析地址</param>
+        /// <param name="url">图库服务器地址</param>
         /// <param name="tagUrl">tag自动提示地址</param>
         /// <param name="siteName">站点名</param>
         /// <param name="shortName">站点短名</param>
         /// <param name="referer">引用地址</param>
         /// <param name="needMinus">页码是否从0开始</param>
         /// <param name="srcType">解析类型</param>
-        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, string referer,
+        public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, string referer,
             bool needMinus, BooruProcessor.SourceType srcType)
         {
+            this.Url = url;
             this.siteName = siteName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
@@ -61,15 +66,17 @@ namespace SitePack
         /// Use after successful login
         /// </summary>
         /// <param name="siteUrl">站点解析地址</param>
+        /// <param name="url">图库服务器地址</param>
         /// <param name="tagUrl">tag自动提示地址</param>
         /// <param name="siteName">站点名</param>
         /// <param name="shortName">站点短名</param>
         /// <param name="needMinus">页码是否从0开始</param>
         /// <param name="srcType">解析类型</param>
         /// <param name="shc">Headers</param>
-        public SiteBooru(string siteUrl, string tagUrl, string siteName, string shortName, bool needMinus,
+        public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, bool needMinus,
             BooruProcessor.SourceType srcType, SessionHeadersCollection shc)
         {
+            this.Url = url;
             this.siteName = siteName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
@@ -80,7 +87,7 @@ namespace SitePack
             this.shc = shc;
         }
 
-        public override string SiteUrl { get { return siteUrl.Substring(0, siteUrl.IndexOf('/', 8)); } }
+        public override string SiteUrl { get { return siteUrl; } }
         public override string SiteName { get { return siteName; } }
         public override string ShortName { get { return shortName; } }
         public override string ShortType { get { return shortType; } }
@@ -90,7 +97,7 @@ namespace SitePack
         private void SetHeaders(BooruProcessor.SourceType srcType)
         {
             shc.Referer = referer;
-            shc.Timeout = 20000;
+            shc.Timeout = 12000;
             shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
             shc.AutomaticDecompression = System.Net.DecompressionMethods.GZip;
 
@@ -115,22 +122,49 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy)
         {
-            string url;
+            string url, pagestr;
+            int tmpID;
+
+            SetHeaderType(srcType);
+            page = needMinus ? page - 1 : page;
+            pagestr = Convert.ToString(page);
+
+            //Danbooru 1000+ page
+            switch (shortName)
+            {
+                case "donmai":
+                case "atfbooru":
+                    if (page > 1000)
+                    {
+                        //取得1000页最后ID
+                        List<Img> tmpimgs = GetImages(
+                                Sweb.Get(
+                                    string.Format(Url, 1000, count, keyWord)
+                                , proxy, shc)
+                            , proxy);
+
+                        tmpID = tmpimgs[tmpimgs.Count - 1].Id;
+
+                        tmpID -= (page - 1001) * count;
+                        pagestr = "b" + tmpID;
+                    }
+                    break;
+            }
+
             if (count > 0)
-                url = string.Format(siteUrl, needMinus ? page - 1 : page, count, keyWord);
+                url = string.Format(Url, pagestr, count, keyWord);
             else
-                url = string.Format(siteUrl, needMinus ? page - 1 : page, keyWord);
+                url = string.Format(Url, pagestr, keyWord);
 
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
-            SetHeaderType(srcType);
-            return Sweb.Get(url, proxy, "UTF-8", shc);
+            return Sweb.Get(url, proxy, shc);
         }
 
         public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
         {
             BooruProcessor nowSession = new BooruProcessor(srcType);
-            return nowSession.ProcessPage(siteUrl, pageString);
+            return nowSession.ProcessPage(siteUrl, Url, pageString);
         }
 
         public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
@@ -142,7 +176,7 @@ namespace SitePack
             {
                 string url = string.Format(tagUrl, word);
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
-                url = Sweb.Get(url, proxy, "UTF-8", shc);
+                url = Sweb.Get(url, proxy, shc);
 
                 // [{"id":null,"name":"idolmaster_cinderella_girls","post_count":54050,"category":3,"antecedent_name":"cinderella_girls"},
                 // {"id":null,"name":"cirno","post_count":24486,"category":4,"antecedent_name":null}]
@@ -169,8 +203,7 @@ namespace SitePack
 
                 shc.Accept = SessionHeadersValue.AcceptTextXml;
                 shc.ContentType = SessionHeadersValue.AcceptAppXml;
-                string xml = Sweb.Get(url, proxy, "UTF-8", shc);
-
+                string xml = Sweb.Get(url, proxy, shc);
 
                 //<?xml version="1.0" encoding="UTF-8"?>
                 //<tags type="array">

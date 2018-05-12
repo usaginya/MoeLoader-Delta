@@ -11,6 +11,7 @@ namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
+    /// Last change 180417
     /// </summary>
     class SiteYuriimg : AbstractImageSite
     {
@@ -49,7 +50,7 @@ namespace SitePack
             shc.Remove("Accept-Ranges");
             shc.Accept = SessionHeadersValue.AcceptTextHtml;
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+            string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
         }
@@ -79,7 +80,7 @@ namespace SitePack
                     IsExplicit = false,
                     Tags = tags,
                     Desc = tags,
-                    SampleUrl = imgNode.Attributes["data-original"].Value,
+                    SampleUrl = imgNode.Attributes["data-original"].Value.Replace("!single","!320px"),
                     //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
                     Id = StringToInt(imgNode.Attributes["id"].Value),
                     DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,
@@ -88,7 +89,7 @@ namespace SitePack
 
                 item.DownloadDetail = (i, p) =>
                 {
-                    string html = Sweb.Get(i.DetailUrl, proxy, "UTF-8", shc);
+                    string html = Sweb.Get(i.DetailUrl, proxy, shc);
 
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(html);
@@ -182,7 +183,7 @@ namespace SitePack
                     shc.AutomaticDecompression = DecompressionMethods.GZip;
                     shc.Remove("Accept-Ranges");
 
-                    retData = Sweb.Post(loginUrl, postData, proxy, "UTF-8", shc);
+                    retData = Sweb.Post(loginUrl, postData, proxy, shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (retData.Contains("-2"))

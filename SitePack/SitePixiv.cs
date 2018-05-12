@@ -10,6 +10,11 @@ using System.Text;
 
 namespace SitePack
 {
+    /// <summary>
+    /// PIXIV
+    /// Last change 180417
+    /// </summary>
+
     public class SitePixiv : AbstractImageSite
     {
         //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id
@@ -157,7 +162,7 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            string pageString = Sweb.Get(url, proxy, "UTF-8", shc);
+            string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
         }
@@ -245,7 +250,7 @@ namespace SitePack
                     Dictionary<string, object> obj = o as Dictionary<string, object>;
                     string
                         detailUrl = "",
-                        previewUrl = "",
+                        SampleUrl = "",
                         id = "";
                     if (obj["illustId"] != null)
                     {
@@ -254,9 +259,9 @@ namespace SitePack
                     }
                     if (obj["url"] != null)
                     {
-                        previewUrl = obj["url"].ToString();
+                        SampleUrl = obj["url"].ToString();
                     }
-                    Img img = GenerateImg(detailUrl, previewUrl, id);
+                    Img img = GenerateImg(detailUrl, SampleUrl, id);
                     if (img != null) imgs.Add(img);
                 }
             }
@@ -274,21 +279,21 @@ namespace SitePack
                         //details will be extracted from here
                         //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
                         string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
-                        string previewUrl = "";
-                        previewUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
+                        string sampleUrl = "";
+                        sampleUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
 
-                        if (previewUrl.ToLower().Contains("images/common"))
-                            previewUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
+                        if (sampleUrl.ToLower().Contains("images/common"))
+                            sampleUrl = anode.SelectSingleNode(".//img").Attributes["data-src"].Value;
 
-                        if (previewUrl.Contains('?'))
-                            previewUrl = previewUrl.Substring(0, previewUrl.IndexOf('?'));
+                        if (sampleUrl.Contains('?'))
+                            sampleUrl = sampleUrl.Substring(0, sampleUrl.IndexOf('?'));
 
                         //extract id from detail url
                         //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
                         string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
                         id = id.Substring(id.IndexOf('=') + 1);
 
-                        Img img = GenerateImg(detailUrl, previewUrl, id);
+                        Img img = GenerateImg(detailUrl, sampleUrl, id);
                         if (img != null) imgs.Add(img);
                     }
                     catch
@@ -318,7 +323,7 @@ namespace SitePack
                 shc.ContentType = SessionHeadersValue.AcceptAppJson;
                 shc.Add("X-Requested-With", "XMLHttpRequest");
                 shc.Remove("Accept-Ranges");
-                string json = Sweb.Get(url, proxy, "UTF-8", shc);
+                string json = Sweb.Get(url, proxy, shc);
 
                 object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
 
@@ -335,7 +340,7 @@ namespace SitePack
             return re;
         }
 
-        private Img GenerateImg(string detailUrl, string preview_url, string id)
+        private Img GenerateImg(string detailUrl, string sample_url, string id)
         {
             shc.Add("Accept-Ranges", "bytes");
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
@@ -348,8 +353,8 @@ namespace SitePack
             //convert relative url to absolute
             if (detailUrl.StartsWith("/"))
                 detailUrl = SiteUrl + detailUrl;
-            if (preview_url.StartsWith("/"))
-                preview_url = SiteUrl + preview_url;
+            if (sample_url.StartsWith("/"))
+                sample_url = SiteUrl + sample_url;
 
             referer = detailUrl;
             //string fileUrl = preview_url.Replace("_s.", ".");
@@ -368,7 +373,7 @@ namespace SitePack
                 //JpegUrl = fileUrl,
                 //OriginalUrl = fileUrl,
                 //PreviewUrl = preview_url,
-                SampleUrl = preview_url,
+                SampleUrl = sample_url,
                 //Score = 0,
                 //Width = width,
                 //Height = height,
@@ -383,7 +388,7 @@ namespace SitePack
                     page = tempPage;
                 //retrieve details
                 else
-                    page = Sweb.Get(i.DetailUrl, p, "UTF-8", shc);
+                    page = Sweb.Get(i.DetailUrl, p, shc);
 
                 Regex reg = new Regex(@"^「(?<Desc>.*?)」/「(?<Author>.*?)」");
                 HtmlDocument doc = new HtmlDocument();
@@ -400,7 +405,7 @@ namespace SitePack
                 {
                     MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.PreviewUrl, @"_.+(?=_)").Value;
+                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.SampleUrl, @"_.+(?=_)").Value;
                     else
                         i.Desc = mc[0].Groups["Desc"].Value;
                     i.Author = mc[0].Groups["Author"].Value;
@@ -409,23 +414,15 @@ namespace SitePack
                 //URLS
                 //http://i2.pixiv.net/c/600x600/img-master/img/2014/10/08/06/13/30/46422743_p0_master1200.jpg
                 //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
-                if (srcType == PixivSrcType.Pid)
-                {
-                    i.PreviewUrl = i.PreviewUrl.Replace("150x150", "600x600");
-                }
-                else
-                {
-                    i.PreviewUrl = doc.DocumentNode.SelectSingleNode("//div[@class='works_display']").SelectSingleNode(".//img").Attributes["src"].Value;
-                    i.PreviewUrl = i.PreviewUrl.Replace("600x600", "150x150");
-                }
-                i.PreviewUrl = i.PreviewUrl.Replace("600x600", "1200x1200");
+                Regex rx = new Regex(@"/\d+x\d+/");
+                i.PreviewUrl = rx.Replace(i.SampleUrl, "/1200x1200/");
                 i.JpegUrl = i.PreviewUrl;
                 try
                 {
                     i.OriginalUrl = doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[2]/div").SelectSingleNode(".//img").Attributes["data-src"].Value;
                 }
                 catch { }
-                i.OriginalUrl = i.OriginalUrl == "" ? i.JpegUrl : i.OriginalUrl;
+                i.OriginalUrl = string.IsNullOrWhiteSpace(i.OriginalUrl) ? i.JpegUrl : i.OriginalUrl;
 
                 //600×800 or 漫画 6P
                 string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
@@ -452,7 +449,7 @@ namespace SitePack
                         {
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, "UTF-8", shc);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, shc);
                                 ds.LoadHtml(page);
                                 i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                             }
@@ -466,7 +463,7 @@ namespace SitePack
                                 //保存漫画时优先下载原图 找不到原图则下jpg
                                 try
                                 {
-                                    page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, "UTF-8", shc);
+                                    page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, shc);
                                     ds.LoadHtml(page);
                                     oriul = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                                     img.OrignalUrlList.Add(oriul);
@@ -522,7 +519,7 @@ namespace SitePack
                     shc.ContentType = SessionHeadersValue.AcceptTextHtml;
 
                     //请求1 获取post_key
-                    data = Sweb.Get(loginurl, proxy, "UTF-8", shc);
+                    data = Sweb.Get(loginurl, proxy, shc);
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
@@ -534,7 +531,7 @@ namespace SitePack
                         + "&password=" + pass[index]
                         + "&captcha=&g_recaptcha_response=&post_key=" + post_key
                         + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
-                    data = Sweb.Post(loginpost, data, proxy, "UTF-8", shc);
+                    data = Sweb.Post(loginpost, data, proxy, shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (data.Contains("400"))

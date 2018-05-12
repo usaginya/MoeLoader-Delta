@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
 namespace MoeLoaderDelta
@@ -12,15 +13,16 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
+    /// Last change 180417
     /// </summary>
     public partial class ImgControl : UserControl
     {
+        private ImageSite site;
         private Img img;
         public Img Image
         {
             get { return img; }
         }
-        private string needReferer;
 
         private int index;
         private bool canRetry = false;
@@ -38,18 +40,17 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="img">图片</param>
         /// <param name="index">缩略图位置索引</param>
-        /// <param name="referer">需要的Referer</param>
-        /// <param name="supportScore">是否支持分数过滤(Not yet used)</param>
-        public ImgControl(Img img, int index, string referer, bool supportScore)
+        /// <param name="site">图片站点</param>
+        public ImgControl(Img img, int index, ImageSite site)
         {
             InitializeComponent();
-            needReferer = referer;
+            this.site = site;
             this.img = img;
             this.index = index;
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
-            shc.Referer = referer;
-            shc.Timeout = 10000;
+            shc.Referer = site.Referer;
+            shc.Timeout = 8000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
@@ -100,14 +101,12 @@ namespace MoeLoaderDelta
                 chk.Text = "信息未加载";
             }
             else
-            {
                 ShowImgDetail();
-            }
         }
 
         void ShowImgDetail()
         {
-            chk.Text = img.Dimension;
+            chk.Text = site.IsShowRes ? img.Dimension : img.Desc;
             string type = "N/A", aniformat = "gif webm mpeg  mpg mp4 avi";
 
             if (img.OriginalUrl.Length > 6)
@@ -119,6 +118,7 @@ namespace MoeLoaderDelta
                 //url不可能这么短
                 LayoutRoot.IsEnabled = false;
                 chk.Text = "原始地址无效";
+                preview_ImageFailed(null, null);
                 return;
             }
             score.Text = img.Score.ToString();
@@ -161,7 +161,7 @@ namespace MoeLoaderDelta
                 catch (Exception ex)
                 {
                     Program.Log(ex, "Start download preview failed");
-                    StopLoadImg();
+                    preview_ImageFailed(null, null);
                 }
             }
 
@@ -191,6 +191,7 @@ namespace MoeLoaderDelta
                         Program.Log(ex, "Download img detail failed");
                         Dispatcher.Invoke(new VoidDel(() =>
                         {
+                            preview_ImageFailed(null, null);
                             isRetrievingDetail = false;
                             canRetry = true;
                             chk.Text = "信息加载失败";
@@ -219,14 +220,14 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.OnDemand);
+                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
                     canRetry = false;
                 }));
             }
             catch (Exception ex)
             {
                 Program.Log(ex, "Download sample failed");
-                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { StopLoadImg(); }), "");
+                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { preview_ImageFailed(null, null); }), "");
             }
         }
 
@@ -294,10 +295,9 @@ namespace MoeLoaderDelta
                 req.Abort();
             preview.Source = new BitmapImage(new Uri("/Images/pic.png", UriKind.Relative));
 
-            //itmRetry.IsEnabled = true;
             canRetry = true;
-            //if (ImgLoaded != null)
-            //ImgLoaded(this, null);
+            Storyboard sb = FindResource("showFail") as Storyboard;
+            sb.Begin();
         }
 
         /// <summary>
@@ -315,9 +315,6 @@ namespace MoeLoaderDelta
         void preview_ImageFailed(object sender, ExceptionRoutedEventArgs e)
         {
             StopLoadImg();
-
-            //if (ImgLoaded != null)
-            //ImgLoaded(this, null);
         }
 
         /// <summary>
@@ -336,7 +333,7 @@ namespace MoeLoaderDelta
                 //{
                 //窗口有焦点才进行动画
                 preview.Stretch = Stretch.Uniform;
-                System.Windows.Media.Animation.Storyboard sb = FindResource("imgLoaded") as System.Windows.Media.Animation.Storyboard;
+                Storyboard sb = FindResource("imgLoaded") as Storyboard;
                 //sb.Completed += new EventHandler(delegate { preview.Stretch = Stretch.Uniform; });
                 sb.Begin();
 
@@ -374,7 +371,7 @@ namespace MoeLoaderDelta
         /// </summary>
         public void RetryLoad()
         {
-            if (canRetry)
+            if (canRetry || preview.Opacity < 1)
             {
                 //itmRetry.IsEnabled = false;
                 canRetry = false;
@@ -386,8 +383,12 @@ namespace MoeLoaderDelta
                 trans.ScaleX = 0.6;
                 trans.ScaleY = 0.6;
 
-                System.Windows.Media.Animation.Storyboard sb = FindResource("imgLoaded") as System.Windows.Media.Animation.Storyboard;
+                Storyboard sb = FindResource("imgLoaded") as Storyboard;
                 sb.Stop();
+                sb = FindResource("showFail") as Storyboard;
+                sb.Stop();
+                sb = FindResource("hideFail") as Storyboard;
+                sb.Begin();
 
                 DownloadImg();
             }

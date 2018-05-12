@@ -127,7 +127,7 @@ namespace SitePack
                 Width = width,
                 Height = height,
                 Tags = member + " | " + chara,
-                DetailUrl = detailUrl
+                DetailUrl = SiteUrl + detailUrl
             };
 
             return img;

@@ -97,8 +97,8 @@ namespace MoeLoaderDelta
         private int nowSelectedIndex = 0;
 
         internal List<Img> imgs;
-        private List<int> selected = new List<int>();
-
+        internal List<int> selected = new List<int>();
+        
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -748,10 +748,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(
-                        imgs[i], i,
-                        SiteManager.Instance.Sites[nowSelectedIndex].Referer,
-                        SiteManager.Instance.Sites[nowSelectedIndex].IsSupportScore);
+                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -830,6 +827,8 @@ namespace MoeLoaderDelta
             if (selected.Contains(id))
                 selected.Remove(id);
             else selected.Add(id);
+            if (previewFrm != null)
+                previewFrm.ChangePreBtnText();
 
             if (IsShiftDown())
             {
@@ -839,6 +838,8 @@ namespace MoeLoaderDelta
                     bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                     if (enabled && !selected.Contains(i))
                         selected.Add(i);
+                    if (previewFrm != null)
+                        previewFrm.ChangePreBtnText();
                 }
             }
 
@@ -1446,7 +1447,7 @@ namespace MoeLoaderDelta
 
             //排除不支持预览的格式
             string supportformat = "jpg jpeg png bmp gif";
-            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].SampleUrl.Substring(imgs[index].SampleUrl.LastIndexOf('.') + 1));
+            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1));
             if (!supportformat.Contains(ext))
             {
                 MessageBox.Show(this, "未支持" + ext + "格式的预览显示，请下载后使用其它程序方式打开文件预览",
@@ -1467,9 +1468,18 @@ namespace MoeLoaderDelta
 
         public void SelectByIndex(int index)
         {
-            (imgPanel.Children[index] as ImgControl).SetChecked(true);
-            if (!selected.Contains(index))
+            //判断是否选中
+            //(imgPanel.Children[index] as ImgControl).SetChecked(true);
+            if (selected.Contains(index))
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(false);
+                selected.Remove(index);
+            }
+            else
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(true);
                 selected.Add(index);
+            }
         }
 
         /// <summary>
@@ -1480,8 +1490,10 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-
+                
                 imgc.SetChecked(!selected.Contains(i));
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1496,6 +1508,8 @@ namespace MoeLoaderDelta
                 bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                 if (enabled && !selected.Contains(i))
                     selected.Add(i);
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1510,6 +1524,8 @@ namespace MoeLoaderDelta
                 ((ImgControl)imgPanel.Children[i]).SetChecked(false);
                 if (selected.Contains(i))
                     selected.Remove(i);
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(true);
         }
@@ -1901,10 +1917,10 @@ namespace MoeLoaderDelta
                         url = img.JpegUrl;
                         break;
                     case AddressType.Pre:
-                        url = img.SampleUrl;
+                        url = img.PreviewUrl;
                         break;
                     case AddressType.Small:
-                        url = img.PreviewUrl;
+                        url = img.SampleUrl;
                         break;
                 }
                 List<string> urls = new List<string>();
@@ -2278,11 +2294,11 @@ namespace MoeLoaderDelta
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-           /* OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
+            OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
             Storyboard std = Resources["ClosedStoryboard"] as Storyboard;
             std.Completed += delegate { Close(); };
-            std.Begin();*/
-            Close();
+            std.Begin();
+            //Close();
         }
 
         /// <summary>
@@ -2347,7 +2363,6 @@ namespace MoeLoaderDelta
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
         }
-
         /// <summary>
         /// 删除临时缓存目录
         /// </summary>
