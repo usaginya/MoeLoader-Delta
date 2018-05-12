@@ -11,7 +11,7 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 180326
+    /// Fixed 180421
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
@@ -38,13 +38,13 @@ namespace SitePack
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             // API
-            booru.siteUrl = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
+            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
             string pageString = booru.GetPageString(page, count, keyWord, proxy);
             if (GetAPImode(pageString)) return pageString;
 
             // Html
-            booru.siteUrl = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
-            booru.siteUrl = keyWord.Length < 1 ? booru.siteUrl.Substring(0, booru.siteUrl.Length - 6) : booru.siteUrl;
+            booru.Url = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
+            booru.Url = keyWord.Length < 1 ? booru.Url.Substring(0, booru.Url.Length - 6) : booru.Url;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
             return pageString;
         }
