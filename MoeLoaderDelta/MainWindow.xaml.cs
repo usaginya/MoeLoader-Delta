@@ -827,7 +827,8 @@ namespace MoeLoaderDelta
             if (selected.Contains(id))
                 selected.Remove(id);
             else selected.Add(id);
-            ChangePreBtnText();
+            if (previewFrm != null)
+                previewFrm.ChangePreBtnText();
 
             if (IsShiftDown())
             {
@@ -837,7 +838,8 @@ namespace MoeLoaderDelta
                     bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                     if (enabled && !selected.Contains(i))
                         selected.Add(i);
-                    ChangePreBtnText();
+                    if (previewFrm != null)
+                        previewFrm.ChangePreBtnText();
                 }
             }
 
@@ -1490,7 +1492,8 @@ namespace MoeLoaderDelta
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
                 
                 imgc.SetChecked(!selected.Contains(i));
-                ChangePreBtnText();
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1505,7 +1508,8 @@ namespace MoeLoaderDelta
                 bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                 if (enabled && !selected.Contains(i))
                     selected.Add(i);
-                ChangePreBtnText();
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1520,7 +1524,8 @@ namespace MoeLoaderDelta
                 ((ImgControl)imgPanel.Children[i]).SetChecked(false);
                 if (selected.Contains(i))
                     selected.Remove(i);
-                ChangePreBtnText();
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(true);
         }
@@ -2358,27 +2363,6 @@ namespace MoeLoaderDelta
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
         }
-        /// <summary>
-        /// 用于修改PreviewWnd中的按钮文本
-        /// </summary>
-        private void ChangePreBtnText()
-        {
-            //判断是否选中
-            if (previewFrm != null)
-            {
-                if (selected.Contains(previewFrm.oriIndex[previewFrm.selectedId]))
-                {
-                    previewFrm.btnClick.ToolTip = "关闭该预览图并取消选中该图";
-                    previewFrm.btnClickText.Text = "取消选中并关闭(_A)";
-                }
-                else
-                {
-                    previewFrm.btnClick.ToolTip = "关闭该预览图并选中该图";
-                    previewFrm.btnClickText.Text = "选中并关闭(_A)";
-                }
-            }
-        }
-
         /// <summary>
         /// 删除临时缓存目录
         /// </summary>

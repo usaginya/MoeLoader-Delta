@@ -724,7 +724,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 用于修改PreviewWnd中的按钮文本
         /// </summary>
-        private void ChangePreBtnText()
+        public void ChangePreBtnText()
         {
             //判断当前浏览的预览图是否选中
             if (mainW.selected.Contains(oriIndex[selectedId]))
