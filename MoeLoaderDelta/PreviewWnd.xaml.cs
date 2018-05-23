@@ -590,6 +590,25 @@ namespace MoeLoaderDelta
             catch (Exception) { }
         }
 
+        private void txtDesc_Click_copyid(object sender, RoutedEventArgs e)
+        {
+            //id
+            try
+            {
+                Clipboard.SetText(descs[selectedId].Id.ToSafeString());
+            }
+            catch { }
+        }
+
+        private void txtDesc_Click_copyAuthor(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(descs[selectedId].Author.ToSafeString());
+            }
+            catch { }
+        }
+
         #region 信息框鼠标悬浮样式处理
         private void Border_MouseEnter_1(object sender, MouseEventArgs e)
         {

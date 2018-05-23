@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
     Width="400"
-    Height="505"
+    Height="560"
     Icon="m.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
@@ -19,6 +19,7 @@
             <!--<RowDefinition Height="70"/>-->
             <RowDefinition Height="168" />
             <RowDefinition Height="120" />
+            <RowDefinition Height="60" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
 
@@ -151,37 +152,6 @@
                     TextDecorations="Underline" />
             </Grid>
         </GroupBox>
-        <GroupBox
-            Grid.Row="2"
-            Margin="5,2"
-            Header="代理设置">
-            <Grid>
-                <RadioButton
-                    x:Name="rtNoProxy"
-                    Margin="10,11,0,0"
-                    Checked="chkProxy_Click"
-                    Content="不使用代理"
-                    IsChecked="True" />
-                <RadioButton
-                    x:Name="rtSystem"
-                    Margin="10,39,0,0"
-                    Checked="chkProxy_Click"
-                    Content="使用IE代理" />
-                <RadioButton
-                    x:Name="rtCustom"
-                    Margin="10,67,0,0"
-                    Checked="chkProxy_Click"
-                    Content="自定义" />
-                <TextBox
-                    x:Name="txtProxy"
-                    Height="20"
-                    Margin="100,55,20,0"
-                    IsEnabled="False"
-                    Text="127.0.0.1:1080"
-                    TextWrapping="NoWrap" />
-            </Grid>
-        </GroupBox>
-
         <GroupBox
             Grid.Row="1"
             Margin="5,2"
@@ -336,6 +306,64 @@
                     ToolTip="插入 文件名裁剪符 格式" />
             </Grid>
         </GroupBox>
+        <GroupBox
+            Grid.Row="2"
+            Margin="5,2"
+            Header="代理设置">
+            <Grid>
+                <RadioButton
+                    x:Name="rtNoProxy"
+                    Margin="10,11,0,0"
+                    Checked="chkProxy_Click"
+                    Content="不使用代理"
+                    IsChecked="True" />
+                <RadioButton
+                    x:Name="rtSystem"
+                    Margin="10,39,0,0"
+                    Checked="chkProxy_Click"
+                    Content="使用IE代理" />
+                <RadioButton
+                    x:Name="rtCustom"
+                    Margin="10,67,0,0"
+                    Checked="chkProxy_Click"
+                    Content="自定义" />
+                <TextBox
+                    x:Name="txtProxy"
+                    Height="20"
+                    Margin="100,55,20,0"
+                    IsEnabled="False"
+                    Text="127.0.0.1:1080"
+                    TextWrapping="NoWrap" />
+            </Grid>
+        </GroupBox>
+        <GroupBox
+            Grid.Row="3"
+            Margin="5,2"
+            Header="登录设置">
+            <Grid>
+                <RadioButton
+                    x:Name="iniLogininside"
+                    Margin="7,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Content="使用内置账号登录"
+                    GroupName="iniLogin"
+                    IsChecked="True" />
+                <RadioButton
+                    x:Name="iniLoginIE"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="使用IE登录"
+                    GroupName="iniLogin" />
+                <RadioButton
+                    x:Name="iniLoginChrome"
+                    Margin="0,0,7,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Content="使用Chrome登录"
+                    GroupName="iniLogin" />
+            </Grid>
+        </GroupBox>
         <TextBlock
             x:Name="txtUrl"
             Margin="0,0,6,0"
@@ -348,30 +376,32 @@
             Text="关于 MoeLoader Δ"
             TextDecorations="Underline" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
-            Margin="0,0,96,6"
+            Margin="0,0,96,7"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Click="Button_Click"
             Content="确定"
             IsDefault="True" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
-            Margin="0,0,10,6"
+            Margin="0,0,10,7"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
+            HorizontalContentAlignment="Center"
+            VerticalContentAlignment="Center"
             Click="Button1_Click"
             Content="取消"
             IsCancel="True" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
-            Margin="10,0,0,6"
+            Margin="10,0,0,7"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Click="Button2_Click"

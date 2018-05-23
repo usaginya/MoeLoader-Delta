@@ -21,6 +21,7 @@ namespace MoeLoaderDelta
     public delegate void VoidDel();
 
     internal enum ProxyType { System, Custom, None }
+    internal enum LoginType { Byo, IE, Chrome }
 
     internal class SessionState
     {
@@ -65,7 +66,7 @@ namespace MoeLoaderDelta
         }
 
 
-        private const string IMGLOADING = "图片加载中...";
+        private const string IMGLOADING = "少女祈禱中...";
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
@@ -130,7 +131,6 @@ namespace MoeLoaderDelta
         internal Stretch bgSt = Stretch.None;
         internal AlignmentX bgHe = AlignmentX.Right;
         internal AlignmentY bgVe = AlignmentY.Bottom;
-        //private bool isStyleNone = true;
 
         [DllImport("user32")]
         private static extern int RegisterHotKey(IntPtr hwnd, int id, int fsModifiers, System.Windows.Forms.Keys vk);
@@ -153,18 +153,16 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 代理设置，eg. 127.0.0.1:1080
         /// </summary>
-        internal static string Proxy
-        {
-            set;
-            get;
-        }
+        internal static string Proxy { set; get; }
+        internal static ProxyType ProxyType { get; set; }
+        /// <summary>
+        /// 登录方式
+        /// </summary>
+        internal static LoginType LoginType { get; set; }
 
-        internal static ProxyType ProxyType
-        {
-            get;
-            set;
-        }
-
+        /// <summary>
+        /// /////////////////////// 主构建方法 ////////////////////////////
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -177,11 +175,8 @@ namespace MoeLoaderDelta
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
 
-            //SessionClient.ReadCookiesFromFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
 
-            //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
-            //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
-            /////////////////////////////////////// init image site list //////////////////////////////////
+            //---------------------- init image site list -----------------------
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             List<MenuItem> tempSites = new List<MenuItem>();
             List<ImageSite> tmpISites = SiteManager.Instance.Sites;
@@ -201,11 +196,7 @@ namespace MoeLoaderDelta
 
                     menuItem = new MenuItem()
                     {
-                        Header = (
-                        space > 0
-                        ? site.SiteName.Substring(0, space)
-                        : site.SiteName
-                        )
+                        Header = (space > 0 ? site.SiteName.Substring(0, space) : site.SiteName)
                     };
 
                     menuItem.Style = (Style)Resources["SimpleMenuItem"];
@@ -259,6 +250,9 @@ namespace MoeLoaderDelta
             ProxyType = ProxyType.System;
             bossKey = System.Windows.Forms.Keys.F9;
 
+            LoginType = LoginType.Byo;
+            //ChangeitmLoginTitle(LoginStatus.No);
+
             LoadConfig();
             //itmxExplicit.IsChecked = !showExplicit;
 
@@ -278,33 +272,76 @@ namespace MoeLoaderDelta
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount)
+
+            stackPanel1.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount;
+            itmMaskScore.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportScore;
+            itmMaskRes.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportRes;
+
+            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportLogin)
             {
-                stackPanel1.IsEnabled = true;
+                itmLoginSite.Visibility = Visibility.Visible;
+                itmLoginSite.IsEnabled = true;
+                //ChangeitmLoginTitle(SiteManager.Instance.Sites[comboBoxIndex].loginInfo.loginStatus);
             }
             else
             {
-                stackPanel1.IsEnabled = false;
+                itmLoginSite.Visibility = Visibility.Collapsed;
+                itmLoginSite.IsEnabled = false;
             }
 
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportScore)
-            {
-                itmMaskScore.IsEnabled = true;
-            }
-            else
-            {
-                itmMaskScore.IsEnabled = false;
-            }
-
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportRes)
-            {
-                itmMaskRes.IsEnabled = true;
-            }
-            else
-            {
-                itmMaskRes.IsEnabled = false;
-            }
         }
+
+        /// <summary>
+        /// 切换登录菜单标题
+        /// </summary>
+        //public static void ChangeitmLoginTitle(LoginStatus lstatus)
+        //{
+        //    ChangeitmLoginTitle(lstatus, "");
+        //}
+        //public static void ChangeitmLoginTitle(LoginStatus lstatus, string user)
+        //{
+        //    new MainWindow().ChangeitmLoginTitle_(lstatus, user);
+        //}
+        //private static void ChangeitmLoginTitle_(LoginStatus lstatus, string user)
+        //{
+        //    switch (lstatus)
+        //    {
+        //        case LoginStatus.Yes:
+        //            switch (LoginType)
+        //            {
+        //                case LoginType.IE:
+        //                    itmLoginSite.Header = "已登录站点 [IE](_L)"; break;
+        //                case LoginType.Chrome:
+        //                    itmLoginSite.Header = "已登录站点 [Chrome](_L)"; break;
+        //                default:
+        //                    itmLoginSite.Header = user + "已登录站点 [内置](_L)"; break;
+        //            }
+        //            break;
+        //        case LoginStatus.Err:
+        //            switch (LoginType)
+        //            {
+        //                case LoginType.IE:
+        //                    itmLoginSite.Header = "重新登录站点 [IE](_L)"; break;
+        //                case LoginType.Chrome:
+        //                    itmLoginSite.Header = "重新登录站点 [Chrome](_L)"; break;
+        //                default:
+        //                    itmLoginSite.Header = "重新登录站点 [内置](_L)"; break;
+        //            }
+        //            break;
+        //        default:
+        //            switch (LoginType)
+        //            {
+        //                case LoginType.IE:
+        //                    itmLoginSite.Header = "登录站点 [IE](_L)"; break;
+        //                case LoginType.Chrome:
+        //                    itmLoginSite.Header = "登录站点 [Chrome](_L)"; break;
+        //                default:
+        //                    itmLoginSite.Header = "自动登录站点 [内置](_L)"; break;
+        //            }
+        //            break;
+        //    }
+        //}
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -536,6 +573,10 @@ namespace MoeLoaderDelta
                         {
                             bgOp = double.Parse(parts[19]);
                         }
+                        if (parts.Length > 20)
+                        {
+                            LoginType = (LoginType)Enum.Parse(typeof(LoginType), parts[20]);
+                        }
                     }
                     //else itmJpg.IsChecked = lines[2].Trim().Equals("1");
                     else addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
@@ -748,7 +789,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
+                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -1647,6 +1688,25 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 登录站点
+        /// </summary>
+        private void itmLoginSite_Click(object sender, RoutedEventArgs e)
+        {
+            switch (LoginType)
+            {
+                case LoginType.Chrome:
+
+                    break;
+                case LoginType.IE:
+
+                    break;
+                default:
+
+                    break;
+            }
+        }
+
+        /// <summary>
         /// 生成选中图片的下载列表Lst文件
         /// </summary>
         private void itmLst_Click(object sender, RoutedEventArgs e)
@@ -2378,7 +2438,8 @@ namespace MoeLoaderDelta
 
                     string text = downloadC.NumOnce + "\r\n"
                         + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-                        ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
+                        ? "." : DownloadControl.SaveLocation) + "\r\n"
+                        + addressType + ";"
                         + (downloadC.IsSaSave ? "1" : "0") + ";"
                         + numOfLoading + ";"
                         + (itmMaskViewed.IsChecked ? "1" : "0") + ";"
@@ -2397,7 +2458,8 @@ namespace MoeLoaderDelta
                         + bgSt + ";"
                         + bgHe + ";"
                         + bgVe + ";"
-                        + bgOp + "\r\n";
+                        + bgOp + ";"
+                        + LoginType + "\r\n";
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
                         text += id.Key + ":" + id.Value + "\r\n";
@@ -2444,6 +2506,7 @@ namespace MoeLoaderDelta
                 newThread.Start();
             }
         }
+
         /// <summary>
         /// 线程延迟执行翻页
         /// </summary>

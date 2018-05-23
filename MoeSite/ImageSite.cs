@@ -18,7 +18,18 @@ namespace MoeLoaderDelta
     }
 
     /// <summary>
+    /// 登录信息
+    /// </summary>
+    public enum LoginStatus { No, Yes, Err }
+    public struct LoginInfo
+    {
+        public LoginStatus loginStatus;
+        public string loginUser;
+    }
+
+    /// <summary>
     /// 图片站点的接口
+    /// Last 20180424
     /// </summary>
     public interface ImageSite
     {
@@ -90,6 +101,16 @@ namespace MoeLoaderDelta
         bool IsSupportTag { get; }
 
         /// <summary>
+        /// 是否支持登录
+        /// </summary>
+        bool IsSupportLogin { get; }
+
+        /// <summary>
+        /// 站点登录信息
+        /// </summary>
+        LoginInfo loginInfo { get; }
+
+        /// <summary>
         /// 大缩略图尺寸
         /// </summary>
         System.Drawing.Point LargeImgSize { get; }
@@ -110,6 +131,11 @@ namespace MoeLoaderDelta
         /// 站点列表中显示的图标
         /// </summary>
         System.IO.Stream IconStream { get; }
+
+        /// <summary>
+        /// 登录图站站点
+        /// </summary>
+        void Login();
 
         /// <summary>
         /// 获取图片列表

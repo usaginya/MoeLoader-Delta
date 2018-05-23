@@ -464,6 +464,15 @@ namespace MoeLoaderDelta
             catch { }
         }
 
+        private void txtDesc_Click_copyAuthor(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(img.Author.ToSafeString());
+            }
+            catch { }
+        }
+
         private void txtDetail_Click(object sender, RoutedEventArgs e)
         {
             try

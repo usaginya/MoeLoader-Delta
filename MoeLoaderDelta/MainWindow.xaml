@@ -1119,6 +1119,12 @@
                                                 x:Name="itmOpenSite"
                                                 Click="itmOpenSite_Click"
                                                 Header="访问站点主页(_W)" />
+                                            <MenuItem
+                                                x:Name="itmLoginSite"
+                                                Click="itmLoginSite_Click"
+                                                Header="{Binding }"
+                                                IsEnabled="False"
+                                                Visibility="Collapsed" />
                                         </ContextMenu>
                                     </ScrollViewer.ContextMenu>
                                     <WrapPanel x:Name="imgPanel" Margin="20,0,45,0" />

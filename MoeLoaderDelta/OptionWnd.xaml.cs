@@ -25,65 +25,54 @@ namespace MoeLoaderDelta
             }
 
             txtProxy.Text = MainWindow.Proxy;
-
             rtNoProxy.IsChecked = true;
             if (MainWindow.ProxyType == ProxyType.System)
-            {
                 rtSystem.IsChecked = true;
-            }
             else if (MainWindow.ProxyType == ProxyType.Custom)
             {
                 rtCustom.IsChecked = true;
                 txtProxy.IsEnabled = true;
             }
+
             txtBossKey.Text = MainWindow.BossKey.ToString();
             txtPattern.Text = main.namePatter;
             chkProxy_Click(null, null);
-            //chkAero.IsChecked = main.isAero;
             txtCount.Text = PreFetcher.CachedImgCount.ToString();
             txtParal.Text = main.downloadC.NumOnce.ToString();
             chkSepSave.IsChecked = chkSaSave.IsEnabled = main.downloadC.IsSepSave;
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
 
+            switch(MainWindow.LoginType)
+            {
+                case LoginType.Chrome:
+                    iniLoginChrome.IsChecked = true; break;
+                case LoginType.IE:
+                    iniLoginIE.IsChecked = true; break;
+                default:
+                    iniLogininside.IsChecked = true; break;
+            }
+
             if (main.bgSt == Stretch.None)
-            {
                 cbBgSt.SelectedIndex = 0;
-            }
             else if (main.bgSt == Stretch.Uniform)
-            {
                 cbBgSt.SelectedIndex = 1;
-            }
             else if (main.bgSt == Stretch.UniformToFill)
-            {
                 cbBgSt.SelectedIndex = 2;
-            }
-
+            
             if (main.bgHe == AlignmentX.Left)
-            {
                 cbBgHe.SelectedIndex = 0;
-            }
             else if (main.bgHe == AlignmentX.Center)
-            {
                 cbBgHe.SelectedIndex = 1;
-            }
             else if (main.bgHe == AlignmentX.Right)
-            {
                 cbBgHe.SelectedIndex = 2;
-            }
-
+            
             if (main.bgVe == AlignmentY.Top)
-            {
                 cbBgVe.SelectedIndex = 0;
-            }
             else if (main.bgVe == AlignmentY.Center)
-            {
                 cbBgVe.SelectedIndex = 1;
-            }
             else if (main.bgVe == AlignmentY.Bottom)
-            {
                 cbBgVe.SelectedIndex = 2;
-            }
 
             textNameHelp.ToolTip = "【以下必须是小写英文】\r\n%site 站点名\r\n%id 编号\r\n%tag 标签\r\n%desc 描述\r\n"
                 + "%author 作者名\r\n%date 上载时间\r\n%imgp[3] 图册页数[页数总长度(补0)]\r\n\r\n"
@@ -124,6 +113,7 @@ namespace MoeLoaderDelta
                     return;
                 }
             }
+
             if (txtProxy.Text.Trim().Length > 0)
             {
                 string add = txtProxy.Text.Trim();
@@ -151,59 +141,45 @@ namespace MoeLoaderDelta
             else MainWindow.Proxy = "";
 
             if (rtNoProxy.IsChecked.Value)
-            {
                 MainWindow.ProxyType = ProxyType.None;
-            }
             else if (rtSystem.IsChecked.Value)
-            {
                 MainWindow.ProxyType = ProxyType.System;
-            }
             else
-            {
                 MainWindow.ProxyType = ProxyType.Custom;
-            }
+
+            if (iniLoginChrome.IsChecked.Value)
+                MainWindow.LoginType = LoginType.Chrome;
+            else if (iniLoginIE.IsChecked.Value)
+                MainWindow.LoginType = LoginType.IE;
+            else
+                MainWindow.LoginType = LoginType.Byo;
+
+            //MainWindow.ChangeitmLoginTitle(SiteManager.Instance.Sites[MainWindow.comboBoxIndex].loginInfo.loginStatus);
 
             MainWindow.BossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), txtBossKey.Text);
             main.namePatter = txtPattern.Text.Replace(";", "；").Trim();
 
             if (cbBgSt.SelectedIndex == 0)
-            {
                 main.bgSt = Stretch.None;
-            }
             else if (cbBgSt.SelectedIndex == 1)
-            {
                 main.bgSt = Stretch.Uniform;
-            }
             else if (cbBgSt.SelectedIndex == 2)
-            {
                 main.bgSt = Stretch.UniformToFill;
-            }
 
             if (cbBgHe.SelectedIndex == 0)
-            {
                 main.bgHe = AlignmentX.Left;
-            }
             else if (cbBgHe.SelectedIndex == 1)
-            {
                 main.bgHe = AlignmentX.Center;
-            }
             else if (cbBgHe.SelectedIndex == 2)
-            {
                 main.bgHe = AlignmentX.Right;
-            }
 
             if (cbBgVe.SelectedIndex == 0)
-            {
                 main.bgVe = AlignmentY.Top;
-            }
             else if (cbBgVe.SelectedIndex == 1)
-            {
                 main.bgVe = AlignmentY.Center;
-            }
             else if (cbBgVe.SelectedIndex == 2)
-            {
                 main.bgVe = AlignmentY.Bottom;
-            }
+
             if (main.bgImg != null)
             {
                 main.bgImg.Stretch = main.bgSt;
@@ -232,7 +208,7 @@ namespace MoeLoaderDelta
             txtProxy.Text = "127.0.0.1:1080";
             txtPattern.Text = MainWindow.DefaultPatter;
             txtBossKey.Text = System.Windows.Forms.Keys.F9.ToString();
-            rtNoProxy.IsChecked = true;
+            rtNoProxy.IsChecked = iniLogininside.IsChecked = true;
             txtCount.Text = "6";
             chkProxy_Click(null, null);
             txtParal.Text = "2";

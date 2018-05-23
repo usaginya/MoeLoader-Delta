@@ -4,6 +4,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 抽象图片站点
+    /// Last 20180425
     /// </summary>
     public abstract class AbstractImageSite : ImageSite
     {
@@ -77,6 +78,16 @@ namespace MoeLoaderDelta
         public virtual bool IsSupportTag { get { return true; } }
 
         /// <summary>
+        /// 是否支持登录
+        /// </summary>
+        public virtual bool IsSupportLogin { get { return false; } }
+
+        /// <summary>
+        /// 站点登录信息
+        /// </summary>
+        public virtual LoginInfo loginInfo { get { return new LoginInfo(); } }
+
+        /// <summary>
         /// 鼠标悬停在站点列表项上时显示的工具提示信息
         /// </summary>
         public virtual string ToolTip { get { return null; } }
@@ -96,6 +107,11 @@ namespace MoeLoaderDelta
         /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
         /// </summary>
         public virtual System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(PICWIDTH, PICWIDTH); } }
+
+        /// <summary>
+        /// 登录图站站点
+        /// </summary>
+        public virtual void Login() { }
 
         /// <summary>
         /// 获取页面的源代码，例如HTML

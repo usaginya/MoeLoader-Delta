@@ -12,7 +12,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180417
+    /// Last change 180424
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -86,8 +86,9 @@ namespace SitePack
         //public override bool IsSupportScore { get { return false; } }
         public override bool IsSupportRes { get { return false; } }
         //public override bool IsSupportPreview { get { return true; } }
-        //public override bool IsSupportTag { get { if (srcType == PixivSrcType.Author) return true; else return false; } }
+        public override bool IsSupportLogin { get { return true; } }
         public override bool IsSupportTag { get { return true; } }
+        public override LoginInfo loginInfo { get { return logini; } }
 
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
@@ -101,6 +102,7 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
+        private LoginInfo logini = new LoginInfo();
 
         /// <summary>
         /// pixiv.net site
@@ -108,7 +110,8 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType)
         {
             this.srcType = srcType;
-            CookieRestore();
+            logini.loginStatus = LoginStatus.No;
+            logini.loginUser = "";
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -498,6 +501,8 @@ namespace SitePack
 
         private void Login(IWebProxy proxy)
         {
+            CookieRestore();
+
             if (!cookie.Contains("pixiv") && !cookie.Contains("token="))
             {
                 try
@@ -535,16 +540,31 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (data.Contains("400"))
+                    {
+                        logini.loginStatus = LoginStatus.Err;
                         throw new Exception(data);
+                    }
                     else if (cookie.Length < 9)
+                    {
+                        logini.loginStatus = LoginStatus.Err;
                         throw new Exception("自动登录失败 ");
+                    }
                     else
+                    {
                         cookie = "pixiv;" + cookie;
+                        logini.loginStatus = LoginStatus.Yes;
+                        logini.loginUser = user[index];
+                    }
                 }
                 catch (Exception e)
                 {
+                    logini.loginStatus = LoginStatus.Err;
                     throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
                 }
+            }
+            else
+            {
+                logini.loginStatus = LoginStatus.Yes;
             }
         }
 

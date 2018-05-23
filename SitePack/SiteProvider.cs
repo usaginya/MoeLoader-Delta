@@ -85,9 +85,9 @@ namespace SitePack
             {
                 sites.Add(new SiteLargeBooru(
                     "https://lolibooru.moe",
-                    "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
+                    "https://lolibooru.moe/post.json?page={0}&limit={1}&tags={2}", //XML
                     "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
-                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.JSONNV));
 
                 sites.Add(new SiteBooru(
                     "https://atfbooru.ninja",
