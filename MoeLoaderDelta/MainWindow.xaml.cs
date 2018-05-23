@@ -97,8 +97,8 @@ namespace MoeLoaderDelta
         private int nowSelectedIndex = 0;
 
         internal List<Img> imgs;
-        private List<int> selected = new List<int>();
-
+        internal List<int> selected = new List<int>();
+        
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -827,6 +827,8 @@ namespace MoeLoaderDelta
             if (selected.Contains(id))
                 selected.Remove(id);
             else selected.Add(id);
+            if (previewFrm != null)
+                previewFrm.ChangePreBtnText();
 
             if (IsShiftDown())
             {
@@ -836,6 +838,8 @@ namespace MoeLoaderDelta
                     bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                     if (enabled && !selected.Contains(i))
                         selected.Add(i);
+                    if (previewFrm != null)
+                        previewFrm.ChangePreBtnText();
                 }
             }
 
@@ -1462,11 +1466,24 @@ namespace MoeLoaderDelta
             //System.Media.SystemSounds.Exclamation.Play();
         }
 
+        /// <summary>
+        /// excuse me?
+        /// </summary>
+        /// <param name="index"></param>
         public void SelectByIndex(int index)
         {
-            (imgPanel.Children[index] as ImgControl).SetChecked(true);
-            if (!selected.Contains(index))
+            //判断是否选中
+            //(imgPanel.Children[index] as ImgControl).SetChecked(true);
+            if (selected.Contains(index))
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(false);
+                selected.Remove(index);
+            }
+            else
+            {
+                (imgPanel.Children[index] as ImgControl).SetChecked(true);
                 selected.Add(index);
+            }
         }
 
         /// <summary>
@@ -1477,8 +1494,10 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-
+                
                 imgc.SetChecked(!selected.Contains(i));
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1493,6 +1512,8 @@ namespace MoeLoaderDelta
                 bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                 if (enabled && !selected.Contains(i))
                     selected.Add(i);
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(selected.Count < 1);
         }
@@ -1507,6 +1528,8 @@ namespace MoeLoaderDelta
                 ((ImgControl)imgPanel.Children[i]).SetChecked(false);
                 if (selected.Contains(i))
                     selected.Remove(i);
+                if (previewFrm != null)
+                    previewFrm.ChangePreBtnText();
             }
             ShowOrHideFuncBtn(true);
         }
@@ -2344,7 +2367,6 @@ namespace MoeLoaderDelta
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
         }
-
         /// <summary>
         /// 删除临时缓存目录
         /// </summary>
