@@ -1466,6 +1466,10 @@ namespace MoeLoaderDelta
             //System.Media.SystemSounds.Exclamation.Play();
         }
 
+        /// <summary>
+        /// excuse me?
+        /// </summary>
+        /// <param name="index"></param>
         public void SelectByIndex(int index)
         {
             //判断是否选中
