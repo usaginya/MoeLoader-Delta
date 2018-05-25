@@ -162,6 +162,7 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+            Sweb.GetURLCookies(cookie);
             string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
@@ -278,6 +279,7 @@ namespace SitePack
                         }
                         //details will be extracted from here
                         //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
+                        //sampleUrl 正则 @"https://i\.pximg\..+?(?=")"
                         string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
                         string sampleUrl = "";
                         sampleUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
