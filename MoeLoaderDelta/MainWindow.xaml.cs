@@ -1476,13 +1476,12 @@ namespace MoeLoaderDelta
             //(imgPanel.Children[index] as ImgControl).SetChecked(true);
             if (selected.Contains(index))
             {
+                //下面会添加或删除index
                 (imgPanel.Children[index] as ImgControl).SetChecked(false);
-                selected.Remove(index);
             }
             else
             {
                 (imgPanel.Children[index] as ImgControl).SetChecked(true);
-                selected.Add(index);
             }
         }
 
