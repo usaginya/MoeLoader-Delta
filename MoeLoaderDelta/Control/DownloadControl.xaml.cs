@@ -656,7 +656,62 @@ namespace MoeLoaderDelta
                 MessageBox.Show("保存失败:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        /// <summary>
+        /// 导出图片lst，itmLstPic_Click
+        /// </summary>
+        private void itmLstPic_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Windows.Forms.SaveFileDialog saveFileDialog1 = new System.Windows.Forms.SaveFileDialog()
+                {
+                    DefaultExt = "lst",
+                    FileName = "MoeLoaderPicList.lst",
+                    Filter = "lst文件|*.lst",
+                    OverwritePrompt = false
+                };
+                if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string text = "";
+                    int success = 0, repeat = 0;
+                    //读存在的lst内容
+                    string[] flst = null;
+                    bool havelst = File.Exists(saveFileDialog1.FileName);
+                    bool isexists = false;
 
+                    if (havelst)
+                    {
+                        flst = File.ReadAllLines(saveFileDialog1.FileName);
+                    }
+
+                    foreach (DownloadItem i in dlList.SelectedItems)
+                    {
+                        //查找重复项
+                        try
+                        {
+                            isexists = havelst && flst.Any(x => x== i.Url);
+                        }
+                        catch { }
+
+                        if (!isexists)
+                        {
+                            //url
+                            text += i.Url+ "\r\n";
+                            success++;
+                        }
+                        else
+                            repeat++;
+                    }
+                    File.AppendAllText(saveFileDialog1.FileName, text);
+                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个图片地址已在列表中\r\n", MainWindow.ProgramName,
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("保存失败:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         /// <summary>
         /// 复制地址
         /// </summary>
@@ -1000,6 +1055,7 @@ namespace MoeLoaderDelta
                     itmRetry.IsEnabled =
                     itmStop.IsEnabled =
                     itmDelete.IsEnabled =
+                    itmLstPic.IsEnabled=
                     itmDeleteFile.IsEnabled = false;
             }
             else
@@ -1009,6 +1065,7 @@ namespace MoeLoaderDelta
                     itmRetry.IsEnabled =
                     itmStop.IsEnabled =
                     itmDelete.IsEnabled =
+                    itmLstPic.IsEnabled =
                     itmDeleteFile.IsEnabled = true;
             }
 
@@ -1138,30 +1195,6 @@ namespace MoeLoaderDelta
             catch {
                 System.Diagnostics.Process.Start(saveLocation);
             }
-        }
-
-        /// <summary>
-        /// 双击打开文件
-        /// </summary>
-        private void grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                if (e.ClickCount == 2)
-                {
-                    DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
-                    if (dlItem.StatusE == DLStatus.Success)
-                    {
-                        if (!File.Exists(dlItem.LocalName))
-                        {
-                            MessageBox.Show("无法打开文件！ 可能已被更名、删除或移动。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
-                        }
-                        System.Diagnostics.Process.Start(dlItem.LocalName);
-                    }
-                }
-            }
-            catch { }
         }
 
         /// <summary>
@@ -1316,8 +1349,21 @@ namespace MoeLoaderDelta
                 {
                     case DLStatus.Success:
                     case DLStatus.IsHave:
-                        if (File.Exists(dcitem.LocalName))
-                            System.Diagnostics.Process.Start(dcitem.LocalName);
+                        //当文件成功下载后，双击打开文件
+                        try
+                        {
+                            DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
+                            if (dlItem.StatusE == DLStatus.Success)
+                            {
+                                if (!File.Exists(dlItem.LocalName))
+                                {
+                                    MessageBox.Show("无法打开文件！ 可能已被更名、删除或移动。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                                    return;
+                                }
+                                System.Diagnostics.Process.Start(dlItem.LocalName);
+                            }
+                        }
+                        catch{ }
                         break;
                     case DLStatus.Cancel:
                     case DLStatus.Failed:
@@ -1352,6 +1398,11 @@ namespace MoeLoaderDelta
                     else if (e.Key == Key.C && dlselect == 1)
                     {   //复制地址
                         itmCopy_Click(null, null);
+                    }
+                    else if(e.Key==Key.Z)
+                    {
+                        //导出图片下载链接列表
+                        itmLstPic_Click(null, null);
                     }
                     else if (e.Key == Key.R)
                     {    //重试
