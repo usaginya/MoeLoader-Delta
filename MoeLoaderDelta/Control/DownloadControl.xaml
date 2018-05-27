@@ -43,7 +43,6 @@
                             x:Name="grid"
                             Margin="3,3,3,3"
                             Background="{x:Null}"
-                            MouseLeftButtonDown="grid_MouseLeftButtonDown"
                             ToolTip="{Binding LocalName}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="70" />
@@ -160,6 +159,11 @@
                         Click="itmLst_Click"
                         Header="导出下载列表(_L)"
                         IsEnabled="False" />
+                    <MenuItem 
+                        x:Name="itmLstPic"
+                        Click="itmLstPic_Click"
+                        Header="导出图片下载链接列表(_Z)"
+                        IsEnabled="False"/>
                     <MenuItem
                         x:Name="itmCopy"
                         Click="itmCopy_Click"

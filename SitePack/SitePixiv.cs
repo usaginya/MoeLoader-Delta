@@ -162,7 +162,6 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            Sweb.GetURLCookies(cookie);
             string pageString = Sweb.Get(url, proxy, shc);
 
             return pageString;
