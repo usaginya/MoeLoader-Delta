@@ -7,12 +7,13 @@ using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180417
+    /// Last change 180527
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -93,8 +94,8 @@ namespace SitePack
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
 
         private static string cookie = "";
-        private string[] user = { "moe1user", "moe3user", "a-rin-a" };
-        private string[] pass = { "630489372", "1515817701", "2422093014" };
+        private string[] user = { "a-rin-a" }; //{ "moe1user", "moe3user", "a-rin-a" };
+        private string[] pass = { "2422093014" };//{ "630489372", "1515817701", "2422093014" };
         private static string tempPage = null;
         private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
@@ -105,17 +106,18 @@ namespace SitePack
         /// <summary>
         /// pixiv.net site
         /// </summary>
-        public SitePixiv(PixivSrcType srcType)
+        public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
             this.srcType = srcType;
             CookieRestore();
+            Login(proxy);
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
+            Login(proxy);
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             string url = null;
-            Login(proxy);
             if (srcType == PixivSrcType.Pid)
             {
                 if (keyWord.Length > 0 && Regex.Match(keyWord, @"^[0-9]+$").Success)
@@ -196,17 +198,39 @@ namespace SitePack
                     if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
                         tempPage = pageString;
-                        string previewUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
-                        string id = previewUrl.Substring(previewUrl.LastIndexOf("/") + 1, previewUrl.IndexOf("_") - previewUrl.LastIndexOf("/") - 1);
-                        string detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
-
                         int mangaCount = 1;
-                        string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
-                        if (dimension.EndsWith("P"))
-                            mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
+                        string id, SampleUrl;
+                        id = SampleUrl = string.Empty;
+
+                        if (!pageString.Contains("globalInitData"))
+                        {
+                            //----- 旧版 -----
+                            SampleUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
+                            id = SampleUrl.Substring(SampleUrl.LastIndexOf("/") + 1, SampleUrl.IndexOf("_") - SampleUrl.LastIndexOf("/") - 1);
+
+                            string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
+                            if (dimension.EndsWith("P"))
+                                mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
+                        }
+                        else
+                        {
+                            //----- 新版 -----
+                            Match strRex = Regex.Match(pageString, @"(?<=(?:,illust\:.{.))\d+(?=(?:\:.))");
+                            id = strRex.Value;
+
+                            strRex = Regex.Match(pageString, @"(?<=(?:" + id + ":.)).*?(?=(?:.},user))");
+
+                            JObject jobj = JObject.Parse(strRex.Value);
+                            try { mangaCount = int.Parse(jobj["pageCount"].ToSafeString()); } catch { }
+
+                            jobj = JObject.Parse(jobj["urls"].ToSafeString());
+                            SampleUrl = jobj["thumb"].ToSafeString();
+                        }
+
+                        string detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                         for (int i = 0; i < mangaCount; i++)
                         {
-                            Img img = GenerateImg(detailUrl, previewUrl.Replace("_p0_", "_p" + i.ToString() + "_"), id);
+                            Img img = GenerateImg(detailUrl, SampleUrl.Replace("_p0_", "_p" + i.ToString() + "_"), id);
                             StringBuilder sb = new StringBuilder();
                             sb.Append("P");
                             sb.Append(i.ToString());
@@ -313,16 +337,13 @@ namespace SitePack
 
             if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
-
-                Login(proxy);
                 Dictionary<string, object> tags = new Dictionary<string, object>();
                 Dictionary<string, object> tag = new Dictionary<string, object>();
 
                 string url = string.Format(SiteUrl + "/rpc/cps.php?keyword={0}", word);
 
                 shc.Referer = referer;
-                shc.ContentType = SessionHeadersValue.AcceptAppJson;
-                shc.Add("X-Requested-With", "XMLHttpRequest");
+                //shc.ContentType = SessionHeadersValue.AcceptAppJson;
                 shc.Remove("Accept-Ranges");
                 string json = Sweb.Get(url, proxy, shc);
 
@@ -384,7 +405,9 @@ namespace SitePack
 
             img.DownloadDetail = new DetailHandler((i, p) =>
             {
-                string page = null;
+                int pageCount = 1;
+                string page, dimension;
+                page = dimension = string.Empty;
                 if (srcType == PixivSrcType.Pid)
                     page = tempPage;
                 //retrieve details
@@ -396,10 +419,7 @@ namespace SitePack
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
 
-                //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫画 6P｜SAI
-                i.Date = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[1]").InnerText;
-                //总点数
-                i.Score = int.Parse(doc.DocumentNode.SelectSingleNode("//dd[@class='rated-count']").InnerText);
+                //=================================================
                 //「カルタ＆わたぬき」/「えれっと」のイラスト [pixiv]
                 //标题中取名字和作者
                 try
@@ -412,40 +432,83 @@ namespace SitePack
                     i.Author = mc[0].Groups["Author"].Value;
                 }
                 catch { }
-                //URLS
-                //http://i2.pixiv.net/c/600x600/img-master/img/2014/10/08/06/13/30/46422743_p0_master1200.jpg
-                //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
-                Regex rx = new Regex(@"/\d+x\d+/");
-                i.PreviewUrl = rx.Replace(i.SampleUrl, "/1200x1200/");
-                i.JpegUrl = i.PreviewUrl;
-                try
+                //------------------------
+                if (!page.Contains("globalInitData"))
                 {
-                    i.OriginalUrl = doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[2]/div").SelectSingleNode(".//img").Attributes["data-src"].Value;
-                }
-                catch { }
-                i.OriginalUrl = string.IsNullOrWhiteSpace(i.OriginalUrl) ? i.JpegUrl : i.OriginalUrl;
+                    //++++旧版详情页+++++
+                    //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫画 6P｜SAI
+                    i.Date = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[1]").InnerText;
+                    //总点数
+                    i.Score = int.Parse(doc.DocumentNode.SelectSingleNode("//dd[@class='rated-count']").InnerText);
 
-                //600×800 or 漫画 6P
-                string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
-                try
-                {
-                    //706×1000
-                    i.Width = int.Parse(dimension.Substring(0, dimension.IndexOf('×')));
-                    i.Height = int.Parse(Regex.Match(dimension.Substring(dimension.IndexOf('×') + 1), @"\d+").Value);
+                    //URLS
+                    //http://i2.pixiv.net/c/600x600/img-master/img/2014/10/08/06/13/30/46422743_p0_master1200.jpg
+                    //http://i2.pixiv.net/img-original/img/2014/10/08/06/13/30/46422743_p0.png
+                    Regex rx = new Regex(@"/\d+x\d+/");
+                    i.PreviewUrl = rx.Replace(i.SampleUrl, "/1200x1200/");
+                    i.JpegUrl = i.PreviewUrl;
+                    try
+                    {
+                        i.OriginalUrl = doc.DocumentNode.SelectSingleNode("//*[@id='wrapper']/div[2]/div").SelectSingleNode(".//img").Attributes["data-src"].Value;
+                    }
+                    catch { }
+                    i.OriginalUrl = string.IsNullOrWhiteSpace(i.OriginalUrl) ? i.JpegUrl : i.OriginalUrl;
+
+                    //600×800 or 漫画 6P
+                    dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
+                    try
+                    {
+                        //706×1000
+                        i.Width = int.Parse(dimension.Substring(0, dimension.IndexOf('×')));
+                        i.Height = int.Parse(Regex.Match(dimension.Substring(dimension.IndexOf('×') + 1), @"\d+").Value);
+                    }
+                    catch { }
                 }
-                catch { }
+                else
+                {
+                    //+++++新版详情页+++++
+                    Match strRex = Regex.Match(page, @"(?<=(?:" + i.Id + ":.)).*?(?=(?:.},user))");
+
+                    JObject jobj = JObject.Parse(strRex.Value);
+
+                    i.Date = jobj["uploadDate"].ToSafeString();
+
+                    try
+                    {
+                        i.Score = int.Parse(jobj["likeCount"].ToSafeString());
+                        i.Width = int.Parse(jobj["width"].ToSafeString());
+                        i.Height = int.Parse(jobj["height"].ToSafeString());
+                        pageCount = int.Parse(jobj["pageCount"].ToSafeString());
+                    }
+                    catch { }
+
+                    jobj = JObject.Parse(jobj["urls"].ToSafeString());
+                    i.PreviewUrl = jobj["regular"].ToSafeString();
+                    i.JpegUrl = jobj["small"].ToSafeString();
+                    i.OriginalUrl = jobj["original"].ToSafeString();
+                }
+                //----------------------------
+
                 try
                 {
-                    if (i.Width == 0 && i.Height == 0)
+                    if (pageCount > 1 || i.Width == 0 && i.Height == 0)
                     {
                         //i.OriginalUrl = i.SampleUrl.Replace("600x600", "1200x1200");
                         //i.JpegUrl = i.OriginalUrl;
                         //manga list
                         //漫画 6P
                         string oriul = "";
-                        int index = dimension.IndexOf(' ') + 1;
-                        string mangaPart = dimension.Substring(index, dimension.IndexOf('P') - index);
-                        int mangaCount = int.Parse(mangaPart);
+                        int mangaCount = pageCount;
+                        if (pageCount > 1)
+                        {
+                            mangaCount = pageCount;
+                        }
+                        else
+                        {
+                            int index = dimension.IndexOf(' ') + 1;
+                            string mangaPart = dimension.Substring(index, dimension.IndexOf('P') - index);
+                            mangaCount = int.Parse(mangaPart);
+                        }
                         if (srcType == PixivSrcType.Pid)
                         {
                             try
@@ -510,7 +573,7 @@ namespace SitePack
                         data = "",
                         post_key = "",
                         loginpost = "https://accounts.pixiv.net/api/login?lang=zh",
-                        loginurl = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index";
+                        loginurl = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
 
                     int index = rand.Next(0, user.Length);
 
@@ -529,14 +592,15 @@ namespace SitePack
                     //请求2 POST取登录Cookie
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
                     data = "pixiv_id=" + user[index]
+                        + "&captcha=&g_recaptcha_response="
                         + "&password=" + pass[index]
-                        + "&captcha=&g_recaptcha_response=&post_key=" + post_key
-                        + "&source=pc&ref=wwwtop_accounts_index&return_to=http%3A%2F%2Fwww.pixiv.net%2F";
+                        + "&post_key=" + post_key
+                        + "&source=pc&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
                     data = Sweb.Post(loginpost, data, proxy, shc);
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
-                    if (data.Contains("400"))
-                        throw new Exception(data);
+                    if (!data.Contains("success"))
+                        throw new Exception("自动登录失败 " + data);
                     else if (cookie.Length < 9)
                         throw new Exception("自动登录失败 ");
                     else

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Reflection;
 
 namespace MoeLoaderDelta
@@ -10,6 +11,7 @@ namespace MoeLoaderDelta
     /// </summary>
     public class SiteManager
     {
+        private static IWebProxy mainproxy;
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
 
@@ -39,7 +41,7 @@ namespace MoeLoaderDelta
                 {
                     Type type = Assembly.LoadFile(dll).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), null) as List<ImageSite>);
+                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { mainproxy }) as List<ImageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -71,6 +73,19 @@ namespace MoeLoaderDelta
             get
             {
                 return sites;
+            }
+        }
+
+        public static IWebProxy Mainproxy
+        {
+            get
+            {
+                return mainproxy;
+            }
+
+            set
+            {
+                mainproxy = value;
             }
         }
     }
