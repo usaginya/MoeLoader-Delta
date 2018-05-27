@@ -302,6 +302,7 @@ namespace SitePack
                         }
                         //details will be extracted from here
                         //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
+                        //sampleUrl 正则 @"https://i\.pximg\..+?(?=")"
                         string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
                         string sampleUrl = "";
                         sampleUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
