@@ -182,6 +182,7 @@ namespace MoeLoaderDelta
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
             /////////////////////////////////////// init image site list //////////////////////////////////
+            SiteManager.Mainproxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             List<MenuItem> tempSites = new List<MenuItem>();
             List<ImageSite> tmpISites = SiteManager.Instance.Sites;

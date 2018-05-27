@@ -13,7 +13,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 180417
+    /// Last change 180527
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -460,6 +460,16 @@ namespace MoeLoaderDelta
             try
             {
                 Clipboard.SetText(img.Id.ToSafeString());
+            }
+            catch { }
+        }
+
+        private void txtDesc_Click_copyauthor(object sender, RoutedEventArgs e)
+        {
+            //author
+            try
+            {
+                Clipboard.SetText(img.Author.ToSafeString());
             }
             catch { }
         }

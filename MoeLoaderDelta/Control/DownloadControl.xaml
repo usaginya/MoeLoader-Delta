@@ -43,8 +43,7 @@
                             x:Name="grid"
                             Margin="3,3,3,3"
                             Background="{x:Null}"
-                            MouseLeftButtonDown="grid_MouseLeftButtonDown"
-                            ToolTip="{Binding LocalName}">
+                            ToolTip="{Binding LocalName}" MouseLeftButtonDown="grid_MouseLeftButtonDown">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="70" />
                                 <ColumnDefinition />
@@ -139,7 +138,6 @@
             ItemContainerStyle="{DynamicResource ListBoxItemStyle1}"
             ItemsSource="{Binding DownloadItems}"
             KeyDown="dlList_KeyDown"
-            MouseDoubleClick="dlList_MouseDoubleClick"
             SelectionMode="Extended"
             Style="{DynamicResource ListBoxStyle1}">
             <ListBox.ContextMenu>

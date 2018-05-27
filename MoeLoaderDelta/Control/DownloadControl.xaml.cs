@@ -574,7 +574,7 @@ namespace MoeLoaderDelta
         /// </summary>
         public static string ReplaceInvalidPathChars(string file)
         {
-            return ReplaceInvalidPathChars(file, "");
+            return ReplaceInvalidPathChars(file, "_");
         }
         /// <summary>
         /// 去掉文件名中无效字符的同时裁剪过长文件名
@@ -1135,33 +1135,38 @@ namespace MoeLoaderDelta
                 }
 
             }
-            catch {
+            catch
+            {
                 System.Diagnostics.Process.Start(saveLocation);
             }
         }
 
         /// <summary>
-        /// 双击打开文件
+        /// 双击一个表项执行的操作
         /// </summary>
         private void grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            try
+            if (e.ClickCount == 2)
             {
-                if (e.ClickCount == 2)
+                DownloadItem dcitem = (DownloadItem)dlList.SelectedItem;
+                switch (dcitem.StatusE)
                 {
-                    DownloadItem dlItem = (DownloadItem)dlList.SelectedItem;
-                    if (dlItem.StatusE == DLStatus.Success)
-                    {
-                        if (!File.Exists(dlItem.LocalName))
-                        {
-                            MessageBox.Show("无法打开文件！ 可能已被更名、删除或移动。", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
-                        }
-                        System.Diagnostics.Process.Start(dlItem.LocalName);
-                    }
+                    case DLStatus.Success:
+                    case DLStatus.IsHave:
+                        if (File.Exists(dcitem.LocalName))
+                            System.Diagnostics.Process.Start(dcitem.LocalName);
+                        else
+                            MessageBox.Show("无法打开文件！可能已被更名、删除或移动", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        break;
+                    case DLStatus.Cancel:
+                    case DLStatus.Failed:
+                        ExecuteDownloadListTask(DLWorkMode.Retry);
+                        break;
+                    default:
+                        ExecuteDownloadListTask(DLWorkMode.Stop);
+                        break;
                 }
             }
-            catch { }
         }
 
         /// <summary>
@@ -1305,32 +1310,6 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 双击一个表项执行的操作
-        /// </summary>
-        private void dlList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (dlList.SelectedItems.Count == 1)
-            {
-                DownloadItem dcitem = (DownloadItem)dlList.SelectedItem;
-                switch (dcitem.StatusE)
-                {
-                    case DLStatus.Success:
-                    case DLStatus.IsHave:
-                        if (File.Exists(dcitem.LocalName))
-                            System.Diagnostics.Process.Start(dcitem.LocalName);
-                        break;
-                    case DLStatus.Cancel:
-                    case DLStatus.Failed:
-                        ExecuteDownloadListTask(DLWorkMode.Retry);
-                        break;
-                    default:
-                        ExecuteDownloadListTask(DLWorkMode.Stop);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
         /// 当做下载列表快捷键
         /// </summary>
         private void dlList_KeyDown(object sender, KeyEventArgs e)
@@ -1384,5 +1363,6 @@ namespace MoeLoaderDelta
                 }
             }
         }
+
     }
 }
