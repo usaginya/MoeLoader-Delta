@@ -13,7 +13,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180527
+    /// Last change 180528
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -94,8 +94,8 @@ namespace SitePack
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
 
         private static string cookie = "";
-        private string[] user = { "a-rin-a" }; //{ "moe1user", "moe3user", "a-rin-a" };
-        private string[] pass = { "2422093014" };//{ "630489372", "1515817701", "2422093014" };
+        private string[] user = { "moe1user", "moe3user", "a-rin-a" };
+        private string[] pass = { "630489372", "1515817701", "2422093014" };
         private static string tempPage = null;
         private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
@@ -406,7 +406,7 @@ namespace SitePack
             img.DownloadDetail = new DetailHandler((i, p) =>
             {
                 int pageCount = 1;
-                string page, dimension;
+                string page, dimension, Pcount;
                 page = dimension = string.Empty;
                 if (srcType == PixivSrcType.Pid)
                     page = tempPage;
@@ -418,6 +418,7 @@ namespace SitePack
                 HtmlDocument doc = new HtmlDocument();
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
+                Pcount = Regex.Match(i.SampleUrl, @"(?<=_p)\d+(?=_)").Value;
 
                 //=================================================
                 //「カルタ＆わたぬき」/「えれっと」のイラスト [pixiv]
@@ -426,7 +427,7 @@ namespace SitePack
                 {
                     MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.SampleUrl, @"_.+(?=_)").Value;
+                        i.Desc = mc[0].Groups["Desc"].Value + "P" + Pcount;
                     else
                         i.Desc = mc[0].Groups["Desc"].Value;
                     i.Author = mc[0].Groups["Author"].Value;
@@ -483,9 +484,10 @@ namespace SitePack
                     catch { }
 
                     jobj = JObject.Parse(jobj["urls"].ToSafeString());
-                    i.PreviewUrl = jobj["regular"].ToSafeString();
-                    i.JpegUrl = jobj["small"].ToSafeString();
-                    i.OriginalUrl = jobj["original"].ToSafeString();
+                    Regex rex = new Regex(@"(?<=.*)p\d+(?=[^/]*[^\._]*$)");
+                    i.PreviewUrl = rex.Replace(jobj["regular"].ToSafeString(), "p" + Pcount);
+                    i.JpegUrl = rex.Replace(jobj["small"].ToSafeString(), "p" + Pcount);
+                    i.OriginalUrl = rex.Replace(jobj["original"].ToSafeString(), "p" + Pcount);
                 }
                 //----------------------------
 
@@ -513,7 +515,7 @@ namespace SitePack
                         {
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, shc);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Pcount, p, shc);
                                 ds.LoadHtml(page);
                                 i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                             }
