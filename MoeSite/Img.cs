@@ -190,12 +190,12 @@ namespace MoeLoaderDelta
         {
             string[] strs = Regex.Split(Str, @"(?<=\G.{" + LineWordCount + "})(?!$)");
             int strsl = strs.Length;
-            string retstr = "";
+            string retsrt = "";
             for (int i = 0; i < strsl; i++)
             {
-                retstr += strs[i] + (i == strsl - 1 ? "" : "\r\n");
+                retsrt += strs[i] + (i == strsl - 1 ? "" : "\r\n");
             }
-            return retstr;
+            return retsrt;
         }
     }
 }

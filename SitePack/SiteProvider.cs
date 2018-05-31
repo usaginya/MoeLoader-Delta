@@ -1,12 +1,11 @@
 ﻿using MoeLoaderDelta;
 using System.Collections.Generic;
-using System.Net;
 
 namespace SitePack
 {
     class SiteProvider
     {
-        public List<ImageSite> SiteList(IWebProxy proxy)
+        public List<ImageSite> SiteList()
         {
             List<ImageSite> sites = new List<ImageSite>();
             bool ecchimode = System.IO.File.Exists(
@@ -69,13 +68,13 @@ namespace SitePack
 
             sites.Add(new SiteWCosplay());
 
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid));
 
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));

@@ -182,7 +182,6 @@ namespace MoeLoaderDelta
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
             /////////////////////////////////////// init image site list //////////////////////////////////
-            SiteManager.Mainproxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             List<MenuItem> tempSites = new List<MenuItem>();
             List<ImageSite> tmpISites = SiteManager.Instance.Sites;
@@ -1467,10 +1466,6 @@ namespace MoeLoaderDelta
             //System.Media.SystemSounds.Exclamation.Play();
         }
 
-        /// <summary>
-        /// excuse me?
-        /// </summary>
-        /// <param name="index"></param>
         public void SelectByIndex(int index)
         {
             //判断是否选中

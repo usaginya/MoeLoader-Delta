@@ -298,10 +298,6 @@
                             Click="txtDesc_Click_copyid"
                             Header="复制ID(_I)"
                             ToolTip="复制作品ID号到剪贴板" />
-                        <MenuItem
-                            Click="txtDesc_Click_copyauthor"
-                            Header="复制作者(_A)"
-                            ToolTip="复制作者昵称到剪贴板" />
                         <Separator />
                         <MenuItem
                             Click="txtDesc_Click_5"
