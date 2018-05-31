@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.7
+ * version 1.8
  * by YIU
  * Create               20170106
- * Last Change     20180419
+ * Last Change     20180527
  */
 
 using System;
@@ -24,8 +24,8 @@ namespace MoeLoaderDelta
 
         private static string[] UAs = new string[]
         {
-            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11",
-            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/53.0.1271.64 Safari/537.21",
+            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
             "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_2 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Mobile/15A421",
             };
 
@@ -160,7 +160,7 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, SessionHeadersCollection shc)
         {
-            return Get(url, proxy, "UTF-8", new SessionHeadersCollection());
+            return Get(url, proxy, "UTF-8", shc);
         }
 
         /// <summary>
@@ -503,6 +503,11 @@ namespace MoeLoaderDelta
     public static class SessionHeadersValue
     {
         /// <summary>
+        /// text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+        /// </summary>
+        public static string AcceptDefault = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
+
+        /// <summary>
         /// text/html
         /// </summary>
         public static string AcceptTextHtml = "text/html";
@@ -550,7 +555,7 @@ namespace MoeLoaderDelta
     {
         public SessionHeadersCollection()
         {
-            Accept = SessionHeadersValue.AcceptTextHtml;
+            Accept = SessionHeadersValue.AcceptDefault;
             AcceptEncoding = null;
             AcceptLanguage = "zh-CN,zh,zh-TW;q=0.7,en,*;q=0.5";
             AllowAutoRedirect = true;
@@ -563,7 +568,7 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// text/html
+        /// SessionHeadersValue.AcceptDefault
         /// </summary>
         public string Accept { get; set; }
 
