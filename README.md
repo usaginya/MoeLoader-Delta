@@ -82,4 +82,4 @@ PS2. 若希望将自定义的站点加入MoeLoader正式版本中，请[与我�
 * [yuriimg.com](http://yuriimg.com) (百合)
 * [atfbooru.ninja](http://atfbooru.ninja) (萝莉(需要文件))
 * [rule34.xxx](https://rule34.xxx) (欧美多(需要文件))
-* [kawaiinyan.com](https://kawaiinyan.com )
+* [kawaiinyan.com](https://kawaiinyan.com)
