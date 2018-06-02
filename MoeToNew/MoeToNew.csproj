@@ -71,6 +71,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -90,6 +91,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MyWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SessionClient.cs" />
     <Page Include="MtoNWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -111,9 +116,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MyWebClient.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -146,12 +148,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\HtmlTextBlock.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
-      <Project>{D25819AA-59F6-4193-9071-F638F85FFCCF}</Project>
-      <Name>MoeSite</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.1">

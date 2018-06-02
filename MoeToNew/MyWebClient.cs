@@ -17,7 +17,7 @@ namespace MoeLoaderDelta
         public MyWebClient()
         {
             Headers["User-Agent"] = SessionClient.DefUA;
-            ServicePointManager.DefaultConnectionLimit = 30;
+            ServicePointManager.DefaultConnectionLimit = 60;
         }
 
         /// <summary>
@@ -52,5 +52,6 @@ namespace MoeLoaderDelta
             request.ServicePoint.ConnectionLimit = int.MaxValue;
             return request;
         }
+
     }
 }

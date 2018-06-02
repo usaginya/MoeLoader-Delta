@@ -13,7 +13,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180528
+    /// Last change 180602
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -102,6 +102,7 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
+        private static  bool startLogin;
 
         /// <summary>
         /// pixiv.net site
@@ -109,8 +110,12 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
             this.srcType = srcType;
-            CookieRestore();
-            Login(proxy);
+            if (!startLogin)
+            {
+                startLogin = true;
+                CookieRestore();
+                Login(proxy);
+            }
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -589,7 +594,7 @@ namespace SitePack
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
-                        throw new Exception("自动登录失败");
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
 
                     //请求2 POST取登录Cookie
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
@@ -602,15 +607,15 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (!data.Contains("success"))
-                        throw new Exception("自动登录失败 " + data);
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 " + data);
                     else if (cookie.Length < 9)
-                        throw new Exception("自动登录失败 ");
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }
                 catch (Exception e)
                 {
-                    throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
+                    SiteManager.echoErrLog(ShortName, e, "可能无法连接到服务器");
                 }
             }
         }

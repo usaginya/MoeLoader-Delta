@@ -106,12 +106,6 @@
     <EmbeddedResource Include="image\idol.sku.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
-      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
-      <Name>MoeSite</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="image\lolibooru.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +119,13 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="image\kawaiinyan.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
+      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
+      <Name>MoeSite</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
