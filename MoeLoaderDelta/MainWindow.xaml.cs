@@ -98,7 +98,7 @@ namespace MoeLoaderDelta
 
         internal List<Img> imgs;
         internal List<int> selected = new List<int>();
-        
+
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -749,7 +749,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
+                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -1447,9 +1447,23 @@ namespace MoeLoaderDelta
             int index = (int)sender;
 
             //不支持预览的格式使用浏览来源页
-            string supportformat = "jpg jpeg png bmp gif";
-            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1));
-            if (!supportformat.Contains(ext))
+            string supportFormat = "jpg jpeg png bmp gif",
+             videoFormat = "mp4 webm avi mpg flv",
+             ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1)),
+             videoExe = DataHelpers.GetFileExecutable("mp4");
+
+            //使用关联视频播放预览
+            if (videoFormat.Contains(ext) && !string.IsNullOrWhiteSpace(videoExe))
+            {
+                try
+                {
+                    if (imgs[index].DetailUrl.Length > 0)
+                        System.Diagnostics.Process.Start(videoExe, imgs[index].OriginalUrl);
+                }
+                catch (Exception) { }
+                return;
+            }
+            else if (!supportFormat.Contains(ext))
             {
                 try
                 {
@@ -1498,7 +1512,7 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-                
+
                 imgc.SetChecked(!selected.Contains(i));
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
@@ -2038,7 +2052,7 @@ namespace MoeLoaderDelta
         /// <param name="img"></param>
         /// <param name="url">下载链接用于提取原名</param>
         /// <returns></returns>
-        private string GenFileName(Img img,string url)
+        private string GenFileName(Img img, string url)
         {
             //namePatter
             string file = namePatter;
