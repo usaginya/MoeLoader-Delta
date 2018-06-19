@@ -1463,7 +1463,7 @@ namespace MoeLoaderDelta
                 catch (Exception) { }
                 return;
             }
-            else if (!supportFormat.Contains(ext))
+            else if (!supportFormat.Contains(ext) || videoFormat.Contains(ext))
             {
                 try
                 {
