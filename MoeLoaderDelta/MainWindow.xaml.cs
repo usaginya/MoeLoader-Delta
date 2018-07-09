@@ -98,7 +98,7 @@ namespace MoeLoaderDelta
 
         internal List<Img> imgs;
         internal List<int> selected = new List<int>();
-        
+
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -749,7 +749,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
+                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -802,7 +802,7 @@ namespace MoeLoaderDelta
                 {
                     imgs[index].ImgP = c + 1 + "";
                 }
-                string fileName = GenFileName(dlimg);
+                string fileName = GenFileName(dlimg, oriUrls[c]);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                 downloadC.AddDownload(new MiniDownloadItem[] {
                     new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify)
@@ -1446,13 +1446,31 @@ namespace MoeLoaderDelta
         {
             int index = (int)sender;
 
-            //排除不支持预览的格式
-            string supportformat = "jpg jpeg png bmp gif";
-            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1));
-            if (!supportformat.Contains(ext))
+            //不支持预览的格式使用浏览来源页
+            string supportFormat = "jpg jpeg png bmp gif",
+             videoFormat = "mp4 webm avi mpg flv",
+             ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1)),
+             videoExe = DataHelpers.GetFileExecutable("mp4");
+
+            //使用关联视频播放预览
+            if (videoFormat.Contains(ext) && !string.IsNullOrWhiteSpace(videoExe))
             {
-                MessageBox.Show(this, "未支持" + ext + "格式的预览显示，请下载后使用其它程序方式打开文件预览",
-                    ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                try
+                {
+                    if (imgs[index].DetailUrl.Length > 0)
+                        System.Diagnostics.Process.Start(videoExe, imgs[index].OriginalUrl);
+                }
+                catch (Exception) { }
+                return;
+            }
+            else if (!supportFormat.Contains(ext) || videoFormat.Contains(ext))
+            {
+                try
+                {
+                    if (imgs[index].DetailUrl.Length > 0)
+                        System.Diagnostics.Process.Start(imgs[index].DetailUrl);
+                }
+                catch (Exception) { }
                 return;
             }
 
@@ -1494,7 +1512,7 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-                
+
                 imgc.SetChecked(!selected.Contains(i));
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
@@ -1728,7 +1746,7 @@ namespace MoeLoaderDelta
 
                                 //url|文件名|域名|上传者|ID(用于判断重复)
                                 text += oriUrls[c]
-                                    + "|" + GenFileName(selectimg)
+                                    + "|" + GenFileName(selectimg, oriUrls[c])
                                     + "|" + host
                                     + "|" + selectimg.Author
                                     + "|" + selectimg.Id
@@ -2018,7 +2036,7 @@ namespace MoeLoaderDelta
                         {
                             imgs[i].ImgP = c + 1 + "";
                         }
-                        string fileName = GenFileName(dlimg);
+                        string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                         urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify));
                     }
@@ -2032,11 +2050,14 @@ namespace MoeLoaderDelta
         /// 构建文件名 generate file name
         /// </summary>
         /// <param name="img"></param>
+        /// <param name="url">下载链接用于提取原名</param>
         /// <returns></returns>
-        private string GenFileName(Img img)
+        private string GenFileName(Img img, string url)
         {
             //namePatter
             string file = namePatter;
+            if (string.IsNullOrWhiteSpace(file))
+                return System.IO.Path.GetFileName(url);
 
             //%site站点 %id编号 %tag标签 %desc描述 %author作者 %date图片时间 %imgid[2]图册中图片编号[补n个零]
             file = file.Replace("%site", SiteManager.Instance.Sites[nowSelectedIndex].ShortName);
