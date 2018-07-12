@@ -5,12 +5,13 @@ using System.Xml;
 using System.Linq;
 using System.Web.Script.Serialization;
 using System.Web;
+using Newtonsoft.Json.Linq;
 
 namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点
-    /// Fixed 180417
+    /// Fixed 180712
     /// </summary>
     public class BooruProcessor
     {
@@ -528,23 +529,68 @@ namespace MoeLoaderDelta
                 //标签
                 if (obj.ContainsKey("tags") && obj["tags"] != null)
                 {
+
                     if (sub == "sku")
                     {
-                        object ov = obj["tags"];
-                        StringBuilder ovsb = new StringBuilder();
-
-                        if (ov.GetType().FullName.Contains("Object[]"))
+                        #region sankaku tags rule
+                        try
                         {
-                            (new JavaScriptSerializer()).Serialize(ov, ovsb);
-                            string ovsbstr = ovsb.ToString();
-                            object[] ovarr = (new JavaScriptSerializer()).DeserializeObject(ovsbstr) as object[];
-                            for (int i = 0; i < ovarr.Count(); i++)
+                            JavaScriptSerializer jss = new JavaScriptSerializer();
+                            string stags = jss.Serialize(obj["tags"]);
+
+                            JArray jary = JArray.Parse(stags);
+                            if (jary.Count > 0)
                             {
-                                obj = ovarr[i] as Dictionary<string, object>;
-                                if (obj.ContainsKey("name"))
-                                    tags += i < ovarr.Count() - 1 ? obj["name"] + " " : obj["name"];
+                                JArray ResultTags = new JArray();
+                                JArray TagGroup = new JArray();
+                                string TagTypeGroup = "3,2,4,1,8,0,9";
+                                string[] TTGarr = TagTypeGroup.Split(',');
+
+                                foreach (string tts in TTGarr)
+                                {
+                                    foreach (JToken tjt in jary)
+                                    {
+                                        if (((JObject)tjt)["type"].ToString().Equals(tts, StringComparison.CurrentCultureIgnoreCase))
+                                        {
+                                            TagGroup.Add(tjt);
+                                        }
+                                    }
+
+                                    if (tts.Equals("0"))
+                                        ResultTags.Add(TagGroup.OrderBy(jo => (string)jo["name"]));
+                                    else
+                                        ResultTags.Add(TagGroup.OrderByDescending(jo => Convert.ToInt32((string)jo["count"])));
+
+                                    TagGroup.Clear();
+                                }
+
+                                int i = 0, RTcount = ResultTags.Count();
+                                foreach (JToken tjt in ResultTags)
+                                {
+                                    i++;
+                                    tags += i < RTcount ? ((JObject)tjt)["name"].ToString() + " " : ((JObject)tjt)["name"].ToString();
+                                }
                             }
                         }
+                        catch
+                        {
+                            object ov = obj["tags"];
+                            StringBuilder ovsb = new StringBuilder();
+
+                            if (ov.GetType().FullName.Contains("Object[]"))
+                            {
+                                (new JavaScriptSerializer()).Serialize(ov, ovsb);
+                                string ovsbstr = ovsb.ToString();
+                                object[] ovarr = (new JavaScriptSerializer()).DeserializeObject(ovsbstr) as object[];
+                                for (int i = 0; i < ovarr.Count(); i++)
+                                {
+                                    obj = ovarr[i] as Dictionary<string, object>;
+                                    if (obj.ContainsKey("name"))
+                                        tags += i < ovarr.Count() - 1 ? obj["name"] + " " : obj["name"];
+                                }
+                            }
+                        }
+                        #endregion
                     }
                     else
                     {
