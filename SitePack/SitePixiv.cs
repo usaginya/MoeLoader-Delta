@@ -8,12 +8,13 @@ using System.Web.Script.Serialization;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180527
+    /// Last change 180706
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -94,14 +95,15 @@ namespace SitePack
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
 
         private static string cookie = "";
-        private string[] user = { "a-rin-a" }; //{ "moe1user", "moe3user", "a-rin-a" };
-        private string[] pass = { "2422093014" };//{ "630489372", "1515817701", "2422093014" };
+        private string[] user = { "moe1user", "moe3user", "a-rin-a" };
+        private string[] pass = { "630489372", "1515817701", "2422093014" };
         private static string tempPage = null;
         private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
+        private static bool startLogin;
 
         /// <summary>
         /// pixiv.net site
@@ -109,8 +111,15 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
             this.srcType = srcType;
-            CookieRestore();
-            Login(proxy);
+            new Thread(new ThreadStart(delegate
+            {
+                if (!startLogin)
+                {
+                    startLogin = true;
+                    CookieRestore();
+                    Login(proxy);
+                }
+            })).Start();
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -406,7 +415,7 @@ namespace SitePack
             img.DownloadDetail = new DetailHandler((i, p) =>
             {
                 int pageCount = 1;
-                string page, dimension;
+                string page, dimension, Pcount;
                 page = dimension = string.Empty;
                 if (srcType == PixivSrcType.Pid)
                     page = tempPage;
@@ -418,6 +427,7 @@ namespace SitePack
                 HtmlDocument doc = new HtmlDocument();
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
+                Pcount = Regex.Match(i.SampleUrl, @"(?<=_p)\d+(?=_)").Value;
 
                 //=================================================
                 //「カルタ＆わたぬき」/「えれっと」のイラスト [pixiv]
@@ -426,7 +436,7 @@ namespace SitePack
                 {
                     MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + Regex.Match(i.SampleUrl, @"_.+(?=_)").Value;
+                        i.Desc = mc[0].Groups["Desc"].Value + "P" + Pcount;
                     else
                         i.Desc = mc[0].Groups["Desc"].Value;
                     i.Author = mc[0].Groups["Author"].Value;
@@ -483,9 +493,10 @@ namespace SitePack
                     catch { }
 
                     jobj = JObject.Parse(jobj["urls"].ToSafeString());
-                    i.PreviewUrl = jobj["regular"].ToSafeString();
-                    i.JpegUrl = jobj["small"].ToSafeString();
-                    i.OriginalUrl = jobj["original"].ToSafeString();
+                    Regex rex = new Regex(@"(?<=.*)p\d+(?=[^/]*[^\._]*$)");
+                    i.PreviewUrl = rex.Replace(jobj["regular"].ToSafeString(), "p" + Pcount);
+                    i.JpegUrl = rex.Replace(jobj["small"].ToSafeString(), "p" + Pcount);
+                    i.OriginalUrl = rex.Replace(jobj["original"].ToSafeString(), "p" + Pcount);
                 }
                 //----------------------------
 
@@ -513,7 +524,7 @@ namespace SitePack
                         {
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Regex.Match(i.PreviewUrl, @"(?<=_p).+(?=_)").Value, p, shc);
+                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Pcount, p, shc);
                                 ds.LoadHtml(page);
                                 i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
                             }
@@ -587,7 +598,7 @@ namespace SitePack
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
-                        throw new Exception("自动登录失败");
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
 
                     //请求2 POST取登录Cookie
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
@@ -600,15 +611,15 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (!data.Contains("success"))
-                        throw new Exception("自动登录失败 " + data);
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 " + data);
                     else if (cookie.Length < 9)
-                        throw new Exception("自动登录失败 ");
+                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }
                 catch (Exception e)
                 {
-                    throw new Exception(e.Message.TrimEnd("。".ToCharArray()) + "或无法连接到远程服务器");
+                    SiteManager.echoErrLog(ShortName, e, "可能无法连接到服务器");
                 }
             }
         }

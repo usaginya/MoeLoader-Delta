@@ -34,6 +34,7 @@ namespace SitePack
         {
             sitePrefix = prefix;
             CookieRestore();
+            shc.Timeout = 16000;
         }
 
         /// <summary>

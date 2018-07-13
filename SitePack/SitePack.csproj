@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -58,6 +59,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Utility">
       <HintPath>..\lib\System.Utility.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
@@ -104,12 +106,6 @@
     <EmbeddedResource Include="image\idol.sku.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
-      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
-      <Name>MoeSite</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="image\lolibooru.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +119,13 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="image\kawaiinyan.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeSite\MoeSite.csproj">
+      <Project>{d25819aa-59f6-4193-9071-f638f85ffccf}</Project>
+      <Name>MoeSite</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

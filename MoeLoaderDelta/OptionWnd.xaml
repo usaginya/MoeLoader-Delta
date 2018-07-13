@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
     Width="400"
-    Height="505"
+    Height="490"
     Icon="m.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
@@ -17,8 +17,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="135" />
             <!--<RowDefinition Height="70"/>-->
-            <RowDefinition Height="168" />
-            <RowDefinition Height="120" />
+            <RowDefinition Height="185" />
+            <RowDefinition Height="90" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
 
@@ -156,6 +156,14 @@
             Margin="5,2"
             Header="代理设置">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width=".5*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
                 <RadioButton
                     x:Name="rtNoProxy"
                     Margin="10,11,0,0"
@@ -164,18 +172,26 @@
                     IsChecked="True" />
                 <RadioButton
                     x:Name="rtSystem"
-                    Margin="10,39,0,0"
+                    Grid.Column="1"
+                    Margin="0,11,0,0"
                     Checked="chkProxy_Click"
                     Content="使用IE代理" />
                 <RadioButton
                     x:Name="rtCustom"
-                    Margin="10,67,0,0"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Margin="10,5,0,0"
                     Checked="chkProxy_Click"
                     Content="自定义" />
                 <TextBox
                     x:Name="txtProxy"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Width="120"
                     Height="20"
-                    Margin="100,55,20,0"
+                    Margin="80,5,20,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
                     IsEnabled="False"
                     Text="127.0.0.1:1080"
                     TextWrapping="NoWrap" />
@@ -208,33 +224,38 @@
                     Content="浏览" />
                 <CheckBox
                     x:Name="chkSepSave"
-                    Margin="200,46,0,0"
+                    Margin="95,65,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Click="chkSepSave_Click"
                     Content="分站点保存"
-                    ToolTip="将图片按站点分目录下载保存" />
+                    ToolTip="将图片下载保存到站点名称的目录中" />
                 <CheckBox
                     x:Name="chkSaSave"
-                    Margin="294,46,0,0"
+                    Margin="299,65,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Content="分上传者"
-                    IsEnabled="False"
-                    ToolTip="在分站点目录下将图片按上传者保存到子目录中" />
+                    ToolTip="将图片保存到站点目录中上传者名称的子目录中" />
+                <CheckBox
+                    x:Name="chkSscSave"
+                    Margin="185,65,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="分搜索标签保存"
+                    ToolTip="将图片保存到站点目录中当前搜索的关键词名称的子目录中" />
                 <TextBlock
-                    Margin="10,46,0,0"
+                    Margin="10,41,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Text="同时下载数量" />
                 <StackPanel
-                    Margin="91,38,0,0"
+                    Margin="91,30,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Orientation="Horizontal">
                     <TextBox
                         x:Name="txtParal"
-                        Width="50"
+                        Width="60"
                         Margin="5,5,0,4"
                         InputMethod.IsInputMethodEnabled="False"
                         MaxLength="5"
@@ -257,19 +278,20 @@
                 </StackPanel>
                 <TextBox
                     x:Name="txtPattern"
-                    Margin="95,76,30,0"
+                    Margin="95,92,30,0"
                     VerticalAlignment="Top"
+                    RenderTransformOrigin="0.503,0.746"
                     Text=""
                     TextWrapping="NoWrap" />
                 <TextBlock
-                    Margin="10,76,0,0"
+                    Margin="10,93,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Text="文件命名格式"
                     TextWrapping="Wrap" />
                 <TextBlock
                     x:Name="textNameHelp"
-                    Margin="0,75,15,0"
+                    Margin="0,92,15,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Cursor="Help"
@@ -280,7 +302,7 @@
                     TextDecorations="Underline" />
                 <Button
                     x:Name="FNRsite"
-                    Margin="97,0,0,24"
+                    Margin="96,0,0,24"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%site"
@@ -322,7 +344,7 @@
                     ToolTip="插入 上载时间 格式" />
                 <Button
                     x:Name="FNRimgp"
-                    Margin="97,0,0,2"
+                    Margin="96,0,0,2"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Content="%imgp[n]"

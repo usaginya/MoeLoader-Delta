@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO;
+using System.Threading;
 
 namespace MoeLoaderDelta
 {
@@ -127,7 +128,10 @@ namespace MoeLoaderDelta
             }
             get { return numOnce; }
         }
-
+        /// <summary>
+        /// 重试次数
+        /// </summary>
+        public int retryCount = 2;
         /// <summary>
         /// 分站点存放
         /// </summary>
@@ -136,6 +140,10 @@ namespace MoeLoaderDelta
         /// 分上传者存放
         /// </summary>
         public bool IsSaSave { get; set; }
+        /// <summary>
+        /// 分搜索标签存放
+        /// </summary>
+        public bool IsSscSave { get; set; }
 
         private static string saveLocation = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         /// <summary>
@@ -154,7 +162,7 @@ namespace MoeLoaderDelta
             InitializeComponent();
 
             NumOnce = 2;
-            IsSepSave = IsSaSave = false;
+            IsSepSave = IsSscSave = IsSaSave = false;
 
             downloadStatus.Text = "当前无下载任务";
 
@@ -199,21 +207,23 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private string GetLocalPath(DownloadItem dlitem)
         {
-            string path = "";
-
-            if (IsSepSave)
+            string sPath;
+            if (dlitem.LocalName.Contains("\\"))
             {
-                string sPath = saveLocation + "\\" + dlitem.Host + (IsSaSave ? "\\" + dlitem.Author : "");
-                if (!Directory.Exists(sPath))
-                    Directory.CreateDirectory(sPath);
-
-                path = sPath + "\\";
+                sPath = dlitem.LocalName.Substring(0, dlitem.LocalName.LastIndexOf("\\") + 1);
             }
             else
             {
-                path = saveLocation + "\\";
+                sPath = saveLocation
+                    + (IsSepSave ? "\\" + dlitem.Host : "")
+                   + (IsSscSave ? "\\" + ReplaceInvalidPathChars(MainWindow.SearchWordPu) : "")
+                   + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
+                   + "\\";
+
+                if (!Directory.Exists(sPath))
+                    Directory.CreateDirectory(sPath);
             }
-            return path;
+            return sPath;
         }
 
         /// <summary>
@@ -299,7 +309,7 @@ namespace MoeLoaderDelta
             SessionClient sc = new SessionClient();
             System.Net.WebResponse res = null;
             double downed = 0;
-            string lpath = GetLocalPath(downloadItemsDic[task.Url]);
+            DownloadItem item = downloadItemsDic[task.Url];
 
             try
             {
@@ -345,8 +355,8 @@ namespace MoeLoaderDelta
                     //下载失败
                     if (downloadItemsDic.ContainsKey(task.Url))
                     {
-                        downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
-                        downloadItemsDic[task.Url].Size = "下载失败";
+                        item.StatusE = DLStatus.Failed;
+                        item.Size = "下载失败";
                         WriteErrText(task.Url);
                         WriteErrText(task.SaveLocation);
                         WriteErrText(ex.Message + "\r\n");
@@ -361,10 +371,7 @@ namespace MoeLoaderDelta
                                 res.Close();
 
                             File.Delete(task.SaveLocation + DLEXT);
-
-                            DirectoryInfo di = new DirectoryInfo(lpath);
-                            if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                                Directory.Delete(lpath);
+                            DelDLItemNullDirector(item);
                         }
                         catch { }
                     }
@@ -387,9 +394,9 @@ namespace MoeLoaderDelta
                 {
                     if (downloadItemsDic.ContainsKey(task.Url))
                     {
-                        if (!dlerrtxt.Contains(downloadItemsDic[task.Url].Size))
+                        if (!dlerrtxt.Contains(item.Size))
                         {
-                            downloadItemsDic[task.Url].StatusE = DLStatus.Cancel;
+                            item.StatusE = DLStatus.Cancel;
                         }
                     }
                 }));
@@ -397,10 +404,7 @@ namespace MoeLoaderDelta
                 try
                 {
                     File.Delete(task.SaveLocation + DLEXT);
-
-                    DirectoryInfo di = new DirectoryInfo(lpath);
-                    if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                        Directory.Delete(lpath);
+                    DelDLItemNullDirector(item);
                 }
                 catch { }
             }
@@ -414,18 +418,15 @@ namespace MoeLoaderDelta
                         //DownloadTask task1 = obj as DownloadTask;
 
                         //判断完整性
-                        if (!downloadItemsDic[task.Url].NoVerify && 100 - downloadItemsDic[task.Url].Progress > 0.001)
+                        if (!item.NoVerify && 100 - item.Progress > 0.001)
                         {
                             task.IsStop = true;
-                            downloadItemsDic[task.Url].StatusE = DLStatus.Failed;
-                            downloadItemsDic[task.Url].Size = "下载未完成";
+                            item.StatusE = DLStatus.Failed;
+                            item.Size = "下载未完成";
                             try
                             {
                                 File.Delete(task.SaveLocation + DLEXT);
-
-                                DirectoryInfo di = new DirectoryInfo(lpath);
-                                if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                                    Directory.Delete(lpath);
+                                DelDLItemNullDirector(item);
                             }
                             catch { }
                         }
@@ -434,8 +435,8 @@ namespace MoeLoaderDelta
                             //修改后缀名
                             File.Move(task.SaveLocation + DLEXT, task.SaveLocation);
 
-                            downloadItemsDic[task.Url].Progress = 100.0;
-                            downloadItemsDic[task.Url].StatusE = DLStatus.Success;
+                            item.Progress = 100.0;
+                            item.StatusE = DLStatus.Success;
                             //downloadItemsDic[task.Url].Size = (downed > 1048576
                             //? (downed / 1048576.0).ToString("0.00MB")
                             //: (downed / 1024.0).ToString("0.00KB"));
@@ -477,6 +478,12 @@ namespace MoeLoaderDelta
             {
                 isWorking = false;
                 downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 下载完毕";
+                if (retryCount > 0)
+                {
+                    retryCount--;
+                    Thread.Sleep(1000);
+                    ExecuteDownloadListTask(DLWorkMode.RetryAll);
+                }
             }
 
             if (downloadItems.Count == 0)
@@ -547,6 +554,7 @@ namespace MoeLoaderDelta
             }
             else
             {
+                Win7TaskBar.ChangeProcessValue(MainWindow.Hwnd, 0);
                 Win7TaskBar.StopProcess(MainWindow.Hwnd);
             }
         }
@@ -559,7 +567,7 @@ namespace MoeLoaderDelta
         /// <returns>处理后的文件名</returns>
         public static string ReplaceInvalidPathChars(string file, string replace)
         {
-            if (file.IndexOf('?', file.LastIndexOf('.')) > 0)
+            if (file.IndexOf('?', (file.LastIndexOf('.') < 1 ? file.Length : file.LastIndexOf('.'))) > 0)
             {
                 //adfadsf.jpg?adfsdf   remove trailing ?param
                 file = file.Substring(0, file.IndexOf('?'));
@@ -689,14 +697,14 @@ namespace MoeLoaderDelta
                         //查找重复项
                         try
                         {
-                            isexists = havelst && flst.Any(x => x== i.Url);
+                            isexists = havelst && flst.Any(x => x == i.Url);
                         }
                         catch { }
 
                         if (!isexists)
                         {
                             //url
-                            text += i.Url+ "\r\n";
+                            text += i.Url + "\r\n";
                             success++;
                         }
                         else
@@ -753,9 +761,6 @@ namespace MoeLoaderDelta
             }
             selectcs = selected.Count;
 
-            string lpath = "";
-            DirectoryInfo di;
-
             foreach (DownloadItem item in selected)
             {
                 switch (dlworkmode)
@@ -796,11 +801,7 @@ namespace MoeLoaderDelta
                             try
                             {
                                 File.Delete(item.LocalFileName + DLEXT);
-
-                                lpath = GetLocalPath(item);
-                                di = new DirectoryInfo(lpath);
-                                if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                                    Directory.Delete(lpath);
+                                DelDLItemNullDirector(item);
                             }
                             catch { }
                         }
@@ -845,12 +846,8 @@ namespace MoeLoaderDelta
                             if (File.Exists(fname))
                             {
                                 File.Delete(fname);
+                                DelDLItemNullDirector(item);
                             }
-
-                            lpath = GetLocalPath(item);
-                            di = new DirectoryInfo(lpath);
-                            if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                                Directory.Delete(lpath);
                         }
                         break;
                 }
@@ -863,6 +860,32 @@ namespace MoeLoaderDelta
             {
                 RefreshStatus();
             }
+        }
+
+        /// <summary>
+        /// 删除空目录
+        /// </summary>
+        /// <param name="item">下载项</param>
+        private void DelDLItemNullDirector(DownloadItem item)
+        {
+            try
+            {
+                new Thread(new ThreadStart(delegate
+                {
+                    string lpath = GetLocalPath(item);
+                    DirectoryInfo di = new DirectoryInfo(lpath);
+
+                    while (Directory.Exists(lpath) && di.GetFiles().Length + di.GetDirectories().Length < 1 && lpath.Contains(saveLocation))
+                    {
+                        Directory.Delete(lpath);
+                        Thread.Sleep(666);
+                        int last = lpath.LastIndexOf("\\", lpath.Length - 2);
+                        lpath = lpath.Substring(0, last > 0 ? last : lpath.Length);
+                        di = new DirectoryInfo(lpath);
+                    }
+                })).Start();
+            }
+            catch { }
         }
         //================================================================================
         /// <summary>
@@ -934,113 +957,6 @@ namespace MoeLoaderDelta
             RefreshStatus();
         }
 
-        #region 遗弃的方法
-        /// <summary>
-        /// 选择保存位置
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void itmSaveLocation_Click(object sender, RoutedEventArgs e)
-        //{
-        //    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog
-        //    {
-        //        Description = "当前保存位置: " + saveLocation,
-        //        SelectedPath = saveLocation
-        //    };
-
-        //    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        //    {
-        //        SaveLocation = dialog.SelectedPath;
-        //    }
-        //}
-
-        //#region 设置同时下载数量
-        //public void SetNum(int i)
-        //{
-        //    if (i == 1)
-        //    {
-        //        itm1.IsChecked = true;
-        //    }
-        //    else if (i == 2)
-        //    {
-        //        itm2.IsChecked = true;
-        //    }
-        //    else if (i == 3)
-        //    {
-        //        itm3.IsChecked = true;
-        //    }
-        //    else if (i == 4)
-        //    {
-        //        itm4.IsChecked = true;
-        //    }
-        //    else if (i == 5)
-        //    {
-        //        itm5.IsChecked = true;
-        //    }
-        //}
-
-        //private void itm1_Checked(object sender, RoutedEventArgs e)
-        //{
-        //    if (sender == itm1)
-        //    {
-        //        if (itm1.IsChecked)
-        //        {
-        //            NumOnce = 1;
-        //            itm2.IsChecked = false;
-        //            itm3.IsChecked = false;
-        //            itm4.IsChecked = false;
-        //            itm5.IsChecked = false;
-        //        }
-        //    }
-        //    else if (sender == itm2)
-        //    {
-        //        if (itm2.IsChecked)
-        //        {
-        //            NumOnce = 2;
-        //            itm1.IsChecked = false;
-        //            itm3.IsChecked = false;
-        //            itm4.IsChecked = false;
-        //            itm5.IsChecked = false;
-        //        }
-        //    }
-        //    else if (sender == itm3)
-        //    {
-        //        if (itm3.IsChecked)
-        //        {
-        //            NumOnce = 3;
-        //            itm1.IsChecked = false;
-        //            itm2.IsChecked = false;
-        //            itm4.IsChecked = false;
-        //            itm5.IsChecked = false;
-        //        }
-        //    }
-        //    else if (sender == itm4)
-        //    {
-        //        if (itm4.IsChecked)
-        //        {
-        //            NumOnce = 4;
-        //            itm1.IsChecked = false;
-        //            itm3.IsChecked = false;
-        //            itm2.IsChecked = false;
-        //            itm5.IsChecked = false;
-        //        }
-        //    }
-        //    else if (sender == itm5)
-        //    {
-        //        if (itm5.IsChecked)
-        //        {
-        //            NumOnce = 5;
-        //            itm1.IsChecked = false;
-        //            itm2.IsChecked = false;
-        //            itm3.IsChecked = false;
-        //            itm4.IsChecked = false;
-        //        }
-        //    }
-        //    SetNum(NumOnce);
-        //}
-        //#endregion
-        #endregion
-
         /// <summary>
         /// 右键菜单即将打开
         /// </summary>
@@ -1055,7 +971,7 @@ namespace MoeLoaderDelta
                     itmRetry.IsEnabled =
                     itmStop.IsEnabled =
                     itmDelete.IsEnabled =
-                    itmLstPic.IsEnabled=
+                    itmLstPic.IsEnabled =
                     itmDeleteFile.IsEnabled = false;
             }
             else
@@ -1151,6 +1067,8 @@ namespace MoeLoaderDelta
                 //添加至下载列表
                 AddDownload(items);
             }
+            //重置重试次数
+            retryCount = 2;
         }
 
         /// <summary>
@@ -1389,7 +1307,7 @@ namespace MoeLoaderDelta
                     {   //复制地址
                         itmCopy_Click(null, null);
                     }
-                    else if(e.Key==Key.Z)
+                    else if (e.Key == Key.Z)
                     {
                         //导出图片下载链接列表
                         itmLstPic_Click(null, null);

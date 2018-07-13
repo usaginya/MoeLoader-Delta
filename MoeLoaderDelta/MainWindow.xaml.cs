@@ -69,7 +69,7 @@ namespace MoeLoaderDelta
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
-        private string SearchWord = "";
+        private static string SearchWord = "";
 
         //private Color backColor;
         //internal bool isAero = true;
@@ -98,7 +98,7 @@ namespace MoeLoaderDelta
 
         internal List<Img> imgs;
         internal List<int> selected = new List<int>();
-        
+
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -163,6 +163,14 @@ namespace MoeLoaderDelta
         {
             get;
             set;
+        }
+
+        public static string SearchWordPu
+        {
+            get
+            {
+                return SearchWord;
+            }
         }
 
         public MainWindow()
@@ -410,7 +418,13 @@ namespace MoeLoaderDelta
 
                         if (parts.Length > 1)
                         {
-                            downloadC.IsSaSave = parts[1].Equals("1");
+                            try
+                            {
+                                int tpart = Convert.ToInt32(parts[1]);
+                                downloadC.IsSscSave = tpart > 1;
+                                downloadC.IsSaSave = tpart > 0 && tpart < 3;
+                            }
+                            catch { }
                         }
                         if (parts.Length > 2)
                         {
@@ -749,7 +763,7 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(imgs[i], i,SiteManager.Instance.Sites[nowSelectedIndex]);
+                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
                     img.imgClicked += img_Click;
@@ -802,12 +816,14 @@ namespace MoeLoaderDelta
                 {
                     imgs[index].ImgP = c + 1 + "";
                 }
-                string fileName = GenFileName(dlimg);
+                string fileName = GenFileName(dlimg, oriUrls[c]);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                 downloadC.AddDownload(new MiniDownloadItem[] {
                     new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify)
                 });
             }
+            //重置重试次数
+            downloadC.retryCount = 2;
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
             //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
@@ -1446,13 +1462,31 @@ namespace MoeLoaderDelta
         {
             int index = (int)sender;
 
-            //排除不支持预览的格式
-            string supportformat = "jpg jpeg png bmp gif";
-            string ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1));
-            if (!supportformat.Contains(ext))
+            //不支持预览的格式使用浏览来源页
+            string supportFormat = "jpg jpeg png bmp gif",
+             videoFormat = "mp4 webm avi mpg flv",
+             ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1)),
+             videoExe = DataHelpers.GetFileExecutable("mp4");
+
+            //使用关联视频播放预览
+            if (videoFormat.Contains(ext) && !string.IsNullOrWhiteSpace(videoExe))
             {
-                MessageBox.Show(this, "未支持" + ext + "格式的预览显示，请下载后使用其它程序方式打开文件预览",
-                    ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                try
+                {
+                    if (imgs[index].DetailUrl.Length > 0)
+                        System.Diagnostics.Process.Start(videoExe, imgs[index].OriginalUrl);
+                }
+                catch (Exception) { }
+                return;
+            }
+            else if (!supportFormat.Contains(ext) || videoFormat.Contains(ext))
+            {
+                try
+                {
+                    if (imgs[index].DetailUrl.Length > 0)
+                        System.Diagnostics.Process.Start(imgs[index].DetailUrl);
+                }
+                catch (Exception) { }
                 return;
             }
 
@@ -1494,7 +1528,7 @@ namespace MoeLoaderDelta
             for (int i = 0; i < imgs.Count; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-                
+
                 imgc.SetChecked(!selected.Contains(i));
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
@@ -1728,7 +1762,7 @@ namespace MoeLoaderDelta
 
                                 //url|文件名|域名|上传者|ID(用于判断重复)
                                 text += oriUrls[c]
-                                    + "|" + GenFileName(selectimg)
+                                    + "|" + GenFileName(selectimg, oriUrls[c])
                                     + "|" + host
                                     + "|" + selectimg.Author
                                     + "|" + selectimg.Id
@@ -2018,7 +2052,7 @@ namespace MoeLoaderDelta
                         {
                             imgs[i].ImgP = c + 1 + "";
                         }
-                        string fileName = GenFileName(dlimg);
+                        string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                         urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify));
                     }
@@ -2026,17 +2060,22 @@ namespace MoeLoaderDelta
                 downloadC.AddDownload(urls);
             }
             ButtonMainDL.IsEnabled = true;
+            //重置重试次数
+            downloadC.retryCount = 2;
         }
 
         /// <summary>
         /// 构建文件名 generate file name
         /// </summary>
         /// <param name="img"></param>
+        /// <param name="url">下载链接用于提取原名</param>
         /// <returns></returns>
-        private string GenFileName(Img img)
+        private string GenFileName(Img img, string url)
         {
             //namePatter
             string file = namePatter;
+            if (string.IsNullOrWhiteSpace(file))
+                return System.IO.Path.GetFileName(url);
 
             //%site站点 %id编号 %tag标签 %desc描述 %author作者 %date图片时间 %imgid[2]图册中图片编号[补n个零]
             file = file.Replace("%site", SiteManager.Instance.Sites[nowSelectedIndex].ShortName);
@@ -2401,7 +2440,7 @@ namespace MoeLoaderDelta
                     string text = downloadC.NumOnce + "\r\n"
                         + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
                         ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
-                        + (downloadC.IsSaSave ? "1" : "0") + ";"
+                        + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + ";"
                         + numOfLoading + ";"
                         + (itmMaskViewed.IsChecked ? "1" : "0") + ";"
                         + words + ";"

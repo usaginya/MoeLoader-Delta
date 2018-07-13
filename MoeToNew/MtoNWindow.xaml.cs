@@ -14,7 +14,8 @@ namespace MoeLoaderDelta
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
-    /// 2017-5-10       by YIU
+    /// 2017-05-10       by YIU
+    /// Last 20180602
     /// </summary>
     public partial class MtoNWindow : Window
     {

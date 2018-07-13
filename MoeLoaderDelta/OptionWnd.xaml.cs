@@ -42,7 +42,8 @@ namespace MoeLoaderDelta
             //chkAero.IsChecked = main.isAero;
             txtCount.Text = PreFetcher.CachedImgCount.ToString();
             txtParal.Text = main.downloadC.NumOnce.ToString();
-            chkSepSave.IsChecked = chkSaSave.IsEnabled = main.downloadC.IsSepSave;
+            chkSepSave.IsChecked  = main.downloadC.IsSepSave;
+            chkSscSave.IsChecked = main.downloadC.IsSscSave;
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
 
@@ -215,6 +216,7 @@ namespace MoeLoaderDelta
 
             DownloadControl.SaveLocation = txtSaveLocation.Text;
             main.downloadC.IsSepSave = chkSepSave.IsChecked.Value;
+            main.downloadC.IsSscSave = chkSscSave.IsChecked.Value;
             main.downloadC.IsSaSave = chkSaSave.IsChecked.Value;
             main.downloadC.NumOnce = int.Parse(txtParal.Text);
 
@@ -236,7 +238,7 @@ namespace MoeLoaderDelta
             txtCount.Text = "6";
             chkProxy_Click(null, null);
             txtParal.Text = "2";
-            chkSepSave.IsChecked = chkSaSave.IsChecked = chkSaSave.IsEnabled = false;
+            chkSepSave.IsChecked = chkSscSave.IsChecked = chkSaSave.IsChecked = false;
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
             txtSaveLocation.Text = "MoeLoaderGallery";
@@ -342,11 +344,6 @@ namespace MoeLoaderDelta
         {
             MessageBox.Show(this, "将图片文件重命名为 bg.png 或 bg.jpg 后放入 MoeLoaderDelta.exe 所在目录，重启 MoeLoader Δ 即可",
                 MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void chkSepSave_Click(object sender, RoutedEventArgs e)
-        {
-            chkSaSave.IsEnabled = chkSepSave.IsChecked == null ? false : (bool)chkSepSave.IsChecked;
         }
 
         /// <summary>
