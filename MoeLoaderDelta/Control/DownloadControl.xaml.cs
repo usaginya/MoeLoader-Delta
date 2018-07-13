@@ -6,7 +6,6 @@ using System.Windows.Input;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO;
-using System.Collections;
 using System.Threading;
 
 namespace MoeLoaderDelta
@@ -129,7 +128,10 @@ namespace MoeLoaderDelta
             }
             get { return numOnce; }
         }
-
+        /// <summary>
+        /// 重试次数
+        /// </summary>
+        public int retryCount = 2;
         /// <summary>
         /// 分站点存放
         /// </summary>
@@ -476,6 +478,12 @@ namespace MoeLoaderDelta
             {
                 isWorking = false;
                 downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 下载完毕";
+                if (retryCount > 0)
+                {
+                    retryCount--;
+                    Thread.Sleep(1000);
+                    ExecuteDownloadListTask(DLWorkMode.RetryAll);
+                }
             }
 
             if (downloadItems.Count == 0)
@@ -1059,6 +1067,8 @@ namespace MoeLoaderDelta
                 //添加至下载列表
                 AddDownload(items);
             }
+            //重置重试次数
+            retryCount = 2;
         }
 
         /// <summary>

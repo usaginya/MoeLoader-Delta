@@ -822,6 +822,8 @@ namespace MoeLoaderDelta
                     new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify)
                 });
             }
+            //重置重试次数
+            downloadC.retryCount = 2;
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
             //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
@@ -2058,6 +2060,8 @@ namespace MoeLoaderDelta
                 downloadC.AddDownload(urls);
             }
             ButtonMainDL.IsEnabled = true;
+            //重置重试次数
+            downloadC.retryCount = 2;
         }
 
         /// <summary>
