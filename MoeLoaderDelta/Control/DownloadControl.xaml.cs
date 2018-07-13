@@ -127,7 +127,10 @@ namespace MoeLoaderDelta
             }
             get { return numOnce; }
         }
-
+        /// <summary>
+        /// 重试次数
+        /// </summary>
+        public int retryCount = 2;
         /// <summary>
         /// 分站点存放
         /// </summary>
@@ -300,7 +303,6 @@ namespace MoeLoaderDelta
             System.Net.WebResponse res = null;
             double downed = 0;
             string lpath = GetLocalPath(downloadItemsDic[task.Url]);
-
             try
             {
                 res = sc.GetWebResponse(
@@ -477,6 +479,12 @@ namespace MoeLoaderDelta
             {
                 isWorking = false;
                 downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 下载完毕";
+                if (retryCount > 0)
+                {
+                    retryCount--;
+                    System.Threading.Thread.Sleep(1000);
+                    ExecuteDownloadListTask(DLWorkMode.RetryAll);
+                }
             }
 
             if (downloadItems.Count == 0)
@@ -689,14 +697,14 @@ namespace MoeLoaderDelta
                         //查找重复项
                         try
                         {
-                            isexists = havelst && flst.Any(x => x== i.Url);
+                            isexists = havelst && flst.Any(x => x == i.Url);
                         }
                         catch { }
 
                         if (!isexists)
                         {
                             //url
-                            text += i.Url+ "\r\n";
+                            text += i.Url + "\r\n";
                             success++;
                         }
                         else
@@ -1055,7 +1063,7 @@ namespace MoeLoaderDelta
                     itmRetry.IsEnabled =
                     itmStop.IsEnabled =
                     itmDelete.IsEnabled =
-                    itmLstPic.IsEnabled=
+                    itmLstPic.IsEnabled =
                     itmDeleteFile.IsEnabled = false;
             }
             else
@@ -1151,6 +1159,8 @@ namespace MoeLoaderDelta
                 //添加至下载列表
                 AddDownload(items);
             }
+            //重置重试次数
+            retryCount = 2;
         }
 
         /// <summary>
@@ -1389,7 +1399,7 @@ namespace MoeLoaderDelta
                     {   //复制地址
                         itmCopy_Click(null, null);
                     }
-                    else if(e.Key==Key.Z)
+                    else if (e.Key == Key.Z)
                     {
                         //导出图片下载链接列表
                         itmLstPic_Click(null, null);
