@@ -69,7 +69,7 @@ namespace MoeLoaderDelta
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
-        private string SearchWord = "";
+        private static string SearchWord = "";
 
         //private Color backColor;
         //internal bool isAero = true;
@@ -163,6 +163,14 @@ namespace MoeLoaderDelta
         {
             get;
             set;
+        }
+
+        public static string SearchWordPu
+        {
+            get
+            {
+                return SearchWord;
+            }
         }
 
         public MainWindow()
@@ -410,7 +418,13 @@ namespace MoeLoaderDelta
 
                         if (parts.Length > 1)
                         {
-                            downloadC.IsSaSave = parts[1].Equals("1");
+                            try
+                            {
+                                int tpart = Convert.ToInt32(parts[1]);
+                                downloadC.IsSscSave = tpart > 1;
+                                downloadC.IsSaSave = tpart > 0 && tpart < 3;
+                            }
+                            catch { }
                         }
                         if (parts.Length > 2)
                         {
@@ -2426,7 +2440,7 @@ namespace MoeLoaderDelta
                     string text = downloadC.NumOnce + "\r\n"
                         + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
                         ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
-                        + (downloadC.IsSaSave ? "1" : "0") + ";"
+                        + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + ";"
                         + numOfLoading + ";"
                         + (itmMaskViewed.IsChecked ? "1" : "0") + ";"
                         + words + ";"

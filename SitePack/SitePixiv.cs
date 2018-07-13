@@ -8,12 +8,13 @@ using System.Web.Script.Serialization;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180602
+    /// Last change 180706
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -102,7 +103,7 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
-        private static  bool startLogin;
+        private static bool startLogin;
 
         /// <summary>
         /// pixiv.net site
@@ -110,12 +111,15 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
             this.srcType = srcType;
-            if (!startLogin)
+            new Thread(new ThreadStart(delegate
             {
-                startLogin = true;
-                CookieRestore();
-                Login(proxy);
-            }
+                if (!startLogin)
+                {
+                    startLogin = true;
+                    CookieRestore();
+                    Login(proxy);
+                }
+            })).Start();
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
