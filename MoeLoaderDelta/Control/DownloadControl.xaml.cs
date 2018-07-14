@@ -229,7 +229,7 @@ namespace MoeLoaderDelta
             {
                 sPath = saveLocation
                     + (IsSepSave ? "\\" + dlitem.Host : "")
-                   + (IsSscSave ? "\\" + ReplaceInvalidPathChars(MainWindow.SearchWordPu) : "")
+                   + (IsSscSave && !MainWindow.SearchWordPu.IsNullOrEmptyOrWhiteSpace() ? "\\" + ReplaceInvalidPathChars(MainWindow.SearchWordPu) : "")
                    + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
                    + "\\";
 
