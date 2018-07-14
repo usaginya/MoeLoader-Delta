@@ -823,7 +823,7 @@ namespace MoeLoaderDelta
                 });
             }
             //重置重试次数
-            downloadC.retryCount = 2;
+            downloadC.ResetRetryCount();
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
             //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
@@ -1785,32 +1785,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            if (downloadC.IsWorking)
-            {
-                if (
-                    MessageBox.Show(this, "正在下载图片，确定要关闭程序吗？未下载完成的图片不会保存",
-                    ProgramName,
-                    MessageBoxButton.OKCancel,
-                    MessageBoxImage.Question) == MessageBoxResult.Cancel
-                    )
-                {
-                    e.Cancel = true;
-                    return;
-                }
-                //else { isClose = true; }
-            }
-
-            if (previewFrm != null && previewFrm.IsLoaded)
-            {
-                previewFrm.Close();
-                //previewFrm = null;
-            }
-            //prevent from saving invalid window size
-            WindowState = WindowState.Normal;
-        }
-
         /// <summary>
         /// setting
         /// </summary>
@@ -2061,7 +2035,7 @@ namespace MoeLoaderDelta
             }
             ButtonMainDL.IsEnabled = true;
             //重置重试次数
-            downloadC.retryCount = 2;
+            downloadC.ResetRetryCount();
         }
 
         /// <summary>
@@ -2337,11 +2311,7 @@ namespace MoeLoaderDelta
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
-            Storyboard std = Resources["ClosedStoryboard"] as Storyboard;
-            std.Completed += delegate { Close(); };
-            std.Begin();
-            //Close();
+            Close();
         }
 
         /// <summary>
@@ -2417,6 +2387,41 @@ namespace MoeLoaderDelta
                 catch { }
         }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (downloadC.IsWorking)
+            {
+                if (
+                    MessageBox.Show(this, "正在下载图片，确定要关闭程序吗？未下载完成的图片不会保存",
+                    ProgramName,
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Question) == MessageBoxResult.Cancel
+                    )
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                //else { isClose = true; }
+            }
+
+            if (previewFrm != null && previewFrm.IsLoaded)
+            {
+                previewFrm.Close();
+                //previewFrm = null;
+            }
+            //prevent from saving invalid window size
+            WindowState = WindowState.Normal;
+            #region Close animation
+            OpacityMask = Resources["ClosedBrush"] as LinearGradientBrush;
+            Storyboard std = Resources["ClosedStoryboard"] as Storyboard;
+            std.Completed += delegate { Window_Closed(sender, e); };
+            std.Begin();
+            #endregion
+
+            e.Cancel = true;
+            return;
+        }
+
         /// <summary>
         /// 关闭程序
         /// </summary>
@@ -2469,8 +2474,6 @@ namespace MoeLoaderDelta
             }
             catch { }
 
-            //SessionClient.WriteCookiesToFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
-
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
@@ -2505,6 +2508,7 @@ namespace MoeLoaderDelta
                 newThread.Start();
             }
         }
+
         /// <summary>
         /// 线程延迟执行翻页
         /// </summary>
