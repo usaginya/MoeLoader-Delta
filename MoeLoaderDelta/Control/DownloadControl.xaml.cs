@@ -287,19 +287,20 @@ namespace MoeLoaderDelta
                         downloadItems[downloadItems.Count - numLeft].Size = "已存在跳过";
                         j--;
                     }
-                    else if (!Directory.Exists(path))
+                    else
                     {
-                        Directory.CreateDirectory(path);
+                        if (!Directory.Exists(path))
+                            Directory.CreateDirectory(path);
+
+                        downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.DLing;
+
+                        DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
+                        webs.Add(url, task);
+
+                        //异步下载开始
+                        System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Download));
+                        thread.Start(task);
                     }
-
-                    downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.DLing;
-
-                    DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
-                    webs.Add(url, task);
-
-                    //异步下载开始
-                    System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Download));
-                    thread.Start(task);
 
                     numLeft = numLeft > 0 ? --numLeft : 0;
                 }
@@ -364,13 +365,9 @@ namespace MoeLoaderDelta
                 Dispatcher.Invoke(new VoidDel(delegate ()
                 {
                     //下载失败
-                    if (item.Id == 177272)
-                        Console.WriteLine(item.Id);
-
                     if (downloadItemsDic.ContainsKey(task.Url))
                     {
                         item.StatusE = DLStatus.Failed;
-                        Console.WriteLine(item.StatusE);
                         item.Size = "下载失败";
                         WriteErrText(task.Url);
                         WriteErrText(task.SaveLocation);
