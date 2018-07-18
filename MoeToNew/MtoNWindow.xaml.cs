@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 2017-05-10       by YIU
-    /// Last 20180602
+    /// Last 20180717
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -237,7 +237,14 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Process.Start("MoeLoaderDelta.exe", arg);
+                string nowDy = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = nowDy + "MoeLoaderDelta.exe";
+                psi.UseShellExecute = false;
+                psi.WorkingDirectory = nowDy;
+                psi.CreateNoWindow = true;
+                psi.Arguments = arg;
+                Process.Start(psi);
             }
             catch { }
         }
@@ -364,6 +371,7 @@ namespace MoeLoaderDelta
                             if (!Directory.Exists(tmpDLPath))
                             {
                                 Directory.CreateDirectory(tmpDLPath);
+                                new DirectoryInfo(tmpDLPath).Attributes = FileAttributes.Hidden;
                             }
 
                             Stream str = res.GetResponseStream();
@@ -483,7 +491,7 @@ namespace MoeLoaderDelta
             UpdateState = -1;
             KillMoeLoader();
             RunMoeLoader(haveUpdate ? "" : noUpdateRunMLD);
-            Environment.Exit(0);
+            Process.GetCurrentProcess().Kill();
         }
 
         /// <summary>
