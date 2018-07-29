@@ -80,6 +80,7 @@ namespace MoeLoaderDelta
                     else
                     {
                         //从更新程序启动
+                        Thread.Sleep(666);
                         Process.Start(UpdateAppEXEName);
                         Process.GetCurrentProcess().Kill();
                     }

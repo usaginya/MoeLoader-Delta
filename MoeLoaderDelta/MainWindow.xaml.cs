@@ -2054,9 +2054,9 @@ namespace MoeLoaderDelta
             //%site站点 %id编号 %tag标签 %desc描述 %author作者 %date图片时间 %imgid[2]图册中图片编号[补n个零]
             file = file.Replace("%site", SiteManager.Instance.Sites[nowSelectedIndex].ShortName);
             file = file.Replace("%id", img.Id.ToSafeString());
-            file = file.Replace("%tag", img.Tags.Replace("\r\n", ""));
-            file = file.Replace("%desc", img.Desc.Replace("\r\n", ""));
-            file = file.Replace("%author", img.Author);
+            file = file.Replace("%tag", DownloadControl.ReplaceInvalidPathChars(img.Tags.Replace("\r\n", "")));
+            file = file.Replace("%desc", DownloadControl.ReplaceInvalidPathChars(img.Desc.Replace("\r\n", "")));
+            file = file.Replace("%author", DownloadControl.ReplaceInvalidPathChars(img.Author.Replace("\r\n", "")));
             file = file.Replace("%date", FormatFileDateTime(img.Date));
             #region 图册页数格式化
             try
