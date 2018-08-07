@@ -14,8 +14,8 @@ namespace MoeLoaderDelta
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
-    /// 2017-05-10       by YIU
-    /// Last 20180717
+    /// 20170510       by YIU
+    /// Last 20180808
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -366,6 +366,7 @@ namespace MoeLoaderDelta
 
                             //响应长度
                             double reslength = res.ContentLength;
+                            if (reslength < 1) throw new Exception("获取文件长度失败，请检查网络是否正常");
 
                             string tmpDLPath = updateTmpPath + "\\" + RepairPath(nowDLfile.Path);
                             if (!Directory.Exists(tmpDLPath))
@@ -425,7 +426,6 @@ namespace MoeLoaderDelta
                             }, null);
                             #endregion
                             break;
-
                     }
                 }
                 catch (Exception ex)
