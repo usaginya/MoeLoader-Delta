@@ -23,6 +23,7 @@ namespace MoeLoaderDelta
         public string localfileName;
         public int id;
         public bool noVerify;
+        public string searchWord;
         public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id, bool noVerify)
         {
             //原始后缀名
@@ -47,6 +48,7 @@ namespace MoeLoaderDelta
                 : localfileName.IsNullOrEmptyOrWhiteSpace() ? fileName : localfileName + ext;
             this.id = id;
             this.noVerify = noVerify;
+            this.searchWord = MainWindow.SearchWordPu;
         }
     }
 
@@ -196,7 +198,7 @@ namespace MoeLoaderDelta
                       {
                           downloadItemsDic.Remove(item.url);
                       }*/
-                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify);
+                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify,item.searchWord);
 
                     downloadItemsDic.Add(item.url, itm);
                     downloadItems.Add(itm);
@@ -221,7 +223,7 @@ namespace MoeLoaderDelta
         private string GetLocalPath(DownloadItem dlitem)
         {
             string sPath;
-            if (dlitem.LocalName.Contains("\\"))
+            if (!dlitem.LocalName.IsNullOrEmptyOrWhiteSpace() && dlitem.LocalName.Contains("\\"))
             {
                 sPath = dlitem.LocalName.Substring(0, dlitem.LocalName.LastIndexOf("\\") + 1);
             }
@@ -229,7 +231,7 @@ namespace MoeLoaderDelta
             {
                 sPath = saveLocation
                     + (IsSepSave ? "\\" + dlitem.Host : "")
-                   + (IsSscSave && !MainWindow.SearchWordPu.IsNullOrEmptyOrWhiteSpace() ? "\\" + ReplaceInvalidPathChars(MainWindow.SearchWordPu) : "")
+                   + (IsSscSave && !dlitem.SearchWord.IsNullOrEmptyOrWhiteSpace() ? "\\" + dlitem.SearchWord : "")
                    + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
                    + "\\";
 
@@ -660,6 +662,7 @@ namespace MoeLoaderDelta
                                 + "|" + i.Author
                                 + "|" + i.Id
                                 + "|" + (i.NoVerify ? 'v' : 'x')
+                                + "|" + i.SearchWord
                                 + "\r\n";
                             success++;
                         }
@@ -1076,6 +1079,9 @@ namespace MoeLoaderDelta
                     if (parts.Length > 5 && parts[5].Trim().Length > 0)
                         di.noVerify = parts[5].Contains('v');
 
+                    //搜索时关键词
+                    if (parts.Length > 6 && parts[6].Trim().Length > 0)
+                        di.searchWord = parts[6];
 
                     items.Add(di);
                 }

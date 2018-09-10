@@ -169,7 +169,7 @@ namespace MoeLoaderDelta
         {
             get
             {
-                return SearchWord;
+                return DownloadControl.ReplaceInvalidPathChars(SearchWord);
             }
         }
 
@@ -1767,7 +1767,8 @@ namespace MoeLoaderDelta
                                     + "|" + selectimg.Author
                                     + "|" + selectimg.Id
                                     + "|" + (selectimg.NoVerify ? 'v' : 'x')
-                                    + "\r\n";
+                                    + "|" + SearchWordPu
+                                    +"\r\n";
                                 success++;
                             }
                         }
