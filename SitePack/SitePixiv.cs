@@ -90,7 +90,16 @@ namespace SitePack
         public override string Referer { get { return referer; } }
         public override string SubReferer { get { return ShortName + ",pximg"; } }
 
-        public override bool IsSupportCount { get { return false; } } //fixed 20
+        public override bool IsSupportCount  //fixed 20
+        {
+            get
+            {
+                if (srcType == PixivSrcType.PidPlus)
+                    return true;
+                else
+                    return false;
+            }
+        }
         //public override bool IsSupportScore { get { return false; } }
         public override bool IsSupportRes { get { return false; } }
         //public override bool IsSupportPreview { get { return true; } }
@@ -99,7 +108,8 @@ namespace SitePack
 
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
-
+        private int page = 1;
+        private int count = 1;
         private static string cookie = "";
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
@@ -133,6 +143,8 @@ namespace SitePack
             Login(proxy);
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             string url = null;
+            this.page = page;
+            this.count = count;
             if (srcType == PixivSrcType.Pid||srcType==PixivSrcType.PidPlus)
             {
                 if (keyWord.Length > 0 && Regex.Match(keyWord, @"^[0-9]+$").Success)
@@ -235,10 +247,9 @@ namespace SitePack
                     }
                     if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
-                        //for(int j=0;j<=rMList.Count;j++)
-                        for (int j = 0; j <= 10; j++)
+                        for (int j = (page-1)*count; j <= page*count&j<=rMList.Count; j++)
                         {
-                            if (j != 0)
+                            if (j != 0|page>1)
                             {
                                 pageString = Sweb.Get(SiteUrl + "/member_illust.php?mode=medium&illust_id=" +rMList[j-1], proxy, shc);    
                             }
