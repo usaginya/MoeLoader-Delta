@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -42,7 +43,7 @@ namespace MoeLoaderDelta
             //chkAero.IsChecked = main.isAero;
             txtCount.Text = PreFetcher.CachedImgCount.ToString();
             txtParal.Text = main.downloadC.NumOnce.ToString();
-            chkSepSave.IsChecked  = main.downloadC.IsSepSave;
+            chkSepSave.IsChecked = main.downloadC.IsSepSave;
             chkSscSave.IsChecked = main.downloadC.IsSscSave;
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
@@ -149,7 +150,21 @@ namespace MoeLoaderDelta
                     return;
                 }
             }
-            else MainWindow.Proxy = "";
+            else
+                MainWindow.Proxy = "";
+
+            if (txtPattern.Text.Trim().Length > 0)
+            {
+                foreach (char rInvalidChar in Path.GetInvalidFileNameChars())
+                {
+                    if (!rInvalidChar.Equals('<') && txtPattern.Text.Contains(rInvalidChar.ToSafeString()))
+                    {
+                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符",
+                        MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+            }
 
             if (rtNoProxy.IsChecked.Value)
             {
