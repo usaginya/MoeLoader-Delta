@@ -259,7 +259,6 @@
                         Margin="5,5,0,4"
                         InputMethod.IsInputMethodEnabled="False"
                         MaxLength="5"
-                        PreviewKeyDown="txtPage_PreviewKeyDown"
                         Style="{StaticResource SimpleTextBox}" />
                     <Button
                         Width="15"

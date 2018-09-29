@@ -20,7 +20,7 @@ namespace SitePack
     public class SitePixiv : AbstractImageSite
     {
         //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id, 作品id及相关作品
-        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid,PidPlus }
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid, PidPlus }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -142,14 +142,15 @@ namespace SitePack
         {
             Login(proxy);
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            int memberId = 0;
             string url = null;
             this.page = page;
             this.count = count;
-            if (srcType == PixivSrcType.Pid||srcType==PixivSrcType.PidPlus)
+            if (srcType == PixivSrcType.Pid || srcType == PixivSrcType.PidPlus)
             {
-                if (keyWord.Length > 0 && Regex.Match(keyWord, @"^[0-9]+$").Success)
+                if (keyWord.Length > 0 && int.TryParse(keyWord.Trim(), out memberId))
                 {
-                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + keyWord;
+                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + memberId;
                 }
                 else throw new Exception("请输入图片id");
             }
@@ -167,7 +168,7 @@ namespace SitePack
                 }
                 if (srcType == PixivSrcType.Author)
                 {
-                    int memberId = 0;
+                    memberId = 0;
                     if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                     {
                         throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
@@ -195,7 +196,7 @@ namespace SitePack
             if (srcType == PixivSrcType.PidPlus)
             {
                 //相关作品json信息
-                tempPage = Sweb.Get("https://www.pixiv.net/ajax/illust/" + keyWord + "/recommend/init?limit=1", proxy, shc);
+                tempPage = Sweb.Get(SiteUrl + "/ajax/illust/" + keyWord + "/recommend/init?limit=18", proxy, shc);
             }
             return pageString;
         }
@@ -224,7 +225,7 @@ namespace SitePack
                 }
                 //else if (srcType == PixivSrcType.Day || srcType == PixivSrcType.Month || srcType == PixivSrcType.Week) //ranking
                 //nodes = doc.DocumentNode.SelectSingleNode("//section[@class='ranking-items autopagerize_page_element']").SelectNodes("div");
-                else if (srcType == PixivSrcType.Pid||srcType==PixivSrcType.PidPlus)
+                else if (srcType == PixivSrcType.Pid || srcType == PixivSrcType.PidPlus)
                 {
                     //相关作品json信息
                     string relatePicJson = tempPage;
@@ -247,11 +248,15 @@ namespace SitePack
                     }
                     if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
                     {
-                        for (int j = (page-1)*count; j <= page*count&j<=rMList.Count; j++)
+                        for (int j = (page - 1) * count; j <= page * count & j <= rMList.Count; j++)
                         {
-                            if (j != 0|page>1)
+                            if (j != 0 | page > 1)
                             {
-                                pageString = Sweb.Get(SiteUrl + "/member_illust.php?mode=medium&illust_id=" +rMList[j-1], proxy, shc);    
+                                try
+                                {
+                                    pageString = Sweb.Get(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + rMList[j - 1], proxy, shc);
+                                }
+                                catch { continue; }
                             }
                             int mangaCount = 1;
                             string id, SampleUrl;
@@ -292,7 +297,7 @@ namespace SitePack
                                 img.Dimension = sb.ToString();
                                 if (img != null) imgs.Add(img);
                             }
-                        } 
+                        }
                         return imgs;
                     }
                     else throw new Exception("该作品已被删除，或作品ID不存在");
@@ -658,6 +663,14 @@ namespace SitePack
 
                     if (!data.Contains("success"))
                         SiteManager.echoErrLog(ShortName, "自动登录失败 " + data);
+                    else if (data.Contains("locked"))
+                    {
+                        try
+                        {
+                            throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
+                        }
+                        catch { }
+                    }
                     else if (cookie.Length < 9)
                         SiteManager.echoErrLog(ShortName, "自动登录失败 ");
                     else
