@@ -20,7 +20,7 @@ namespace MoeLoaderDelta
         private SiteManager()
         {
 
-            string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.TopDirectoryOnly);
+            string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.AllDirectories);
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
@@ -40,7 +40,8 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    Type type = Assembly.LoadFile(dll).GetType("SitePack.SiteProvider", true, false);
+                    byte[] assemblyBuffer = File.ReadAllBytes(dll);
+                    Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
                     sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { mainproxy }) as List<ImageSite>);
                 }
