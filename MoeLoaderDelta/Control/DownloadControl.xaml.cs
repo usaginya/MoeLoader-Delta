@@ -122,7 +122,7 @@ namespace MoeLoaderDelta
         {
             set
             {
-                if (value > 5) value = 5;
+                if (value > 20) value = 20;
                 else if (value < 1) value = 1;
 
                 numOnce = value;

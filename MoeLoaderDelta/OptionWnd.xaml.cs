@@ -308,7 +308,7 @@ namespace MoeLoaderDelta
         private void pageUp_Click1(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtParal.Text);
-            if (value < 5)
+            if (value < 20)
                 txtParal.Text = (value + 1).ToString();
         }
 
@@ -388,5 +388,6 @@ namespace MoeLoaderDelta
             txtPattern.SelectionStart = selectstart + format.Length;
             txtPattern.Focus();
         }
+
     }
 }
