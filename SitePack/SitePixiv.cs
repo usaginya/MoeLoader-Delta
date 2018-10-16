@@ -263,7 +263,7 @@ namespace SitePack
                         else
                             ids += "ids[]=" + illustsList[j] + "&";
                     }
-                    pageString = Sweb.Get(SiteUrl + "/ajax/user/212801/profile/illusts?" + ids + "is_manga_top=0", proxy, shc);
+                    pageString = Sweb.Get(SiteUrl + "/ajax/user/"+keyWord+"/profile/illusts?" + ids + "is_manga_top=0", proxy, shc);
                     //ROOT->body->works
                     //获取图片详细信息
                     if (!string.IsNullOrWhiteSpace(pageString))
