@@ -181,7 +181,7 @@ namespace SitePack
                     //url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
                     //https://www.pixiv.net/ajax/user/212801/profile/all
                     //https://www.pixiv.net/ajax/user/212801/profile/illusts?ids%5B%5D=70095905&ids%5B%5D=69446164&is_manga_top=0
-                    url = SiteUrl+"/ajax/user/"+memberId+"/profile/all";
+                    url = SiteUrl + "/ajax/user/" + memberId + "/profile/all";
                 }
                 else if (srcType == PixivSrcType.Day)
                 {
@@ -248,38 +248,44 @@ namespace SitePack
                             {
                                 illustsList.Add(jp.Name);
                             }
-                            jToken = ((JObject)jsonObj["body"])["illusts"];
+                            jToken = ((JObject)jsonObj["body"])["manga"];
                             foreach (JProperty jp in jToken)
                             {
                                 mangaList.Add(jp.Name);
                             }
                         }
                     }
-                    string ids = null;
-                    for (int j = (page - 1) * count; j < page * count & j <= illustsList.Count + mangaList.Count; j++)
+                    string ids = string.Empty;
+                    int ilistcount = illustsList.Count,
+                        mlistcount = mangaList.Count,
+                        scount = ilistcount + mlistcount;
+                    for (int j = (page - 1) * count; j < page * count & scount > 0 & j <= scount; j++)
                     {
-                        if (j == illustsList.Count)
-                            ids += "ids[]=" + mangaList[j] + "&";
-                        else
-                            ids += "ids[]=" + illustsList[j] + "&";
+                        if (j < ilistcount)
+                            ids += $"ids[]={illustsList[j]}&";
+                        if (j < mlistcount)
+                            ids += $"ids[]={mangaList[j]}&";
                     }
-                    pageString = Sweb.Get(SiteUrl + "/ajax/user/"+keyWord+"/profile/illusts?" + ids + "is_manga_top=0", proxy, shc);
-                    //ROOT->body->works
-                    //获取图片详细信息
-                    if (!string.IsNullOrWhiteSpace(pageString))
+                    if (!string.IsNullOrWhiteSpace(ids))
                     {
-                        JObject jsonObj = JObject.Parse(pageString);
-                        JToken jToken;
-                        if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids}is_manga_top=0", proxy, shc);
+                        //ROOT->body->works
+                        //获取图片详细信息
+                        if (!string.IsNullOrWhiteSpace(pageString))
                         {
-                            jToken = ((JObject)jsonObj["body"])["works"];
-                            foreach (JProperty jp in jToken)
+                            JObject jsonObj = JObject.Parse(pageString);
+                            JToken jToken;
+                            if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
                             {
-                                JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
-                                if (img != null) imgs.Add(img);
-                            }
+                                jToken = ((JObject)jsonObj["body"])["works"];
+                                foreach (JProperty jp in jToken)
+                                {
+                                    JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
+                                    Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
+                                    if (img != null) imgs.Add(img);
+                                }
 
+                            }
                         }
                     }
                     return imgs;
@@ -290,7 +296,7 @@ namespace SitePack
                 {
                     //相关作品json信息
                     string relatePicJson = tempPage;
-                    string imagesJson = null;
+                    string imagesJson = string.Empty;
                     //ROOT ->body -> recommendMethods
                     List<string> rmsList = new List<string>();//recommendMethods 数据
                     if (!string.IsNullOrWhiteSpace(relatePicJson))
@@ -307,29 +313,29 @@ namespace SitePack
                             }
                         }
                     }
-                    string ids = null;
-                    if (page == 1)
-                        ids = "ids[]=" + keyWord + "&";
-                    else
-                        ids = null;
-                    for (int j = (page - 1) * count; j < page * count & j <= rmsList.Count; j++)
-                        ids += "ids[]=" + rmsList[j] + "&";
-                    pageString = Sweb.Get(SiteUrl + "/ajax/user/212801/profile/illusts?" + ids + "is_manga_top=0", proxy, shc);
-                    if (!string.IsNullOrWhiteSpace(pageString))
-                    {
-                        JObject jsonObj = JObject.Parse(pageString);
-                        JToken jToken;
-                        if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
-                        {
-                            jToken = ((JObject)jsonObj["body"])["works"];
-                            foreach (JProperty jp in jToken)
-                            {
-                                JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
-                                if (keyWord == jp.Name) img.Source = "相关作品";
-                                if (img != null) imgs.Add(img);
-                            }
+                    string ids = string.Empty;
+                    ids = (page == 1 ? "ids[]=" + keyWord + "&" : ids);
 
+                    for (int j = (page - 1) * count; j < page * count & rmsList.Count > 0 & j <= rmsList.Count; j++)
+                        ids += "ids[]=" + rmsList[j] + "&";
+                    if (!string.IsNullOrWhiteSpace(ids))
+                    {
+                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids}is_manga_top=0", proxy, shc);
+                        if (!string.IsNullOrWhiteSpace(pageString))
+                        {
+                            JObject jsonObj = JObject.Parse(pageString);
+                            JToken jToken;
+                            if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                            {
+                                jToken = ((JObject)jsonObj["body"])["works"];
+                                foreach (JProperty jp in jToken)
+                                {
+                                    JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
+                                    Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
+                                    if (keyWord == jp.Name) img.Source = "相关作品";
+                                    if (img != null) imgs.Add(img);
+                                }
+                            }
                         }
                     }
                     return imgs;
@@ -386,8 +392,9 @@ namespace SitePack
                     nodes = doc.DocumentNode.SelectNodes("//section[@class='ranking-item']");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                SiteManager.echoErrLog(SiteName, ex);
                 throw new Exception("没有找到图片哦～ .=ω=");
             }
 
@@ -724,7 +731,7 @@ namespace SitePack
                     hdoc.LoadHtml(data);
                     post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                     if (post_key.Length < 9)
-                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
+                        SiteManager.echoErrLog(SiteName, "自动登录失败 ");
 
                     //请求2 POST取登录Cookie
                     shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
@@ -737,7 +744,7 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (!data.Contains("success"))
-                        SiteManager.echoErrLog(ShortName, "自动登录失败 " + data);
+                        SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
                     else if (data.Contains("locked"))
                     {
                         try
@@ -747,13 +754,13 @@ namespace SitePack
                         catch { }
                     }
                     else if (cookie.Length < 9)
-                        SiteManager.echoErrLog(ShortName, "自动登录失败 ");
+                        SiteManager.echoErrLog(SiteName, "自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }
                 catch (Exception e)
                 {
-                    SiteManager.echoErrLog(ShortName, e, "可能无法连接到服务器");
+                    SiteManager.echoErrLog(SiteName, e, "可能无法连接到服务器");
                 }
             }
         }
