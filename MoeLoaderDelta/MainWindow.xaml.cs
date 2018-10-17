@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Xml;
 using System.Linq;
 using System.Windows;
 using System.Threading;
@@ -50,6 +51,17 @@ namespace MoeLoaderDelta
         /// 程序版本
         /// </summary>
         public static Version ProgramVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+        /// <summary>
+        /// 封装当前程序运行目录
+        /// </summary>
+        public static string ProgramRunPath
+        {
+            get
+            {
+                return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            }
+        }
 
         /// <summary>
         /// 封装的程序名
@@ -180,12 +192,12 @@ namespace MoeLoaderDelta
 
             btnGet.ToolTip = btnGet.Tag as string;
 
-            if (!File.Exists(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\nofont.txt"))
+            if (!File.Exists($"{ProgramRunPath}\\nofont.txt"))
             {
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
 
-            //SessionClient.ReadCookiesFromFile(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SaveCk.mck");
+            //SessionClient.ReadCookiesFromFile($"{ProgramRunPath}\\SaveCk.mck");
 
             //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
             //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
@@ -258,6 +270,33 @@ namespace MoeLoaderDelta
                 siteMenu.Icon = tempSites[0].Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
+            else
+            {
+                MessageBox.Show("哎呀 Σ(>Д<。ﾉ)ﾉ");      //不知原因这里消息框会被跳过一次
+                MessageBoxResult msgSelect = MessageBox.Show("初始化站点库发生错误、要尝试备用方案吗？", ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (msgSelect == MessageBoxResult.Yes)
+                {
+                    string configPath = $"{ProgramRunPath}\\MoeLoaderDelta.exe.config";
+                    XmlDocument xmlDoc = new XmlDocument();
+                    xmlDoc.Load(configPath);
+
+                    XmlNode root = xmlDoc.SelectSingleNode("/configuration/runtime");
+                    if (root.SelectSingleNode("loadFromRemoteSources") == null)
+                    {
+                        XmlElement insertNode = xmlDoc.CreateElement("loadFromRemoteSources");
+                        insertNode.SetAttribute("enabled", "true");
+                        root.AppendChild(insertNode);
+
+                        xmlDoc.Save(configPath);
+                    }
+
+                    Application.Current.Shutdown();
+                    System.Windows.Forms.Application.Restart();
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                }
+            }
+
+
             //comboBox1.ItemsSource = tempSites;
             //comboBox1.SelectedIndex = 0;
             /////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,20 +367,10 @@ namespace MoeLoaderDelta
 
         private void LoadBgImg()
         {
-            string bgPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\bg.png";
-            bool hasBg = false;
-            if (File.Exists(bgPath))
-            {
-                hasBg = true;
-            }
-            else
-            {
-                bgPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\bg.jpg";
-                if (File.Exists(bgPath))
-                {
-                    hasBg = true;
-                }
-            }
+            string bgPath = $"{ProgramRunPath}\\bg.png";
+            bgPath = File.Exists(bgPath) ? bgPath : $"{ProgramRunPath}\\bg.jpg";
+            bool hasBg = File.Exists(bgPath);
+
             if (hasBg)
             {
                 Dispatcher.Invoke(new VoidDel(delegate
@@ -382,7 +411,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void LoadConfig()
         {
-            string configFile = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Moe_config.ini";
+            string configFile = $"{ProgramRunPath}\\Moe_config.ini";
 
             //读取配置文件
             if (File.Exists(configFile))
@@ -1768,7 +1797,7 @@ namespace MoeLoaderDelta
                                     + "|" + selectimg.Id
                                     + "|" + (selectimg.NoVerify ? 'v' : 'x')
                                     + "|" + SearchWordPu
-                                    +"\r\n";
+                                    + "\r\n";
                                 success++;
                             }
                         }
@@ -2444,7 +2473,7 @@ namespace MoeLoaderDelta
                     }
 
                     string text = downloadC.NumOnce + "\r\n"
-                        + (DownloadControl.SaveLocation == System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+                        + (DownloadControl.SaveLocation == ProgramRunPath
                         ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
                         + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + ";"
                         + numOfLoading + ";"
@@ -2469,8 +2498,7 @@ namespace MoeLoaderDelta
                     {
                         text += id.Key + ":" + id.Value + "\r\n";
                     }
-                    File.WriteAllText(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-                        + "\\Moe_config.ini", text);
+                    File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
                 }
             }
             catch { }

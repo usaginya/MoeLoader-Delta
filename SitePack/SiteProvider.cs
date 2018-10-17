@@ -9,8 +9,9 @@ namespace SitePack
         public List<ImageSite> SiteList(IWebProxy proxy)
         {
             List<ImageSite> sites = new List<ImageSite>();
+
             bool ecchimode = System.IO.File.Exists(
-                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"
+                $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
                 );
 
             sites.Add(new SiteLargeBooru(

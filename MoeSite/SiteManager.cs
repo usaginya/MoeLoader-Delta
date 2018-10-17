@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Windows.Forms;
+using System.Xml;
 
 namespace MoeLoaderDelta
 {
@@ -15,18 +17,19 @@ namespace MoeLoaderDelta
         private static IWebProxy mainproxy;
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
-        private static string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\SitePacks\\";
+        private static string runPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        private static string sitePacksPath = $"{runPath}\\SitePacks\\";
 
         private SiteManager()
         {
 
-            string[] dlls = Directory.GetFiles(path, "SitePack*.dll", SearchOption.AllDirectories);
+            string[] dlls = Directory.GetFiles(sitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
             {
                 List<string> dlll = new List<string>();
-                string basisdll = path + "SitePack.dll";
+                string basisdll = sitePacksPath + "SitePack.dll";
 
                 if (File.Exists(basisdll))
                 {
@@ -113,7 +116,7 @@ namespace MoeLoaderDelta
                 wstr += "[调用堆栈]: " + ex.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
-            File.AppendAllText(path + "site_error.log", wstr + "\r\n");
+            File.AppendAllText(sitePacksPath + "site_error.log", wstr + "\r\n");
         }
         /// <summary>
         /// 提供站点错误的输出
