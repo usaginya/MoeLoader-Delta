@@ -1,14 +1,14 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using MoeLoaderDelta;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using HtmlAgilityPack;
-using MoeLoaderDelta;
-using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
 using System.Net;
 using System.Text;
-using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web.Script.Serialization;
 
 namespace SitePack
 {
@@ -744,23 +744,24 @@ namespace SitePack
                     cookie = Sweb.GetURLCookies(SiteUrl);
 
                     if (!data.Contains("success"))
-                        SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
-                    else if (data.Contains("locked"))
                     {
-                        try
+                        if (data.Contains("locked"))
                         {
+
                             throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
+
                         }
-                        catch { }
+                        else if (cookie.Length < 9)
+                            SiteManager.echoErrLog(SiteName, "自动登录失败 ");
+                        else
+                            SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
                     }
-                    else if (cookie.Length < 9)
-                        SiteManager.echoErrLog(SiteName, "自动登录失败 ");
                     else
                         cookie = "pixiv;" + cookie;
                 }
                 catch (Exception e)
                 {
-                    SiteManager.echoErrLog(SiteName, e, "可能无法连接到服务器");
+                    SiteManager.echoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
                 }
             }
         }

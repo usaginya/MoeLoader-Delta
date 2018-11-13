@@ -1,20 +1,20 @@
 ﻿using System;
-using System.IO;
-using System.Xml;
-using System.Linq;
-using System.Windows;
-using System.Threading;
-using System.Reflection;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Windows.Interop;
-using System.Windows.Controls;
 using System.Collections.Generic;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Animation;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Xml;
 
 namespace MoeLoaderDelta
 {
@@ -2413,25 +2413,32 @@ namespace MoeLoaderDelta
         {
             string tmpath = System.IO.Path.GetTempPath() + "\\Moeloadelta";
             if (Directory.Exists(tmpath))
+            {
                 try { Directory.Delete(tmpath, true); }
                 catch { }
+            }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            string CloseMsg = string.Empty;
+
             if (downloadC.IsWorking)
             {
-                if (
-                    MessageBox.Show(this, "正在下载图片，确定要关闭程序吗？未下载完成的图片不会保存",
-                    ProgramName,
-                    MessageBoxButton.OKCancel,
-                    MessageBoxImage.Question) == MessageBoxResult.Cancel
-                    )
-                {
-                    e.Cancel = true;
-                    return;
-                }
-                //else { isClose = true; }
+                CloseMsg = "还有正在下载的图片，确定要关闭程序吗？未下载完成的图片不会保存";
+
+            }
+            else if (downloadC.NumFail > 0)
+            {
+                CloseMsg = "还有下载失败的图片，确定要关闭程序吗？未下载完成的图片不会保存";
+            }
+
+            if (!string.IsNullOrWhiteSpace(CloseMsg)
+                && MessageBox.Show(this, CloseMsg, ProgramName,
+                        MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel)
+            {
+                e.Cancel = true;
+                return;
             }
 
             if (previewFrm != null && previewFrm.IsLoaded)
