@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 180706
+    /// Last change 181115
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -170,9 +170,10 @@ namespace SitePack
                         + (srcType == PixivSrcType.TagFull ? "_full" : "")
                     + "&word=" + keyWord + "&order=date_d&p=" + page;
                 }
+
+                memberId = 0;
                 if (srcType == PixivSrcType.Author)
                 {
-                    memberId = 0;
                     if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                     {
                         throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
@@ -185,15 +186,18 @@ namespace SitePack
                 }
                 else if (srcType == PixivSrcType.Day)
                 {
-                    url = SiteUrl + "/ranking.php?mode=daily&p=" + page;
+                    url = $"{SiteUrl}/ranking.php?mode=daily&p={page}";
+                    url = $"{url}{(keyWord.Trim().Length > 0 && int.TryParse(keyWord.Trim(), out memberId) ? $"&date={memberId}" : string.Empty)}";
                 }
                 else if (srcType == PixivSrcType.Week)
                 {
-                    url = SiteUrl + "/ranking.php?mode=weekly&p=" + page;
+                    url = $"{SiteUrl}/ranking.php?mode=weekly&p={page}";
+                    url = $"{url}{(keyWord.Trim().Length > 0 && int.TryParse(keyWord.Trim(), out memberId) ? $"&date={memberId}" : string.Empty)}";
                 }
                 else if (srcType == PixivSrcType.Month)
                 {
-                    url = SiteUrl + "/ranking.php?mode=monthly&p=" + page;
+                    url = $"{SiteUrl}/ranking.php?mode=monthly&p={page}";
+                    url = $"{url}{(keyWord.Trim().Length > 0 && int.TryParse(keyWord.Trim(), out memberId) ? $"&date={memberId}" : string.Empty)}";
                 }
             }
             shc.Remove("X-Requested-With");

@@ -496,16 +496,16 @@ namespace MoeLoaderDelta
                 IsWorking = false;
                 downloadStatus.Text = "已保存 " + NumSaved + " 剩余 " + NumLeft + " 下载完毕 ";
 
-                // 5 秒后执行重试、5秒内则重置重试时间
+                // 9秒后执行重试、9秒内则重置重试时间
                 if (NumFail > 0 && retryCount > 0)
                 {
                     if (retryTimer == null)
                     {
-                        retryTimer = new Timer(new TimerCallback(RetryRuntime), null, 5000, Timeout.Infinite);
+                        retryTimer = new Timer(new TimerCallback(RetryRuntime), null, 9000, Timeout.Infinite);
                     }
                     else
                     {
-                        retryTimer.Change(5000, Timeout.Infinite);
+                        retryTimer.Change(9000, Timeout.Infinite);
                     }
                 }
             }
@@ -805,6 +805,8 @@ namespace MoeLoaderDelta
                         if (item.StatusE == DLStatus.Failed || item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
                         {
                             if (dlworkmode == DLWorkMode.AutoRetryAll && item.StatusE == DLStatus.Cancel) break;
+                            retryTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
                             NumLeft = NumLeft > selectcs ? selectcs : NumLeft;
                             NumFail = NumFail > 0 ? --NumFail : 0;
                             downloadItems.Remove(item);
