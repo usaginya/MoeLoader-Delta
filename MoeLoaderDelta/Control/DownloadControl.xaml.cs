@@ -214,6 +214,7 @@ namespace MoeLoaderDelta
             }
 
             RefreshList();
+            ResetRetryCount();
         }
 
         /// <summary>
