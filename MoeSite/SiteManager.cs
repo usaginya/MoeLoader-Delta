@@ -117,6 +117,7 @@ namespace MoeLoaderDelta
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
             File.AppendAllText(sitePacksPath + "site_error.log", wstr + "\r\n");
+            MessageBox.Show(extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         /// <summary>
         /// 提供站点错误的输出
