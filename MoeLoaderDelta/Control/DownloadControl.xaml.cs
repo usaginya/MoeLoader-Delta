@@ -184,8 +184,9 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 添加下载任务
         /// </summary>
-        /// <param name="urls"></param>
-        public void AddDownload(IEnumerable<MiniDownloadItem> items)
+        /// <param name="items">下载物</param>
+        /// <param name="dLWork">模式</param>
+        public void AddDownload(IEnumerable<MiniDownloadItem> items, DLWorkMode dLWork)
         {
             foreach (MiniDownloadItem item in items)
             {
@@ -214,7 +215,18 @@ namespace MoeLoaderDelta
             }
 
             RefreshList();
-            ResetRetryCount();
+            if (dLWork != DLWorkMode.AutoRetryAll)
+            {
+                ResetRetryCount();
+            }
+        }
+        /// <summary>
+        /// 添加下载通用
+        /// </summary>
+        /// <param name="items"></param>
+        public void AddDownload(IEnumerable<MiniDownloadItem> items)
+        {
+            AddDownload(items, DLWorkMode.Retry);
         }
 
         /// <summary>
@@ -520,7 +532,10 @@ namespace MoeLoaderDelta
         private void RetryRuntime(object state)
         {
             retryCount--;
-            Dispatcher.Invoke(new VoidDel(delegate () { ExecuteDownloadListTask(DLWorkMode.AutoRetryAll); }));
+            if (downloadItems.Count > 0)
+            {
+                Dispatcher.Invoke(new VoidDel(delegate () { ExecuteDownloadListTask(DLWorkMode.AutoRetryAll); }));
+            }
             GC.Collect();
         }
 
@@ -815,7 +830,7 @@ namespace MoeLoaderDelta
                             AddDownload(new MiniDownloadItem[] {
                                 new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName,
                                 item.Id, item.NoVerify)
-                            });
+                            }, dlworkmode);
                         }
                         break;
 
@@ -1208,6 +1223,7 @@ namespace MoeLoaderDelta
                 {
                     downloadItems.RemoveAt(i);
                     downloadItemsDic.Remove(item.Url);
+                    NumFail = NumFail > 0 ? --NumFail : 0;
                 }
                 else
                 {
@@ -1335,6 +1351,7 @@ namespace MoeLoaderDelta
             }
         }
 
+        /// <summary>
         /// 当做下载列表快捷键
         /// </summary>
         private void dlList_KeyDown(object sender, KeyEventArgs e)
