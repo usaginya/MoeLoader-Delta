@@ -821,8 +821,7 @@ namespace MoeLoaderDelta
                         if (item.StatusE == DLStatus.Failed || item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
                         {
                             if (dlworkmode == DLWorkMode.AutoRetryAll && item.StatusE == DLStatus.Cancel) break;
-                            retryTimer.Change(Timeout.Infinite, Timeout.Infinite);
-
+                            if (retryTimer != null) retryTimer.Change(Timeout.Infinite, Timeout.Infinite);
                             NumLeft = NumLeft > selectcs ? selectcs : NumLeft;
                             NumFail = NumFail > 0 ? --NumFail : 0;
                             downloadItems.Remove(item);
