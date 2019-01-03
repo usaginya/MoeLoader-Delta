@@ -185,6 +185,8 @@ namespace MoeLoaderDelta
             }
         }
 
+        WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -300,6 +302,11 @@ namespace MoeLoaderDelta
             //comboBox1.ItemsSource = tempSites;
             //comboBox1.SelectedIndex = 0;
             /////////////////////////////////////////////////////////////////////////////////////////////
+            /********************  Binding Control Data ***************************/
+            itmLoginSite.DataContext = loginsitedata;
+            UpdateLoginInfo();
+            /******************************************************************/
+
 
             viewedIds = new Dictionary<string, ViewedID>(SiteManager.Instance.Sites.Count);
 
@@ -326,32 +333,11 @@ namespace MoeLoaderDelta
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount)
-            {
-                stackPanel1.IsEnabled = true;
-            }
-            else
-            {
-                stackPanel1.IsEnabled = false;
-            }
-
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportScore)
-            {
-                itmMaskScore.IsEnabled = true;
-            }
-            else
-            {
-                itmMaskScore.IsEnabled = false;
-            }
-
-            if (SiteManager.Instance.Sites[comboBoxIndex].IsSupportRes)
-            {
-                itmMaskRes.IsEnabled = true;
-            }
-            else
-            {
-                itmMaskRes.IsEnabled = false;
-            }
+            itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+            stackPanel1.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount;
+            itmMaskScore.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportScore;
+            itmMaskRes.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportRes;
+            UpdateLoginInfo();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -363,6 +349,19 @@ namespace MoeLoaderDelta
             GlassHelper.EnableBlurBehindWindow(containerB, this);
             (new Thread(new ThreadStart(LoadBgImg))).Start();
 
+        }
+
+        /// <summary>
+        /// 更新菜单中登录站点的用户名
+        /// </summary>
+        private void UpdateLoginInfo()
+        {
+            string tmp_user = null;
+            if (itmLoginSite.IsEnabled)
+            {
+                tmp_user = SiteManager.Instance.Sites[comboBoxIndex].LoginUser;
+            }
+            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : tmp_user;
         }
 
         private void LoadBgImg()
@@ -795,7 +794,7 @@ namespace MoeLoaderDelta
                     ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
 
                     img.imgDLed += img_imgDLed;
-                    img.imgClicked += img_Click;
+                    img.imgClicked += Img_Click;
                     img.ImgLoaded += img_ImgLoaded;
                     img.checkedChanged += img_checkedChanged;
 
@@ -834,7 +833,7 @@ namespace MoeLoaderDelta
             if (!toggleDownload.IsChecked.Value)
                 toggleDownload.IsChecked = true;
 
-            toggleDownload_Click(null, null);
+            ToggleDownload_Click(null, null);
 
             Img dlimg = imgs[index];
             List<string> oriUrls = GetImgAddress(dlimg);
@@ -1243,7 +1242,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void toggleDownload_Click(object sender, RoutedEventArgs e)
+        private void ToggleDownload_Click(object sender, RoutedEventArgs e)
         {
             Storyboard sb;
 
@@ -1276,7 +1275,7 @@ namespace MoeLoaderDelta
                 sb = (Storyboard)FindResource("closeDownload");
                 sb.Begin();
             }
-            sb.Completed += toggleDownloadAni_Completed;
+            sb.Completed += ToggleDownloadAni_Completed;
         }
 
         /// <summary>
@@ -1284,7 +1283,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void toggleDownloadAni_Completed(object sender, EventArgs e)
+        private void ToggleDownloadAni_Completed(object sender, EventArgs e)
         {
             PlayPreNextAnimation();
             PlayPreNextAnimation(1);
@@ -1487,7 +1486,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void img_Click(object sender, EventArgs e)
+        void Img_Click(object sender, EventArgs e)
         {
             int index = (int)sender;
 
@@ -1552,7 +1551,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 反选
         /// </summary>
-        private void itmSelectInverse_Click(object sender, RoutedEventArgs e)
+        private void ItmSelectInverse_Click(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < imgs.Count; i++)
             {
@@ -1568,7 +1567,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 全选
         /// </summary>
-        private void itmSelectAll_Click(object sender, RoutedEventArgs e)
+        private void ItmSelectAll_Click(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < imgs.Count; i++)
             {
@@ -1584,7 +1583,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 全不选
         /// </summary>
-        private void itmUnSelectAll_Click(object sender, RoutedEventArgs e)
+        private void ItmUnSelectAll_Click(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < imgs.Count; i++)
             {
@@ -1600,7 +1599,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 重试
         /// </summary>
-        private void itmReload_Click(object sender, RoutedEventArgs e)
+        private void ItmReload_Click(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < imgs.Count; i++)
             {
@@ -1612,7 +1611,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 屏蔽图片rate 菜单勾选状态
         /// </summary>
-        private void itm5_Checked(object sender, RoutedEventArgs e)
+        private void Itm5_Checked(object sender, RoutedEventArgs e)
         {
             if (sender == itm5)
             {
@@ -1669,7 +1668,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 屏蔽图片res 菜单勾选状态
         /// </summary>
-        private void itmx5_Checked(object sender, RoutedEventArgs e)
+        private void Itmx5_Checked(object sender, RoutedEventArgs e)
         {
             if (sender == itmx5)
             {
@@ -1724,18 +1723,47 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 登录站点
+        /// </summary>
+        private void ItmLoginSite_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
+                {
+                    SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
+                    System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                }
+            }
+            catch { SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false; }
+        }
+
+        /// <summary>
         /// 打开站点主页
         /// </summary>
-        private void itmOpenSite_Click(object sender, RoutedEventArgs e)
+        private void ItmOpenSite_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count > 0)
                 System.Diagnostics.Process.Start(SiteManager.Instance.Sites[comboBoxIndex].SiteUrl);
         }
 
         /// <summary>
+        /// 弹出右键菜单时处理
+        /// </summary>
+        private void ScrList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            UpdateLoginInfo();
+        }
+
+        private void CanExecute_LoginSite(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        /// <summary>
         /// 生成选中图片的下载列表Lst文件
         /// </summary>
-        private void itmLst_Click(object sender, RoutedEventArgs e)
+        private void ItmLst_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2017,7 +2045,7 @@ namespace MoeLoaderDelta
         {
             if (!toggleDownload.IsChecked.Value)
                 toggleDownload.IsChecked = true;
-            toggleDownload_Click(null, null);
+            ToggleDownload_Click(null, null);
 
             Thread thread = new Thread(new ThreadStart(delegate
             {
@@ -2208,15 +2236,15 @@ namespace MoeLoaderDelta
                         {
                             if (e.Key == Key.I)
                             {   //反选
-                                itmSelectInverse_Click(null, null);
+                                ItmSelectInverse_Click(null, null);
                             }
                             else if (e.Key == Key.A)
                             {   //全选
-                                itmSelectAll_Click(null, null);
+                                ItmSelectAll_Click(null, null);
                             }
                             else if (e.Key == Key.Z)
                             {   //全不选
-                                itmUnSelectAll_Click(null, null);
+                                ItmUnSelectAll_Click(null, null);
                             }
                         }
                         else if (e.Key == Key.S)
@@ -2226,7 +2254,7 @@ namespace MoeLoaderDelta
 
                         if (e.Key == Key.R)
                         {//重试
-                            itmReload_Click(null, null);
+                            ItmReload_Click(null, null);
                         }
                         else if (e.Key == Key.Right)
                         {//强制下一页
@@ -2543,6 +2571,11 @@ namespace MoeLoaderDelta
                 UpdatePreNextDisable();
                 newThread.Start();
             }
+        }
+
+        private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+
         }
 
         /// <summary>

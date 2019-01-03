@@ -14,7 +14,6 @@ namespace MoeLoaderDelta
     /// </summary>
     public class SiteManager
     {
-        private static IWebProxy mainproxy;
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
         private static string runPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -46,7 +45,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { mainproxy }) as List<ImageSite>);
+                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<ImageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -73,29 +72,12 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点集合
         /// </summary>
-        public List<ImageSite> Sites
-        {
-            get
-            {
-                return sites;
-            }
-        }
+        public List<ImageSite> Sites => sites;
 
         /// <summary>
         /// 主窗口代理传递
         /// </summary>
-        public static IWebProxy Mainproxy
-        {
-            get
-            {
-                return mainproxy;
-            }
-
-            set
-            {
-                mainproxy = value;
-            }
-        }
+        public static IWebProxy Mainproxy { get; set; }
 
         /// <summary>
         /// 提供站点错误的输出

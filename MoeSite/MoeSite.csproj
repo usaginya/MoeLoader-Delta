@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BooruProcessor.cs" />
+    <Compile Include="CookiesHelper.cs" />
     <Compile Include="ImageSite.cs" />
     <Compile Include="Img.cs" />
     <Compile Include="MyWebClient.cs">

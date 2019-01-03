@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 181115
+    /// Last change 190104
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -86,9 +86,12 @@ namespace SitePack
                 return "[T]";
             }
         }
-        public override string ShortName { get { return "pixiv"; } }
-        public override string Referer { get { return referer; } }
-        public override string SubReferer { get { return ShortName + ",pximg"; } }
+        public override string ShortName => "pixiv";
+        public override string Referer => referer;
+        public override string SubReferer => ShortName + ",pximg";
+        public override string LoginURL => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
+        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
+        public override string LoginUser => nowUser;
 
         public override bool IsSupportCount  //fixed 20
         {
@@ -103,17 +106,17 @@ namespace SitePack
             }
         }
         //public override bool IsSupportScore { get { return false; } }
-        public override bool IsSupportRes { get { return false; } }
+        public override bool IsSupportRes => false;
         //public override bool IsSupportPreview { get { return true; } }
         //public override bool IsSupportTag { get { if (srcType == PixivSrcType.Author) return true; else return false; } }
-        public override bool IsSupportTag { get { return true; } }
+        public override bool IsSupportTag => true;
 
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
         private int page = 1;
         private int count = 1;
         private string keyWord = null;
-        private static string cookie = "";
+        private static string cookie = string.Empty, nowUser = string.Empty;
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
         private static string tempPage = null;
@@ -122,13 +125,15 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
-        private static bool startLogin;
+        private static bool startLogin, IsLoginSite;
+        private IWebProxy p_proxy;
 
         /// <summary>
         /// pixiv.net site
         /// </summary>
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
+            p_proxy = proxy;
             this.srcType = srcType;
             new Thread(new ThreadStart(delegate
             {
@@ -143,6 +148,7 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
+            p_proxy = proxy;
             Login(proxy);
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             int memberId = 0;
@@ -203,6 +209,7 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+            shc.Set("Cookie", cookie);
             string pageString = Sweb.Get(url, proxy, shc);
             if (srcType == PixivSrcType.PidPlus)
             {
@@ -704,64 +711,77 @@ namespace SitePack
         {
             if (!string.IsNullOrWhiteSpace(cookie)) return;
 
-            string ck = Sweb.GetURLCookies(SiteUrl);
-            cookie = string.IsNullOrWhiteSpace(ck) ? ck : cookie;
+            if (!IELogin())
+            {
+                string ck = Sweb.GetURLCookies(SiteUrl);
+                cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : cookie;
+            }
         }
 
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") && !cookie.Contains("token="))
+            if (!cookie.Contains("pixiv") && !cookie.Contains("token=") || IsLoginSite)
             {
                 try
                 {
-                    HtmlDocument hdoc = new HtmlDocument();
+                    cookie = string.Empty;
+                    string data = string.Empty, post_key = string.Empty,
+                        loginpost = "https://accounts.pixiv.net/api/login?lang=zh";
 
-                    cookie = "";
-                    string
-                        data = "",
-                        post_key = "",
-                        loginpost = "https://accounts.pixiv.net/api/login?lang=zh",
-                        loginurl = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
-
-                    int index = rand.Next(0, user.Length);
-
-                    shc.Referer = Referer;
-                    shc.Remove("X-Requested-With");
-                    shc.Remove("Accept-Ranges");
-                    shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-
-                    //请求1 获取post_key
-                    data = Sweb.Get(loginurl, proxy, shc);
-                    hdoc.LoadHtml(data);
-                    post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
-                    if (post_key.Length < 9)
-                        SiteManager.echoErrLog(SiteName, "自动登录失败 ");
-
-                    //请求2 POST取登录Cookie
-                    shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                    data = "pixiv_id=" + user[index]
-                        + "&captcha=&g_recaptcha_response="
-                        + "&password=" + pass[index]
-                        + "&post_key=" + post_key
-                        + "&source=pc&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
-                    data = Sweb.Post(loginpost, data, proxy, shc);
-                    cookie = Sweb.GetURLCookies(SiteUrl);
-
-                    if (!data.Contains("success"))
+                    if (IsLoginSite)
                     {
-                        if (data.Contains("locked"))
+                        if (!IELogin())
                         {
-
-                            throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
-
+                            Login(proxy); //重新自动登录
                         }
-                        else if (cookie.Length < 9)
-                            SiteManager.echoErrLog(SiteName, "自动登录失败 ");
-                        else
-                            SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
                     }
                     else
-                        cookie = "pixiv;" + cookie;
+                    {
+
+                        int index = rand.Next(0, user.Length);
+
+                        shc.Referer = Referer;
+                        shc.Remove("X-Requested-With");
+                        shc.Remove("Accept-Ranges");
+                        shc.Remove("Cookie");
+                        shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+                        HtmlDocument hdoc = new HtmlDocument();
+
+                        //请求1 获取post_key
+                        data = Sweb.Get(LoginURL, proxy, shc);
+                        hdoc.LoadHtml(data);
+                        post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
+                        if (post_key.Length < 9)
+                            SiteManager.echoErrLog(SiteName, "自动登录失败 ");
+
+                        //请求2 POST取登录Cookie
+                        shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
+                        data = "pixiv_id=" + user[index]
+                            + "&captcha=&g_recaptcha_response="
+                            + "&password=" + pass[index]
+                            + "&post_key=" + post_key
+                            + "&source=pc&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
+                        data = Sweb.Post(loginpost, data, proxy, shc);
+                        cookie = Sweb.GetURLCookies(SiteUrl);
+
+                        if (!data.Contains("success"))
+                        {
+                            if (data.Contains("locked"))
+                            {
+                                throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
+                            }
+                            else if (cookie.Length < 9)
+                                SiteManager.echoErrLog(SiteName, "自动登录失败 ");
+                            else
+                                SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
+                        }
+                        else
+                        {
+                            cookie = "pixiv;" + cookie;
+                            nowUser = "临时账号";
+                        }
+                    }
+
                 }
                 catch (Exception e)
                 {
@@ -769,5 +789,36 @@ namespace SitePack
                 }
             }
         }
+
+        /// <summary>
+        /// 从IE登录
+        /// </summary>
+        private bool IELogin()
+        {
+            IsLoginSite = false;
+            cookie = CookiesHelper.GetIECookies(SiteUrl);
+            bool result = string.IsNullOrWhiteSpace(cookie) || cookie.Length < 9 || !cookie.Contains("is_sensei_service_user");
+            if (result && !startLogin)
+            {
+                SiteManager.echoErrLog(SiteName, "用户登录失败 ");
+            }
+            else
+            {
+                shc.Set("Cookie", cookie);
+                string pageString = Sweb.Get(SiteUrl, p_proxy, shc);
+                result = string.IsNullOrWhiteSpace(pageString) || !pageString.Contains("/logout");
+                if (!result)
+                {
+                    nowUser = "你的账号";
+                    cookie = "pixiv;" + cookie;
+                }
+                else
+                {
+                    cookie = string.Empty;
+                }
+            }
+            return !result;
+        }
+
     }
 }
