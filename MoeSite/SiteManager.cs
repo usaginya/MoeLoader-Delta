@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace MoeLoaderDelta
 {
@@ -78,6 +77,39 @@ namespace MoeLoaderDelta
         /// 主窗口代理传递
         /// </summary>
         public static IWebProxy Mainproxy { get; set; }
+
+        /// <summary>
+        /// 站点登录处理 通过IE
+        /// </summary>
+        /// <param name="imageSite">站点</param>
+        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
+        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
+        /// <param name="Sweb">站点内部SessionClient</param>
+        /// <param name="shc">站点内部SessionHeadersCollection</param>
+        /// <returns></returns>
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        {
+            string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
+            bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
+
+            if (result)
+            {
+                shc.Set("Cookie", tmp_cookie);
+                string pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
+                result = !string.IsNullOrWhiteSpace(pageString);
+
+                if (result && LoggedFlags != null)
+                {
+                    string[] LFlagsArray = LoggedFlags.Split('|');
+                    foreach (string Flag in LFlagsArray)
+                    {
+                        result &= pageString.Contains(Flag);
+                    }
+                }
+            }
+            cookie = result ? tmp_cookie : cookie;
+            return result;
+        }
 
         /// <summary>
         /// 提供站点错误的输出

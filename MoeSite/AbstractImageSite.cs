@@ -94,7 +94,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 当前登录站点的用户
         /// </summary>
-        public virtual string LoginUser => null;
+        public virtual string LoginUser => "登录站点";
 
         /// <summary>
         /// 该站点在站点列表中是否可见

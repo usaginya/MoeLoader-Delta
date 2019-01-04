@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
 namespace SitePack
@@ -91,7 +91,7 @@ namespace SitePack
         public override string SubReferer => ShortName + ",pximg";
         public override string LoginURL => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
         public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
-        public override string LoginUser => nowUser;
+        public override string LoginUser => nowUser ?? base.LoginUser;
 
         public override bool IsSupportCount  //fixed 20
         {
@@ -116,7 +116,7 @@ namespace SitePack
         private int page = 1;
         private int count = 1;
         private string keyWord = null;
-        private static string cookie = string.Empty, nowUser = string.Empty;
+        private static string cookie = string.Empty, nowUser = null;
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
         private static string tempPage = null;
@@ -126,29 +126,31 @@ namespace SitePack
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
         private static bool startLogin, IsLoginSite;
-        private IWebProxy p_proxy;
 
         /// <summary>
         /// pixiv.net site
         /// </summary>
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
-            p_proxy = proxy;
             this.srcType = srcType;
-            new Thread(new ThreadStart(delegate
+            Task.Factory.StartNew(() => FirstLogin(proxy));
+        }
+
+        /// <summary>
+        /// 首次尝试登录
+        /// </summary>
+        private void FirstLogin(IWebProxy proxy)
+        {
+            if (!startLogin)
             {
-                if (!startLogin)
-                {
-                    startLogin = true;
-                    CookieRestore();
-                    Login(proxy);
-                }
-            })).Start();
+                startLogin = true;
+                CookieRestore();
+                Login(proxy);
+            }
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            p_proxy = proxy;
             Login(proxy);
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             int memberId = 0;
@@ -567,14 +569,14 @@ namespace SitePack
                 //retrieve details
                 page = Sweb.Get(i.DetailUrl, p, shc);
 
-                Regex reg = new Regex(@"^「(?<Desc>.*?)」/「(?<Author>.*?)」");
+                Regex reg = new Regex(@"】「(?<Desc>.*?)」.*?/(?<Author>.*?)\s\[pixi");
                 HtmlDocument doc = new HtmlDocument();
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
                 Pcount = Regex.Match(i.SampleUrl, @"(?<=_p)\d+(?=_)").Value;
 
                 //=================================================
-                //「カルタ＆わたぬき」/「えれっと」のイラスト [pixiv]
+                //[R-XX] 【XX】「Desc」插画/Author [pixiv]
                 //标题中取名字和作者
                 try
                 {
@@ -714,16 +716,17 @@ namespace SitePack
             if (!IELogin())
             {
                 string ck = Sweb.GetURLCookies(SiteUrl);
-                cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : cookie;
+                cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"pixiv;{ck}";
             }
         }
 
         private void Login(IWebProxy proxy)
         {
-            if (!cookie.Contains("pixiv") && !cookie.Contains("token=") || IsLoginSite)
+            if ((!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
             {
                 try
                 {
+                    nowUser = null;
                     cookie = string.Empty;
                     string data = string.Empty, post_key = string.Empty,
                         loginpost = "https://accounts.pixiv.net/api/login?lang=zh";
@@ -737,7 +740,6 @@ namespace SitePack
                     }
                     else
                     {
-
                         int index = rand.Next(0, user.Length);
 
                         shc.Referer = Referer;
@@ -773,12 +775,12 @@ namespace SitePack
                             else if (cookie.Length < 9)
                                 SiteManager.echoErrLog(SiteName, "自动登录失败 ");
                             else
-                                SiteManager.echoErrLog(SiteName, "自动登录失败 " + data);
+                                SiteManager.echoErrLog(SiteName, $"自动登录失败 {data}");
                         }
                         else
                         {
-                            cookie = "pixiv;" + cookie;
-                            nowUser = "临时账号";
+                            cookie = $"pixiv;{cookie}";
+                            nowUser = "内置账号";
                         }
                     }
 
@@ -796,28 +798,20 @@ namespace SitePack
         private bool IELogin()
         {
             IsLoginSite = false;
-            cookie = CookiesHelper.GetIECookies(SiteUrl);
-            bool result = string.IsNullOrWhiteSpace(cookie) || cookie.Length < 9 || !cookie.Contains("is_sensei_service_user");
-            if (result && !startLogin)
+
+            bool result = SiteManager.LoginSite(this, ref cookie, "/logout", ref Sweb, ref shc);
+
+            if (result)
+            {
+                nowUser = "你的账号";
+                cookie = $"pixiv;{cookie}";
+            }
+            else if (!startLogin)
             {
                 SiteManager.echoErrLog(SiteName, "用户登录失败 ");
             }
-            else
-            {
-                shc.Set("Cookie", cookie);
-                string pageString = Sweb.Get(SiteUrl, p_proxy, shc);
-                result = string.IsNullOrWhiteSpace(pageString) || !pageString.Contains("/logout");
-                if (!result)
-                {
-                    nowUser = "你的账号";
-                    cookie = "pixiv;" + cookie;
-                }
-                else
-                {
-                    cookie = string.Empty;
-                }
-            }
-            return !result;
+
+            return result;
         }
 
     }
