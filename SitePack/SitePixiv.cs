@@ -754,7 +754,10 @@ namespace SitePack
                         hdoc.LoadHtml(data);
                         post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                         if (post_key.Length < 9)
+                        {
                             SiteManager.echoErrLog(SiteName, "自动登录失败 ");
+                            return;
+                        }
 
                         //请求2 POST取登录Cookie
                         shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;

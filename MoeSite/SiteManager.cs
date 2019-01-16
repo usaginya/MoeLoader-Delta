@@ -9,7 +9,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20180602
+    /// Last 20190117
     /// </summary>
     public class SiteManager
     {
@@ -86,8 +86,9 @@ namespace MoeLoaderDelta
         /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
         /// <param name="Sweb">站点内部SessionClient</param>
         /// <param name="shc">站点内部SessionHeadersCollection</param>
+        /// <param name="PageString">返回验证登录时的页面HTML</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
         {
             string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
             bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
@@ -95,7 +96,7 @@ namespace MoeLoaderDelta
             if (result)
             {
                 shc.Set("Cookie", tmp_cookie);
-                string pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
+                pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
                 result = !string.IsNullOrWhiteSpace(pageString);
 
                 if (result && LoggedFlags != null)
@@ -109,6 +110,21 @@ namespace MoeLoaderDelta
             }
             cookie = result ? tmp_cookie : cookie;
             return result;
+        }
+
+        /// <summary>
+        /// 站点登录处理 通过IE
+        /// </summary>
+        /// <param name="imageSite">站点</param>
+        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
+        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
+        /// <param name="Sweb">站点内部SessionClient</param>
+        /// <param name="shc">站点内部SessionHeadersCollection</param>
+        /// <returns></returns>
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        {
+            string NullPageString = string.Empty;
+            return LoginSite( imageSite, ref  cookie,  LoggedFlags, ref  Sweb, ref  shc, ref NullPageString);
         }
 
         /// <summary>

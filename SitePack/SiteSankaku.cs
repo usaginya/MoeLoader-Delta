@@ -220,7 +220,7 @@ namespace SitePack
                 byte[] bytes_in = encode.GetBytes(content);
                 byte[] bytes_out = sha1.ComputeHash(bytes_in);
                 string result = BitConverter.ToString(bytes_out);
-                result = result.Replace("-", "");
+                result = result.Replace("-", string.Empty);
                 return result;
             }
             catch (Exception ex)

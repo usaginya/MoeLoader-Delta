@@ -92,11 +92,7 @@ namespace SitePack
                     "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
                     "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
 
-                sites.Add(new SiteBooru(
-                    "https://atfbooru.ninja",
-                    "https://atfbooru.ninja/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://atfbooru.ninja/tags/autocomplete.json?search%5Bname_matches%5D={0}",
-                    "atfbooru.ninja", "atfbooru", "https://atfbooru.ninja/", false, BooruProcessor.SourceType.JSON));
+                sites.Add(new SiteATFBooru());
 
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Full));
