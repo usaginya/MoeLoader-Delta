@@ -4,17 +4,15 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20180602
+    /// Last 20190117
     /// </summary>
     public class SiteManager
     {
-        private static IWebProxy mainproxy;
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
         private static string runPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -46,7 +44,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { mainproxy }) as List<ImageSite>);
+                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<ImageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -73,28 +71,60 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点集合
         /// </summary>
-        public List<ImageSite> Sites
-        {
-            get
-            {
-                return sites;
-            }
-        }
+        public List<ImageSite> Sites => sites;
 
         /// <summary>
         /// 主窗口代理传递
         /// </summary>
-        public static IWebProxy Mainproxy
-        {
-            get
-            {
-                return mainproxy;
-            }
+        public static IWebProxy Mainproxy { get; set; }
 
-            set
+        /// <summary>
+        /// 站点登录处理 通过IE
+        /// </summary>
+        /// <param name="imageSite">站点</param>
+        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
+        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
+        /// <param name="Sweb">站点内部SessionClient</param>
+        /// <param name="shc">站点内部SessionHeadersCollection</param>
+        /// <param name="PageString">返回验证登录时的页面HTML</param>
+        /// <returns></returns>
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
+        {
+            string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
+            bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
+
+            if (result)
             {
-                mainproxy = value;
+                shc.Set("Cookie", tmp_cookie);
+                pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
+                result = !string.IsNullOrWhiteSpace(pageString);
+
+                if (result && LoggedFlags != null)
+                {
+                    string[] LFlagsArray = LoggedFlags.Split('|');
+                    foreach (string Flag in LFlagsArray)
+                    {
+                        result &= pageString.Contains(Flag);
+                    }
+                }
             }
+            cookie = result ? tmp_cookie : cookie;
+            return result;
+        }
+
+        /// <summary>
+        /// 站点登录处理 通过IE
+        /// </summary>
+        /// <param name="imageSite">站点</param>
+        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
+        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
+        /// <param name="Sweb">站点内部SessionClient</param>
+        /// <param name="shc">站点内部SessionHeadersCollection</param>
+        /// <returns></returns>
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        {
+            string NullPageString = string.Empty;
+            return LoginSite( imageSite, ref  cookie,  LoggedFlags, ref  Sweb, ref  shc, ref NullPageString);
         }
 
         /// <summary>

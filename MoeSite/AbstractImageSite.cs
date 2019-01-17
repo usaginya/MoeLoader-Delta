@@ -34,68 +34,83 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点的搜索方式短名称，用于显示在下拉表标题上
         /// </summary>
-        public virtual string ShortType { get { return ""; } }
+        public virtual string ShortType => string.Empty;
 
         /// <summary>
         /// 向该站点发起请求时需要伪造的Referer，若不需要则保持null
         /// </summary>
-        public virtual string Referer { get { return null; } }
+        public virtual string Referer => null;
 
         /// <summary>
         /// 子站映射关键名，用于下载时判断不同于主站短域名的子站，以此返回主站的Referer,用半角逗号分隔
         /// </summary>
-        public virtual string SubReferer { get { return null; } }
+        public virtual string SubReferer => null;
 
         /// <summary>
         /// 是否支持设置单页数量，若为false则单页数量不可修改
         /// </summary>
-        public virtual bool IsSupportCount { get { return true; } }
+        public virtual bool IsSupportCount => true;
 
         /// <summary>
         /// 是否支持评分，若为false则不可按分数过滤图片
         /// </summary>
-        public virtual bool IsSupportScore { get { return true; } }
+        public virtual bool IsSupportScore => true;
 
         /// <summary>
         /// 是否支持分辨率，若为false则不可按分辨率过滤图片
         /// </summary>
-        public virtual bool IsSupportRes { get { return true; } }
+        public virtual bool IsSupportRes => true;
 
         /// <summary>
         /// 是否显示分辨率，若为false则在缩略图分辨率处显示标签
         /// </summary>
-        public virtual bool IsShowRes { get { return true; } }
+        public virtual bool IsShowRes => true;
 
         /// <summary>
         /// 是否支持预览图，若为false则缩略图上无查看预览图的按钮
         /// </summary>
-        public virtual bool IsSupportPreview { get { return true; } }
+        public virtual bool IsSupportPreview => true;
 
         /// <summary>
         /// 是否支持搜索框自动提示，若为false则输入关键词时无自动提示
         /// </summary>
-        public virtual bool IsSupportTag { get { return true; } }
+        public virtual bool IsSupportTag => true;
 
         /// <summary>
         /// 鼠标悬停在站点列表项上时显示的工具提示信息
         /// </summary>
-        public virtual string ToolTip { get { return null; } }
+        public virtual string ToolTip => null;
+
+        /// <summary>
+        /// 站点登录地址，如果有登录地址则可在主页右键菜单中登录
+        /// </summary>
+        public virtual string LoginURL => null;
+
+        /// <summary>
+        /// 由界面传递给站点登录动作
+        /// </summary>
+        public virtual bool LoginSite { get; set; }
+
+        /// <summary>
+        /// 当前登录站点的用户
+        /// </summary>
+        public virtual string LoginUser => "登录站点";
 
         /// <summary>
         /// 该站点在站点列表中是否可见
         /// 提示：若该站点默认不希望被看到可以设为false，当满足一定条件时（例如存在某个文件）再显示
         /// </summary>
-        public virtual bool IsVisible { get { return true; } }
+        public virtual bool IsVisible => true;
 
         /// <summary>
         /// 大缩略图尺寸
         /// </summary>
-        public virtual System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(PICWIDTH, PICWIDTH); } }
+        public virtual System.Drawing.Point LargeImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
         /// <summary>
         /// 小缩略图尺寸
         /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
         /// </summary>
-        public virtual System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(PICWIDTH, PICWIDTH); } }
+        public virtual System.Drawing.Point SmallImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
 
         /// <summary>
         /// 获取页面的源代码，例如HTML

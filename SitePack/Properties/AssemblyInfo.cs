@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("esonic, Moekai")]
 [assembly: AssemblyProduct("SitePack")]
-[assembly: AssemblyCopyright("Copyright © esonic 2010-2014, Moekai 2016-2018")]
+[assembly: AssemblyCopyright("Copyright © esonic 2010-2014, Moekai 2016-2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.6.9")]
-[assembly: AssemblyFileVersion("1.0.6.9")]
+[assembly: AssemblyVersion("1.0.7.1")]
+[assembly: AssemblyFileVersion("1.0.7.1")]
