@@ -240,5 +240,3 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-SitePack/SitePack.csproj
-/MoeLoader-Delta/
