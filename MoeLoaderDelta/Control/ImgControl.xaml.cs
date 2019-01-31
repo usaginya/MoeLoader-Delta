@@ -122,9 +122,9 @@ namespace MoeLoaderDelta
                 return;
             }
             score.Text = img.Score.ToString();
-            txtDesc.Inlines.Add(img.Id + " " + img.Desc + "\r\n" + img.Author);
+            txtDesc.Inlines.Add(img.Id + " " + img.Desc.Replace(Environment.NewLine, ""));
             txtDesc.Inlines.Add(new LineBreak());
-            txtDesc.Inlines.Add(type);
+            txtDesc.Inlines.Add(type + " " + img.Author);
             //txtDesc.Inlines.Add(new LineBreak());
             txtDesc.Inlines.Add(" " + img.FileSize);
             txtDesc.ToolTip = img.Id + " " + img.Desc + "\r\n" + img.Author + "\r\n" + type + "  " + img.FileSize + "  " + img.Date;

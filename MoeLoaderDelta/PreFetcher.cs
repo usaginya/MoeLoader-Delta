@@ -137,6 +137,11 @@ namespace MoeLoaderDelta
                         {
                             preFetchedImg.Add(imgs[i].PreviewUrl, MainWindow.MainW.CreateImageSrc(str));
                         }
+
+                        res.Close();
+                        res.Dispose();
+                        str.Close();
+                        str.Dispose();
                     }
                 }
                 catch

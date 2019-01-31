@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.IO;
-using System.Threading;
 
 namespace MoeLoaderDelta
 {
@@ -103,16 +103,10 @@ namespace MoeLoaderDelta
 
         //downloadItems的副本，用于快速查找
         private Dictionary<string, DownloadItem> downloadItemsDic = new Dictionary<string, DownloadItem>();
-
-        private bool isWorking = false;
         /// <summary>
         /// 是否正在下载
         /// </summary>
-        public bool IsWorking
-        {
-            get { return isWorking; }
-            //set { isWorking = value; }
-        }
+        public bool IsWorking { get; private set; } = false;
 
         private int numOnce;
         /// <summary>
@@ -135,6 +129,10 @@ namespace MoeLoaderDelta
         /// </summary>
         private int retryCount;
         /// <summary>
+        /// 重试计时器
+        /// </summary>
+        private Timer retryTimer;
+        /// <summary>
         /// 分站点存放
         /// </summary>
         public bool IsSepSave { get; set; }
@@ -146,15 +144,18 @@ namespace MoeLoaderDelta
         /// 分搜索标签存放
         /// </summary>
         public bool IsSscSave { get; set; }
-
-        private static string saveLocation = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         /// <summary>
         /// 下载的保存位置
         /// </summary>
-        public static string SaveLocation { get { return saveLocation; } set { saveLocation = value; } }
-
-        private int numSaved = 0;
-        private int numLeft = 0;
+        public static string SaveLocation { get; set; } = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        /// <summary>
+        /// 已保存数量、剩余保存数量
+        /// </summary>
+        private int NumSaved = 0, NumLeft = 0;
+        /// <summary>
+        /// 错误数量
+        /// </summary>
+        public int NumFail { get; private set; } = 0;
 
         //正在下载的链接
         private Dictionary<string, DownloadTask> webs = new Dictionary<string, DownloadTask>();
@@ -177,14 +178,15 @@ namespace MoeLoaderDelta
         /// </summary>
         public void ResetRetryCount()
         {
-            retryCount = 3;
+            retryCount = 1;
         }
 
         /// <summary>
         /// 添加下载任务
         /// </summary>
-        /// <param name="urls"></param>
-        public void AddDownload(IEnumerable<MiniDownloadItem> items)
+        /// <param name="items">下载物</param>
+        /// <param name="dLWork">模式</param>
+        public void AddDownload(IEnumerable<MiniDownloadItem> items, DLWorkMode dLWork)
         {
             foreach (MiniDownloadItem item in items)
             {
@@ -198,21 +200,33 @@ namespace MoeLoaderDelta
                       {
                           downloadItemsDic.Remove(item.url);
                       }*/
-                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify,item.searchWord);
+                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify, item.searchWord);
 
                     downloadItemsDic.Add(item.url, itm);
                     downloadItems.Add(itm);
-                    numLeft++;
+                    NumLeft++;
                 }
                 catch (ArgumentException) { }//duplicate entry
             }
 
-            if (!isWorking)
+            if (!IsWorking)
             {
-                isWorking = true;
+                IsWorking = true;
             }
 
             RefreshList();
+            if (dLWork != DLWorkMode.AutoRetryAll)
+            {
+                ResetRetryCount();
+            }
+        }
+        /// <summary>
+        /// 添加下载通用
+        /// </summary>
+        /// <param name="items"></param>
+        public void AddDownload(IEnumerable<MiniDownloadItem> items)
+        {
+            AddDownload(items, DLWorkMode.Retry);
         }
 
         /// <summary>
@@ -229,7 +243,7 @@ namespace MoeLoaderDelta
             }
             else
             {
-                sPath = saveLocation
+                sPath = SaveLocation
                     + (IsSepSave ? "\\" + dlitem.Host : "")
                    + (IsSscSave && !dlitem.SearchWord.IsNullOrEmptyOrWhiteSpace() ? "\\" + dlitem.SearchWord : "")
                    + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
@@ -252,9 +266,9 @@ namespace MoeLoaderDelta
             int downloadingCount = NumOnce - webs.Count;
             for (int j = 0; j < downloadingCount; j++)
             {
-                if (numLeft > 0)
+                if (NumLeft > 0)
                 {
-                    DownloadItem dlitem = downloadItems[downloadItems.Count - numLeft];
+                    DownloadItem dlitem = downloadItems[downloadItems.Count - NumLeft];
 
                     string url = dlitem.Url;
                     string file = dlitem.FileName.Replace("\r\n", "");
@@ -263,8 +277,8 @@ namespace MoeLoaderDelta
                     //检查目录长度
                     if (path.Length > 248)
                     {
-                        downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
-                        downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
+                        downloadItems[downloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
+                        downloadItems[downloadItems.Count - NumLeft].Size = "路径太长";
                         WriteErrText(url + ": 路径太长");
                         j--;
                     }
@@ -276,8 +290,8 @@ namespace MoeLoaderDelta
                         //检查全路径长度
                         if (file.Length > 258)
                         {
-                            downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.Failed;
-                            downloadItems[downloadItems.Count - numLeft].Size = "路径太长";
+                            downloadItems[downloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
+                            downloadItems[downloadItems.Count - NumLeft].Size = "路径太长";
                             WriteErrText(url + ": 路径太长");
                             j--;
                         }
@@ -285,8 +299,8 @@ namespace MoeLoaderDelta
 
                     if (File.Exists(file))
                     {
-                        downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.IsHave;
-                        downloadItems[downloadItems.Count - numLeft].Size = "已存在跳过";
+                        downloadItems[downloadItems.Count - NumLeft].StatusE = DLStatus.IsHave;
+                        downloadItems[downloadItems.Count - NumLeft].Size = "已存在跳过";
                         j--;
                     }
                     else
@@ -294,17 +308,17 @@ namespace MoeLoaderDelta
                         if (!Directory.Exists(path))
                             Directory.CreateDirectory(path);
 
-                        downloadItems[downloadItems.Count - numLeft].StatusE = DLStatus.DLing;
+                        downloadItems[downloadItems.Count - NumLeft].StatusE = DLStatus.DLing;
 
                         DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
                         webs.Add(url, task);
 
                         //异步下载开始
-                        System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Download));
+                        Thread thread = new Thread(new ParameterizedThreadStart(Download));
                         thread.Start(task);
                     }
 
-                    numLeft = numLeft > 0 ? --numLeft : 0;
+                    NumLeft = NumLeft > 0 ? --NumLeft : 0;
                 }
                 else break;
             }
@@ -369,6 +383,7 @@ namespace MoeLoaderDelta
                     //下载失败
                     if (downloadItemsDic.ContainsKey(task.Url))
                     {
+                        NumFail++;
                         item.StatusE = DLStatus.Failed;
                         item.Size = "下载失败";
                         WriteErrText(task.Url);
@@ -437,6 +452,7 @@ namespace MoeLoaderDelta
                             task.IsStop = true;
                             item.StatusE = DLStatus.Failed;
                             item.Size = "下载未完成";
+                            NumFail++;
                             try
                             {
                                 File.Delete(task.SaveLocation + DLEXT);
@@ -454,7 +470,7 @@ namespace MoeLoaderDelta
                             //downloadItemsDic[task.Url].Size = (downed > 1048576
                             //? (downed / 1048576.0).ToString("0.00MB")
                             //: (downed / 1024.0).ToString("0.00KB"));
-                            numSaved++;
+                            NumSaved++;
                         }
                     }
                     catch { }
@@ -473,7 +489,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                File.AppendAllText(saveLocation + "\\moedl_error.log", content + "\r\n");
+                File.AppendAllText(SaveLocation + "\\moedl_error.log", content + "\r\n");
             }
             catch { }
         }
@@ -486,23 +502,41 @@ namespace MoeLoaderDelta
         {
             if (webs.Count > 0)
             {
-                downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 正在下载 " + webs.Count;
+                downloadStatus.Text = "已保存 " + NumSaved + " 剩余 " + NumLeft + " 正在下载 " + webs.Count;
             }
             else
             {
-                isWorking = false;
-                downloadStatus.Text = "已保存 " + numSaved + " 剩余 " + numLeft + " 下载完毕 ";
-                if (retryCount > 0)
+                IsWorking = false;
+                downloadStatus.Text = "已保存 " + NumSaved + " 剩余 " + NumLeft + " 下载完毕 ";
+
+                // 9秒后执行重试、9秒内则重置重试时间
+                if (NumFail > 0 && retryCount > 0)
                 {
-                    retryCount--;
-                    ExecuteDownloadListTask(DLWorkMode.AutoRetryAll);
+                    if (retryTimer == null)
+                    {
+                        retryTimer = new Timer(new TimerCallback(RetryRuntime), null, 9000, Timeout.Infinite);
+                    }
+                    else
+                    {
+                        retryTimer.Change(9000, Timeout.Infinite);
+                    }
                 }
             }
 
-            if (downloadItems.Count == 0)
-                blkTip.Visibility = Visibility.Visible;
-            else
-                blkTip.Visibility = Visibility.Collapsed;
+            blkTip.Visibility = downloadItems.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// 重试失败项计时处理
+        /// </summary>
+        private void RetryRuntime(object state)
+        {
+            retryCount--;
+            if (downloadItems.Count > 0)
+            {
+                Dispatcher.Invoke(new VoidDel(delegate () { ExecuteDownloadListTask(DLWorkMode.AutoRetryAll); }));
+            }
+            GC.Collect();
         }
 
         /// <summary>
@@ -531,7 +565,7 @@ namespace MoeLoaderDelta
         {
             if (downloadItems.Count > 0)
             {
-                double percent = (downloadItems.Count - numLeft - webs.Count) / (double)downloadItems.Count * 100.0;
+                double percent = (downloadItems.Count - NumLeft - webs.Count) / (double)downloadItems.Count * 100.0;
 
                 Win7TaskBar.ChangeProcessValue(MainWindow.Hwnd, (uint)percent);
 
@@ -787,13 +821,15 @@ namespace MoeLoaderDelta
                         if (item.StatusE == DLStatus.Failed || item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
                         {
                             if (dlworkmode == DLWorkMode.AutoRetryAll && item.StatusE == DLStatus.Cancel) break;
-                            numLeft = numLeft > selectcs ? selectcs : numLeft;
+                            if (retryTimer != null) retryTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                            NumLeft = NumLeft > selectcs ? selectcs : NumLeft;
+                            NumFail = NumFail > 0 ? --NumFail : 0;
                             downloadItems.Remove(item);
                             downloadItemsDic.Remove(item.Url);
                             AddDownload(new MiniDownloadItem[] {
                                 new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName,
                                 item.Id, item.NoVerify)
-                            });
+                            }, dlworkmode);
                         }
                         break;
 
@@ -806,12 +842,12 @@ namespace MoeLoaderDelta
                                 webs[item.Url].IsStop = true;
                                 webs.Remove(item.Url);
                             }
-                            else
-                                numLeft = numLeft > 0 ? --numLeft : 0;
+
+                            NumLeft = NumLeft > 0 ? --NumLeft : 0;
 
                             if (dlworkmode == DLWorkMode.StopAll)
                             {
-                                numLeft = 0;
+                                NumLeft = 0;
                             }
                             item.StatusE = DLStatus.Cancel;
                             item.Size = "已取消";
@@ -850,9 +886,14 @@ namespace MoeLoaderDelta
                             }
                         }
                         else if (item.StatusE == DLStatus.Success || item.StatusE == DLStatus.IsHave)
-                            numSaved = numSaved > 0 ? --numSaved : 0;
+                            NumSaved = NumSaved > 0 ? --NumSaved : 0;
                         else if (item.StatusE == DLStatus.Wait || item.StatusE == DLStatus.Cancel)
-                            numLeft = numLeft > 0 ? --numLeft : 0;
+                        {
+                            NumLeft = NumLeft > 0 ? --NumLeft : 0;
+                        }
+                        else if (item.StatusE == DLStatus.Failed)
+                            NumFail = NumFail > 0 ? --NumFail : 0;
+
 
                         downloadItems.Remove(item);
                         downloadItemsDic.Remove(item.Url);
@@ -893,7 +934,7 @@ namespace MoeLoaderDelta
                     string lpath = GetLocalPath(item);
                     DirectoryInfo di = new DirectoryInfo(lpath);
 
-                    while (Directory.Exists(lpath) && di.GetFiles().Length + di.GetDirectories().Length < 1 && lpath.Contains(saveLocation))
+                    while (Directory.Exists(lpath) && di.GetFiles().Length + di.GetDirectories().Length < 1 && lpath.Contains(SaveLocation))
                     {
                         Directory.Delete(lpath);
                         Thread.Sleep(666);
@@ -972,7 +1013,7 @@ namespace MoeLoaderDelta
                     i++;
                 }
             }
-            numSaved = 0;
+            NumSaved = 0;
             RefreshStatus();
         }
 
@@ -1134,7 +1175,7 @@ namespace MoeLoaderDelta
             }
             catch
             {
-                System.Diagnostics.Process.Start(saveLocation);
+                System.Diagnostics.Process.Start(SaveLocation);
             }
         }
 
@@ -1181,6 +1222,7 @@ namespace MoeLoaderDelta
                 {
                     downloadItems.RemoveAt(i);
                     downloadItemsDic.Remove(item.Url);
+                    NumFail = NumFail > 0 ? --NumFail : 0;
                 }
                 else
                 {
@@ -1308,6 +1350,7 @@ namespace MoeLoaderDelta
             }
         }
 
+        /// <summary>
         /// 当做下载列表快捷键
         /// </summary>
         private void dlList_KeyDown(object sender, KeyEventArgs e)

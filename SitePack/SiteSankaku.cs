@@ -1,9 +1,9 @@
-﻿using System;
+﻿using MoeLoaderDelta;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using MoeLoaderDelta;
 using System.Net;
+using System.Text;
 using System.Web.Script.Serialization;
 
 namespace SitePack
@@ -17,24 +17,24 @@ namespace SitePack
         private string[] user = { "girltmp", "mload006", "mload107", "mload482", "mload367", "mload876", "mload652", "mload740", "mload453", "mload263", "mload395" };
         private string[] pass = { "girlis2018", "moel006", "moel107", "moel482", "moel367", "moel876", "moel652", "moel740", "moel453", "moel263", "moel395" };
         private string sitePrefix, tempuser, temppass, tempappkey, ua, pageurl;
-        private static string cookie = "";
+        private static string cookie = string.Empty;
 
-        public override string SiteUrl { get { return "https://" + sitePrefix + ".sankakucomplex.com"; } }
-        public override string SiteName { get { return sitePrefix + ".sankakucomplex.com"; } }
-        public override string ShortName { get { return (sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku"); } }
-        public override bool IsSupportScore { get { return false; } }
-        public override bool IsSupportCount { get { return true; } }
-        public override string Referer { get { return SiteUrl + "/post/show/12345"; } }
-        public override string SubReferer { get { return "*"; } }
+        public override string SiteUrl => $"https://{sitePrefix}.sankakucomplex.com";
+        public override string SiteName => $"{sitePrefix}.sankakucomplex.com";
+        public override string ShortName => sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku";
+        public override bool IsSupportScore => false;
+        public override bool IsSupportCount => true;
+        public override string Referer => $"{SiteUrl}/post";
+        public override string SubReferer => "*";
 
         /// <summary>
         /// sankakucomplex site
         /// </summary>
         public SiteSankaku(string prefix)
         {
+            shc.Timeout = 16000;
             sitePrefix = prefix;
             CookieRestore();
-            shc.Timeout = 16000;
         }
 
         /// <summary>
@@ -55,7 +55,8 @@ namespace SitePack
             {
                 ua = "SCChannelApp/2.3 (Android; idol)";
             }
-            else return null;
+            else
+                return null;
 
             Login(proxy);
             return booru.GetPageString(page, count, keyWord, proxy);
@@ -119,9 +120,10 @@ namespace SitePack
         {
             if (!string.IsNullOrWhiteSpace(cookie)) return;
 
+            string subdomain = sitePrefix.Contains("chan") ? "capi-beta" : "iapi";
+
             string ck = Sweb.GetURLCookies(SiteUrl);
-            if (!string.IsNullOrWhiteSpace(ck))
-                cookie = ck;
+            cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"{subdomain}.sankaku;{ck}";
         }
 
         /// <summary>
@@ -131,22 +133,23 @@ namespace SitePack
         /// <param name="proxy"></param>
         private void Login(IWebProxy proxy)
         {
+
             string subdomain = sitePrefix.Substring(0, 1),
                 loginhost = "https://";
 
             subdomain += subdomain.Contains("c") ? "api-beta" : "api";
-            loginhost = "https://" + subdomain + ".sankakucomplex.com";
+            loginhost += $"{subdomain}.sankakucomplex.com";
 
-            if (!cookie.Contains(subdomain + ".sankaku"))
+            if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains(subdomain + ".sankaku"))
             {
                 try
                 {
-                    cookie = "";
+                    cookie = string.Empty;
                     int index = rand.Next(0, user.Length);
                     tempuser = user[index];
                     temppass = GetSankakuPwHash(pass[index]);
                     tempappkey = GetSankakuAppkey(tempuser);
-                    string post = "";
+                    string post = cookie;
 
                     if (subdomain.Contains("capi"))
                         post = "user[name]=" + tempuser + "&user[password]=" + pass[index] + "&appkey=" + tempappkey;
@@ -164,10 +167,13 @@ namespace SitePack
                     if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))
                         throw new Exception("获取登录Cookie失败");
                     else
+                    {
                         cookie = subdomain + ".sankaku;" + cookie;
+                    }
 
                     pageurl = loginhost + "/post/index.json?login=" + tempuser + "&password_hash="
                         + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";
+
 
                     //登录成功才能初始化Booru类型站点
                     shc.Referer = Referer;
@@ -214,7 +220,7 @@ namespace SitePack
                 byte[] bytes_in = encode.GetBytes(content);
                 byte[] bytes_out = sha1.ComputeHash(bytes_in);
                 string result = BitConverter.ToString(bytes_out);
-                result = result.Replace("-", "");
+                result = result.Replace("-", string.Empty);
                 return result;
             }
             catch (Exception ex)

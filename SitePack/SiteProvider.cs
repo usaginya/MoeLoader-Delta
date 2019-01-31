@@ -9,8 +9,9 @@ namespace SitePack
         public List<ImageSite> SiteList(IWebProxy proxy)
         {
             List<ImageSite> sites = new List<ImageSite>();
+
             bool ecchimode = System.IO.File.Exists(
-                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"
+                $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
                 );
 
             sites.Add(new SiteLargeBooru(
@@ -91,11 +92,7 @@ namespace SitePack
                     "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
                     "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
 
-                sites.Add(new SiteBooru(
-                    "https://atfbooru.ninja",
-                    "https://atfbooru.ninja/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://atfbooru.ninja/tags/autocomplete.json?search%5Bname_matches%5D={0}",
-                    "atfbooru.ninja", "atfbooru", "https://atfbooru.ninja/", false, BooruProcessor.SourceType.JSON));
+                sites.Add(new SiteATFBooru());
 
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Full));
