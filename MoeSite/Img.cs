@@ -177,7 +177,7 @@ namespace MoeLoaderDelta
             DetailUrl = "";
             Author = "UnkwnAuthor";
             ImgP = "";
-            NoVerify = false;
+            NoVerify = false;         
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string StringLineBreak(string Str, int LineWordCount)
         {
-            string[] strs = Regex.Split(Str, @"(?<=\G.{" + LineWordCount + @"}.*?\s)(?!$)");
+            string[] strs = Regex.Split(Str, $@"(?<=\G.{LineWordCount}.*?\s)(?!$)");
             int strsl = strs.Length;
             string retstr = string.Empty;
             for (int i = 0; i < strsl; i++)

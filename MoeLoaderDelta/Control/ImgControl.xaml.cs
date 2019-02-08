@@ -111,7 +111,7 @@ namespace MoeLoaderDelta
 
             if (img.OriginalUrl.Length > 6)
             {
-                type = BooruProcessor.FormattedImgUrl("", img.OriginalUrl.Substring(img.OriginalUrl.LastIndexOf('.') + 1)).ToUpper();
+                type = BooruProcessor.FormattedImgUrl(string.Empty, img.OriginalUrl.Substring(img.OriginalUrl.LastIndexOf('.') + 1)).ToUpper();
             }
             else
             {
@@ -122,7 +122,7 @@ namespace MoeLoaderDelta
                 return;
             }
             score.Text = img.Score.ToString();
-            txtDesc.Inlines.Add(img.Id + " " + img.Desc.Replace(Environment.NewLine, ""));
+            txtDesc.Inlines.Add(img.Id + " " + img.Desc.Replace(Environment.NewLine, string.Empty));
             txtDesc.Inlines.Add(new LineBreak());
             txtDesc.Inlines.Add(type + " " + img.Author);
             //txtDesc.Inlines.Add(new LineBreak());
@@ -227,7 +227,7 @@ namespace MoeLoaderDelta
             catch (Exception ex)
             {
                 Program.Log(ex, "Download sample failed");
-                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { preview_ImageFailed(null, null); }), "");
+                Dispatcher.Invoke(new UIdelegate(delegate (object sender) { preview_ImageFailed(null, null); }), string.Empty);
             }
         }
 
@@ -439,7 +439,7 @@ namespace MoeLoaderDelta
             //tag
             try
             {
-                Clipboard.SetText(img.Desc.Replace("\r\n", ""));
+                Clipboard.SetText(img.Desc.Replace("\r\n", string.Empty));
             }
             catch { }
         }
@@ -449,7 +449,7 @@ namespace MoeLoaderDelta
             //source
             try
             {
-                Clipboard.SetText(img.Source.Replace("\r\n", ""));
+                Clipboard.SetText(img.Source.Replace("\r\n", string.Empty));
             }
             catch { }
         }
