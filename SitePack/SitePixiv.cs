@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190104
+    /// Last change 190208
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -164,7 +164,10 @@ namespace SitePack
                 {
                     url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + memberId;
                 }
-                else throw new Exception("请输入图片id");
+                else
+                {
+                    throw new Exception("请输入图片id");
+                }
             }
             else
             {
@@ -239,6 +242,10 @@ namespace SitePack
                 {
                     tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
                     //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                    if (tagNode == null)
+                    {
+                        nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[1]/div/ul").SelectNodes("li");
+                    }
                 }
                 else if (srcType == PixivSrcType.Author)
                 {
@@ -344,7 +351,7 @@ namespace SitePack
                                 foreach (JProperty jp in jToken)
                                 {
                                     JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                    Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
+                                    Img img = GenerateImg($"{SiteUrl}/member_illust.php?mode=medium&illust_id={ jp.Name}", (string)nextJToken["url"], (string)nextJToken["id"]);
                                     if (keyWord == jp.Name) img.Source = "相关作品";
                                     if (img != null) imgs.Add(img);
                                 }
@@ -411,44 +418,12 @@ namespace SitePack
                 throw new Exception("没有找到图片哦～ .=ω=");
             }
 
-            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            {
-                if (tagNode == null)
-                {
-                    return imgs;
-                }
-            }
-            else if (nodes == null)
+            if (nodes == null && tagNode == null)
             {
                 return imgs;
             }
 
-            //Tag search js-mount-point-search-related-tags Json
-            if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            {
-                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
-                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
-                foreach (object o in array)
-                {
-                    Dictionary<string, object> obj = o as Dictionary<string, object>;
-                    string
-                        detailUrl = "",
-                        SampleUrl = "",
-                        id = "";
-                    if (obj["illustId"] != null)
-                    {
-                        id = obj["illustId"].ToString();
-                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
-                    }
-                    if (obj["url"] != null)
-                    {
-                        SampleUrl = obj["url"].ToString();
-                    }
-                    Img img = GenerateImg(detailUrl, SampleUrl, id);
-                    if (img != null) imgs.Add(img);
-                }
-            }
-            else
+            if (nodes != null && nodes.Count > 0)
             {
                 foreach (HtmlNode imgNode in nodes)
                 {
@@ -462,8 +437,8 @@ namespace SitePack
                         //details will be extracted from here
                         //eg. member_illust.php?mode=medium&illust_id=29561307&ref=rn-b-5-thumbnail
                         //sampleUrl 正则 @"https://i\.pximg\..+?(?=")"
-                        string detailUrl = anode.Attributes["href"].Value.Replace("amp;", "");
-                        string sampleUrl = "";
+                        string detailUrl = anode.Attributes["href"].Value.Replace("amp;", string.Empty);
+                        string sampleUrl = string.Empty;
                         sampleUrl = anode.SelectSingleNode(".//img").Attributes["src"].Value;
 
                         if (sampleUrl.ToLower().Contains("images/common"))
@@ -484,6 +459,30 @@ namespace SitePack
                     {
                         //int i = 0;
                     }
+                }
+            }
+            else if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            {//Tag search js-mount-point-search-related-tags Json
+                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
+                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
+                foreach (object o in array)
+                {
+                    Dictionary<string, object> obj = o as Dictionary<string, object>;
+                    string
+                        detailUrl = "",
+                        SampleUrl = "",
+                        id = "";
+                    if (obj["illustId"] != null)
+                    {
+                        id = obj["illustId"].ToString();
+                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
+                    }
+                    if (obj["url"] != null)
+                    {
+                        SampleUrl = obj["url"].ToString();
+                    }
+                    Img img = GenerateImg(detailUrl, SampleUrl, id);
+                    if (img != null) imgs.Add(img);
                 }
             }
 
