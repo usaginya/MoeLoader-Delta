@@ -396,18 +396,18 @@ namespace MoeLoaderDelta
                     string md5 = string.Empty;
                     if (post.HasAttribute("md5"))
                         md5 = post.GetAttribute("md5");
-                    sample = siteUrl + "/data/preview/" + md5.Substring(0, 2) + "/" + md5.Substring(2, 2) + "/" + md5 + ".jpg";
-                    preview_url = siteUrl + "/sample/" + md5 + "/yande " + id + " sample.jpg";
+                    sample = $"{siteUrl}/data/preview/{md5.Substring(0, 2)}/{md5.Substring(2, 2)}/{md5}.jpg";
+                    preview_url = $"{siteUrl}/sample/{md5}/yande {id} sample.jpg";
 
                     string file_ext = string.Empty;
                     if (post.HasAttribute("file_ext"))
                         file_ext = post.GetAttribute("file_ext");
                     if (file_ext.Contains("png"))
-                        file_url = siteUrl + "/image/" + md5 + "/" + "yande " + id + " image.png";
+                        file_url = $"{siteUrl}/image/{md5}/yande {id} image.png";
                     else
-                        file_url = siteUrl + "/image/" + md5 + "/" + "yande " + id + " image.jpg";
+                        file_url = $"{siteUrl}/image/{md5}/yande {id} image.jpg";
 
-                    jpeg_url = siteUrl + "/jpeg/" + md5 + "/yande " + id + " jpeg.jpg";
+                    jpeg_url = $"{siteUrl}/jpeg/{md5}/yande {id} jpeg.jpg";
                 }
 
                 preview_url = FormattedImgUrl(host, preview_url);
