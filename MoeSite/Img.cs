@@ -177,7 +177,7 @@ namespace MoeLoaderDelta
             DetailUrl = "";
             Author = "UnkwnAuthor";
             ImgP = "";
-            NoVerify = false;
+            NoVerify = false;         
         }
 
         /// <summary>
