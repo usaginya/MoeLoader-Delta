@@ -18,7 +18,7 @@ namespace SitePack
                 "https://yande.re",
                 "https://yande.re/post.xml?page={0}&limit={1}&tags={2}", //XML
                 "https://yande.re/tag.xml?limit={0}&order=count&name={1}",
-                "yande.re", "yande", "https://yande.re/", false, BooruProcessor.SourceType.XML));
+                "yande.re", "yande", "https://yande.re/", false, BooruProcessor.SourceType.XMLYD));
 
             sites.Add(new SiteLargeBooru(
                 "https://konachan.com",
