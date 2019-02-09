@@ -292,15 +292,18 @@ namespace MoeLoaderDelta
                         }
                     }
 
-                    if (dlitem.LocalFileName.Contains("deleted"))
+                    #region --- deleted标签的图片文件是否已存在 ---
+                    if (dlitem.Url.Contains("#ext") && dlitem.LocalFileName.Contains("deleted"))
                     {
                         int lastind;
                         string oFileName = file;
                         string filename = string.Empty;
                         string[] exts = { "png", "gif", "webm" };
 
+                        file = file.Replace(".#ext", ".jpg");
                         foreach (string ext in exts)
                         {
+
                             if (File.Exists(file))
                             {
                                 DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.IsHave;
@@ -326,6 +329,7 @@ namespace MoeLoaderDelta
                         j--;
                         fileExists = true;
                     }
+                    #endregion --- deleted标签的图片文件是否已存在 ---
 
                     if (!fileExists)
                     {
@@ -369,13 +373,16 @@ namespace MoeLoaderDelta
             {
                 string oTaskUrl = task.Url;
 
-                //应对deleted标签
-                if (task.SaveLocation.Contains("deleted"))
+                #region --- 验证deleted标签文件是否可获取 ---
+                if (task.Url.Contains("#ext") && task.SaveLocation.Contains("deleted"))
                 {
                     int lastind;
                     string filename = string.Empty;
                     shc.Referer = task.NeedReferer;
                     string[] exts = { "png", "gif", "webm" };
+                    task.Url = task.Url.Replace(".#ext", ".jpg");
+                    task.SaveLocation = task.SaveLocation.Replace(".#ext", ".jpg");
+                    item.LocalFileName = item.LocalFileName.Replace(".#ext", ".jpg");
 
                     foreach (string ext in exts)
                     {
@@ -397,6 +404,7 @@ namespace MoeLoaderDelta
                         else { break; }
                     }
                 }
+                #endregion --- 验证deleted标签文件是否可获取 ---
 
                 res = sc.GetWebResponse(
                     task.Url,
