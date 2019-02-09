@@ -36,7 +36,7 @@ MoeLoader是一个基于WPF的图片浏览、收集工具。
 
 MoeLoader官网(已失效): http://moeloader.sinaapp.com/
 
-如何开发自定义站点：
+如何开发自定义站点<label style="color:red">**（目前暂不支持）**</label>：
 
 1. 使用Visual Studio创建Class Library类型的项目，将项目属性中的默认命名空间设置为SitePack；
 
