@@ -275,36 +275,48 @@ namespace SitePack
                             }
                         }
                     }
-                    string ids = string.Empty;
                     int ilistcount = illustsList.Count,
                         mlistcount = mangaList.Count,
                         scount = ilistcount + mlistcount;
+                    List<string> ids = new List<string>();
                     for (int j = (page - 1) * count; j < page * count & scount > 0 & j <= scount; j++)
                     {
+                        if ((j - (page - 1) * count) % 48 == 0)
+                            ids.Add(string.Empty);
                         if (j < ilistcount)
-                            ids += $"ids[]={illustsList[j]}&";
+                            ids[(j- (page - 1) * count) / 48] += $"ids[]={illustsList[j]}&";
                         if (j < mlistcount)
-                            ids += $"ids[]={mangaList[j]}&";
+                            ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[j]}&";
                     }
-                    if (!string.IsNullOrWhiteSpace(ids))
+                    if (!ids.Exists(string.IsNullOrWhiteSpace))
                     {
-                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids}is_manga_top=0", proxy, shc);
-                        //ROOT->body->works
-                        //获取图片详细信息
-                        if (!string.IsNullOrWhiteSpace(pageString))
+                        List<string> tempPageString = new List<string>();
+                        for (int i = 0; i < ids.Count; i++)
                         {
-                            JObject jsonObj = JObject.Parse(pageString);
-                            JToken jToken;
-                            if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                            tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}is_manga_top=0", proxy, shc));
+                        }
+                        if(!tempPageString.Exists(string.IsNullOrWhiteSpace))
+                        {
+                            //ROOT->body->works
+                            //获取图片详细信息
+                            foreach (string tempString in tempPageString)
                             {
-                                jToken = ((JObject)jsonObj["body"])["works"];
-                                foreach (JProperty jp in jToken)
+                                if (!string.IsNullOrWhiteSpace(tempString))
                                 {
-                                    JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                    Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
-                                    if (img != null) imgs.Add(img);
-                                }
+                                    JObject jsonObj = JObject.Parse(tempString);
+                                    JToken jToken;
+                                    if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                                    {
+                                        jToken = ((JObject)jsonObj["body"])["works"];
+                                        foreach (JProperty jp in jToken)
+                                        {
+                                            JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
+                                            Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
+                                            if (img != null) imgs.Add(img);
+                                        }
 
+                                    }
+                                }
                             }
                         }
                     }
