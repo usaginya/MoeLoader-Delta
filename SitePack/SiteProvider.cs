@@ -24,7 +24,7 @@ namespace SitePack
                 "https://konachan.com",
                 "https://konachan.com/post.xml?page={0}&limit={1}&tags={2}",
                 "https://konachan.com/tag.xml?limit={0}&order=count&name={1}",
-                "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XML));
+                "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XMLYD));
 
             sites.Add(new SiteBooru(
                     "https://danbooru.donmai.us",
@@ -90,7 +90,7 @@ namespace SitePack
                     "https://lolibooru.moe",
                     "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
                     "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
-                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLYDNV));
 
                 sites.Add(new SiteATFBooru());
 
