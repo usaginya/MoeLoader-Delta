@@ -2,7 +2,7 @@
  * version 1.8
  * by YIU
  * Create               20170106
- * Last Change     20190209
+ * Last Change     20190104
  */
 
 using System;
@@ -50,7 +50,7 @@ namespace MoeLoaderDelta
 
         public SessionClient()
         {
-            ServicePointManager.DefaultConnectionLimit = 768;
+            ServicePointManager.DefaultConnectionLimit = 512;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)
@@ -312,41 +312,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        //########################################################################################
-        //#############################   HEAD   #################################################
-        public bool IsExist(string uri, IWebProxy proxy, SessionHeadersCollection shc)
-        {
-            HttpWebRequest req = null;
-            HttpWebResponse res = null;
-            try
-            {
-                req = (HttpWebRequest)WebRequest.Create(uri);
-                req.Method = "HEAD";
-
-                SetHeader(req, uri, proxy, shc);
-
-                res = (HttpWebResponse)req.GetResponse();
-
-                return (res.StatusCode == HttpStatusCode.OK);
-            }
-            catch
-            {
-                return false;
-            }
-            finally
-            {
-                if (res != null)
-                {
-                    res.Close();
-                    res = null;
-                }
-                if (req != null)
-                {
-                    req.Abort();
-                    req = null;
-                }
-            }
-        }
         //########################################################################################
         //#############################   Cookies   #################################################
         /// <summary>

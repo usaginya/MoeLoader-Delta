@@ -27,7 +27,7 @@ namespace MoeLoaderDelta
             try
             {
                 var i = bytes.Select((t, index) =>
-                new { t, index }).FirstOrDefault(t =>
+                new { t = t, index = index }).FirstOrDefault(t =>
                 bytes.Skip(t.index).Take(search.Length).SequenceEqual(search)).index;
                 return i;
             }
