@@ -24,7 +24,7 @@ namespace SitePack
         public override string ShortName => sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku";
         public override bool IsSupportScore => false;
         public override bool IsSupportCount => true;
-        public override string Referer => $"{SiteUrl}/post";
+        //public override string Referer => $"{SiteUrl}/post";
         public override string SubReferer => "*";
 
         /// <summary>
@@ -94,23 +94,6 @@ namespace SitePack
             }
 
             return re;
-        }
-
-        private string FixUrl(string url)
-        {
-            if (url.StartsWith("//"))
-            {
-                url = "https:" + url;
-            }
-            else if (url.StartsWith("/"))
-            {
-                url = SiteUrl + url;
-            }
-            if (url.Contains("?"))
-            {
-                url = url.Substring(0, url.LastIndexOf('?'));
-            }
-            return url;
         }
 
         /// <summary>
