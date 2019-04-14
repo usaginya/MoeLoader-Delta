@@ -70,13 +70,13 @@ namespace MoeLoaderDelta.Control
         /// <summary>
         /// 下载图片
         /// </summary>
-        /// <param name="reTry">重试:1~4</param>
+        /// <param name="reTry">重试:1~9</param>
         public void DownloadImg(string needReferer, int reTry = 0)
         {
             try
             {
                 #region 创建请求数据
-                reTry = (reTry < 0 ? 0 : reTry) > 4 ? 4 : reTry;
+                reTry = (reTry < 0 ? 0 : reTry) > 9 ? 9 : reTry;
                 shc.Add("Accept-Ranges", "bytes");
                 shc.Referer = needReferer;
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
@@ -87,10 +87,15 @@ namespace MoeLoaderDelta.Control
                     img.JpegUrl,
                     img.OriginalUrl.Replace(".#ext",".jpg"),
                     img.OriginalUrl.Replace(".#ext", ".png"),
-                    img.OriginalUrl.Replace(".#ext", ".gif")
+                    img.OriginalUrl.Replace(".#ext", ".gif"),
+                    WebUrlEncode(img.PreviewUrl),
+                    WebUrlEncode(img.JpegUrl),
+                    WebUrlEncode(img.OriginalUrl.Replace(".#ext",".jpg")),
+                    WebUrlEncode(img.OriginalUrl.Replace(".#ext", ".png")),
+                    WebUrlEncode(img.OriginalUrl.Replace(".#ext", ".gif"))
                 };
 
-                string requrl = WebUrlEncode(requrls[reTry]);
+                string requrl = requrls[reTry];
                 HttpWebRequest req = Sweb.CreateWebRequest(requrl, MainWindow.WebProxy, shc);
 
                 //将请求加入请求组
@@ -190,7 +195,7 @@ namespace MoeLoaderDelta.Control
                     catch (WebException e)
                     {
                         reTryCount++;
-                        if (reTryCount > 0 && reTryCount < 5)
+                        if (reTryCount > 0 && reTryCount < 10)
                         {
                             if (req != null)
                             {

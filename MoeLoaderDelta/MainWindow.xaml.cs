@@ -1073,7 +1073,7 @@ namespace MoeLoaderDelta
                     }
                 }))).Start(currentSession);
 
-                GC.Collect();
+                GC.Collect(2,GCCollectionMode.Optimized);
             }
             else
             {
@@ -1523,7 +1523,7 @@ namespace MoeLoaderDelta
                 previewFrm = new PreviewWnd(this);
                 previewFrm.Show();
                 Focus();
-                //System.GC.Collect();
+                //System.GC.Collect(2,GCCollectionMode.Optimized);
             }
             previewFrm.AddPreview(imgs[index], index, SiteManager.Instance.Sites[nowSelectedIndex].Referer);
             //System.Media.SystemSounds.Exclamation.Play();
@@ -2538,7 +2538,7 @@ namespace MoeLoaderDelta
             }
             catch { }
 
-            GC.Collect();
+            GC.Collect(2,GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }

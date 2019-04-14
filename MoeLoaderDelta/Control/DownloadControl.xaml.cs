@@ -604,7 +604,7 @@ namespace MoeLoaderDelta
             {
                 Dispatcher.Invoke(new VoidDel(delegate () { ExecuteDownloadListTask(DLWorkMode.AutoRetryAll); }));
             }
-            GC.Collect();
+            GC.Collect(2,GCCollectionMode.Optimized);
         }
 
         /// <summary>
