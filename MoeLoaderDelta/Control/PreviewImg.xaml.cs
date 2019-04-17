@@ -16,7 +16,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// PreviewImg.xaml 的交互逻辑
     /// by YIU
-    /// Fixed 20190209
+    /// Fixed 20180326
     /// </summary>
     public partial class PreviewImg : UserControl
     {
@@ -29,26 +29,49 @@ namespace MoeLoaderDelta.Control
         //网络请求组
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
-        //容错加载次数
-        private int reTryCount = 0;
-
+        private Dictionary<int, HttpWebRequest> reqs = new Dictionary<int, HttpWebRequest>();
+        private Stream strs;
+        //图片是否载入完成
+        private bool imgloaded;
+        //是否缩放
+        private bool iszoom;
+        //预览图类型
+        private string imgType;
         //用于静态图片格式转化
         Dictionary<string, ImageFormat> imgf = new Dictionary<string, ImageFormat>();
 
         #region ==== 封装 =======
-        public Dictionary<int, HttpWebRequest> Reqs { get; set; } = new Dictionary<int, HttpWebRequest>();
+        public Dictionary<int, HttpWebRequest> Reqs
+        {
+            get { return reqs; }
+            set { reqs = value; }
+        }
 
-        public bool ImgLoaded { get; private set; }
+        public bool ImgLoaded
+        {
+            get { return imgloaded; }
+        }
 
-        public bool isZoom { get; set; }
+        public bool isZoom
+        {
+            get { return iszoom; }
+            set { iszoom = value; }
+        }
 
         /// <summary>
         /// 预览图类型
         /// bmp, jpg, png, gif, webm, mpeg, zip, rar, 7z
         /// </summary>
-        public string ImgType { get; private set; }
+        public string ImgType
+        {
+            get { return imgType; }
+        }
 
-        public Stream Strs { get; set; }
+        public Stream Strs
+        {
+            get { return strs; }
+            set { strs = value; }
+        }
         #endregion
 
         //======= 委托 =======
@@ -82,6 +105,7 @@ namespace MoeLoaderDelta.Control
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
                 shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
                 shc.AutomaticDecompression = DecompressionMethods.GZip;
+
                 string[] requrls = {
                     img.PreviewUrl,
                     img.JpegUrl,
@@ -99,7 +123,7 @@ namespace MoeLoaderDelta.Control
                 HttpWebRequest req = Sweb.CreateWebRequest(requrl, MainWindow.WebProxy, shc);
 
                 //将请求加入请求组
-                Reqs.Add(img.Id, req);
+                reqs.Add(img.Id, req);
                 #endregion
 
                 //异步下载开始
@@ -110,6 +134,13 @@ namespace MoeLoaderDelta.Control
                 Program.Log(ex, "Download sample failed");
                 StopLoadImg(img.Id, true, "创建下载失败");
             }
+        }
+        /// <summary>
+        /// 下载图片
+        /// </summary>
+        public void DownloadImg(string needReferer)
+        {
+            DownloadImg(needReferer, false);
         }
 
         /// <summary>
@@ -169,7 +200,7 @@ namespace MoeLoaderDelta.Control
                                 }
                                 catch
                                 {
-                                    Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, "数据中止"); }), string.Empty);
+                                    Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, "数据中止"); }), "");
                                     return;
                                 }
                             }
@@ -186,7 +217,7 @@ namespace MoeLoaderDelta.Control
                             ms = new MemoryStream(data);
 
                             //读完数据传递图片流并显示
-                            Dispatcher.Invoke(new UIdelegate(delegate (object sende) { AssignImg(ms, re.Key); }), string.Empty);
+                            Dispatcher.Invoke(new UIdelegate(delegate (object sende) { AssignImg(ms, re.Key); }), "");
 
                             str.Dispose();
                             str.Close();
@@ -198,12 +229,9 @@ namespace MoeLoaderDelta.Control
                         if (reTryCount > 0 && reTryCount < 10)
                         {
                             if (req != null)
-                            {
                                 req.AsyncWaitHandle.Close();
-                            }
-
-                            StopLoadImg(re.Key, false, $"容错加载{reTryCount}次");
-                            DownloadImg(re.Value.Referer, reTryCount);
+                            StopLoadImg(re.Key, false, "容错缓冲中");
+                            DownloadImg(re.Value.Referer, true);
                         }
                         else
                             Dispatcher.Invoke(new UIdelegate(delegate (object sende) { StopLoadImg(re.Key, true, "缓冲失败"); }), e);
@@ -277,20 +305,20 @@ namespace MoeLoaderDelta.Control
             try
             {
                 //清理请求数据
-                if (Reqs.ContainsKey(id))
+                if (reqs.ContainsKey(id))
                 {
-                    if (Reqs[id] != null)
+                    if (reqs[id] != null)
                     {
-                        Reqs[id].Abort();
-                        Reqs.Remove(id);
+                        reqs[id].Abort();
+                        reqs.Remove(id);
                     }
                 }
 
-                if (Strs != null)
+                if (strs != null)
                 {
-                    Strs.Flush();
-                    Strs.Dispose();
-                    Strs.Close();
+                    strs.Flush();
+                    strs.Dispose();
+                    strs.Close();
                 }
             }
             catch { }
@@ -328,10 +356,10 @@ namespace MoeLoaderDelta.Control
             {
                 //提取图片规格类型
                 string type = GetImgType(str);
-                ImgType = type;
+                imgType = type;
 
                 //记录Stream
-                Strs = str;
+                strs = str;
 
                 //分显示容器
                 switch (type)
@@ -379,7 +407,7 @@ namespace MoeLoaderDelta.Control
 
                     default:
                         //未支持预览的格式
-                        Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, "不支持" + type); }), string.Empty);
+                        Dispatcher.Invoke(new UIdelegate(delegate (object ss) { StopLoadImg(key, "不支持" + type); }), "");
                         return;
                 }
 
@@ -393,7 +421,7 @@ namespace MoeLoaderDelta.Control
                 ProgressPlate.Visibility = Visibility.Hidden;
 
                 ImgZoom(true);
-                ImgLoaded = true;
+                imgloaded = true;
             }
             catch (Exception ex1)
             {
@@ -410,7 +438,7 @@ namespace MoeLoaderDelta.Control
         /// <param name="begin">首次显示</param>
         public void ImgZoom(bool zoom, bool begin)
         {
-            if (ImgType == null) return;
+            if (imgType == null) return;
 
             double imgw = 0, imgh = 0;
             AnimatedGIF gifo = null;
@@ -418,7 +446,7 @@ namespace MoeLoaderDelta.Control
 
             UIElement imgui = prewimg.Children[0];
             //分类型取值
-            switch (ImgType)
+            switch (imgType)
             {
                 case "bmp":
                 case "jpg":
@@ -495,7 +523,7 @@ namespace MoeLoaderDelta.Control
         /// <returns>bmp,jpg,png,gif,webm,mpeg,zip,rar,7z</returns>
         private string GetImgType(Stream str)
         {
-            if (str == null) return string.Empty;
+            if (str == null) return "";
 
             //由自带对象判断类型
             ImageFormat dwimgformat = System.Drawing.Image.FromStream(str).RawFormat;
@@ -540,27 +568,7 @@ namespace MoeLoaderDelta.Control
                     return type;
                 }
             }
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// 常规化的URL编码
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static string WebUrlEncode(string str)
-        {
-            return !string.IsNullOrEmpty(str) ?
-                WebUtility.UrlEncode(str).Replace("+", "%20")
-                .Replace("*", "%2A")
-                .Replace("%7E", "~")
-                .Replace("'", "%27")
-                .Replace("(", "%28")
-                .Replace(")", "%29")
-                .Replace("%3A", ":")
-                .Replace("%2F", "/")
-                .Replace("%23", "#")
-                : str;
+            return "";
         }
 
     }

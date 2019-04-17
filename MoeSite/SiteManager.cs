@@ -141,13 +141,13 @@ namespace MoeLoaderDelta
             wstr += "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
             if (!exisnull)
             {
-                wstr += (string.IsNullOrWhiteSpace(extra_info) ? string.Empty : " | ") + ex.Message + "\r\n";
+                wstr += (string.IsNullOrWhiteSpace(extra_info) ? "" : " | ") + ex.Message + "\r\n";
                 wstr += "[异常对象]: " + ex.Source + "\r\n";
                 wstr += "[调用堆栈]: " + ex.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
             File.AppendAllText(sitePacksPath + "site_error.log", wstr + "\r\n");
-            MessageBox.Show((string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info), $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         /// <summary>
         /// 提供站点错误的输出

@@ -13,12 +13,16 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 190209
+    /// Last change 180527
     /// </summary>
     public partial class ImgControl : UserControl
     {
         private ImageSite site;
-        public Img Image { get; }
+        private Img img;
+        public Img Image
+        {
+            get { return img; }
+        }
 
         private int index;
         private bool canRetry = false;
@@ -41,7 +45,7 @@ namespace MoeLoaderDelta
         {
             InitializeComponent();
             this.site = site;
-            Image = img;
+            this.img = img;
             this.index = index;
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
@@ -102,12 +106,12 @@ namespace MoeLoaderDelta
 
         void ShowImgDetail()
         {
-            chk.Text = site.IsShowRes ? Image.Dimension : Image.Desc;
+            chk.Text = site.IsShowRes ? img.Dimension : img.Desc;
             string type = "N/A", aniformat = "gif webm mpeg  mpg mp4 avi";
 
-            if (Image.OriginalUrl.Length > 6)
+            if (img.OriginalUrl.Length > 6)
             {
-                type = BooruProcessor.FormattedImgUrl(string.Empty, Image.OriginalUrl.Substring(Image.OriginalUrl.LastIndexOf('.') + 1)).ToUpper();
+                type = BooruProcessor.FormattedImgUrl(string.Empty, img.OriginalUrl.Substring(img.OriginalUrl.LastIndexOf('.') + 1)).ToUpper();
             }
             else
             {
@@ -117,13 +121,13 @@ namespace MoeLoaderDelta
                 preview_ImageFailed(null, null);
                 return;
             }
-            score.Text = Image.Score.ToString();
-            txtDesc.Inlines.Add(Image.Id + " " + Image.Desc.Replace(Environment.NewLine, string.Empty));
+            score.Text = img.Score.ToString();
+            txtDesc.Inlines.Add(img.Id + " " + img.Desc.Replace(Environment.NewLine, string.Empty));
             txtDesc.Inlines.Add(new LineBreak());
-            txtDesc.Inlines.Add(type + " " + Image.Author);
+            txtDesc.Inlines.Add(type + " " + img.Author);
             //txtDesc.Inlines.Add(new LineBreak());
-            txtDesc.Inlines.Add(" " + Image.FileSize);
-            txtDesc.ToolTip = $"{Image.Id} {Image.Desc}\r\n{(string.IsNullOrWhiteSpace(Image.Author) ? string.Empty : "[投稿者] " + Image.Author)} \r\n{type} {Image.FileSize} {Image.Date}";
+            txtDesc.Inlines.Add(" " + img.FileSize);
+            txtDesc.ToolTip = img.Id + " " + img.Desc + "\r\n" + img.Author + "\r\n" + type + "  " + img.FileSize + "  " + img.Date;
             //txtDesc.Inlines.Add(new LineBreak());
             //txtDesc.Inlines.Add("评分: " + img.Score);
             //txtDesc.Inlines.Add(new LineBreak());
@@ -139,16 +143,16 @@ namespace MoeLoaderDelta
         /// </summary>
         public void DownloadImg()
         {
-            if (PreFetcher.Fetcher.PreFetchedImg(Image.SampleUrl) != null)
+            if (PreFetcher.Fetcher.PreFetchedImg(img.SampleUrl) != null)
             {
-                preview.Source = PreFetcher.Fetcher.PreFetchedImg(Image.SampleUrl);
+                preview.Source = PreFetcher.Fetcher.PreFetchedImg(img.SampleUrl);
                 //preview.Source = BitmapDecoder.Create(PreFetcher.Fetcher.PreFetchedImg(img.PreUrl), BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
             }
             else
             {
                 try
                 {
-                    req = Sweb.CreateWebRequest(Image.SampleUrl, MainWindow.WebProxy, shc);
+                    req = Sweb.CreateWebRequest(img.SampleUrl, MainWindow.WebProxy, shc);
                     req.Proxy = MainWindow.WebProxy;
 
                     //异步下载开始
@@ -161,7 +165,7 @@ namespace MoeLoaderDelta
                 }
             }
 
-            if (!isDetailSucc && Image.DownloadDetail != null)
+            if (!isDetailSucc && img.DownloadDetail != null)
             {
                 canRetry = true;
                 isRetrievingDetail = true;
@@ -170,7 +174,7 @@ namespace MoeLoaderDelta
                 {
                     try
                     {
-                        Image.DownloadDetail(Image, MainWindow.WebProxy);
+                        img.DownloadDetail(img, MainWindow.WebProxy);
                         Dispatcher.Invoke(new VoidDel(() =>
                         {
                             LayoutRoot.IsEnabled = true;
@@ -395,7 +399,7 @@ namespace MoeLoaderDelta
             //ori
             try
             {
-                Clipboard.SetText(Image.OriginalUrl);
+                Clipboard.SetText(img.OriginalUrl);
             }
             catch { }
         }
@@ -405,7 +409,7 @@ namespace MoeLoaderDelta
             //jpg
             try
             {
-                Clipboard.SetText(Image.JpegUrl);
+                Clipboard.SetText(img.JpegUrl);
             }
             catch { }
         }
@@ -415,7 +419,7 @@ namespace MoeLoaderDelta
             //预览图
             try
             {
-                Clipboard.SetText(Image.PreviewUrl);
+                Clipboard.SetText(img.PreviewUrl);
             }
             catch { }
         }
@@ -425,7 +429,7 @@ namespace MoeLoaderDelta
             //缩略图
             try
             {
-                Clipboard.SetText(Image.SampleUrl);
+                Clipboard.SetText(img.SampleUrl);
             }
             catch { }
         }
@@ -435,7 +439,7 @@ namespace MoeLoaderDelta
             //tag
             try
             {
-                Clipboard.SetText(Image.Desc.Replace("\r\n", string.Empty));
+                Clipboard.SetText(img.Desc.Replace("\r\n", string.Empty));
             }
             catch { }
         }
@@ -445,7 +449,7 @@ namespace MoeLoaderDelta
             //source
             try
             {
-                Clipboard.SetText(Image.Source.Replace("\r\n", string.Empty));
+                Clipboard.SetText(img.Source.Replace("\r\n", string.Empty));
             }
             catch { }
         }
@@ -455,7 +459,7 @@ namespace MoeLoaderDelta
             //id
             try
             {
-                Clipboard.SetText(Image.Id.ToSafeString());
+                Clipboard.SetText(img.Id.ToSafeString());
             }
             catch { }
         }
@@ -465,7 +469,7 @@ namespace MoeLoaderDelta
             //author
             try
             {
-                Clipboard.SetText(Image.Author.ToSafeString());
+                Clipboard.SetText(img.Author.ToSafeString());
             }
             catch { }
         }
@@ -474,8 +478,8 @@ namespace MoeLoaderDelta
         {
             try
             {
-                if (Image.DetailUrl.Length > 0)
-                    System.Diagnostics.Process.Start(Image.DetailUrl);
+                if (img.DetailUrl.Length > 0)
+                    System.Diagnostics.Process.Start(img.DetailUrl);
             }
             catch (Exception) { }
         }
