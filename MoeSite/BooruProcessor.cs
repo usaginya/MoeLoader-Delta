@@ -41,7 +41,7 @@ namespace MoeLoaderDelta
             /// </summary>
             XMLYDNV,
             /// <summary>
-            /// konachan Json
+            /// konachan JSON
             /// </summary>
             JSONKnc,
             /// <summary>
