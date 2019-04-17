@@ -1,17 +1,17 @@
-﻿using System;
+﻿using MoeLoaderDelta.Control;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media.Animation;
-using MoeLoaderDelta.Control;
-using System.IO;
-using System.Linq;
+using System.Windows.Media.Imaging;
 
 namespace MoeLoaderDelta
 {
@@ -313,12 +313,12 @@ namespace MoeLoaderDelta
 
                 //index为0时添加图片不能自增、因此需要在此设1
                 index = index < 1 ? 1 : index;
-                GC.Collect();
+                GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
                 selectedId = index = 0;
-                GC.Collect();
+                GC.Collect(2, GCCollectionMode.Optimized);
                 Close();
             }
         }
@@ -340,14 +340,7 @@ namespace MoeLoaderDelta
             imgGrid.Children.Clear();
             mainW.previewFrm = null;
 
-            (new System.Threading.Thread(
-                new System.Threading.ThreadStart(delegate ()
-                {
-                    //启动回收
-                    System.Threading.Thread.Sleep(2000);
-                    GC.Collect();
-                })
-             )).Start();
+            GC.Collect(2, GCCollectionMode.Optimized);
         }
 
         /// <summary>
