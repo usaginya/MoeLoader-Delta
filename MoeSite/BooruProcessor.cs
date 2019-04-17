@@ -41,6 +41,10 @@ namespace MoeLoaderDelta
             /// </summary>
             XMLYDNV,
             /// <summary>
+            /// konachan JSON
+            /// </summary>
+            JSONKnc,
+            /// <summary>
             /// JSON
             /// </summary>
             JSON,
@@ -187,6 +191,9 @@ namespace MoeLoaderDelta
                     break;
                 case SourceType.XML:
                     ProcessXML(siteUrl, url, pageString, imgs, string.Empty);
+                    break;
+                case SourceType.JSONKnc:
+                    ProcessJSON(siteUrl, url, pageString, imgs, "konachan");
                     break;
                 case SourceType.XMLYD:
                     ProcessXML(siteUrl, url, pageString, imgs, "yande", shortName);
@@ -397,6 +404,7 @@ namespace MoeLoaderDelta
 
                 string host = url.Substring(0, url.IndexOf('/', 8));
 
+                //恢复yande删除的图片信息
                 if (sub.Contains("yande") & !post.HasAttribute("file_url"))
                 {
                     tags = "deleted " + tags;
@@ -635,6 +643,20 @@ namespace MoeLoaderDelta
                     tags = obj["tag_string"].ToString();
                 }
 
+                //恢复konachan删除的图片信息
+                if(sub.Contains("konachan")&!obj.ContainsKey("file_url"))
+                {
+                    tags = "deleted " + tags;
+                    string md5 = string.Empty;
+                    if (obj.ContainsKey("md5"))
+                        md5 = obj["md5"].ToString();
+                    sample = $"{siteUrl}/data/preview/{md5.Substring(0, 2)}/{md5.Substring(2, 2)}/{md5}.jpg";
+                    preview_url = $"{siteUrl}/sample/{md5}/{sub} - {id} sample.jpg";
+
+                    file_url = $"{siteUrl}/image/{md5}/{sub} - {id} image.#ext"; //下载时会自动判断格式
+
+                    jpeg_url = $"{siteUrl}/jpeg/{md5}/{sub} - {id} jpeg.jpg";
+                }
                 bool noVerify = sub.Length == 2 && sub.Contains("nv");
 
                 Img img = GenerateImg(siteUrl, url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
