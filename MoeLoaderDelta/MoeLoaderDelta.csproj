@@ -116,6 +116,7 @@
       <HintPath>..\lib\System.Utility.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />

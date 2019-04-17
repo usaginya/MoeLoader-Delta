@@ -8,7 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 20180421
+    /// Last 20190209
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -164,7 +164,7 @@ namespace SitePack
         public override List<Img> GetImages(string pageString, System.Net.IWebProxy proxy)
         {
             BooruProcessor nowSession = new BooruProcessor(srcType);
-            return nowSession.ProcessPage(siteUrl, Url, pageString);
+            return nowSession.ProcessPage(siteUrl, shortName, Url, pageString);
         }
 
         public override List<TagItem> GetTags(string word, System.Net.IWebProxy proxy)
