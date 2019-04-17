@@ -2,16 +2,16 @@
  * version 1.8
  * by YIU
  * Create               20170106
- * Last Change     20180527
+ * Last Change     20190209
  */
 
 using System;
-using System.Text;
-using System.Net;
-using System.IO;
-using System.Web;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Web;
 
 namespace MoeLoaderDelta
 {
@@ -44,13 +44,13 @@ namespace MoeLoaderDelta
         /// </summary>
         public CookieContainer CookieContainer
         {
-            get { return m_Cookie; }
-            set { m_Cookie = value; }
+            get => m_Cookie ?? new CookieContainer();
+            set => m_Cookie = value;
         }
 
         public SessionClient()
         {
-            ServicePointManager.DefaultConnectionLimit = 60;
+            ServicePointManager.DefaultConnectionLimit = 768;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)
@@ -62,7 +62,7 @@ namespace MoeLoaderDelta
             request.Timeout = shc.Timeout;
             request.KeepAlive = shc.KeepAlive;
             request.UserAgent = shc.UserAgent;
-            request.CookieContainer = m_Cookie;
+            request.CookieContainer = string.IsNullOrWhiteSpace(shc.Get("Cookie")) ? CookieContainer : request.CookieContainer;
             request.AllowAutoRedirect = shc.AllowAutoRedirect;
             request.AutomaticDecompression = shc.AutomaticDecompression;
             request.ContentType = shc.ContentType.Contains("auto") ? MimeMapping.GetMimeMapping(url) : shc.ContentType;
@@ -122,7 +122,7 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
-            string ret = "";
+            string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse reponse = null;
             try
@@ -313,6 +313,41 @@ namespace MoeLoaderDelta
         }
 
         //########################################################################################
+        //#############################   HEAD   #################################################
+        public bool IsExist(string uri, IWebProxy proxy, SessionHeadersCollection shc)
+        {
+            HttpWebRequest req = null;
+            HttpWebResponse res = null;
+            try
+            {
+                req = (HttpWebRequest)WebRequest.Create(uri);
+                req.Method = "HEAD";
+
+                SetHeader(req, uri, proxy, shc);
+
+                res = (HttpWebResponse)req.GetResponse();
+
+                return (res.StatusCode == HttpStatusCode.OK);
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (res != null)
+                {
+                    res.Close();
+                    res = null;
+                }
+                if (req != null)
+                {
+                    req.Abort();
+                    req = null;
+                }
+            }
+        }
+        //########################################################################################
         //#############################   Cookies   #################################################
         /// <summary>
         /// 取CookieContainer中所有站点Cookies
@@ -340,7 +375,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public string GetURLCookies(string url)
         {
-            return m_Cookie.GetCookieHeader(new Uri(url));
+            return m_Cookie?.GetCookieHeader(new Uri(url));
         }
 
         /// <summary>
@@ -351,7 +386,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public string GetURLCookies(string url, CookieContainer cc)
         {
-            return cc.GetCookieHeader(new Uri(url));
+            return cc?.GetCookieHeader(new Uri(url));
         }
 
         /// <summary>

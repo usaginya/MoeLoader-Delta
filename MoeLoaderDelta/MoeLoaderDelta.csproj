@@ -104,7 +104,8 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Expression.Drawing, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Expression.Drawing">
+      <HintPath>..\lib\Microsoft.Expression.Drawing.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PresentationFramework.Aero" />
@@ -115,11 +116,13 @@
       <HintPath>..\lib\System.Utility.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -156,6 +159,7 @@
       <DependentUpon>SearchControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Win7TaskBar.cs" />
+    <Compile Include="WindowData\MainLoginSite.cs" />
     <Page Include="Control\PreviewImg.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

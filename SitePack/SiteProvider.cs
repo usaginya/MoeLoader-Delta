@@ -9,21 +9,22 @@ namespace SitePack
         public List<ImageSite> SiteList(IWebProxy proxy)
         {
             List<ImageSite> sites = new List<ImageSite>();
+
             bool ecchimode = System.IO.File.Exists(
-                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\18x.txt"
+                $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
                 );
 
             sites.Add(new SiteLargeBooru(
                 "https://yande.re",
                 "https://yande.re/post.xml?page={0}&limit={1}&tags={2}", //XML
                 "https://yande.re/tag.xml?limit={0}&order=count&name={1}",
-                "yande.re", "yande", "https://yande.re/", false, BooruProcessor.SourceType.XML));
+                "yande.re", "yande", "https://yande.re/", false, BooruProcessor.SourceType.XMLYD));
 
             sites.Add(new SiteLargeBooru(
                 "https://konachan.com",
                 "https://konachan.com/post.xml?page={0}&limit={1}&tags={2}",
                 "https://konachan.com/tag.xml?limit={0}&order=count&name={1}",
-                "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XML));
+                "konachan.com", "konachan", null, false, BooruProcessor.SourceType.XMLYD));
 
             sites.Add(new SiteBooru(
                     "https://danbooru.donmai.us",
@@ -76,6 +77,7 @@ namespace SitePack
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week, proxy));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus, proxy));
 
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));
@@ -88,13 +90,9 @@ namespace SitePack
                     "https://lolibooru.moe",
                     "https://lolibooru.moe/post.xml?page={0}&limit={1}&tags={2}", //XML
                     "https://lolibooru.moe/tag.xml?limit={0}&order=count&name={1}",
-                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLNV));
+                    "lolibooru.moe", "lolibooru", "https://lolibooru.moe/", false, BooruProcessor.SourceType.XMLYDNV));
 
-                sites.Add(new SiteBooru(
-                    "https://atfbooru.ninja",
-                    "https://atfbooru.ninja/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://atfbooru.ninja/tags/autocomplete.json?search%5Bname_matches%5D={0}",
-                    "atfbooru.ninja", "atfbooru", "https://atfbooru.ninja/", false, BooruProcessor.SourceType.JSON));
+                sites.Add(new SiteATFBooru());
 
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Filter));
                 sites.Add(new SiteRule34(SiteRule34.Rule34srcType.Full));

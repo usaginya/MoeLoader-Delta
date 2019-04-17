@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("esonic, Moekai")]
 [assembly: AssemblyProduct("MoeLoader Δ")]
-[assembly: AssemblyCopyright("Copyright© esonic 2013, Moekai 2016-2018")]
+[assembly: AssemblyCopyright("Copyright© esonic 2013, Moekai 2016-2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -51,6 +51,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("7.0.5.9")]
-[assembly: AssemblyFileVersion("7.0.5.9")]
+[assembly: AssemblyVersion("7.0.6.5")]
+[assembly: AssemblyFileVersion("7.0.6.5")]
 [assembly: GuidAttribute("e1b87586-4b7e-4f4a-be97-55d3349ed5a6")]

@@ -60,6 +60,21 @@ namespace MoeLoaderDelta
         string ToolTip { get; }
 
         /// <summary>
+        /// 站点登录地址，如果有登录地址则可在主页右键菜单中登录
+        /// </summary>
+        string LoginURL { get; }
+
+        /// <summary>
+        /// 由界面传递给站点登录动作
+        /// </summary>
+        bool LoginSite { set; }
+
+        /// <summary>
+        /// 当前登录站点的用户
+        /// </summary>
+        string LoginUser { get; }
+
+        /// <summary>
         /// 是否支持设置单页数量，若为false则单页数量不可修改
         /// </summary>
         bool IsSupportCount { get; }

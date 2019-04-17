@@ -58,6 +58,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -65,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BooruProcessor.cs" />
+    <Compile Include="CookiesHelper.cs" />
     <Compile Include="ImageSite.cs" />
     <Compile Include="Img.cs" />
     <Compile Include="MyWebClient.cs">

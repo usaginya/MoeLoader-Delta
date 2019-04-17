@@ -1,17 +1,17 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Linq;
-using System.Web.Script.Serialization;
+using System.Text;
 using System.Web;
-using Newtonsoft.Json.Linq;
+using System.Web.Script.Serialization;
+using System.Xml;
 
 namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点
-    /// Fixed 180712
+    /// Fixed 190209
     /// </summary>
     public class BooruProcessor
     {
@@ -32,6 +32,14 @@ namespace MoeLoaderDelta
             /// XML
             /// </summary>
             XML,
+            /// <summary>
+            /// yande XML
+            /// </summary>
+            XMLYD,
+            /// <summary>
+            /// yande XML No Verify
+            /// </summary>
+            XMLYDNV,
             /// <summary>
             /// JSON
             /// </summary>
@@ -162,23 +170,29 @@ namespace MoeLoaderDelta
         /// <param name="url">页面地址</param>
         /// <param name="pageString">页面源代码</param>
         /// <returns></returns>
-        public List<Img> ProcessPage(string siteUrl, string url, string pageString)
+        public List<Img> ProcessPage(string siteUrl, string shortName, string url, string pageString)
         {
             List<Img> imgs = new List<Img>();
 
             switch (type)
             {
                 case SourceType.HTML:
-                    ProcessHTML(siteUrl, url, pageString, imgs, "");
+                    ProcessHTML(siteUrl, url, pageString, imgs, string.Empty);
                     break;
                 case SourceType.JSON:
-                    ProcessJSON(siteUrl, url, pageString, imgs, "");
+                    ProcessJSON(siteUrl, url, pageString, imgs, string.Empty);
                     break;
                 case SourceType.JSONSku:
                     ProcessJSON(siteUrl, url, pageString, imgs, "sku");
                     break;
                 case SourceType.XML:
-                    ProcessXML(siteUrl, url, pageString, imgs, "");
+                    ProcessXML(siteUrl, url, pageString, imgs, string.Empty);
+                    break;
+                case SourceType.XMLYD:
+                    ProcessXML(siteUrl, url, pageString, imgs, "yande", shortName);
+                    break;
+                case SourceType.XMLYDNV:
+                    ProcessXML(siteUrl, url, pageString, imgs, "yandenv", shortName);
                     break;
                 case SourceType.HTMLNV:
                     ProcessHTML(siteUrl, url, pageString, imgs, "nv");
@@ -308,7 +322,7 @@ namespace MoeLoaderDelta
         /// <param name="pageString"></param>
         /// <param name="imgs"></param>
         /// <param name="sub">标记 (nv 不验证完整性)</param>
-        private void ProcessXML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
+        private void ProcessXML(string siteUrl, string url, string pageString, List<Img> imgs, string sub, string shortName)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
             XmlDocument xmlDoc = new XmlDocument();
@@ -344,7 +358,7 @@ namespace MoeLoaderDelta
                 if (post.HasAttribute("created_at"))
                     created_at = post.GetAttribute("created_at");
 
-                string preview_url = post.GetAttribute("sample_url");
+                string preview_url = post.GetAttribute("sample_url");  //预览图
                 string file_url = post.GetAttribute("file_url");
 
                 string jpeg_url = preview_url.Length > 0 ? preview_url : file_url;
@@ -353,7 +367,7 @@ namespace MoeLoaderDelta
 
                 string sample = file_url;
                 if (post.HasAttribute("preview_url"))
-                    sample = post.GetAttribute("preview_url");
+                    sample = post.GetAttribute("preview_url");     //缩略图
 
                 string tags = post.GetAttribute("tags");
                 string id = post.GetAttribute("id");
@@ -383,6 +397,21 @@ namespace MoeLoaderDelta
 
                 string host = url.Substring(0, url.IndexOf('/', 8));
 
+                if (sub.Contains("yande") & !post.HasAttribute("file_url"))
+                {
+                    tags = "deleted " + tags;
+                    string md5 = string.Empty;
+                    if (post.HasAttribute("md5"))
+                        md5 = post.GetAttribute("md5");
+                    sample = $"{siteUrl}/data/preview/{md5.Substring(0, 2)}/{md5.Substring(2, 2)}/{md5}.jpg";
+                    preview_url = $"{siteUrl}/sample/{md5}/{shortName} {id} sample.jpg";
+
+                    string file_ext = post.HasAttribute("file_ext") ? post.GetAttribute("file_ext") : "#ext";
+                    file_url = $"{siteUrl}/image/{md5}/{shortName} {id} image.{file_ext}";
+
+                    jpeg_url = $"{siteUrl}/jpeg/{md5}/{shortName} {id} jpeg.jpg";
+                }
+
                 preview_url = FormattedImgUrl(host, preview_url);
                 file_url = FormattedImgUrl(host, file_url);
                 sample = FormattedImgUrl(host, sample);
@@ -390,11 +419,15 @@ namespace MoeLoaderDelta
 
                 //if (!UseJpeg)
                 //jpeg_url = file_url;
-                bool noVerify = sub.Length == 2 && sub.Contains("nv");
+                bool noVerify = sub.Length > 1 && sub.Contains("nv");
 
                 Img img = GenerateImg(siteUrl, url, id, author, source, width, height, file_size, created_at, score, sample, preview_url, file_url, jpeg_url, tags, noVerify);
                 if (img != null) imgs.Add(img);
             }
+        }
+        private void ProcessXML(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
+        {
+            ProcessXML(siteUrl, url, pageString, imgs, sub, string.Empty);
         }
 
         /// <summary>
