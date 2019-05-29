@@ -6,8 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="UserControl"
-    Width="170"
-    Height="190"
+    Width="184"
+    Height="204"
     Margin="6,10,6,10"
     mc:Ignorable="d">
     <!--  S: 160x183 L:310x333  -->

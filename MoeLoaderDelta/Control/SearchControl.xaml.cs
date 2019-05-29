@@ -78,11 +78,34 @@ namespace MoeLoaderDelta
         /// <param name="word"></param>
         public void AddUsedItem(string word)
         {
+            if (word != null && word.Trim().Length > 0 && word != "搜索")
+            {
+                if (usedItems.Contains(word))
+                {
+                    usedItems.Remove(word);
+                    usedItems.AddFirst(word);
+                }
+
+                else
+                {
+                    if (usedItems.Count > 30)
+                        usedItems.RemoveLast();
+                    usedItems.AddFirst(word);
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// 从配置文件中加载搜索过的词
+        /// </summary>
+        /// <param name="word"></param>
+        public void LoadUsedItems(string word)
+        {
             if (word != null && word.Trim().Length > 0 && !usedItems.Contains(word) && word != "搜索")
             {
-                if (usedItems.Count > 30)
-                    usedItems.RemoveLast();
-                usedItems.AddFirst(word);
+                if (usedItems.Count < 30)
+                    usedItems.AddLast(word);
             }
         }
 
