@@ -318,7 +318,7 @@ namespace SitePack
                         {
                             tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}is_manga_top=0", proxy, shc));
                         }
-                        if(!tempPageString.Exists(string.IsNullOrWhiteSpace))
+                        if (!tempPageString.Exists(string.IsNullOrWhiteSpace))
                         {
                             //ROOT->body->works
                             //获取图片详细信息
@@ -766,10 +766,16 @@ namespace SitePack
                                 }
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            throw ex;
+                        }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
             });
 
             return img;
