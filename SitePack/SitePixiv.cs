@@ -90,7 +90,7 @@ namespace SitePack
         public override string Referer => referer;
         public override string SubReferer => ShortName + ",pximg";
         public override string LoginURL => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
-        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
+        public override bool LoginSite { get { return IsLoginSite; } set { IsLoginSite = value; } }
         public override string LoginUser => nowUser ?? base.LoginUser;
 
         public override bool IsSupportCount  //fixed 20
@@ -277,16 +277,39 @@ namespace SitePack
                     }
                     int ilistcount = illustsList.Count,
                         mlistcount = mangaList.Count,
+                        ill_num = 0, mng_num = 0,
                         scount = ilistcount + mlistcount;
                     List<string> ids = new List<string>();
-                    for (int j = (page - 1) * count; j < page * count & scount > 0 & j <= scount; j++)
+                    for (int j = 0; j < page * count && scount > 0 && j < scount; j++)
                     {
-                        if ((j - (page - 1) * count) % 48 == 0)
-                            ids.Add(string.Empty);
-                        if (j < ilistcount)
-                            ids[(j- (page - 1) * count) / 48] += $"ids[]={illustsList[j]}&";
-                        if (j < mlistcount)
-                            ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[j]}&";
+                        if (j < (page - 1) * count)
+                        {
+                            if (ill_num < ilistcount && mng_num < mlistcount)
+                            {
+                                if (int.Parse(illustsList[ill_num]) > int.Parse(mangaList[mng_num])) ill_num++;
+                                else mng_num++;
+                            }
+                            else if (ill_num < ilistcount) ill_num++;
+                            else if (mng_num < mlistcount) mng_num++;
+                        }
+
+                        else
+                        {
+                            if ((j - (page - 1) * count) % 48 == 0)
+                                ids.Add(string.Empty);
+                            if (ill_num < ilistcount && mng_num < mlistcount)
+                            {
+                                if (int.Parse(illustsList[ill_num]) > int.Parse(mangaList[mng_num]))
+                                    ids[(j - (page - 1) * count) / 48] += $"ids[]={illustsList[ill_num++]}&";
+                                else
+                                    ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[mng_num++]}&";
+                            }
+                            else if (ill_num < ilistcount)
+                                ids[(j - (page - 1) * count) / 48] += $"ids[]={illustsList[ill_num++]}&";
+
+                            else if (mng_num < mlistcount)
+                                ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[mng_num++]}&";
+                        }
                     }
                     if (!ids.Exists(string.IsNullOrWhiteSpace))
                     {
@@ -709,6 +732,41 @@ namespace SitePack
                                 }
                             }
                         }
+                    }
+                    else if (i.OriginalUrl.Contains("_ugoira"))//动图 ugoira
+                    {
+                        //从上面的漫画解析处复制粘贴来的
+                        try
+                        {
+                            i.PixivUgoira = true;//标记动图类型
+                            int mangaCount = pageCount;
+                            string ugoira_meta = Sweb.Get("https://www.pixiv.net/ajax/illust/" + i.Id + "/ugoira_meta", p, shc);
+
+                            if (!string.IsNullOrWhiteSpace(ugoira_meta))
+                            {
+                                ugoira_meta = (Convert.ToString(((JObject)JObject.Parse(ugoira_meta)["body"])["frames"]));
+
+                                int n = ugoira_meta.IndexOf("file");
+                                mangaCount = 0;
+                                while (n != -1)
+                                {
+                                    mangaCount++;
+                                    n += "file".Length;
+                                    n = ugoira_meta.IndexOf("file", n);
+                                }
+
+                                i.Dimension = "Ugoira " + mangaCount + "P";
+                                for (int j = 0; j < mangaCount; j++)
+                                {
+                                    try
+                                    {
+                                        i.OrignalUrlList.Add(i.OriginalUrl.Replace("_ugoira0.", "_ugoira" + j.ToString() + ".")); //dirty trick
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+                        catch { }
                     }
                 }
                 catch { }

@@ -18,6 +18,10 @@ namespace MoeLoaderDelta
     public class Img
     {
         /// <summary>
+        /// 是否为Pixiv站动图
+        /// </summary>
+        public bool PixivUgoira { get; set; }
+        /// <summary>
         /// 原图地址
         /// </summary>
         public string OriginalUrl { get; set; }
@@ -158,6 +162,7 @@ namespace MoeLoaderDelta
         /// </summary>
         public Img()
         {
+            PixivUgoira = false;
             Date = "NoDate";
             Desc = "";
             FileSize = "N/A";

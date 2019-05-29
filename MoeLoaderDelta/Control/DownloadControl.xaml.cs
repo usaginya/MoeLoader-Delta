@@ -235,14 +235,22 @@ namespace MoeLoaderDelta
             {
                 sPath = dlitem.LocalName.Substring(0, dlitem.LocalName.LastIndexOf("\\") + 1);
             }
+
             else
             {
-                sPath = SaveLocation
-                    + (IsSepSave ? "\\" + dlitem.Host : "")
-                   + (IsSscSave && !dlitem.SearchWord.IsNullOrEmptyOrWhiteSpace() ? "\\" + dlitem.SearchWord : "")
-                   + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
-                   + "\\";
+                if (!dlitem.LocalName.IsNullOrEmptyOrWhiteSpace() && dlitem.LocalName.Contains("_ugoira"))
+                {
+                    sPath = SaveLocation + "\\" + dlitem.Id + "\\";
+                }
 
+                else
+                {
+                    sPath = SaveLocation
+                      + (IsSepSave ? "\\" + dlitem.Host : "")
+                     + (IsSscSave && !dlitem.SearchWord.IsNullOrEmptyOrWhiteSpace() ? "\\" + dlitem.SearchWord : "")
+                     + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
+                     + "\\";
+                }
                 if (!Directory.Exists(sPath))
                     Directory.CreateDirectory(sPath);
             }
