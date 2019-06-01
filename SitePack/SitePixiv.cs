@@ -733,9 +733,13 @@ namespace SitePack
                             }
                         }
                     }
-                    else if (i.OriginalUrl.Contains("_ugoira"))//动图 ugoira
+                    else if (i.OriginalUrl.Contains("ugoira"))//动图 ugoira
                     {
-                        //从上面的漫画解析处复制粘贴来的
+                        //以上面的漫画解析为蓝本修改而来
+                        if (!i.OriginalUrl.Contains("_ugoira0."))
+                            //为预防Pixiv在未来修改动图页面机制，若连接格式有变则直接抛出异常。
+                            throw new ArgumentException();
+
                         try
                         {
                             i.PixivUgoira = true;//标记动图类型
@@ -746,24 +750,13 @@ namespace SitePack
                             {
                                 ugoira_meta = (Convert.ToString(((JObject)JObject.Parse(ugoira_meta)["body"])["frames"]));
 
-                                int n = ugoira_meta.IndexOf("file");
-                                mangaCount = 0;
-                                while (n != -1)
-                                {
-                                    mangaCount++;
-                                    n += "file".Length;
-                                    n = ugoira_meta.IndexOf("file", n);
-                                }
+                                //直接统计“{”的个数即可知道动图帧数
+                                mangaCount = ugoira_meta.Count(c => c == '{');
 
                                 i.Dimension = "Ugoira " + mangaCount + "P";
                                 for (int j = 0; j < mangaCount; j++)
-                                {
-                                    try
-                                    {
-                                        i.OrignalUrlList.Add(i.OriginalUrl.Replace("_ugoira0.", "_ugoira" + j.ToString() + ".")); //dirty trick
-                                    }
-                                    catch { }
-                                }
+                                    //Generate urls for each frame
+                                    i.OrignalUrlList.Add(i.OriginalUrl.Replace("_ugoira0.", "_ugoira" + j.ToString() + "."));
                             }
                         }
                         catch (Exception ex)
