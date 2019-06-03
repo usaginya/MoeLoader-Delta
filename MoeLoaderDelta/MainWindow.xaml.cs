@@ -268,7 +268,7 @@ namespace MoeLoaderDelta
             if (SiteManager.Instance.Sites.Count > 0)
             {
                 siteMenu.ItemsSource = tempSites;
-                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
                 siteMenu.Icon = tempSites[0].Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
@@ -329,7 +329,7 @@ namespace MoeLoaderDelta
                 return;
 
             MenuItem item = sender as MenuItem;
-            comboBoxIndex = (int)(item.DataContext);
+            comboBoxIndex = (int)item.DataContext;
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
@@ -1073,7 +1073,7 @@ namespace MoeLoaderDelta
                     }
                 }))).Start(currentSession);
 
-                GC.Collect(2,GCCollectionMode.Optimized);
+                GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
@@ -2106,7 +2106,7 @@ namespace MoeLoaderDelta
         {
             //Pixiv站动图
             if (img.PixivUgoira == true)
-                return img.Id.ToSafeString() + "_ugoira"+ img.ImgP;
+                return img.Id.ToSafeString() + "_ugoira" + img.ImgP;
             //namePatter
             string file = namePatter;
             if (string.IsNullOrWhiteSpace(file))
@@ -2541,7 +2541,7 @@ namespace MoeLoaderDelta
             }
             catch { }
 
-            GC.Collect(2,GCCollectionMode.Optimized);
+            GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }

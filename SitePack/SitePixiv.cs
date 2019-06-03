@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190208
+    /// Last change 190604
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -119,13 +119,14 @@ namespace SitePack
         private static string cookie = string.Empty, nowUser = null;
         private string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private string[] pass = { "630489372", "1515817701", "2422093014" };
+        private static int startLogin = 0;
         private static string tempPage = null;
         private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
-        private static bool startLogin, IsLoginSite;
+        private static bool IsLoginSite;
 
         /// <summary>
         /// pixiv.net site
@@ -141,17 +142,21 @@ namespace SitePack
         /// </summary>
         private void FirstLogin(IWebProxy proxy)
         {
-            if (!startLogin)
+            if (startLogin < 1)
             {
-                startLogin = true;
+                startLogin = 1;
                 CookieRestore();
                 Login(proxy);
+                startLogin = 2;
             }
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            Login(proxy);
+            if (!Login(proxy))
+            {
+                return string.Empty;
+            }
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
             int memberId = 0;
             string url = null;
@@ -788,7 +793,12 @@ namespace SitePack
             }
         }
 
-        private void Login(IWebProxy proxy)
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="proxy"></param>
+        /// <returns>返回登录状态</returns>
+        private bool Login(IWebProxy proxy)
         {
             if ((!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
             {
@@ -803,7 +813,11 @@ namespace SitePack
                     {
                         if (!IELogin())
                         {
-                            Login(proxy); //重新自动登录
+                            return Login(proxy); //重新自动登录
+                        }
+                        else
+                        {
+                            return true;
                         }
                     }
                     else
@@ -823,8 +837,8 @@ namespace SitePack
                         post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                         if (post_key.Length < 9)
                         {
-                            SiteManager.echoErrLog(SiteName, "自动登录失败 ");
-                            return;
+                            SiteManager.echoErrLog(SiteName, "自动登录失败 ", startLogin < 2);
+                            return false;
                         }
 
                         //请求2 POST取登录Cookie
@@ -841,26 +855,31 @@ namespace SitePack
                         {
                             if (data.Contains("locked"))
                             {
-                                throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
+                                SiteManager.echoErrLog(SiteName,
+                                    $"登录Pixiv时IP被封锁，剩余时间：{Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value}", startLogin < 2);
                             }
                             else if (cookie.Length < 9)
-                                SiteManager.echoErrLog(SiteName, "自动登录失败 ");
+                                SiteManager.echoErrLog(SiteName, "自动登录失败 ", startLogin < 2);
                             else
-                                SiteManager.echoErrLog(SiteName, $"自动登录失败 {data}");
+                                SiteManager.echoErrLog(SiteName, $"自动登录失败 {data}", startLogin < 2);
                         }
                         else
                         {
                             cookie = $"pixiv;{cookie}";
                             nowUser = "内置账号";
+                            return true;
                         }
+                        return false;
                     }
 
                 }
                 catch (Exception e)
                 {
-                    SiteManager.echoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
+                    SiteManager.echoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器", startLogin < 2);
+                    return false;
                 }
             }
+            return true;
         }
 
         /// <summary>
@@ -877,9 +896,9 @@ namespace SitePack
                 nowUser = "你的账号";
                 cookie = $"pixiv;{cookie}";
             }
-            else if (!startLogin)
+            else
             {
-                SiteManager.echoErrLog(SiteName, "用户登录失败 ");
+                SiteManager.echoErrLog(SiteName, "用户登录失败 ", startLogin < 2);
             }
 
             return result;
