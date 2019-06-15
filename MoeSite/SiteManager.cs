@@ -124,7 +124,7 @@ namespace MoeLoaderDelta
         public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
         {
             string NullPageString = string.Empty;
-            return LoginSite( imageSite, ref  cookie,  LoggedFlags, ref  Sweb, ref  shc, ref NullPageString);
+            return LoginSite(imageSite, ref cookie, LoggedFlags, ref Sweb, ref shc, ref NullPageString);
         }
 
         /// <summary>
@@ -133,7 +133,8 @@ namespace MoeLoaderDelta
         /// <param name="SiteShortName">站点短名</param>
         /// <param name="ex">错误信息</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void echoErrLog(string SiteShortName, Exception ex, string extra_info)
+        /// <param name="NoShow">不显示信息</param>
+        public static void echoErrLog(string SiteShortName, Exception ex = null, string extra_info =null, bool NoShow = false)
         {
             bool exisnull = ex == null;
             string wstr = "[异常站点]: " + SiteShortName + "\r\n";
@@ -147,25 +148,19 @@ namespace MoeLoaderDelta
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
             File.AppendAllText(sitePacksPath + "site_error.log", wstr + "\r\n");
-            MessageBox.Show((string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info), $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-        /// <summary>
-        /// 提供站点错误的输出
-        /// </summary>
-        /// <param name="SiteShortName">站点短名</param>
-        /// <param name="ex">错误信息</param>
-        public static void echoErrLog(string SiteShortName, Exception ex)
-        {
-            echoErrLog(SiteShortName, ex, null);
+            if (!NoShow)
+            {
+                MessageBox.Show((string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info), $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
         /// <param name="SiteShortName">站点短名</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void echoErrLog(string SiteShortName, string extra_info)
+        public static void echoErrLog(string SiteShortName, string extra_info, bool NoShow = false)
         {
-            echoErrLog(SiteShortName, null, extra_info);
+            echoErrLog(SiteShortName, null, extra_info, NoShow);
         }
     }
 }

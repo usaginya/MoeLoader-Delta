@@ -14,6 +14,15 @@ namespace SitePack
                 $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
                 );
 
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus, proxy));
+
             sites.Add(new SiteLargeBooru(
                 "https://yande.re",
                 "https://yande.re/post.xml?page={0}&limit={1}&tags={2}", //XML
@@ -69,15 +78,6 @@ namespace SitePack
             sites.Add(new SiteMjvArt());
 
             sites.Add(new SiteWCosplay());
-
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus, proxy));
 
             sites.Add(new SiteMiniTokyo(1));
             sites.Add(new SiteMiniTokyo(2));

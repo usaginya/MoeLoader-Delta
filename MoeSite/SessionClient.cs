@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.8
+ * version 1.9
  * by YIU
  * Create               20170106
- * Last Change     20190209
+ * Last Change     20190604
  */
 
 using System;
@@ -29,15 +29,10 @@ namespace MoeLoaderDelta
             "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_2 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Mobile/15A421",
             };
 
-        private static string defUA = UAs[new Random().Next(0, UAs.Length - 1)];
-
         /// <summary>
         /// 提供UA
         /// </summary>
-        public static string DefUA
-        {
-            get { return defUA; }
-        }
+        public static string DefUA { get; } = UAs[new Random().Next(0, UAs.Length - 1)];
 
         /// <summary>
         /// Cookie集合
@@ -146,6 +141,11 @@ namespace MoeLoaderDelta
                 if (reponse != null)
                 {
                     reponse.Close();
+                }
+                if (request != null)
+                {
+                    request.Abort();
+                    request = null;
                 }
             }
             return ret;
@@ -278,7 +278,7 @@ namespace MoeLoaderDelta
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
             HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-            HttpWebResponse response;
+            HttpWebResponse response = null;
 
             byte[] bytesToPost = Encoding.GetEncoding(pageEncoding).GetBytes(postData);
             try
@@ -296,7 +296,7 @@ namespace MoeLoaderDelta
                 response = (HttpWebResponse)request.GetResponse();
                 m_Cookie = request.CookieContainer;//访问后更新Cookie
                 Stream responseStream = response.GetResponseStream();
-                string resData = "";
+                string resData = string.Empty;
 
                 using (StreamReader resSR = new StreamReader(responseStream, Encoding.GetEncoding(pageEncoding)))
                 {
@@ -309,6 +309,18 @@ namespace MoeLoaderDelta
             catch (Exception e)
             {
                 return e.Message;
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+                if (request != null)
+                {
+                    request.Abort();
+                    request = null;
+                }
             }
         }
 

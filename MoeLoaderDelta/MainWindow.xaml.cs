@@ -268,7 +268,7 @@ namespace MoeLoaderDelta
             if (SiteManager.Instance.Sites.Count > 0)
             {
                 siteMenu.ItemsSource = tempSites;
-                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
                 siteMenu.Icon = tempSites[0].Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
@@ -329,7 +329,7 @@ namespace MoeLoaderDelta
                 return;
 
             MenuItem item = sender as MenuItem;
-            comboBoxIndex = (int)(item.DataContext);
+            comboBoxIndex = (int)item.DataContext;
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
@@ -487,7 +487,7 @@ namespace MoeLoaderDelta
                             {
                                 //if (word.Trim().Length > 0)
                                 //txtSearch.Items.Add(word);
-                                searchControl.AddUsedItem(word);
+                                searchControl.LoadUsedItems(word);
                             }
                         }
                         //if (!txtSearch.Items.Contains("thighhighs"))
@@ -842,7 +842,7 @@ namespace MoeLoaderDelta
                 //设图册页数
                 if (oriUrls.Count > 1)
                 {
-                    imgs[index].ImgP = c + 1 + "";
+                    imgs[index].ImgP = c + 0 + "";
                 }
                 string fileName = GenFileName(dlimg, oriUrls[c]);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
@@ -1073,7 +1073,7 @@ namespace MoeLoaderDelta
                     }
                 }))).Start(currentSession);
 
-                GC.Collect(2,GCCollectionMode.Optimized);
+                GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
@@ -1814,7 +1814,7 @@ namespace MoeLoaderDelta
                                 //设图册页数
                                 if (oriUrls.Count > 1)
                                 {
-                                    selectimg.ImgP = c + 1 + "";
+                                    selectimg.ImgP = c + 0 + "";
                                 }
 
                                 //url|文件名|域名|上传者|ID(用于判断重复)
@@ -1880,8 +1880,8 @@ namespace MoeLoaderDelta
                     if (img != null)
                     {
                         //如果比默认大小还小就用默认大小
-                        img.Width = smallx < 170 ? img.Width > 170 ? 170 : 170 : smallx;
-                        img.Height = smally < 190 ? img.Height > 190 ? 190 : 190 : smally;
+                        img.Width = smallx < 184 ? img.Width > 184 ? 184 : 184 : smallx;
+                        img.Height = smally < 204 ? img.Height > 204 ? 204 : 204 : smally;
                     }
                     //自适应评分数字区
                     img.brdScr.Width = img.Width / 4;
@@ -2082,7 +2082,7 @@ namespace MoeLoaderDelta
                         //设图册页数
                         if (oriUrls.Count > 1)
                         {
-                            imgs[i].ImgP = c + 1 + "";
+                            imgs[i].ImgP = c + 0 + "";
                         }
                         string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
@@ -2104,6 +2104,9 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private string GenFileName(Img img, string url)
         {
+            //Pixiv站动图
+            if (img.PixivUgoira == true)
+                return img.Id.ToSafeString() + "_ugoira" + img.ImgP;
             //namePatter
             string file = namePatter;
             if (string.IsNullOrWhiteSpace(file))
@@ -2538,7 +2541,7 @@ namespace MoeLoaderDelta
             }
             catch { }
 
-            GC.Collect(2,GCCollectionMode.Optimized);
+            GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }
