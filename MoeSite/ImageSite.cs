@@ -67,12 +67,17 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 由界面传递给站点登录动作
         /// </summary>
-        bool LoginSite { set; }
+        bool LoginSite { get;  set; }
 
         /// <summary>
         /// 当前登录站点的用户
         /// </summary>
-        string LoginUser { get; }
+        string LoginUser { get; set; }
+
+        /// <summary>
+        /// 当前登录站点的蜜码
+        /// </summary>
+        string LoginPwd { set; }
 
         /// <summary>
         /// 是否支持设置单页数量，若为false则单页数量不可修改

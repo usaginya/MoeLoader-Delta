@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190604
+    /// Last change 190629
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -90,7 +90,7 @@ namespace SitePack
         public override string Referer => referer;
         public override string SubReferer => ShortName + ",pximg";
         public override string LoginURL => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
-        public override bool LoginSite { get { return IsLoginSite; } set { IsLoginSite = value; } }
+        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser => nowUser ?? base.LoginUser;
 
         public override bool IsSupportCount  //fixed 20

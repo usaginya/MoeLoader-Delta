@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.9
+ * version 1.91
  * by YIU
  * Create               20170106
- * Last Change     20190604
+ * Last Change     20190627
  */
 
 using System;
@@ -236,7 +236,8 @@ namespace MoeLoaderDelta
         /// <param name="pageEncoding">编码</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding)
         {
-            return Post(url, postData, proxy, pageEncoding, new SessionHeadersCollection());
+            WebHeaderCollection whc = null;
+            return Post(url, postData, proxy, pageEncoding, new SessionHeadersCollection(), ref whc);
         }
 
         /// <summary>
@@ -249,9 +250,10 @@ namespace MoeLoaderDelta
         /// <param name="UA">User-Agent</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, string UA)
         {
+            WebHeaderCollection whc = null;
             SessionHeadersCollection shc = new SessionHeadersCollection();
             shc.UserAgent = UA;
-            return Post(url, postData, proxy, pageEncoding, shc);
+            return Post(url, postData, proxy, pageEncoding, shc, ref whc);
         }
 
         /// <summary>
@@ -263,7 +265,8 @@ namespace MoeLoaderDelta
         /// <param name="shc">Headers</param>
         public string Post(string url, string postData, IWebProxy proxy, SessionHeadersCollection shc)
         {
-            return Post(url, postData, proxy, "UTF-8", shc);
+            WebHeaderCollection whc = null;
+            return Post(url, postData, proxy, "UTF-8", shc, ref whc);
         }
 
         /// <summary>
@@ -275,7 +278,7 @@ namespace MoeLoaderDelta
         /// <param name="pageEncoding">编码</param>
         /// <param name="shc">Headers</param>
         /// <returns></returns>
-        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
+        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc, ref WebHeaderCollection responeHeaders)
         {
             HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
             HttpWebResponse response = null;
@@ -295,6 +298,7 @@ namespace MoeLoaderDelta
 
                 response = (HttpWebResponse)request.GetResponse();
                 m_Cookie = request.CookieContainer;//访问后更新Cookie
+                responeHeaders = request.Headers;
                 Stream responseStream = response.GetResponseStream();
                 string resData = string.Empty;
 
