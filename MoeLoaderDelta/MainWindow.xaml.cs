@@ -358,7 +358,7 @@ namespace MoeLoaderDelta
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
-            if(SiteManager.Instance.Sites.Count >0)
+            if (SiteManager.Instance.Sites.Count > 0)
             {
                 itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
             }
@@ -1737,8 +1737,7 @@ namespace MoeLoaderDelta
             {
                 if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
                 {
-                    bool LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSite;
-                    SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
+                    int LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt;
                     if (SiteManager.Instance.Sites[comboBoxIndex].LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
                     {
                         //输入账号
@@ -1747,28 +1746,34 @@ namespace MoeLoaderDelta
                         string siteuser = Interaction.InputBox("登录账号：", inputTitle, string.Empty);
                         if (string.IsNullOrWhiteSpace(siteuser))
                         {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSite = LoginState;
+                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
                             return;
                         }
 
                         string sitepwd = Interaction.InputBox("登录密码：", inputTitle, string.Empty);
                         if (sitepwd.Length < 1)
                         {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSite = LoginState;
+                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
                             return;
                         }
 
                         SiteManager.Instance.Sites[comboBoxIndex].LoginUser = siteuser;
                         SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
                     }
                     else
                     {
                         //IE登录
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
                         System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
                     }
                 }
             }
-            catch { SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false; }
+            catch
+            {
+                SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 0;
+                SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false;
+            }
         }
 
         /// <summary>

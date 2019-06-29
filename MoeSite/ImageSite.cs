@@ -70,6 +70,11 @@ namespace MoeLoaderDelta
         bool LoginSite { get;  set; }
 
         /// <summary>
+        /// 由界面传递给站点登录动作 int
+        /// </summary>
+        int LoginSiteInt { get; set; }
+
+        /// <summary>
         /// 当前登录站点的用户
         /// </summary>
         string LoginUser { get; set; }

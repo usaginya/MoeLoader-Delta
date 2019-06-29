@@ -18,7 +18,7 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private string sitePrefix, temppass, tempappkey, ua, pageurl;
         private static string cookie = string.Empty, authorization = cookie, nowUser = cookie, nowPwd = cookie, prevSitePrefix = cookie;
-        private static bool IsLoginSite = false;
+        private static int IsLoginSite = 0;
         private static readonly string LocalAccountINI = $"{SiteManager.SitePacksPath}sankaku.ini";
 
         public override string SiteUrl => $"https://{sitePrefix}.sankakucomplex.com";
@@ -26,10 +26,10 @@ namespace SitePack
         public override string ShortName => sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku";
         public override bool IsSupportScore => false;
         public override bool IsSupportCount => true;
-        public override string Referer => sitePrefix.Contains("chan") ? "https://beta.sankakucomplex.com/" : null;
+        //public override string Referer => sitePrefix.Contains("chan") ? "https://beta.sankakucomplex.com/" : null;
         public override string SubReferer => "*";
         public override string LoginURL => SiteManager.SiteLoginType.FillIn.ToSafeString();
-        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
+        public override int LoginSiteInt { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser { get => nowUser; set => nowUser = value; }
         public override string LoginPwd { set => nowPwd = value; }
 
@@ -77,9 +77,9 @@ namespace SitePack
         /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            if (IsLoginSite && prevSitePrefix != sitePrefix)
+            if (prevSitePrefix != sitePrefix)
             {
-                IsLoginSite = false;
+                IsLoginSite = 0;
                 prevSitePrefix = sitePrefix;
             }
 
@@ -89,7 +89,6 @@ namespace SitePack
             }
 
             Login(proxy);
-            string tempsss = booru?.GetPageString(page, count, keyWord, proxy);
             return booru?.GetPageString(page, count, keyWord, proxy);
         }
 
@@ -144,11 +143,11 @@ namespace SitePack
         /// <summary>
         /// 设置登录账号
         /// </summary>
-        private bool SetLogin()
+        private int SetLogin()
         {
             try
             {
-                if (IsLoginSite)
+                if (IsLoginSite > 0)
                 {
                     //已从界面填入了账号 保存起来
                     SetLocalAccount(1, nowUser);
@@ -167,12 +166,12 @@ namespace SitePack
                         }
                     }
                 }
-                return true;
+                return IsLoginSite > 1 ? 2 : 1;
             }
             catch
             {
                 SiteManager.echoErrLog(ShortName, "搜索之前必须先登录站点", false, true);
-                return false;
+                return 0;
             }
         }
 
@@ -185,7 +184,7 @@ namespace SitePack
         private void Login(IWebProxy proxy)
         {
 
-            if (!IsLoginSite)
+            if (IsLoginSite != 1)
             {
                 string subdomain = sitePrefix.Substring(0, 1),
                     loginhost = "https://";
@@ -196,12 +195,12 @@ namespace SitePack
                     subdomain += "api-v2";
                     loginhost += $"{subdomain}.sankakucomplex.com";
 
-                    if (string.IsNullOrWhiteSpace(authorization))
+                    if (string.IsNullOrWhiteSpace(authorization) || IsLoginSite != 1)
                     {
                         try
                         {
                             IsLoginSite = SetLogin();
-                            if (!IsLoginSite)
+                            if (IsLoginSite < 1)
                             {
                                 return;
                             }
@@ -214,13 +213,14 @@ namespace SitePack
                             string post = JsonConvert.SerializeObject(user);
 
                             //Post登录取Authorization
-                            shc.Referer = Referer;
                             shc.Accept = "application/vnd.sankaku.api+json;v=2";
+                            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                            Sweb.CookieContainer = null;
 
                             post = Sweb.Post(loginhost + "/auth/token", post, proxy, shc);
                             if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
                             {
-                                IsLoginSite = false;
+                                IsLoginSite = 0;
                                 nowUser = nowPwd = null;
                                 SiteManager.echoErrLog(ShortName, $"登录失败 - {post}");
                                 return;
@@ -234,7 +234,7 @@ namespace SitePack
 
                             if (string.IsNullOrWhiteSpace(authorization))
                             {
-                                IsLoginSite = false;
+                                IsLoginSite = 0;
                                 nowUser = nowPwd = null;
                                 SiteManager.echoErrLog(ShortName, "登录失败 - 验证账号错误");
                                 return;
@@ -243,7 +243,6 @@ namespace SitePack
                             pageurl = $"{loginhost}/posts?page={{0}}&limit={{1}}&tags=hide_posts_in_books:never+{{2}}";
 
                             //登录成功 初始化Booru类型站点
-                            shc.Referer = Referer;
                             booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONcSku, shc);
 
                             //保存账号
@@ -251,8 +250,8 @@ namespace SitePack
                         }
                         catch (Exception e)
                         {
-                            IsLoginSite = false;
-                            nowUser =  nowPwd = null;
+                            IsLoginSite = 0;
+                            nowUser = nowPwd = null;
                             SiteManager.echoErrLog(ShortName, e, "登录失败 - 内部错误");
                         }
                     }
@@ -264,13 +263,14 @@ namespace SitePack
                     subdomain += "api";
                     loginhost += $"{subdomain}.sankakucomplex.com";
 
-                    if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains($"{subdomain}.sankaku"))
+                    if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains($"{subdomain}.sankaku") || IsLoginSite != 1)
                     {
                         try
                         {
                             IsLoginSite = SetLogin();
-                            if (!IsLoginSite)
+                            if (IsLoginSite < 1)
                             {
+                                nowUser = nowPwd = null;
                                 return;
                             }
 
@@ -283,7 +283,6 @@ namespace SitePack
 
                             //Post登录取Cookie
                             shc.UserAgent = ua;
-                            shc.Referer = Referer;
                             shc.Accept = SessionHeadersValue.AcceptAppJson;
                             shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
                             post = Sweb.Post($"{loginhost}/user/authenticate.json", post, proxy, shc);
@@ -291,7 +290,7 @@ namespace SitePack
 
                             if (!cookie.Contains("sankakucomplex_session") || string.IsNullOrWhiteSpace(cookie))
                             {
-                                IsLoginSite = false;
+                                IsLoginSite = 0;
                                 nowUser = nowPwd = null;
                                 SiteManager.echoErrLog(ShortName, $"登录失败 - {post}");
                                 return;
@@ -305,7 +304,6 @@ namespace SitePack
                                 $"&appkey={tempappkey}&page={{0}}&limit={{1}}&tags={{2}}";
 
                             //登录成功 初始化Booru类型站点
-                            shc.Referer = Referer;
                             booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONiSku, shc);
 
                             //保存账号
@@ -313,11 +311,12 @@ namespace SitePack
                         }
                         catch (Exception e)
                         {
-                            IsLoginSite = false;
+                            IsLoginSite = 0;
                             nowUser = nowPwd = null;
                             SiteManager.echoErrLog(ShortName, e, "登录失败 - 内部错误");
                         }
                     }
+
                 }
             }
 
