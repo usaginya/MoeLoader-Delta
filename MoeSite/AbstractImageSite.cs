@@ -92,9 +92,23 @@ namespace MoeLoaderDelta
         public virtual bool LoginSite { get; set; }
 
         /// <summary>
+        /// 由界面传递给站点登录动作 int
+        /// </summary>
+        public virtual int LoginSiteInt { get; set; }
+
+        /// <summary>
         /// 当前登录站点的用户
         /// </summary>
-        public virtual string LoginUser => "登录站点";
+        public virtual string LoginUser {
+            get => string.IsNullOrWhiteSpace(loginUser) ? "登录站点" : loginUser;
+            set => loginUser = string.IsNullOrWhiteSpace(loginUser) ? "登录站点" : value;
+        }
+        private static string loginUser = null;
+
+        /// <summary>
+        /// 当前登录站点的蜜码
+        /// </summary>
+        public virtual string LoginPwd { get; set; }
 
         /// <summary>
         /// 该站点在站点列表中是否可见

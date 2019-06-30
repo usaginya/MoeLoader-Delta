@@ -9,25 +9,36 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20190117
+    /// Last 20190628
     /// </summary>
     public class SiteManager
     {
+        /// <summary>
+        /// 站点登录类型 用于LoginURL
+        /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
+        /// </summary>
+        public enum SiteLoginType { FillIn }
+
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
-        private static string runPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static string sitePacksPath = $"{runPath}\\SitePacks\\";
+
+        /// <summary>
+        /// 参数共享传递
+        /// </summary>
+        public static IWebProxy Mainproxy { get; set; }
+        public static string RunPath { get; set; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        public static string SitePacksPath { get; set; } = $"{RunPath}\\SitePacks\\";
 
         private SiteManager()
         {
 
-            string[] dlls = Directory.GetFiles(sitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
+            string[] dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
             {
                 List<string> dlll = new List<string>();
-                string basisdll = sitePacksPath + "SitePack.dll";
+                string basisdll = SitePacksPath + "SitePack.dll";
 
                 if (File.Exists(basisdll))
                 {
@@ -72,11 +83,6 @@ namespace MoeLoaderDelta
         /// 站点集合
         /// </summary>
         public List<ImageSite> Sites => sites;
-
-        /// <summary>
-        /// 主窗口代理传递
-        /// </summary>
-        public static IWebProxy Mainproxy { get; set; }
 
         /// <summary>
         /// 站点登录处理 通过IE
@@ -134,10 +140,13 @@ namespace MoeLoaderDelta
         /// <param name="ex">错误信息</param>
         /// <param name="extra_info">附加错误信息</param>
         /// <param name="NoShow">不显示信息</param>
-        public static void echoErrLog(string SiteShortName, Exception ex = null, string extra_info =null, bool NoShow = false)
+        /// <param name="NoLog">不记录Log</param>
+        public static void echoErrLog(string SiteShortName, Exception ex = null, string extra_info = null, bool NoShow = false, bool NoLog = false)
         {
+            int maxlog = 4096;
             bool exisnull = ex == null;
-            string wstr = "[异常站点]: " + SiteShortName + "\r\n";
+            string logPath = SitePacksPath + "site_error.log",
+                wstr = "[异常站点]: " + SiteShortName + "\r\n";
             wstr += "[异常时间]: " + DateTime.Now.ToString() + "\r\n";
             wstr += "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
             if (!exisnull)
@@ -147,20 +156,37 @@ namespace MoeLoaderDelta
                 wstr += "[调用堆栈]: " + ex.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
-            File.AppendAllText(sitePacksPath + "site_error.log", wstr + "\r\n");
+            if (!NoLog)
+            {
+                File.AppendAllText(logPath, wstr + "\r\n");
+            }
             if (!NoShow)
             {
                 MessageBox.Show((string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info), $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+            //压缩记录
+            if (new FileInfo(logPath).Length > maxlog)
+            {
+                char[] a = new char[maxlog];
+                using (FileStream fs = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        sr.ReadBlock(a, 0, maxlog);
+                    }
+                }
+                File.WriteAllText(logPath, new string(a));
+            }
+
         }
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
         /// <param name="SiteShortName">站点短名</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void echoErrLog(string SiteShortName, string extra_info, bool NoShow = false)
+        public static void echoErrLog(string SiteShortName, string extra_info, bool NoShow = false, bool NoLog = false)
         {
-            echoErrLog(SiteShortName, null, extra_info, NoShow);
+            echoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
         }
     }
 }

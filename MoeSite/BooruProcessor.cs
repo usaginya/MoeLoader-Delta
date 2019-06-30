@@ -2,7 +2,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml;
@@ -11,7 +10,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 处理Booru类型站点
-    /// Fixed 190209
+    /// Fixed 190629
     /// </summary>
     public class BooruProcessor
     {
@@ -49,9 +48,13 @@ namespace MoeLoaderDelta
             /// </summary>
             JSON,
             /// <summary>
-            /// Sankaku JSON
+            /// Sankaku chan JSON
             /// </summary>
-            JSONSku,
+            JSONcSku,
+            /// <summary>
+            /// Sankaku idol JSON
+            /// </summary>
+            JSONiSku,
             /// <summary>
             /// HTML
             /// </summary>
@@ -186,8 +189,11 @@ namespace MoeLoaderDelta
                 case SourceType.JSON:
                     ProcessJSON(siteUrl, url, pageString, imgs, string.Empty);
                     break;
-                case SourceType.JSONSku:
-                    ProcessJSON(siteUrl, url, pageString, imgs, "sku");
+                case SourceType.JSONcSku:
+                    ProcessJSON(siteUrl, url, pageString, imgs, "csku");
+                    break;
+                case SourceType.JSONiSku:
+                    ProcessJSON(siteUrl, url, pageString, imgs, "isku");
                     break;
                 case SourceType.XML:
                     ProcessXML(siteUrl, url, pageString, imgs, string.Empty);
@@ -449,10 +455,9 @@ namespace MoeLoaderDelta
         private void ProcessJSON(string siteUrl, string url, string pageString, List<Img> imgs, string sub)
         {
             if (string.IsNullOrWhiteSpace(pageString)) return;
-            object[] array = (new JavaScriptSerializer()).DeserializeObject(pageString) as object[];
-            foreach (object o in array)
+            JArray jArray = JArray.Parse(pageString);
+            foreach (JToken obj in jArray)
             {
-                Dictionary<string, object> obj = o as Dictionary<string, object>;
                 string
                     id = "",
                     tags = "",
@@ -476,24 +481,35 @@ namespace MoeLoaderDelta
                     id = obj["id"].ToString();
 
                 //投稿者
-                if (obj.ContainsKey("author") && obj["author"] != null)
-                    author = obj["author"].ToString();
-                else if (obj.ContainsKey("uploader_name") && obj["uploader_name"] != null)
+                if (obj["author"] != null)
+                {
+                    if (sub.Contains("csku"))
+                    {
+                        JToken jt = JToken.Parse(obj["author"].ToString());
+                        if (jt["name"] != null)
+                            author = jt["name"].ToString();
+                    }
+                    else
+                    {
+                        author = obj["author"].ToString();
+                    }
+                }
+                else if (obj["uploader_name"] != null)
                     author = obj["uploader_name"].ToString();
 
                 //图片来源
-                if (obj.ContainsKey("source") && obj["source"] != null)
+                if (obj["source"] != null)
                     source = obj["source"].ToString();
 
                 //原图宽高 width height
                 try
                 {
-                    if (obj.ContainsKey("width") && obj["width"] != null)
+                    if (obj["width"] != null)
                     {
                         width = int.Parse(obj["width"].ToString().Trim());
                         height = int.Parse(obj["height"].ToString().Trim());
                     }
-                    else if (obj.ContainsKey("image_width") && obj["image_width"] != null)
+                    else if (obj["image_width"] != null)
                     {
                         width = int.Parse(obj["image_width"].ToString().Trim());
                         height = int.Parse(obj["image_height"].ToString().Trim());
@@ -504,18 +520,18 @@ namespace MoeLoaderDelta
                 //文件大小
                 try
                 {
-                    if (obj.ContainsKey("file_size") && obj["file_size"] != null)
+                    if (obj["file_size"] != null)
                         file_size = int.Parse(obj["file_size"].ToString());
                 }
                 catch { }
 
                 //上传时间
-                if (obj.ContainsKey("created_at") && obj["created_at"] != null)
+                if (obj["created_at"] != null)
                 {
-                    if (sub == "sku")
+                    if (sub.Contains("sku"))
                     {
-                        Dictionary<string, object> objs = (Dictionary<string, object>)obj["created_at"];
-                        if (objs.ContainsKey("s"))
+                        JToken objs = JObject.Parse(obj["created_at"].ToString());
+                        if (!string.IsNullOrWhiteSpace(objs["s"].ToString()))
                             created_at = objs["s"].ToString();
                     }
                     else
@@ -525,37 +541,38 @@ namespace MoeLoaderDelta
                 }
 
                 //评级和评分
-                if (obj.ContainsKey("rating") && obj["rating"] != null)
+                if (obj["rating"] != null)
                 {
                     score = "Safe ";
                     if (obj["rating"].ToString() == "e")
                         score = "Explicit ";
-                    else score = "Questionable ";
-                    if (obj.ContainsKey("score"))
+                    else
+                        score = "Questionable ";
+                    if (obj["score"] != null)
                         score += obj["score"].ToString();
-                    else if (obj.ContainsKey("total_score"))
+                    else if (obj["total_score"] != null)
                         score += obj["total_score"].ToString();
                 }
 
                 //缩略图
-                if (obj.ContainsKey("preview_url") && obj["preview_url"] != null)
+                if (obj["preview_url"] != null)
                     sample = obj["preview_url"].ToString();
-                else if (obj.ContainsKey("preview_file_url") && obj["preview_file_url"] != null)
+                else if (obj["preview_file_url"] != null)
                     sample = obj["preview_file_url"].ToString();
 
                 //预览图
-                if (obj.ContainsKey("sample_url") && obj["sample_url"] != null)
+                if (obj["sample_url"] != null)
                     preview_url = obj["sample_url"].ToString();
-                else if (obj.ContainsKey("large_file_url") && obj["large_file_url"] != null)
+                else if (obj["large_file_url"] != null)
                     preview_url = obj["large_file_url"].ToString();
 
                 //原图
-                if (obj.ContainsKey("file_url") && obj["file_url"] != null)
+                if (obj["file_url"] != null)
                     file_url = obj["file_url"].ToString();
 
                 //JPG
                 jpeg_url = preview_url.Length > 0 ? preview_url : file_url;
-                if (obj.ContainsKey("jpeg_url") && obj["jpeg_url"] != null)
+                if (obj["jpeg_url"] != null)
                     jpeg_url = obj["jpeg_url"].ToString();
 
                 //Formatted
@@ -568,18 +585,15 @@ namespace MoeLoaderDelta
 
 
                 //标签
-                if (obj.ContainsKey("tags") && obj["tags"] != null)
+                if (obj["tags"] != null)
                 {
 
-                    if (sub == "sku")
+                    if (sub.Contains("sku"))
                     {
                         #region sankaku tags rule
                         try
                         {
-                            JavaScriptSerializer jss = new JavaScriptSerializer();
-                            string stags = jss.Serialize(obj["tags"]);
-
-                            JArray jary = JArray.Parse(stags);
+                            JArray jary = (JArray)obj["tags"];
                             if (jary.Count > 0)
                             {
                                 JArray ResultTags = new JArray();
@@ -613,24 +627,7 @@ namespace MoeLoaderDelta
                                 }
                             }
                         }
-                        catch
-                        {
-                            object ov = obj["tags"];
-                            StringBuilder ovsb = new StringBuilder();
-
-                            if (ov.GetType().FullName.Contains("Object[]"))
-                            {
-                                (new JavaScriptSerializer()).Serialize(ov, ovsb);
-                                string ovsbstr = ovsb.ToString();
-                                object[] ovarr = (new JavaScriptSerializer()).DeserializeObject(ovsbstr) as object[];
-                                for (int i = 0; i < ovarr.Count(); i++)
-                                {
-                                    obj = ovarr[i] as Dictionary<string, object>;
-                                    if (obj.ContainsKey("name"))
-                                        tags += i < ovarr.Count() - 1 ? obj["name"] + " " : obj["name"];
-                                }
-                            }
-                        }
+                        catch{}
                         #endregion
                     }
                     else
@@ -638,17 +635,17 @@ namespace MoeLoaderDelta
                         tags = obj["tags"].ToString();
                     }
                 }
-                else if (obj.ContainsKey("tag_string") && obj["tag_string"] != null)
+                else if (obj["tag_string"] != null)
                 {
                     tags = obj["tag_string"].ToString();
                 }
 
                 //恢复konachan删除的图片信息
-                if(sub.Contains("konachan")&!obj.ContainsKey("file_url"))
+                if (sub.Contains("konachan") && obj["file_url"] == null)
                 {
                     tags = "deleted " + tags;
                     string md5 = string.Empty;
-                    if (obj.ContainsKey("md5"))
+                    if (obj["md5"] != null)
                         md5 = obj["md5"].ToString();
                     sample = $"{siteUrl}/data/preview/{md5.Substring(0, 2)}/{md5.Substring(2, 2)}/{md5}.jpg";
                     preview_url = $"{siteUrl}/sample/{md5}/{sub} - {id} sample.jpg";
