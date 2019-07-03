@@ -394,6 +394,7 @@ namespace MoeLoaderDelta
 
         public static string IsNeedReferer(string url)
         {
+            Uri uri = new Uri(url);
             List<ImageSite> ISites = SiteManager.Instance.Sites;
 
             foreach (ImageSite site in SiteManager.Instance.Sites)
@@ -403,8 +404,10 @@ namespace MoeLoaderDelta
                     string[] subrefs = site.SubReferer.Split(',');
                     foreach (string sref in subrefs)
                     {
-                        if (url.Contains(sref))
+                        if (uri.Host.Contains(sref))
+                        {
                             return site.Referer;
+                        }
                     }
                 }
             }
