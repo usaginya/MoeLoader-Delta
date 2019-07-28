@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190629
+    /// Last change 190727
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -225,7 +225,8 @@ namespace SitePack
             {
                 //相关作品json信息
                 //https://www.pixiv.net/ajax/illust/70575612/recommend/init?limit=18
-                tempPage = Sweb.Get(SiteUrl + "/ajax/illust/" + keyWord + "/recommend/init?limit=18", proxy, shc);
+                shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                tempPage = Sweb.Get($"{ SiteUrl}/ajax/illust/{keyWord}/recommend/init?limit=18", proxy, shc);
             }
             return pageString;
         }
@@ -318,10 +319,11 @@ namespace SitePack
                     }
                     if (!ids.Exists(string.IsNullOrWhiteSpace))
                     {
+                        shc.ContentType = SessionHeadersValue.AcceptAppJson;
                         List<string> tempPageString = new List<string>();
                         for (int i = 0; i < ids.Count; i++)
                         {
-                            tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}is_manga_top=0", proxy, shc));
+                            tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}work_category=illustManga&is_first_page=0", proxy, shc));
                         }
                         if (!tempPageString.Exists(string.IsNullOrWhiteSpace))
                         {
@@ -356,31 +358,43 @@ namespace SitePack
                 {
                     //相关作品json信息
                     string relatePicJson = tempPage;
-                    string imagesJson = string.Empty;
+                    string tempuid = string.Empty;
                     //ROOT ->body -> recommendMethods
                     List<string> rmsList = new List<string>();//recommendMethods 数据
                     if (!string.IsNullOrWhiteSpace(relatePicJson))
                     {
-                        JObject jsonObj = JObject.Parse(relatePicJson);
-                        JToken jToken;
-                        if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                        JObject JOdata = JObject.Parse(relatePicJson);
+                        JToken JTillusts, JTrecommend;
+                        if (!string.IsNullOrWhiteSpace(JOdata["body"].ToString()))
                         {
-                            imagesJson = jsonObj["body"].ToString();
-                            jToken = ((JObject)jsonObj["body"])["recommendMethods"];
-                            foreach (JProperty jp in jToken)
+                            JTillusts = ((JObject)JOdata["body"])["illusts"];
+                            JTrecommend = ((JObject)JOdata["body"])["recommendMethods"];
+
+                            // get userid
+                            if (((JArray)JTillusts).Count > 0)
+                            {
+                                tempuid = ((JArray)JTillusts)[0]["userId"].ToSafeString();
+                            }
+
+                            // recommendMethods
+                            foreach (JProperty jp in JTrecommend)
                             {
                                 rmsList.Add(jp.Name);
                             }
                         }
                     }
                     string ids = string.Empty;
-                    ids = (page == 1 ? "ids[]=" + keyWord + "&" : ids);
+                    ids = (page == 1 ? $"ids[]={keyWord}&" : ids);
 
-                    for (int j = (page - 1) * count; j < page * count & rmsList.Count > 0 & j <= rmsList.Count; j++)
-                        ids += "ids[]=" + rmsList[j] + "&";
+                    for (int j = (page - 1) * count; j < page * count & rmsList.Count > 0 & j < rmsList.Count; j++)
+                    {
+                        ids += $"ids[]={rmsList[j]}&";
+                    }
+
                     if (!string.IsNullOrWhiteSpace(ids))
                     {
-                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids}is_manga_top=0", proxy, shc);
+                        shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{tempuid}/profile/illusts?{ids}work_category=illustManga&is_first_page=0", proxy, shc);
                         if (!string.IsNullOrWhiteSpace(pageString))
                         {
                             JObject jsonObj = JObject.Parse(pageString);
@@ -800,7 +814,7 @@ namespace SitePack
         /// <returns>返回登录状态</returns>
         private bool Login(IWebProxy proxy)
         {
-            if ((!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
+            if (string.IsNullOrWhiteSpace(cookie) || (!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
             {
                 try
                 {
