@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190812
+    /// Last change 190824
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -904,10 +904,15 @@ namespace SitePack
 
             bool result = SiteManager.LoginSite(this, ref cookie, "/logout", ref Sweb, ref shc);
 
-            if (result)
-            {
+            if (result && !string.IsNullOrWhiteSpace(cookie))
+            { 
                 nowUser = "你的账号";
                 cookie = $"pixiv;{cookie}";
+            }
+            else if (string.IsNullOrWhiteSpace(cookie))
+            {
+                nowUser = "你的账号";
+                result = IsLoginSite = true;
             }
             else
             {

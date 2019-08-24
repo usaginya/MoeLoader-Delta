@@ -2300,6 +2300,11 @@ namespace MoeLoaderDelta
                         {//重试
                             ItmReload_Click(null, null);
                         }
+                        else if (e.Key == Key.Left)
+                        {//强制上一页
+                            e.Handled = true;
+                            DelayPageTurn(1, true);
+                        }
                         else if (e.Key == Key.Right)
                         {//强制下一页
                             e.Handled = true;
@@ -2596,17 +2601,24 @@ namespace MoeLoaderDelta
         private void DelayPageTurn(int operating, bool force)
         {
             Thread newThread = null;
-            if (operating == 1 && realPage > 1)
+            if (operating == 1)
             {
-                newThread = new Thread(new ThreadStart(RDelayP));
-                newThread.Name = "RDelayP";
+                if (realPage > 1 || force)
+                {
+                    newThread = new Thread(new ThreadStart(RDelayP))
+                    {
+                        Name = "RDelayP"
+                    };
+                }
             }
             else if (operating == 2)
             {
                 if (HaveNextPage || force)
                 {
-                    newThread = new Thread(new ThreadStart(RDelayN));
-                    newThread.Name = "RDelayN";
+                    newThread = new Thread(new ThreadStart(RDelayN))
+                    {
+                        Name = "RDelayN"
+                    };
                 }
             }
 

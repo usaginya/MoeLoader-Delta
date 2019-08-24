@@ -9,7 +9,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20190628
+    /// Last 20190824
     /// </summary>
     public class SiteManager
     {
@@ -102,19 +102,29 @@ namespace MoeLoaderDelta
             if (result)
             {
                 shc.Set("Cookie", tmp_cookie);
-                pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
-                result = !string.IsNullOrWhiteSpace(pageString);
-
-                if (result && LoggedFlags != null)
+                try
                 {
-                    string[] LFlagsArray = LoggedFlags.Split('|');
-                    foreach (string Flag in LFlagsArray)
+                    pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
+                    result = !string.IsNullOrWhiteSpace(pageString);
+
+                    if (result && LoggedFlags != null)
                     {
-                        result &= pageString.Contains(Flag);
+                        string[] LFlagsArray = LoggedFlags.Split('|');
+                        foreach (string Flag in LFlagsArray)
+                        {
+                            result &= pageString.Contains(Flag);
+                        }
                     }
+
+                    cookie = result ? tmp_cookie : cookie;
+                }
+                catch
+                {
+                    //有cookie访问时发生超时之类的错误 还是作为用户登录状态 返回true
+                    cookie = string.Empty;
                 }
             }
-            cookie = result ? tmp_cookie : cookie;
+            
             return result;
         }
 
