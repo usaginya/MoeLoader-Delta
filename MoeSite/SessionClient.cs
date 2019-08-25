@@ -2,7 +2,7 @@
  * version 1.91
  * by YIU
  * Create               20170106
- * Last Change     20190627
+ * Last Change     20190824
  */
 
 using System;
@@ -46,6 +46,7 @@ namespace MoeLoaderDelta
         public SessionClient()
         {
             ServicePointManager.DefaultConnectionLimit = 768;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)

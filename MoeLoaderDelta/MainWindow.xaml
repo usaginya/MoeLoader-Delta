@@ -293,11 +293,7 @@
                                                 </GeometryDrawing>
                                             </DrawingBrush.Drawing>
                                             <DrawingBrush.RelativeTransform>
-                                                <ScaleTransform
-                                                    CenterX="0.5"
-                                                    CenterY="0"
-                                                    ScaleX="1.05"
-                                                    ScaleY="0.6" />
+                                                <ScaleTransform CenterX="0.5" CenterY="0" ScaleX="1.05" ScaleY="0.6" />
                                             </DrawingBrush.RelativeTransform>
                                         </DrawingBrush>
                                     </Ellipse.Fill>
@@ -997,22 +993,22 @@
                                             <MenuItem
                                                 x:Name="itmSelectInverse"
                                                 Click="ItmSelectInverse_Click"
-                                                Header="反选(_I)"
+                                                Header="反选Ctrl+(_I)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmSelectAll"
                                                 Click="ItmSelectAll_Click"
-                                                Header="全选(_A)"
+                                                Header="全选Ctrl+(_A)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmUnSelectAll"
                                                 Click="ItmUnSelectAll_Click"
-                                                Header="全不选(_Z)"
+                                                Header="全不选Ctrl+(_Z)"
                                                 IsEnabled="False" />
                                             <MenuItem
                                                 x:Name="itmReload"
                                                 Click="ItmReload_Click"
-                                                Header="重试(_R)"
+                                                Header="重试Ctrl+(_R)"
                                                 IsEnabled="False"
                                                 ToolTip="重试加载失败的缩略图" />
                                             <Separator />
@@ -1156,11 +1152,7 @@
                                         <ImageBrush ImageSource="Images/page.png" Stretch="None">
                                             <ImageBrush.RelativeTransform>
                                                 <TransformGroup>
-                                                    <ScaleTransform
-                                                        CenterX="0.5"
-                                                        CenterY="0.5"
-                                                        ScaleX="1"
-                                                        ScaleY="-1" />
+                                                    <ScaleTransform CenterX="0.5" CenterY="0.5" ScaleX="1" ScaleY="-1" />
                                                 </TransformGroup>
                                             </ImageBrush.RelativeTransform>
                                         </ImageBrush>

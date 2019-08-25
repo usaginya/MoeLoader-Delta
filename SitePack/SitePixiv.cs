@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190727
+    /// Last change 190824
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -622,23 +622,22 @@ namespace SitePack
                 //retrieve details
                 page = Sweb.Get(i.DetailUrl, p, shc);
 
-                Regex reg = new Regex(@"】「(?<Desc>.*?)」.*?/(?<Author>.*?)\s\[pixi");
+                Match regDesc = new Regex(@"illustTitle"":""(.*?)""").Match(page),
+                            regAuthor = new Regex(@"userName"":""(.*?)""").Match(page);
                 HtmlDocument doc = new HtmlDocument();
                 HtmlDocument ds = new HtmlDocument();
                 doc.LoadHtml(page);
                 Pcount = Regex.Match(i.SampleUrl, @"(?<=_p)\d+(?=_)").Value;
 
                 //=================================================
-                //[R-XX] 【XX】「Desc」插画/Author [pixiv]
+                //[#XX] 标题 - 作者名的插画 - pixiv
                 //标题中取名字和作者
                 try
                 {
-                    MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
+                    i.Desc = Regex.Unescape(regDesc.Groups[1].Value);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + "P" + Pcount;
-                    else
-                        i.Desc = mc[0].Groups["Desc"].Value;
-                    i.Author = mc[0].Groups["Author"].Value;
+                        i.Desc += $"{i.Desc} P{Pcount}";
+                    i.Author = Regex.Unescape(regAuthor.Groups[1].Value);
                 }
                 catch { }
                 //------------------------
@@ -905,10 +904,15 @@ namespace SitePack
 
             bool result = SiteManager.LoginSite(this, ref cookie, "/logout", ref Sweb, ref shc);
 
-            if (result)
-            {
+            if (result && !string.IsNullOrWhiteSpace(cookie))
+            { 
                 nowUser = "你的账号";
                 cookie = $"pixiv;{cookie}";
+            }
+            else if (string.IsNullOrWhiteSpace(cookie))
+            {
+                nowUser = "你的账号";
+                result = IsLoginSite = true;
             }
             else
             {

@@ -170,7 +170,7 @@ namespace SitePack
             }
             catch
             {
-                SiteManager.echoErrLog(ShortName, "搜索之前必须先登录站点", false, true);
+                SiteManager.echoErrLog(ShortName, "搜索之前必须先登录站点、从右键菜单中登录站点", false, true);
                 return 0;
             }
         }
