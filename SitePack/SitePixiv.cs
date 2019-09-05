@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190824
+    /// Last change 190905
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -219,6 +219,11 @@ namespace SitePack
             shc.Remove("X-Requested-With");
             shc.Remove("Accept-Ranges");
             shc.ContentType = SessionHeadersValue.AcceptTextHtml;
+            // 如果cookie丢失则还原
+            if(string.IsNullOrWhiteSpace(cookie))
+            {
+                CookieRestore();
+            }
             shc.Set("Cookie", cookie);
             string pageString = Sweb.Get(url, proxy, shc);
             if (srcType == PixivSrcType.PidPlus)
@@ -416,7 +421,7 @@ namespace SitePack
                 }
                 else if (srcType == PixivSrcType.Pid)
                 {
-                    if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
+                    if (!Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误"))
                     {
                         int mangaCount = 1;
                         string id, SampleUrl;
