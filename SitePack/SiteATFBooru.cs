@@ -100,7 +100,7 @@ namespace SitePack
                         token = hdoc.DocumentNode.SelectSingleNode("//meta[@name='csrf-token']").Attributes["content"].Value;
                         if (token.Length < 9)
                         {
-                            SiteManager.echoErrLog(SiteName, "自动登录失败[1] ");
+                            SiteManager.EchoErrLog(SiteName, "自动登录失败[1] ");
                             return;
                         }
 
@@ -111,7 +111,7 @@ namespace SitePack
 
                         if (!pagedata.Contains("setUserId"))
                         {
-                            SiteManager.echoErrLog(SiteName, $"{SiteName} 自动登录失败");
+                            SiteManager.EchoErrLog(SiteName, $"{SiteName} 自动登录失败");
                         }
                         else
                         {
@@ -123,7 +123,7 @@ namespace SitePack
                 }
                 catch (Exception e)
                 {
-                    SiteManager.echoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
+                    SiteManager.EchoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
                 }
             }
         }
@@ -155,7 +155,7 @@ namespace SitePack
             }
             else if (startLogin)
             {
-                SiteManager.echoErrLog(SiteName, "用户未登录或登录失败 ");
+                SiteManager.EchoErrLog(SiteName, "用户未登录或登录失败 ");
             }
 
             return result;
