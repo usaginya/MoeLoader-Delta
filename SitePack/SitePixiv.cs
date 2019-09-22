@@ -16,7 +16,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190918
+    /// Last change 190922
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -157,10 +157,11 @@ namespace SitePack
         {
             if (!Login(proxy))
             {
-                this.keyWord = keyWord;
                 return string.Empty;
             }
+
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            this.keyWord = keyWord;
             int memberId = 0;
             string url = null;
             this.page = page;
