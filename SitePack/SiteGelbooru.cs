@@ -1,9 +1,9 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using MoeLoaderDelta;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using HtmlAgilityPack;
-using MoeLoaderDelta;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
@@ -40,9 +40,10 @@ namespace SitePack
             // API
             booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
             string pageString = booru.GetPageString(page, count, keyWord, proxy);
-            if (GetAPImode(pageString)) return pageString;
+            if (GetAPImode(pageString)) { return pageString; }
 
             // Html
+            if (pageString.Length < 24) { return pageString; }
             booru.Url = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
             booru.Url = keyWord.Length < 1 ? booru.Url.Substring(0, booru.Url.Length - 6) : booru.Url;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
