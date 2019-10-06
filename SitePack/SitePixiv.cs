@@ -7,14 +7,16 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using System.Windows.Forms;
 
 namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190208
+    /// Last change 190922
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -117,15 +119,16 @@ namespace SitePack
         private int count = 1;
         private string keyWord = null;
         private static string cookie = string.Empty, nowUser = null;
-        private string[] user = { "moe1user", "moe3user", "a-rin-a" };
-        private string[] pass = { "630489372", "1515817701", "2422093014" };
+        private readonly string[] user = { "moe1user", "moe3user", "a-rin-a" };
+        private readonly string[] pass = { "630489372", "1515817701", "2422093014" };
+        private static int startLogin = 0;
         private static string tempPage = null;
         private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
-        private static bool startLogin, IsLoginSite;
+        private static bool IsLoginSite;
 
         /// <summary>
         /// pixiv.net site
@@ -141,28 +144,34 @@ namespace SitePack
         /// </summary>
         private void FirstLogin(IWebProxy proxy)
         {
-            if (!startLogin)
+            if (startLogin < 1)
             {
-                startLogin = true;
+                startLogin = 1;
                 CookieRestore();
                 Login(proxy);
+                startLogin = 2;
             }
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            Login(proxy);
+            if (!Login(proxy))
+            {
+                return string.Empty;
+            }
+
             //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            this.keyWord = keyWord;
             int memberId = 0;
             string url = null;
             this.page = page;
             this.count = count;
-            this.keyWord = keyWord;
+
             if (srcType == PixivSrcType.Pid || srcType == PixivSrcType.PidPlus)
             {
                 if (keyWord.Length > 0 && int.TryParse(keyWord.Trim(), out memberId))
                 {
-                    url = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + memberId;
+                    url = $"{SiteUrl}/member_illust.php?mode=medium&illust_id={memberId}";
                 }
                 else
                 {
@@ -171,15 +180,15 @@ namespace SitePack
             }
             else
             {
-                //http://www.pixiv.net/new_illust.php?p=2
-                url = SiteUrl + "/new_illust.php?p=" + page;
-
                 if (keyWord.Length > 0)
                 {
                     //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2
-                    url = SiteUrl + "/search.php?s_mode=s_tag"
-                        + (srcType == PixivSrcType.TagFull ? "_full" : "")
-                    + "&word=" + keyWord + "&order=date_d&p=" + page;
+                    url = $"{SiteUrl}/search.php?s_mode=s_tag{(srcType == PixivSrcType.TagFull ? "_full" : "")}&word={keyWord}&order=date_d&p={page}";
+                }
+                else
+                {
+                    //http://www.pixiv.net/new_illust.php?p=2
+                    url = $"{SiteUrl}/new_illust.php?p={page}";
                 }
 
                 memberId = 0;
@@ -193,7 +202,7 @@ namespace SitePack
                     //url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
                     //https://www.pixiv.net/ajax/user/212801/profile/all
                     //https://www.pixiv.net/ajax/user/212801/profile/illusts?ids%5B%5D=70095905&ids%5B%5D=69446164&is_manga_top=0
-                    url = SiteUrl + "/ajax/user/" + memberId + "/profile/all";
+                    url = $"{SiteUrl}/ajax/user/{memberId}/profile/all";
                 }
                 else if (srcType == PixivSrcType.Day)
                 {
@@ -220,7 +229,8 @@ namespace SitePack
             {
                 //相关作品json信息
                 //https://www.pixiv.net/ajax/illust/70575612/recommend/init?limit=18
-                tempPage = Sweb.Get(SiteUrl + "/ajax/illust/" + keyWord + "/recommend/init?limit=18", proxy, shc);
+                shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                tempPage = Sweb.Get($"{SiteUrl}/ajax/illust/{keyWord}/recommend/init?limit=18", proxy, shc);
             }
             return pageString;
         }
@@ -229,7 +239,7 @@ namespace SitePack
         {
             List<Img> imgs = new List<Img>();
 
-            HtmlDocument doc = new HtmlDocument();
+            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(pageString);
 
             //retrieve all elements via xpath
@@ -277,25 +287,49 @@ namespace SitePack
                     }
                     int ilistcount = illustsList.Count,
                         mlistcount = mangaList.Count,
+                        ill_num = 0, mng_num = 0,
                         scount = ilistcount + mlistcount;
                     List<string> ids = new List<string>();
-                    for (int j = (page - 1) * count; j < page * count & scount > 0 & j <= scount; j++)
+                    for (int j = 0; j < page * count && scount > 0 && j < scount; j++)
                     {
-                        if ((j - (page - 1) * count) % 48 == 0)
-                            ids.Add(string.Empty);
-                        if (j < ilistcount)
-                            ids[(j- (page - 1) * count) / 48] += $"ids[]={illustsList[j]}&";
-                        if (j < mlistcount)
-                            ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[j]}&";
+                        if (j < (page - 1) * count)
+                        {
+                            if (ill_num < ilistcount && mng_num < mlistcount)
+                            {
+                                if (int.Parse(illustsList[ill_num]) > int.Parse(mangaList[mng_num])) ill_num++;
+                                else mng_num++;
+                            }
+                            else if (ill_num < ilistcount) ill_num++;
+                            else if (mng_num < mlistcount) mng_num++;
+                        }
+
+                        else
+                        {
+                            if ((j - (page - 1) * count) % 48 == 0)
+                                ids.Add(string.Empty);
+                            if (ill_num < ilistcount && mng_num < mlistcount)
+                            {
+                                if (int.Parse(illustsList[ill_num]) > int.Parse(mangaList[mng_num]))
+                                    ids[(j - (page - 1) * count) / 48] += $"ids[]={illustsList[ill_num++]}&";
+                                else
+                                    ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[mng_num++]}&";
+                            }
+                            else if (ill_num < ilistcount)
+                                ids[(j - (page - 1) * count) / 48] += $"ids[]={illustsList[ill_num++]}&";
+
+                            else if (mng_num < mlistcount)
+                                ids[(j - (page - 1) * count) / 48] += $"ids[]={mangaList[mng_num++]}&";
+                        }
                     }
                     if (!ids.Exists(string.IsNullOrWhiteSpace))
                     {
+                        shc.ContentType = SessionHeadersValue.AcceptAppJson;
                         List<string> tempPageString = new List<string>();
                         for (int i = 0; i < ids.Count; i++)
                         {
-                            tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}is_manga_top=0", proxy, shc));
+                            tempPageString.Add(Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids[i]}work_category=illustManga&is_first_page=0", proxy, shc));
                         }
-                        if(!tempPageString.Exists(string.IsNullOrWhiteSpace))
+                        if (!tempPageString.Exists(string.IsNullOrWhiteSpace))
                         {
                             //ROOT->body->works
                             //获取图片详细信息
@@ -328,31 +362,43 @@ namespace SitePack
                 {
                     //相关作品json信息
                     string relatePicJson = tempPage;
-                    string imagesJson = string.Empty;
+                    string tempuid = string.Empty;
                     //ROOT ->body -> recommendMethods
                     List<string> rmsList = new List<string>();//recommendMethods 数据
                     if (!string.IsNullOrWhiteSpace(relatePicJson))
                     {
-                        JObject jsonObj = JObject.Parse(relatePicJson);
-                        JToken jToken;
-                        if (!string.IsNullOrWhiteSpace(jsonObj["body"].ToString()))
+                        JObject JOdata = JObject.Parse(relatePicJson);
+                        JToken JTillusts, JTrecommend;
+                        if (!string.IsNullOrWhiteSpace(JOdata["body"].ToString()))
                         {
-                            imagesJson = jsonObj["body"].ToString();
-                            jToken = ((JObject)jsonObj["body"])["recommendMethods"];
-                            foreach (JProperty jp in jToken)
+                            JTillusts = ((JObject)JOdata["body"])["illusts"];
+                            JTrecommend = ((JObject)JOdata["body"])["recommendMethods"];
+
+                            // get userid
+                            if (((JArray)JTillusts).Count > 0)
+                            {
+                                tempuid = ((JArray)JTillusts)[0]["userId"].ToSafeString();
+                            }
+
+                            // recommendMethods
+                            foreach (JProperty jp in JTrecommend)
                             {
                                 rmsList.Add(jp.Name);
                             }
                         }
                     }
                     string ids = string.Empty;
-                    ids = (page == 1 ? "ids[]=" + keyWord + "&" : ids);
+                    ids = (page == 1 ? $"ids[]={keyWord}&" : ids);
 
-                    for (int j = (page - 1) * count; j < page * count & rmsList.Count > 0 & j <= rmsList.Count; j++)
-                        ids += "ids[]=" + rmsList[j] + "&";
+                    for (int j = (page - 1) * count; j < page * count & rmsList.Count > 0 & j < rmsList.Count; j++)
+                    {
+                        ids += $"ids[]={rmsList[j]}&";
+                    }
+
                     if (!string.IsNullOrWhiteSpace(ids))
                     {
-                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{keyWord}/profile/illusts?{ids}is_manga_top=0", proxy, shc);
+                        shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                        pageString = Sweb.Get($"{SiteUrl}/ajax/user/{tempuid}/profile/illusts?{ids}work_category=illustManga&is_first_page=0", proxy, shc);
                         if (!string.IsNullOrWhiteSpace(pageString))
                         {
                             JObject jsonObj = JObject.Parse(pageString);
@@ -374,7 +420,7 @@ namespace SitePack
                 }
                 else if (srcType == PixivSrcType.Pid)
                 {
-                    if (!(Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误")))
+                    if (!Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误"))
                     {
                         int mangaCount = 1;
                         string id, SampleUrl;
@@ -426,7 +472,7 @@ namespace SitePack
             }
             catch (Exception ex)
             {
-                SiteManager.echoErrLog(SiteName, ex);
+                SiteManager.EchoErrLog(SiteName, ex, $"获取 [{Uri.UnescapeDataString(keyWord)}] 失败", true);
                 throw new Exception("没有找到图片哦～ .=ω=");
             }
 
@@ -580,23 +626,22 @@ namespace SitePack
                 //retrieve details
                 page = Sweb.Get(i.DetailUrl, p, shc);
 
-                Regex reg = new Regex(@"】「(?<Desc>.*?)」.*?/(?<Author>.*?)\s\[pixi");
-                HtmlDocument doc = new HtmlDocument();
-                HtmlDocument ds = new HtmlDocument();
+                Match regDesc = new Regex(@"illustTitle"":""(.*?)""").Match(page),
+                            regAuthor = new Regex(@"userName"":""(.*?)""").Match(page);
+                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+                HtmlAgilityPack.HtmlDocument ds = new HtmlAgilityPack.HtmlDocument();
                 doc.LoadHtml(page);
                 Pcount = Regex.Match(i.SampleUrl, @"(?<=_p)\d+(?=_)").Value;
 
                 //=================================================
-                //[R-XX] 【XX】「Desc」插画/Author [pixiv]
+                //[#XX] 标题 - 作者名的插画 - pixiv
                 //标题中取名字和作者
                 try
                 {
-                    MatchCollection mc = reg.Matches(doc.DocumentNode.SelectSingleNode("//title").InnerText);
+                    i.Desc = Regex.Unescape(regDesc.Groups[1].Value);
                     if (srcType == PixivSrcType.Pid)
-                        i.Desc = mc[0].Groups["Desc"].Value + "P" + Pcount;
-                    else
-                        i.Desc = mc[0].Groups["Desc"].Value;
-                    i.Author = mc[0].Groups["Author"].Value;
+                        i.Desc += $"{i.Desc} P{Pcount}";
+                    i.Author = Regex.Unescape(regAuthor.Groups[1].Value);
                 }
                 catch { }
                 //------------------------
@@ -710,8 +755,42 @@ namespace SitePack
                             }
                         }
                     }
+                    else if (i.OriginalUrl.Contains("ugoira"))//动图 ugoira
+                    {
+                        //以上面的漫画解析为蓝本修改而来
+                        if (!i.OriginalUrl.Contains("_ugoira0."))
+                            //为预防Pixiv在未来修改动图页面机制，若连接格式有变则直接抛出异常。
+                            throw new ArgumentException();
+
+                        try
+                        {
+                            i.PixivUgoira = true;//标记动图类型
+                            int mangaCount = pageCount;
+                            string ugoira_meta = Sweb.Get("https://www.pixiv.net/ajax/illust/" + i.Id + "/ugoira_meta", p, shc);
+
+                            if (!string.IsNullOrWhiteSpace(ugoira_meta))
+                            {
+                                ugoira_meta = (Convert.ToString(((JObject)JObject.Parse(ugoira_meta)["body"])["frames"]));
+
+                                //直接统计“{”的个数即可知道动图帧数
+                                mangaCount = ugoira_meta.Count(c => c == '{');
+
+                                i.Dimension = "Ugoira " + mangaCount + "P";
+                                for (int j = 0; j < mangaCount; j++)
+                                    //Generate urls for each frame
+                                    i.OrignalUrlList.Add(i.OriginalUrl.Replace("_ugoira0.", "_ugoira" + j.ToString() + "."));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            throw ex;
+                        }
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
             });
 
             return img;
@@ -731,9 +810,14 @@ namespace SitePack
             }
         }
 
-        private void Login(IWebProxy proxy)
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="proxy"></param>
+        /// <returns>返回登录状态</returns>
+        private bool Login(IWebProxy proxy)
         {
-            if ((!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
+            if (string.IsNullOrWhiteSpace(cookie) || (!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
             {
                 try
                 {
@@ -746,7 +830,11 @@ namespace SitePack
                     {
                         if (!IELogin())
                         {
-                            Login(proxy); //重新自动登录
+                            return Login(proxy); //重新自动登录
+                        }
+                        else
+                        {
+                            return true;
                         }
                     }
                     else
@@ -758,52 +846,71 @@ namespace SitePack
                         shc.Remove("Accept-Ranges");
                         shc.Remove("Cookie");
                         shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-                        HtmlDocument hdoc = new HtmlDocument();
+                        HtmlAgilityPack.HtmlDocument hdoc = new HtmlAgilityPack.HtmlDocument();
 
-                        //请求1 获取post_key
+                        //请求1 获取登录参数post_key
                         data = Sweb.Get(LoginURL, proxy, shc);
                         hdoc.LoadHtml(data);
                         post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                         if (post_key.Length < 9)
                         {
-                            SiteManager.echoErrLog(SiteName, "自动登录失败 ");
-                            return;
+                            SiteManager.EchoErrLog(SiteName, "自动登录失败 ", startLogin < 2);
+                            return false;
                         }
 
                         //请求2 POST取登录Cookie
                         shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                        data = "pixiv_id=" + user[index]
-                            + "&captcha=&g_recaptcha_response="
-                            + "&password=" + pass[index]
-                            + "&post_key=" + post_key
-                            + "&source=pc&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
+                        data = $@"&captcha=&g_recaptcha_response=
+&password={pass[index]}
+&pixiv_id={user[index]}
+&post_key={post_key}
+&source=accounts&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
                         data = Sweb.Post(loginpost, data, proxy, shc);
                         cookie = Sweb.GetURLCookies(SiteUrl);
 
                         if (!data.Contains("success"))
                         {
-                            if (data.Contains("locked"))
+                            if (startLogin > 1)
                             {
-                                throw new Exception("登录Pixiv时IP被封锁，剩余时间：" + Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value);
+                                if (data.Contains("locked"))
+                                {
+                                    ShowMessage($"登录Pixiv时IP被封锁，剩余时间：{Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value}");
+                                }
+                                else if (cookie.Length < 9)
+                                {
+                                    ShowMessage("自动登录失败 ");
+                                }
+                                else
+                                {
+                                    string errinfo = $"自动登录失败 {Regex.Unescape(data)}";
+                                    errinfo = IsLoginSite ? errinfo : $"{errinfo}\r\n\r\n请使用右键菜单[ 登录站点 ]登录\r\n" +
+                                        $"账号：{user[index]}\r\n密码：{pass[index]}\r\n或使用自己的账号登录\r\n\r\n点击 [确定] 复制内置账号";
+                                    if (MessageBox.Show(errinfo, ShortName, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
+                                    {
+                                        Thread newThread = new Thread(() => Clipboard.SetText($"{user[index]} {pass[index]}"));
+                                        newThread.SetApartmentState(ApartmentState.STA);
+                                        newThread.Start();
+                                    }
+                                }
                             }
-                            else if (cookie.Length < 9)
-                                SiteManager.echoErrLog(SiteName, "自动登录失败 ");
-                            else
-                                SiteManager.echoErrLog(SiteName, $"自动登录失败 {data}");
                         }
                         else
                         {
                             cookie = $"pixiv;{cookie}";
                             nowUser = "内置账号";
+                            return true;
                         }
+                        return false;
                     }
 
                 }
                 catch (Exception e)
                 {
-                    SiteManager.echoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
+                    SiteManager.EchoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器", startLogin < 2);
+                    return false;
                 }
             }
+            return true;
         }
 
         /// <summary>
@@ -815,17 +922,27 @@ namespace SitePack
 
             bool result = SiteManager.LoginSite(this, ref cookie, "/logout", ref Sweb, ref shc);
 
-            if (result)
+            if (result && !string.IsNullOrWhiteSpace(cookie))
             {
                 nowUser = "你的账号";
                 cookie = $"pixiv;{cookie}";
             }
-            else if (!startLogin)
+            else if (string.IsNullOrWhiteSpace(cookie))
             {
-                SiteManager.echoErrLog(SiteName, "用户登录失败 ");
+                nowUser = null;
+                result = IsLoginSite = false;
+            }
+            else
+            {
+                SiteManager.EchoErrLog(SiteName, "用户登录失败 ", startLogin < 2);
             }
 
             return result;
+        }
+
+        private void ShowMessage(string text)
+        {
+            MessageBox.Show(text, ShortName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
     }

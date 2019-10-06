@@ -103,7 +103,7 @@ namespace MoeLoaderDelta
         void ShowImgDetail()
         {
             chk.Text = site.IsShowRes ? Image.Dimension : Image.Desc;
-            string type = "N/A", aniformat = "gif webm mpeg  mpg mp4 avi";
+            string type = "N/A", aniformat = "gif webm mpeg  mpg mp4 avi ugoira";
 
             if (Image.OriginalUrl.Length > 6)
             {
@@ -131,7 +131,7 @@ namespace MoeLoaderDelta
             isDetailSucc = true;
 
             //ANI ico
-            selani.Opacity = aniformat.Contains(type, StringComparison.CurrentCultureIgnoreCase) ? .5 : 0;
+            selani.Opacity = aniformat.Contains(type, StringComparison.CurrentCultureIgnoreCase) || Image.PixivUgoira ? .5 : 0;
         }
 
         /// <summary>

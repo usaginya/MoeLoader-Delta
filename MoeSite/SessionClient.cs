@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.8
+ * version 1.91
  * by YIU
  * Create               20170106
- * Last Change     20190209
+ * Last Change     20190824
  */
 
 using System;
@@ -29,15 +29,10 @@ namespace MoeLoaderDelta
             "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_2 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Mobile/15A421",
             };
 
-        private static string defUA = UAs[new Random().Next(0, UAs.Length - 1)];
-
         /// <summary>
         /// 提供UA
         /// </summary>
-        public static string DefUA
-        {
-            get { return defUA; }
-        }
+        public static string DefUA { get; } = UAs[new Random().Next(0, UAs.Length - 1)];
 
         /// <summary>
         /// Cookie集合
@@ -51,6 +46,7 @@ namespace MoeLoaderDelta
         public SessionClient()
         {
             ServicePointManager.DefaultConnectionLimit = 768;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)
@@ -147,6 +143,11 @@ namespace MoeLoaderDelta
                 {
                     reponse.Close();
                 }
+                if (request != null)
+                {
+                    request.Abort();
+                    request = null;
+                }
             }
             return ret;
         }
@@ -236,7 +237,8 @@ namespace MoeLoaderDelta
         /// <param name="pageEncoding">编码</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding)
         {
-            return Post(url, postData, proxy, pageEncoding, new SessionHeadersCollection());
+            WebHeaderCollection whc = null;
+            return Post(url, postData, proxy, pageEncoding, new SessionHeadersCollection(), ref whc);
         }
 
         /// <summary>
@@ -249,9 +251,10 @@ namespace MoeLoaderDelta
         /// <param name="UA">User-Agent</param>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, string UA)
         {
+            WebHeaderCollection whc = null;
             SessionHeadersCollection shc = new SessionHeadersCollection();
             shc.UserAgent = UA;
-            return Post(url, postData, proxy, pageEncoding, shc);
+            return Post(url, postData, proxy, pageEncoding, shc, ref whc);
         }
 
         /// <summary>
@@ -263,7 +266,8 @@ namespace MoeLoaderDelta
         /// <param name="shc">Headers</param>
         public string Post(string url, string postData, IWebProxy proxy, SessionHeadersCollection shc)
         {
-            return Post(url, postData, proxy, "UTF-8", shc);
+            WebHeaderCollection whc = null;
+            return Post(url, postData, proxy, "UTF-8", shc, ref whc);
         }
 
         /// <summary>
@@ -275,10 +279,10 @@ namespace MoeLoaderDelta
         /// <param name="pageEncoding">编码</param>
         /// <param name="shc">Headers</param>
         /// <returns></returns>
-        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
+        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc, ref WebHeaderCollection responeHeaders)
         {
             HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-            HttpWebResponse response;
+            HttpWebResponse response = null;
 
             byte[] bytesToPost = Encoding.GetEncoding(pageEncoding).GetBytes(postData);
             try
@@ -295,8 +299,9 @@ namespace MoeLoaderDelta
 
                 response = (HttpWebResponse)request.GetResponse();
                 m_Cookie = request.CookieContainer;//访问后更新Cookie
+                responeHeaders = request.Headers;
                 Stream responseStream = response.GetResponseStream();
-                string resData = "";
+                string resData = string.Empty;
 
                 using (StreamReader resSR = new StreamReader(responseStream, Encoding.GetEncoding(pageEncoding)))
                 {
@@ -309,6 +314,18 @@ namespace MoeLoaderDelta
             catch (Exception e)
             {
                 return e.Message;
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+                if (request != null)
+                {
+                    request.Abort();
+                    request = null;
+                }
             }
         }
 

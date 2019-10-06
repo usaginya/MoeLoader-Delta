@@ -1,9 +1,9 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using MoeLoaderDelta;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using HtmlAgilityPack;
-using MoeLoaderDelta;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
@@ -27,22 +27,46 @@ namespace SitePack
         {
             booru = new SiteBooru(
                 SiteUrl, "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
-                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
+                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.JSONGelbooru);
         }
-
-        private bool GetAPImode(string pageString)
+        private enum APImode
         {
-            return pageString.Contains("<post");
+            // XML 格式
+            XML,
+            // JSON 格式
+            JSON,
+            // 其他
+            OTHER
+        }
+        private APImode GetAPImode(string pageString)
+        {
+            if (pageString.Contains("<post"))
+                return APImode.XML;
+            else if (pageString.Contains("[{"))
+                return APImode.JSON;
+            else
+                return APImode.OTHER;
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             // API
-            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
+            // JSON
+            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&json=1&tags={2}";
             string pageString = booru.GetPageString(page, count, keyWord, proxy);
-            if (GetAPImode(pageString)) return pageString;
+            if (GetAPImode(pageString) == APImode.JSON) { return pageString; }
+
+            // XML
+            booru = new SiteBooru(
+                SiteUrl, "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
+                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
+
+            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
+            pageString = booru.GetPageString(page, count, keyWord, proxy);
+            if (GetAPImode(pageString)==APImode.XML) { return pageString; }
 
             // Html
+            if (pageString.Length < 24) { return pageString; }
             booru.Url = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
             booru.Url = keyWord.Length < 1 ? booru.Url.Substring(0, booru.Url.Length - 6) : booru.Url;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
@@ -78,7 +102,7 @@ namespace SitePack
         {
             List<Img> list = new List<Img>();
             //API
-            if (GetAPImode(pageString))
+            if (GetAPImode(pageString) == APImode.JSON || GetAPImode(pageString) == APImode.XML)
             {
                 list = booru.GetImages(pageString, proxy);
                 return list;

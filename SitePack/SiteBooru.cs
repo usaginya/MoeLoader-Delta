@@ -8,7 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 20190209
+    /// Last 20190629
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -76,7 +76,7 @@ namespace SitePack
         public SiteBooru(string siteUrl, string url, string tagUrl, string siteName, string shortName, bool needMinus,
             BooruProcessor.SourceType srcType, SessionHeadersCollection shc)
         {
-            this.Url = url;
+            Url = url;
             this.siteName = siteName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
@@ -110,7 +110,7 @@ namespace SitePack
             {
                 case BooruProcessor.SourceType.JSON:
                 case BooruProcessor.SourceType.JSONNV:
-                case BooruProcessor.SourceType.JSONSku:
+                case BooruProcessor.SourceType.JSONiSku:
                     shc.Accept = shc.ContentType = SessionHeadersValue.AcceptAppJson; break;
                 case BooruProcessor.SourceType.XML:
                 case BooruProcessor.SourceType.XMLNV:

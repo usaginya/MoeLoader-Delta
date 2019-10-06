@@ -243,6 +243,12 @@ namespace MoeLoaderDelta
                    + (IsSaSave ? "\\" + ReplaceInvalidPathChars(dlitem.Author) : "")
                    + "\\";
 
+                //Pixiv站动图，每个动图投稿都用ID号建一个文件夹装好
+                if (dlitem.Host == "pixiv" &&
+                    !dlitem.Url.IsNullOrEmptyOrWhiteSpace() &&
+                    dlitem.Url.Contains("_ugoira"))
+                    sPath = SaveLocation + "\\" + dlitem.Id + "\\";
+
                 if (!Directory.Exists(sPath))
                     Directory.CreateDirectory(sPath);
             }
@@ -604,7 +610,7 @@ namespace MoeLoaderDelta
             {
                 Dispatcher.Invoke(new VoidDel(delegate () { ExecuteDownloadListTask(DLWorkMode.AutoRetryAll); }));
             }
-            GC.Collect(2,GCCollectionMode.Optimized);
+            GC.Collect(2, GCCollectionMode.Optimized);
         }
 
         /// <summary>

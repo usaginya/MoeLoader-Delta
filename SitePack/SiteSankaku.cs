@@ -1,8 +1,11 @@
 ﻿using MoeLoaderDelta;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Web.Script.Serialization;
 
@@ -13,26 +16,53 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
-        private Random rand = new Random();
-        private string[] user = { "girltmp", "mload006", "mload107", "mload482", "mload367", "mload876", "mload652", "mload740", "mload453", "mload263", "mload395" };
-        private string[] pass = { "girlis2018", "moel006", "moel107", "moel482", "moel367", "moel876", "moel652", "moel740", "moel453", "moel263", "moel395" };
-        private string sitePrefix, tempuser, temppass, tempappkey, ua, pageurl;
-        private static string cookie = string.Empty;
+        private string sitePrefix, temppass, tempappkey, ua, pageurl;
+        private static string cookie = string.Empty, authorization = cookie, nowUser = cookie, nowPwd = cookie, prevSitePrefix = cookie;
+        private static int IsLoginSite = 0;
+        private static readonly string LocalAccountINI = $"{SiteManager.SitePacksPath}sankaku.ini";
 
         public override string SiteUrl => $"https://{sitePrefix}.sankakucomplex.com";
         public override string SiteName => $"{sitePrefix}.sankakucomplex.com";
         public override string ShortName => sitePrefix.Contains("chan") ? "chan.sku" : "idol.sku";
         public override bool IsSupportScore => false;
         public override bool IsSupportCount => true;
-        //public override string Referer => $"{SiteUrl}/post";
+        //public override string Referer => sitePrefix.Contains("chan") ? "https://beta.sankakucomplex.com/" : null;
         public override string SubReferer => "*";
+        public override string LoginURL => SiteManager.SiteLoginType.FillIn.ToSafeString();
+        public override int LoginSiteInt { get => IsLoginSite; set => IsLoginSite = value; }
+        public override string LoginUser { get => nowUser; set => nowUser = value; }
+        public override string LoginPwd { set => nowPwd = value; }
+
+        /// <summary>
+        /// 读INI配置文件
+        /// </summary>
+        /// <param name="section">节</param>
+        /// <param name="key">项</param>
+        /// <param name="def">缺省值</param>
+        /// <param name="retval">lpReturnedString取得的内容</param>
+        /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
+        /// <param name="filePath">配置文件路径</param>
+        /// <returns></returns>
+        [DllImport("kernel32")]
+        public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
+
+        /// <summary>
+        /// 写INI配置文件
+        /// </summary>
+        /// <param name="section">节</param>
+        /// <param name="key">项</param>
+        /// <param name="val">值</param>
+        /// <param name="filepath">配置文件路径</param>
+        /// <returns></returns>
+        [DllImport("kernel32")]
+        public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
 
         /// <summary>
         /// sankakucomplex site
         /// </summary>
         public SiteSankaku(string prefix)
         {
-            shc.Timeout = 16000;
+            shc.Timeout = 18000;
             sitePrefix = prefix;
             CookieRestore();
         }
@@ -47,24 +77,24 @@ namespace SitePack
         /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            if (sitePrefix == "chan")
+            if (prevSitePrefix != sitePrefix)
             {
-                ua = "SCChannelApp/2.4 (Android; black)";
+                IsLoginSite = 0;
+                prevSitePrefix = sitePrefix;
             }
-            else if (sitePrefix == "idol")
+
+            if (sitePrefix == "idol")
             {
-                ua = "SCChannelApp/2.3 (Android; idol)";
+                ua = "SCChannelApp/3.2 (Android; idol)";
             }
-            else
-                return null;
 
             Login(proxy);
-            return booru.GetPageString(page, count, keyWord, proxy);
+            return booru?.GetPageString(page, count, keyWord, proxy);
         }
 
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-            return booru.GetImages(pageString, proxy);
+            return booru?.GetImages(pageString, proxy);
         }
 
         public override List<TagItem> GetTags(string word, IWebProxy proxy)
@@ -101,72 +131,238 @@ namespace SitePack
         /// </summary>
         private void CookieRestore()
         {
-            if (!string.IsNullOrWhiteSpace(cookie)) return;
-
-            string subdomain = sitePrefix.Contains("chan") ? "capi-beta" : "iapi";
+            if (!string.IsNullOrWhiteSpace(cookie) || sitePrefix.Contains("chan"))
+            {
+                return;
+            }
 
             string ck = Sweb.GetURLCookies(SiteUrl);
-            cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"{subdomain}.sankaku;{ck}";
+            cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"iapi.sankaku;{ck}";
         }
 
         /// <summary>
-        /// 这破站用API需要登录！(╯‵□′)╯︵┻━┻
-        /// 两个图站的账号还不通用(╯‵□′)╯︵┻━┻
+        /// 设置登录账号
+        /// </summary>
+        private int SetLogin()
+        {
+            try
+            {
+                if (IsLoginSite > 0)
+                {
+                    //已从界面填入了账号 保存起来
+                    SetLocalAccount(1, nowUser);
+                    SetLocalAccount(2, nowPwd);
+                }
+                else
+                {
+                    //还没有账号就从本地读取
+                    if (string.IsNullOrWhiteSpace(nowPwd) || prevSitePrefix != sitePrefix)
+                    {
+                        nowUser = GetLocalAccount(1);
+                        nowPwd = GetLocalAccount(2);
+                        if (nowPwd.Length < 1)
+                        {
+                            throw new Exception();
+                        }
+                    }
+                }
+                return IsLoginSite > 1 ? 2 : 1;
+            }
+            catch
+            {
+                SiteManager.EchoErrLog(ShortName, "搜索之前必须先登录站点、从右键菜单中登录站点", false, true);
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 两个子站登录方式不同
+        /// chan 使用 Authorization
+        /// idol 使用 Cookie
         /// </summary>
         /// <param name="proxy"></param>
         private void Login(IWebProxy proxy)
         {
 
-            string subdomain = sitePrefix.Substring(0, 1),
-                loginhost = "https://";
-
-            subdomain += subdomain.Contains("c") ? "api-beta" : "api";
-            loginhost += $"{subdomain}.sankakucomplex.com";
-
-            if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains(subdomain + ".sankaku"))
+            if (IsLoginSite != 1)
             {
-                try
+                string subdomain = sitePrefix.Substring(0, 1),
+                    loginhost = "https://";
+
+                if (subdomain.Contains("c"))
                 {
-                    cookie = string.Empty;
-                    int index = rand.Next(0, user.Length);
-                    tempuser = user[index];
-                    temppass = GetSankakuPwHash(pass[index]);
-                    tempappkey = GetSankakuAppkey(tempuser);
-                    string post = cookie;
+                    //chan
+                    subdomain += "api-v2";
+                    loginhost += $"{subdomain}.sankakucomplex.com";
 
-                    if (subdomain.Contains("capi"))
-                        post = "user[name]=" + tempuser + "&user[password]=" + pass[index] + "&appkey=" + tempappkey;
-                    else
-                        post = "login=" + tempuser + "&password_hash=" + temppass + "&appkey=" + tempappkey;
-
-                    //Post登录取Cookie
-                    shc.UserAgent = ua;
-                    shc.Referer = Referer;
-                    shc.Accept = SessionHeadersValue.AcceptAppJson;
-                    shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                    Sweb.Post(loginhost + "/user/authenticate.json", post, proxy, shc);
-                    cookie = Sweb.GetURLCookies(loginhost);
-
-                    if (sitePrefix == "idol" && !cookie.Contains("sankakucomplex_session"))
-                        throw new Exception("获取登录Cookie失败");
-                    else
+                    if (string.IsNullOrWhiteSpace(authorization) || IsLoginSite != 1)
                     {
-                        cookie = subdomain + ".sankaku;" + cookie;
+                        try
+                        {
+                            IsLoginSite = SetLogin();
+                            if (IsLoginSite < 1)
+                            {
+                                return;
+                            }
+
+                            JObject user = new JObject
+                            {
+                                ["login"] = nowUser,
+                                ["password"] = nowPwd
+                            };
+                            string post = JsonConvert.SerializeObject(user);
+
+                            //Post登录取Authorization
+                            shc.Accept = "application/vnd.sankaku.api+json;v=2";
+                            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+                            Sweb.CookieContainer = null;
+
+                            post = Sweb.Post(loginhost + "/auth/token", post, proxy, shc);
+                            if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
+                            {
+                                IsLoginSite = 0;
+                                nowUser = nowPwd = null;
+                                SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
+                                return;
+                            }
+
+                            JObject jobj = JObject.Parse(post);
+                            if (jobj.Property("token_type") != null)
+                            {
+                                authorization = $"{jobj["token_type"]} {jobj["access_token"]} ";
+                            }
+
+                            if (string.IsNullOrWhiteSpace(authorization))
+                            {
+                                IsLoginSite = 0;
+                                nowUser = nowPwd = null;
+                                SiteManager.EchoErrLog(ShortName, "登录失败 - 验证账号错误");
+                                return;
+                            }
+
+                            pageurl = $"{loginhost}/posts?page={{0}}&limit={{1}}&tags=hide_posts_in_books:never+{{2}}";
+
+                            //登录成功 初始化Booru类型站点
+                            booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONcSku, shc);
+
+                            //保存账号
+                            SetLogin();
+                        }
+                        catch (Exception e)
+                        {
+                            IsLoginSite = 0;
+                            nowUser = nowPwd = null;
+                            SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
+                        }
                     }
 
-                    pageurl = loginhost + "/post/index.json?login=" + tempuser + "&password_hash="
-                        + temppass + "&appkey=" + tempappkey + "&page={0}&limit={1}&tags={2}";
-
-
-                    //登录成功才能初始化Booru类型站点
-                    shc.Referer = Referer;
-                    booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONSku, shc);
                 }
-                catch (Exception e)
+                else
                 {
-                    throw new Exception("自动登录失败: " + e.Message);
+                    //idol
+                    subdomain += "api";
+                    loginhost += $"{subdomain}.sankakucomplex.com";
+
+                    if (string.IsNullOrWhiteSpace(cookie) || !cookie.Contains($"{subdomain}.sankaku") || IsLoginSite != 1)
+                    {
+                        try
+                        {
+                            IsLoginSite = SetLogin();
+                            if (IsLoginSite < 1)
+                            {
+                                nowUser = nowPwd = null;
+                                return;
+                            }
+
+                            cookie = string.Empty;
+
+                            temppass = GetSankakuPwHash(nowPwd);
+                            tempappkey = GetSankakuAppkey(nowUser);
+
+                            string post = $"login={nowUser}&password_hash={temppass}&appkey={tempappkey}";
+
+                            //Post登录取Cookie
+                            shc.UserAgent = ua;
+                            shc.Accept = SessionHeadersValue.AcceptAppJson;
+                            shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
+                            post = Sweb.Post($"{loginhost}/user/authenticate.json", post, proxy, shc);
+                            cookie = Sweb.GetURLCookies(loginhost);
+
+                            if (!cookie.Contains("sankakucomplex_session") || string.IsNullOrWhiteSpace(cookie))
+                            {
+                                IsLoginSite = 0;
+                                nowUser = nowPwd = null;
+                                SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
+                                return;
+                            }
+                            else
+                            {
+                                cookie = $"{subdomain }.sankaku;{cookie}";
+                            }
+
+                            pageurl = $"{loginhost}/post/index.json?login={nowUser}&password_hash={temppass}" +
+                                $"&appkey={tempappkey}&page={{0}}&limit={{1}}&tags={{2}}";
+
+                            //登录成功 初始化Booru类型站点
+                            booru = new SiteBooru(SiteUrl, pageurl, null, SiteName, ShortName, false, BooruProcessor.SourceType.JSONiSku, shc);
+
+                            //保存账号
+                            SetLogin();
+                        }
+                        catch (Exception e)
+                        {
+                            IsLoginSite = 0;
+                            nowUser = nowPwd = null;
+                            SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
+                        }
+                    }
+
                 }
             }
+
+        }
+
+        /// <summary>
+        /// 读取本地账号
+        /// </summary>
+        /// <param name="type">1用户名 2密码</param>
+        /// <returns></returns>
+        private string GetLocalAccount(int type)
+        {
+            StringBuilder sb = new StringBuilder();
+            string key = string.Empty;
+
+            switch (type)
+            {
+                case 1:
+                    key = "User"; break;
+                case 2:
+                    key = "Pwd"; break;
+            }
+
+            GetPrivateProfileString(sitePrefix, key, string.Empty, sb, 255, LocalAccountINI);
+            return sb.ToSafeString();
+        }
+
+        /// <summary>
+        /// 写本地账号
+        /// </summary>
+        /// <param name="type">1用户名 2密码</param>
+        /// <param name="value">值</param>
+        /// <returns></returns>
+        private long SetLocalAccount(int type, string value)
+        {
+            string key = string.Empty;
+
+            switch (type)
+            {
+                case 1:
+                    key = "User"; break;
+                case 2:
+                    key = "Pwd"; break;
+            }
+
+            return WritePrivateProfileString(sitePrefix, key, value, LocalAccountINI);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -268,7 +269,7 @@ namespace MoeLoaderDelta
             if (SiteManager.Instance.Sites.Count > 0)
             {
                 siteMenu.ItemsSource = tempSites;
-                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
                 siteMenu.Icon = tempSites[0].Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
@@ -329,7 +330,7 @@ namespace MoeLoaderDelta
                 return;
 
             MenuItem item = sender as MenuItem;
-            comboBoxIndex = (int)(item.DataContext);
+            comboBoxIndex = (int)item.DataContext;
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
             //functionality support check
@@ -357,6 +358,11 @@ namespace MoeLoaderDelta
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
+            if (SiteManager.Instance.Sites.Count > 0)
+            {
+                itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+            }
+
             if (itmLoginSite.IsEnabled)
             {
                 tmp_user = SiteManager.Instance.Sites[comboBoxIndex].LoginUser;
@@ -388,6 +394,7 @@ namespace MoeLoaderDelta
 
         public static string IsNeedReferer(string url)
         {
+            Uri uri = new Uri(url);
             List<ImageSite> ISites = SiteManager.Instance.Sites;
 
             foreach (ImageSite site in SiteManager.Instance.Sites)
@@ -397,8 +404,10 @@ namespace MoeLoaderDelta
                     string[] subrefs = site.SubReferer.Split(',');
                     foreach (string sref in subrefs)
                     {
-                        if (url.Contains(sref))
+                        if (uri.Host.Contains(sref))
+                        {
                             return site.Referer;
+                        }
                     }
                 }
             }
@@ -487,7 +496,7 @@ namespace MoeLoaderDelta
                             {
                                 //if (word.Trim().Length > 0)
                                 //txtSearch.Items.Add(word);
-                                searchControl.AddUsedItem(word);
+                                searchControl.LoadUsedItems(word);
                             }
                         }
                         //if (!txtSearch.Items.Contains("thighhighs"))
@@ -842,7 +851,7 @@ namespace MoeLoaderDelta
                 //设图册页数
                 if (oriUrls.Count > 1)
                 {
-                    imgs[index].ImgP = c + 1 + "";
+                    imgs[index].ImgP = c + 0 + "";
                 }
                 string fileName = GenFileName(dlimg, oriUrls[c]);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
@@ -1042,14 +1051,9 @@ namespace MoeLoaderDelta
                         //prefetch
                         string pageString = PreFetcher.Fetcher.GetPreFetchedPage(
                             realPage, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
-                        if (pageString != null)
-                        {
-                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy);
-                        }
-                        else
-                        {
-                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
-                        }
+                        imgList = !string.IsNullOrWhiteSpace(pageString)
+                            ? SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy)
+                            : SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
 
                         //过滤图片列表
                         imgList = SiteManager.Instance.Sites[nowSelectedIndex].FilterImg(
@@ -1062,7 +1066,7 @@ namespace MoeLoaderDelta
                         {
                             Dispatcher.Invoke(new VoidDel(() =>
                             {
-                                MessageBox.Show(this, "获取图片遇到错误: " + ex.Message,
+                                MessageBox.Show(this, $"获取图片：{SearchWord}\r\n错误：{ex.Message}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
                         }
@@ -1073,7 +1077,7 @@ namespace MoeLoaderDelta
                     }
                 }))).Start(currentSession);
 
-                GC.Collect(2,GCCollectionMode.Optimized);
+                GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
@@ -1731,11 +1735,43 @@ namespace MoeLoaderDelta
             {
                 if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
                 {
-                    SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
-                    System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                    int LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt;
+                    if (SiteManager.Instance.Sites[comboBoxIndex].LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
+                    {
+                        //输入账号
+                        string inputTitle = $"填写 {SiteManager.Instance.Sites[comboBoxIndex].ShortName} 登录信息";
+
+                        string siteuser = Interaction.InputBox("登录账号：", inputTitle, string.Empty);
+                        if (string.IsNullOrWhiteSpace(siteuser))
+                        {
+                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
+                            return;
+                        }
+
+                        string sitepwd = Interaction.InputBox("登录密码：", inputTitle, string.Empty);
+                        if (sitepwd.Length < 1)
+                        {
+                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
+                            return;
+                        }
+
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginUser = siteuser;
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
+                    }
+                    else
+                    {
+                        //IE登录
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
+                        System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                    }
                 }
             }
-            catch { SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false; }
+            catch
+            {
+                SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 0;
+                SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false;
+            }
         }
 
         /// <summary>
@@ -1814,7 +1850,7 @@ namespace MoeLoaderDelta
                                 //设图册页数
                                 if (oriUrls.Count > 1)
                                 {
-                                    selectimg.ImgP = c + 1 + "";
+                                    selectimg.ImgP = c + 0 + "";
                                 }
 
                                 //url|文件名|域名|上传者|ID(用于判断重复)
@@ -1880,8 +1916,8 @@ namespace MoeLoaderDelta
                     if (img != null)
                     {
                         //如果比默认大小还小就用默认大小
-                        img.Width = smallx < 170 ? img.Width > 170 ? 170 : 170 : smallx;
-                        img.Height = smally < 190 ? img.Height > 190 ? 190 : 190 : smally;
+                        img.Width = smallx < 184 ? img.Width > 184 ? 184 : 184 : smallx;
+                        img.Height = smally < 204 ? img.Height > 204 ? 204 : 204 : smally;
                     }
                     //自适应评分数字区
                     img.brdScr.Width = img.Width / 4;
@@ -2082,7 +2118,7 @@ namespace MoeLoaderDelta
                         //设图册页数
                         if (oriUrls.Count > 1)
                         {
-                            imgs[i].ImgP = c + 1 + "";
+                            imgs[i].ImgP = c + 0 + "";
                         }
                         string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
@@ -2104,6 +2140,9 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private string GenFileName(Img img, string url)
         {
+            //Pixiv站动图
+            if (img.PixivUgoira == true)
+                return img.Id.ToSafeString() + "_ugoira" + img.ImgP;
             //namePatter
             string file = namePatter;
             if (string.IsNullOrWhiteSpace(file))
@@ -2255,6 +2294,11 @@ namespace MoeLoaderDelta
                         if (e.Key == Key.R)
                         {//重试
                             ItmReload_Click(null, null);
+                        }
+                        else if (e.Key == Key.Left)
+                        {//强制上一页
+                            e.Handled = true;
+                            DelayPageTurn(1, true);
                         }
                         else if (e.Key == Key.Right)
                         {//强制下一页
@@ -2538,7 +2582,7 @@ namespace MoeLoaderDelta
             }
             catch { }
 
-            GC.Collect(2,GCCollectionMode.Optimized);
+            GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }
@@ -2552,17 +2596,24 @@ namespace MoeLoaderDelta
         private void DelayPageTurn(int operating, bool force)
         {
             Thread newThread = null;
-            if (operating == 1 && realPage > 1)
+            if (operating == 1)
             {
-                newThread = new Thread(new ThreadStart(RDelayP));
-                newThread.Name = "RDelayP";
+                if (realPage > 1 || force)
+                {
+                    newThread = new Thread(new ThreadStart(RDelayP))
+                    {
+                        Name = "RDelayP"
+                    };
+                }
             }
             else if (operating == 2)
             {
                 if (HaveNextPage || force)
                 {
-                    newThread = new Thread(new ThreadStart(RDelayN));
-                    newThread.Name = "RDelayN";
+                    newThread = new Thread(new ThreadStart(RDelayN))
+                    {
+                        Name = "RDelayN"
+                    };
                 }
             }
 
