@@ -9,7 +9,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20190824
+    /// Last 20190918
     /// </summary>
     public class SiteManager
     {
@@ -59,7 +59,7 @@ namespace MoeLoaderDelta
                 }
                 catch (Exception ex)
                 {
-                    echoErrLog("站点载入过程", ex);
+                    EchoErrLog("站点载入过程", ex);
                 }
             }
         }
@@ -101,6 +101,7 @@ namespace MoeLoaderDelta
 
             if (result)
             {
+                shc.Timeout = shc.Timeout * 2;
                 shc.Set("Cookie", tmp_cookie);
                 try
                 {
@@ -124,7 +125,7 @@ namespace MoeLoaderDelta
                     cookie = string.Empty;
                 }
             }
-            
+
             return result;
         }
 
@@ -151,7 +152,7 @@ namespace MoeLoaderDelta
         /// <param name="extra_info">附加错误信息</param>
         /// <param name="NoShow">不显示信息</param>
         /// <param name="NoLog">不记录Log</param>
-        public static void echoErrLog(string SiteShortName, Exception ex = null, string extra_info = null, bool NoShow = false, bool NoLog = false)
+        public static void EchoErrLog(string SiteShortName, Exception ex = null, string extra_info = null, bool NoShow = false, bool NoLog = false)
         {
             int maxlog = 4096;
             bool exisnull = ex == null;
@@ -172,20 +173,23 @@ namespace MoeLoaderDelta
             }
             if (!NoShow)
             {
-                MessageBox.Show((string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info), $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //压缩记录
-            if (new FileInfo(logPath).Length > maxlog)
+            long sourceLength = new FileInfo(logPath).Length;
+            if (sourceLength > maxlog)
             {
-                char[] a = new char[maxlog];
-                using (FileStream fs = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                byte[] buffer = new byte[maxlog];
+                using (FileStream fs = new FileStream(logPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    using (StreamReader sr = new StreamReader(fs))
-                    {
-                        sr.ReadBlock(a, 0, maxlog);
-                    }
+                    int newleng = (int)sourceLength - maxlog;
+                    newleng = newleng > maxlog ? maxlog : newleng;
+                    fs.Seek(newleng, SeekOrigin.Begin);
+                    fs.Read(buffer, 0, maxlog);
+                    fs.Seek(0, SeekOrigin.Begin);
+                    fs.SetLength(0);
+                    fs.Write(buffer, 0, maxlog);
                 }
-                File.WriteAllText(logPath, new string(a));
             }
 
         }
@@ -194,9 +198,9 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="SiteShortName">站点短名</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void echoErrLog(string SiteShortName, string extra_info, bool NoShow = false, bool NoLog = false)
+        public static void EchoErrLog(string SiteShortName, string extra_info, bool NoShow = false, bool NoLog = false)
         {
-            echoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
+            EchoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
         }
     }
 }

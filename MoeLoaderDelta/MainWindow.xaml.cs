@@ -1051,14 +1051,9 @@ namespace MoeLoaderDelta
                         //prefetch
                         string pageString = PreFetcher.Fetcher.GetPreFetchedPage(
                             realPage, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
-                        if (pageString != null)
-                        {
-                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy);
-                        }
-                        else
-                        {
-                            imgList = SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
-                        }
+                        imgList = !string.IsNullOrWhiteSpace(pageString)
+                            ? SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy)
+                            : SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
 
                         //过滤图片列表
                         imgList = SiteManager.Instance.Sites[nowSelectedIndex].FilterImg(
@@ -1071,7 +1066,7 @@ namespace MoeLoaderDelta
                         {
                             Dispatcher.Invoke(new VoidDel(() =>
                             {
-                                MessageBox.Show(this, "获取图片遇到错误: " + ex.Message,
+                                MessageBox.Show(this, $"获取图片：{SearchWord}\r\n错误：{ex.Message}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
                         }

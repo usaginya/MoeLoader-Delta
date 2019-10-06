@@ -170,7 +170,7 @@ namespace SitePack
             }
             catch
             {
-                SiteManager.echoErrLog(ShortName, "搜索之前必须先登录站点、从右键菜单中登录站点", false, true);
+                SiteManager.EchoErrLog(ShortName, "搜索之前必须先登录站点、从右键菜单中登录站点", false, true);
                 return 0;
             }
         }
@@ -222,7 +222,7 @@ namespace SitePack
                             {
                                 IsLoginSite = 0;
                                 nowUser = nowPwd = null;
-                                SiteManager.echoErrLog(ShortName, $"登录失败 - {post}");
+                                SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
                                 return;
                             }
 
@@ -236,7 +236,7 @@ namespace SitePack
                             {
                                 IsLoginSite = 0;
                                 nowUser = nowPwd = null;
-                                SiteManager.echoErrLog(ShortName, "登录失败 - 验证账号错误");
+                                SiteManager.EchoErrLog(ShortName, "登录失败 - 验证账号错误");
                                 return;
                             }
 
@@ -252,7 +252,7 @@ namespace SitePack
                         {
                             IsLoginSite = 0;
                             nowUser = nowPwd = null;
-                            SiteManager.echoErrLog(ShortName, e, "登录失败 - 内部错误");
+                            SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
                         }
                     }
 
@@ -292,7 +292,7 @@ namespace SitePack
                             {
                                 IsLoginSite = 0;
                                 nowUser = nowPwd = null;
-                                SiteManager.echoErrLog(ShortName, $"登录失败 - {post}");
+                                SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
                                 return;
                             }
                             else
@@ -313,7 +313,7 @@ namespace SitePack
                         {
                             IsLoginSite = 0;
                             nowUser = nowPwd = null;
-                            SiteManager.echoErrLog(ShortName, e, "登录失败 - 内部错误");
+                            SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
                         }
                     }
 
