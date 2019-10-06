@@ -22,12 +22,12 @@ namespace MoeLoaderDelta
         /// </summary>
         public bool PixivUgoira { get; set; }
         /// <summary>
-        /// 原图地址
+        /// 原图地址，大图
         /// </summary>
         public string OriginalUrl { get; set; }
 
         /// <summary>
-        /// 预览图地址，尺寸位于原图与缩略图之间
+        /// 预览图地址，尺寸位于原图与缩略图之间，中图
         /// </summary>
         public string PreviewUrl { get; set; }
 
@@ -48,7 +48,7 @@ namespace MoeLoaderDelta
         public int Height { get; set; }
 
         /// <summary>
-        /// 缩略图地址
+        /// 缩略图地址，小图
         /// </summary>
         public string SampleUrl { get; set; }
 
