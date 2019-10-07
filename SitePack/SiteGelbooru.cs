@@ -11,7 +11,7 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 180421
+    /// Fixed 191007
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
@@ -52,22 +52,24 @@ namespace SitePack
         {
             // API
             // JSON
-            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&json=1&tags={2}";
+            booru.Url = $"{SiteUrl}/index.php?page=dapi&s=post&q=index&pid={{0}}&limit={{1}}&json=1&tags={{2}}";
             string pageString = booru.GetPageString(page, count, keyWord, proxy);
             if (GetAPImode(pageString) == APImode.JSON) { return pageString; }
 
             // XML
+            if (pageString.Length < 24) { return pageString; }
             booru = new SiteBooru(
-                SiteUrl, "", SiteUrl + "/index.php?page=dapi&s=tag&q=index&order=name&limit={0}&name={1}"
-                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML);
-
-            booru.Url = SiteUrl + "/index.php?page=dapi&s=post&q=index&pid={0}&limit={1}&tags={2}";
+                SiteUrl, string.Empty, $"{SiteUrl}/index.php?page=dapi&s=tag&q=index&order=name&limit={{0}}&name={{1}}"
+                , SiteName, ShortName, Referer, true, BooruProcessor.SourceType.XML)
+            {
+                Url = $"{SiteUrl}/index.php?page=dapi&s=post&q=index&pid={{0}}&limit={{1}}&tags={{2}}"
+            };
             pageString = booru.GetPageString(page, count, keyWord, proxy);
-            if (GetAPImode(pageString)==APImode.XML) { return pageString; }
+            if (GetAPImode(pageString) == APImode.XML) { return pageString; }
 
             // Html
             if (pageString.Length < 24) { return pageString; }
-            booru.Url = string.Format(SiteUrl + "/index.php?page=post&s=list&pid={0}&tags={1}", (page - 1) * 42, keyWord);
+            booru.Url = $"{SiteUrl}/index.php?page=post&s=list&pid={(page - 1) * 42}&tags={keyWord}";
             booru.Url = keyWord.Length < 1 ? booru.Url.Substring(0, booru.Url.Length - 6) : booru.Url;
             pageString = booru.GetPageString(page, 0, keyWord, proxy);
             return pageString;
@@ -82,7 +84,7 @@ namespace SitePack
             List<TagItem> re = new List<TagItem>();
             try
             {
-                string url = string.Format(SiteUrl + "/index.php?page=autocomplete&term={0}", word);
+                string url = $"{SiteUrl}/index.php?page=autocomplete&term={word}";
                 shc.Accept = SessionHeadersValue.AcceptAppJson;
                 url = Sweb.Get(url, proxy, shc);
 

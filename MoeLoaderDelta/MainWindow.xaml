@@ -703,7 +703,7 @@
                                     Focusable="false"
                                     IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                                     Placement="Right"
-                                    PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}"
+                                    PopupAnimation="Fade"
                                     VerticalOffset="-3">
                                     <Grid x:Name="SubMenu">
                                         <Border
@@ -741,7 +741,7 @@
                                 <Setter TargetName="ArrowPanel" Property="Visibility" Value="Collapsed" />
                             </Trigger>
                             <Trigger Property="IsSuspendingPopupAnimation" Value="true">
-                                <Setter TargetName="SubMenuPopup" Property="PopupAnimation" Value="None" />
+                                <Setter TargetName="SubMenuPopup" Property="PopupAnimation" Value="Fade" />
                             </Trigger>
                             <Trigger Property="Icon" Value="{x:Null}">
                                 <Setter TargetName="Ico" Property="Visibility" Value="Collapsed" />

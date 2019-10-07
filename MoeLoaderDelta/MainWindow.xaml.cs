@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -143,7 +144,9 @@ namespace MoeLoaderDelta
         internal Stretch bgSt = Stretch.None;
         internal AlignmentX bgHe = AlignmentX.Right;
         internal AlignmentY bgVe = AlignmentY.Bottom;
-        //private bool isStyleNone = true;
+
+        public BitmapImage ExtSiteIconOff { get; set; } = null;
+        public BitmapImage ExtSiteIconOn { get; set; } = null;
 
         [DllImport("user32")]
         private static extern int RegisterHotKey(IntPtr hwnd, int id, int fsModifiers, System.Windows.Forms.Keys vk);
@@ -207,13 +210,37 @@ namespace MoeLoaderDelta
             /////////////////////////////////////// init image site list //////////////////////////////////
             SiteManager.Mainproxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
-            List<MenuItem> tempSites = new List<MenuItem>();
-            List<ImageSite> tmpISites = SiteManager.Instance.Sites;
+            ObservableCollection<FrameworkElement> tempSites = new ObservableCollection<FrameworkElement>();
 
-            int index = 0;
+            int index = 0, extindex = 0;
+            Stream siteIconStream = null;
+            BitmapImage siteIcon = null;
+
+            #region 加载扩展设置图标
+            BitmapImage CreateBitmapImage(string resourceName)
+            {
+                using (siteIconStream = GetType().Assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (siteIconStream != null)
+                    {
+                        siteIcon = new BitmapImage { CacheOption = BitmapCacheOption.Default };
+                        siteIcon.BeginInit();
+                        siteIcon.StreamSource = siteIconStream;
+                        siteIcon.EndInit();
+                    }
+                }
+                return siteIcon;
+            }
+            ExtSiteIconOff = CreateBitmapImage("MoeLoaderDelta.Images.extsetting0.ico");
+            ExtSiteIconOn = CreateBitmapImage("MoeLoaderDelta.Images.extsetting1.ico");
+            #endregion
+
             foreach (ImageSite site in SiteManager.Instance.Sites)
             {
                 MenuItem menuItem = null;
+                MenuItem subItem = null;
+                siteIconStream = null;
+
                 //group by shortName
                 if (dicSites.ContainsKey(site.ShortName))
                 {
@@ -221,26 +248,57 @@ namespace MoeLoaderDelta
                 }
                 else
                 {
+                    extindex = 0;
                     int space = site.SiteName.IndexOf('[');
 
                     menuItem = new MenuItem()
                     {
-                        Header = (
-                        space > 0
-                        ? site.SiteName.Substring(0, space)
-                        : site.SiteName
-                        )
+                        Header = space > 0 ? site.SiteName.Substring(0, space) : site.SiteName
                     };
 
                     menuItem.Style = (Style)Resources["SimpleMenuItem"];
                     dicSites.Add(site.ShortName, menuItem);
+
+                    #region 获取站点图标
+                    siteIconStream = site.IconStream;
+                    if (siteIconStream != null)
+                    {
+                        siteIcon = new BitmapImage { CacheOption = BitmapCacheOption.Default };
+                        siteIcon.BeginInit();
+                        siteIcon.StreamSource = site.IconStream;
+                        siteIcon.EndInit();
+                        menuItem.Icon = siteIcon;
+                    }
+                    #endregion
                 }
-                MenuItem subItem = new MenuItem() { Header = site.SiteName, ToolTip = site.ToolTip, DataContext = index++ };
-                subItem.Click += new RoutedEventHandler(menuItem_Click);
+
+                #region 添加主站子菜单项
+                if (site.SiteName.Contains("ExtStteing"))
+                {
+                    if (menuItem.Items.Count > 0 && extindex < 1)
+                    {
+                        menuItem.Items.Add(new Separator());
+                    }
+                    subItem = new MenuItem()
+                    {
+                        Icon = site.ExtendedSettings[extindex].Enable ? ExtSiteIconOn : ExtSiteIconOff,
+                        Header = site.ExtendedSettings[extindex].Title,
+                        DataContext = index++,
+                        Tag = extindex++
+                    };
+                    subItem.Click += new RoutedEventHandler(RunSiteExtendedSettingAction);
+                }
+                else
+                {
+                    subItem = new MenuItem() { Icon = siteIcon, Header = site.SiteName, ToolTip = site.ToolTip, DataContext = index++ };
+                    subItem.Click += new RoutedEventHandler(menuItem_Click);
+                }
                 subItem.Style = (Style)Resources["SimpleMenuItem"];
                 menuItem.Items.Add(subItem);
+                #endregion
             }
 
+            #region 添加主站菜单
             foreach (ImageSite site in SiteManager.Instance.Sites)
             {
                 MenuItem menuItem = dicSites[site.ShortName];
@@ -249,28 +307,18 @@ namespace MoeLoaderDelta
                 {
                     menuItem = menuItem.Items[0] as MenuItem;
                 }
-
-                //menuItem.Icon = new BitmapImage(new Uri("/Images/site" + (index++) + ".ico", UriKind.Relative));
-                Stream iconStr = site.IconStream;
-                if (iconStr != null)
-                {
-                    BitmapImage ico = new BitmapImage();
-                    ico.CacheOption = BitmapCacheOption.Default;
-                    ico.BeginInit();
-                    ico.StreamSource = site.IconStream;
-                    ico.EndInit();
-                    menuItem.Icon = ico;
-                }
                 tempSites.Add(menuItem);
-
-                dicSites[site.ShortName] = null;
             }
+            #endregion
+
+            dicSites = null;
+            siteIcon = null;
 
             if (SiteManager.Instance.Sites.Count > 0)
             {
                 siteMenu.ItemsSource = tempSites;
                 siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
-                siteMenu.Icon = tempSites[0].Icon;
+                siteMenu.Icon = ((MenuItem)tempSites[0]).Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
             else
@@ -324,7 +372,23 @@ namespace MoeLoaderDelta
             DelTempDirectory();
         }
 
-        void menuItem_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// 执行站点扩展设置方法
+        /// </summary>
+        /// <param name="siteSesd"></param>
+        private void RunSiteExtendedSettingAction(object sender, RoutedEventArgs e)
+        {
+            if (SiteManager.Instance.Sites.Count < 1)
+                return;
+
+            MenuItem item = sender as MenuItem;
+            int index = (int)item.DataContext;
+
+            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction);
+            item.Icon = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].Enable ? ExtSiteIconOn : ExtSiteIconOff;
+        }
+
+        private void menuItem_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count < 1)
                 return;
@@ -738,7 +802,7 @@ namespace MoeLoaderDelta
             if (sender == null)
             {
                 currentSession.IsStop = true;
-                statusText.Text = "加载完毕，取得 0 张图片";
+                statusText.Text = "加载完毕，得到 0 张图片";
 
                 txtGet.Text = "搜索";
                 btnGet.ToolTip = btnGet.Tag as string;
@@ -1091,7 +1155,7 @@ namespace MoeLoaderDelta
                     unloaded.Clear();
                 }
                 currentSession.IsStop = true;
-                statusText.Text = "加载完毕，取得 0 张图片";
+                statusText.Text = "加载完毕，得到 0 张图片";
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
 
                 //尝试加载下一页
@@ -1215,12 +1279,12 @@ namespace MoeLoaderDelta
             catch { }
             string strSW = SearchWord.Length > 0 ? "，" + SearchWord : "";
             if (viewedC < 5 || SearchWord.Length > 0)
-                statusText.Text = "加载完毕，取得 " + imgs.Count + " 张图片";
+                statusText.Text = "加载完毕，得到 " + imgs.Count + " 张图片";
             else
-                statusText.Text = "加载完毕，取得 " + imgs.Count + " 张图片(剩余约 " + viewedC + " 张未浏览)";
+                statusText.Text = "加载完毕，得到 " + imgs.Count + " 张图片(剩余约 " + viewedC + " 张未浏览)";
             statusText.Text += strSW;
 
-            //statusText.Text = "搜索完成！取得 " + imgs.Count + " 张图片信息 (上次浏览至 " + viewedIds[nowSelectedIndex].ViewedBiggestId + " )";
+            //statusText.Text = "搜索完成！得到 " + imgs.Count + " 张图片信息 (上次浏览至 " + viewedIds[nowSelectedIndex].ViewedBiggestId + " )";
             txtGet.Text = "搜索";
             btnGet.ToolTip = btnGet.Tag as string;
             isGetting = false;
