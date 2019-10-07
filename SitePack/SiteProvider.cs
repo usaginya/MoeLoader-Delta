@@ -22,6 +22,7 @@ namespace SitePack
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.ExtStteing_0, proxy));
 
             sites.Add(new SiteLargeBooru(
                 "https://yande.re",

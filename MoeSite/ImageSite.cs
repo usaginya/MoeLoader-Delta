@@ -67,7 +67,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 由界面传递给站点登录动作
         /// </summary>
-        bool LoginSite { get;  set; }
+        bool LoginSite { get; set; }
 
         /// <summary>
         /// 由界面传递给站点登录动作 int
@@ -135,6 +135,11 @@ namespace MoeLoaderDelta
         /// 站点列表中显示的图标
         /// </summary>
         System.IO.Stream IconStream { get; }
+
+        /// <summary>
+        /// 站点扩展设置，用于在站点子菜单加入扩展设置选项
+        /// </summary>
+        List<SiteExtendedSetting> ExtendedSettings { get; set; }
 
         /// <summary>
         /// 获取图片列表

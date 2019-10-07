@@ -99,7 +99,8 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 当前登录站点的用户
         /// </summary>
-        public virtual string LoginUser {
+        public virtual string LoginUser
+        {
             get => string.IsNullOrWhiteSpace(loginUser) ? "登录站点" : loginUser;
             set => loginUser = string.IsNullOrWhiteSpace(loginUser) ? "登录站点" : value;
         }
@@ -125,6 +126,11 @@ namespace MoeLoaderDelta
         /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
         /// </summary>
         public virtual System.Drawing.Point SmallImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
+
+        /// <summary>
+        /// 站点扩展设置，用于在站点子菜单加入扩展设置选项
+        /// </summary>
+        public virtual List<SiteExtendedSetting> ExtendedSettings { get; set; }
 
         /// <summary>
         /// 获取页面的源代码，例如HTML

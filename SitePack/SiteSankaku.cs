@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Web.Script.Serialization;
 
@@ -32,30 +31,6 @@ namespace SitePack
         public override int LoginSiteInt { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser { get => nowUser; set => nowUser = value; }
         public override string LoginPwd { set => nowPwd = value; }
-
-        /// <summary>
-        /// 读INI配置文件
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="def">缺省值</param>
-        /// <param name="retval">lpReturnedString取得的内容</param>
-        /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
-        /// <param name="filePath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32")]
-        public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
-
-        /// <summary>
-        /// 写INI配置文件
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="val">值</param>
-        /// <param name="filepath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32")]
-        public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
 
         /// <summary>
         /// sankakucomplex site
@@ -329,7 +304,6 @@ namespace SitePack
         /// <returns></returns>
         private string GetLocalAccount(int type)
         {
-            StringBuilder sb = new StringBuilder();
             string key = string.Empty;
 
             switch (type)
@@ -340,8 +314,7 @@ namespace SitePack
                     key = "Pwd"; break;
             }
 
-            GetPrivateProfileString(sitePrefix, key, string.Empty, sb, 255, LocalAccountINI);
-            return sb.ToSafeString();
+            return SiteManager.GetPrivateProfileString(sitePrefix, key, LocalAccountINI);
         }
 
         /// <summary>
@@ -362,7 +335,7 @@ namespace SitePack
                     key = "Pwd"; break;
             }
 
-            return WritePrivateProfileString(sitePrefix, key, value, LocalAccountINI);
+            return SiteManager.WritePrivateProfileString(sitePrefix, key, value, LocalAccountINI);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.VisualBasic;
 using MoeLoaderDelta;
 using Newtonsoft.Json.Linq;
 using System;
@@ -16,13 +17,13 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 190922
+    /// Last change 191007
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
     {
-        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id, 作品id及相关作品
-        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid, PidPlus }
+        //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id, 作品id及相关作品, 扩展设置0
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid, PidPlus, ExtStteing_0 }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -43,6 +44,8 @@ namespace SitePack
                     return "www.pixiv.net [IllustId]";
                 else if (srcType == PixivSrcType.PidPlus)
                     return "www.pixiv.net [IllustId+]";
+                else if (srcType == PixivSrcType.ExtStteing_0)
+                    return "ExtStteing_0";
                 return "www.pixiv.net [Tag]";
             }
         }
@@ -113,6 +116,8 @@ namespace SitePack
         //public override bool IsSupportTag { get { if (srcType == PixivSrcType.Author) return true; else return false; } }
         public override bool IsSupportTag => true;
 
+        public override List<SiteExtendedSetting> ExtendedSettings { get => extendedSettings; set => extendedSettings = value; }
+
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
         private int page = 1;
@@ -121,6 +126,7 @@ namespace SitePack
         private static string cookie = string.Empty, nowUser = null;
         private readonly string[] user = { "moe1user", "moe3user", "a-rin-a" };
         private readonly string[] pass = { "630489372", "1515817701", "2422093014" };
+        private static readonly string siteINI = $"{SiteManager.SitePacksPath}pixiv.ini";
         private static int startLogin = 0;
         private static string tempPage = null;
         private Random rand = new Random();
@@ -129,6 +135,12 @@ namespace SitePack
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
         private static bool IsLoginSite;
+        private const string pixivCat = "i.pixiv.cat";
+        private const string extSettingOff = "0";
+        private const string extSettingOn = "1";
+        private static bool enableThirdParty = false;
+        private List<SiteExtendedSetting> extendedSettings = new List<SiteExtendedSetting>();
+        private delegate void delegateExtSetting();
 
         /// <summary>
         /// pixiv.net site
@@ -137,6 +149,29 @@ namespace SitePack
         {
             this.srcType = srcType;
             Task.Factory.StartNew(() => FirstLogin(proxy));
+            CreateExtSetting();
+        }
+
+        /// <summary>
+        /// 创建扩展菜单方法
+        /// </summary>
+        private void CreateExtSetting()
+        {
+            if (!SiteName.Contains("ExtStteing")) { return; }
+
+            ExtendedSettings = new List<SiteExtendedSetting>();
+            SiteExtendedSetting ses;
+            #region 第三方站点服务选项设置
+            string cfgValue = SiteConfig("Cfg", "EnableThirdParty");
+            enableThirdParty = !string.IsNullOrWhiteSpace(cfgValue) && cfgValue.Trim() != extSettingOff;
+            ses = new SiteExtendedSetting()
+            {
+                Title = "使用第三方服务获取图片",
+                Enable = enableThirdParty,
+                SettingAction = new delegateExtSetting(ExtSetting_EnableThirdParty)
+            };
+            ExtendedSettings.Add(ses);
+            #endregion
         }
 
         /// <summary>
@@ -151,6 +186,21 @@ namespace SitePack
                 Login(proxy);
                 startLogin = 2;
             }
+        }
+
+        /// <summary>
+        /// 读写pixiv站点设置
+        /// </summary>
+        /// <param name="section">项名</param>
+        /// <param name="key">键名</param>
+        /// <param name="save">写配置</param>
+        /// <param name="value">写入值</param>
+        /// <returns></returns>
+        private string SiteConfig(string section, string key, bool save = false, string value = null)
+        {
+            return save
+                ? SiteManager.WritePrivateProfileString(section, key, value, siteINI).ToSafeString()
+                : SiteManager.GetPrivateProfileString(section, key, siteINI);
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
@@ -507,11 +557,10 @@ namespace SitePack
 
                         //extract id from detail url
                         //string id = detailUrl.Substring(detailUrl.LastIndexOf('=') + 1);
-                        string id = Regex.Match(detailUrl, @"illust_id=\d+").Value;
-                        id = id.Substring(id.IndexOf('=') + 1);
+                        string id = Regex.Match(detailUrl, @"artworks/(?<id>\d+)").Groups["id"].ToSafeString();
 
                         Img img = GenerateImg(detailUrl, sampleUrl, id);
-                        if (img != null) imgs.Add(img);
+                        if (img != null) { imgs.Add(img); }
                     }
                     catch
                     {
@@ -679,7 +728,7 @@ namespace SitePack
                 else
                 {
                     //+++++新版详情页+++++
-                    Match strRex = Regex.Match(page, @"(?<=(?:" + i.Id + ":.)).*?(?=(?:.},user))");
+                    Match strRex = Regex.Match(page, $@"(?<=(?:{i.Id}:.)).*?(?=(?:.}},user))");
 
                     JObject jobj = JObject.Parse(strRex.Value);
 
@@ -793,6 +842,22 @@ namespace SitePack
                 }
             });
 
+            #region 转换第三方服务的图片地址
+            img.SampleUrl = ThirdPrtyUrl(img.SampleUrl);
+            img.PreviewUrl = ThirdPrtyUrl(img.PreviewUrl);
+            img.JpegUrl = ThirdPrtyUrl(img.JpegUrl);
+            img.OriginalUrl = ThirdPrtyUrl(img.OriginalUrl);
+            if (img.OrignalUrlList.Count > 0)
+            {
+                List<string> newOrigUrlList = new List<string>();
+                foreach (string origUrl in img.OrignalUrlList)
+                {
+                    newOrigUrlList.Add(ThirdPrtyUrl(origUrl));
+                }
+                img.OrignalUrlList = newOrigUrlList;
+                newOrigUrlList = null;
+            }
+            #endregion
             return img;
         }
 
@@ -938,6 +1003,33 @@ namespace SitePack
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 扩展设置启用第三方站点服务
+        /// </summary>
+        private void ExtSetting_EnableThirdParty()
+        {
+            const int ExtSettingId = 0;
+            const string Prompt = "使用第三方站点服务获取图片\r\n启用输入 1\r\n禁用输入 0";
+            string title = $"{ShortName} 扩展设置";
+            string isEnable = Interaction.InputBox(Prompt, title,
+                ExtendedSettings.Count > 0 ? (ExtendedSettings[ExtSettingId].Enable ? extSettingOn : extSettingOff) : string.Empty);
+
+            if (string.IsNullOrWhiteSpace(isEnable)) { return; }
+            enableThirdParty = isEnable.Trim() != extSettingOff;
+            ExtendedSettings[ExtSettingId].Enable = enableThirdParty;
+            SiteConfig("Cfg", "EnableThirdParty", true, isEnable);
+        }
+
+        /// <summary>
+        /// 取第三方站点服务图链
+        /// </summary>
+        /// <param name="imgUrl">原始图片地址</param>
+        /// <returns></returns>
+        private string ThirdPrtyUrl(string imgUrl)
+        {
+            return enableThirdParty ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
         }
 
         private void ShowMessage(string text)

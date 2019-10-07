@@ -322,7 +322,12 @@
   <ItemGroup>
     <Resource Include="m.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Images\extsetting0.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\extsetting1.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>md $(TargetDir)lib
