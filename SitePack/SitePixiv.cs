@@ -694,7 +694,7 @@ namespace SitePack
                 }
                 catch { }
                 //------------------------
-                if (!page.Contains("globalInitData"))
+                if (!page.Contains("preload-data") && !page.Contains("globalInitData"))
                 {
                     //++++旧版详情页+++++
                     //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫画 6P｜SAI
@@ -1011,7 +1011,7 @@ namespace SitePack
         private void ExtSetting_EnableThirdParty()
         {
             const int ExtSettingId = 0;
-            const string Prompt = "使用第三方站点服务获取图片\r\n启用输入 1\r\n禁用输入 0";
+            const string Prompt = "使用第三方pixiv.cat站点服务获取图片\r\n启用输入 1\r\n禁用输入 0";
             string title = $"{ShortName} 扩展设置";
             string isEnable = Interaction.InputBox(Prompt, title,
                 ExtendedSettings.Count > 0 ? (ExtendedSettings[ExtSettingId].Enable ? extSettingOn : extSettingOff) : string.Empty);

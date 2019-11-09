@@ -119,8 +119,8 @@ namespace MoeLoaderDelta
         public static string GetCookies(string setCookie, Uri uri)
         {
             //获取所有Cookie
-            var strCookies = string.Empty;
-            var cookies = GetCookiesByHeader(setCookie);
+            string strCookies = string.Empty;
+            CookieCollection cookies = GetCookiesByHeader(setCookie);
             foreach (Cookie cookie in cookies)
             {
                 //忽略过期Cookie
@@ -144,7 +144,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string GetCookieValueByName(string setCookie, string name)
         {
-            var regex = new Regex($"(?<={name}=).*?(?=; )");
+            Regex regex = new Regex($"(?<={name}=).*?(?=; )");
             return regex.IsMatch(setCookie) ? regex.Match(setCookie).Value : string.Empty;
         }
 
@@ -157,7 +157,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string SetCookieValueByName(string setCookie, string name, string value)
         {
-            var regex = new Regex($"(?<={name}=).*?(?=; )");
+            Regex regex = new Regex($"(?<={name}=).*?(?=; )");
             if (regex.IsMatch(setCookie))
             {
                 setCookie = regex.Replace(setCookie, value);
@@ -174,7 +174,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string UpdateCookieValueByName(string oldCookie, string newCookie, string name)
         {
-            var regex = new Regex($"(?<={name}=).*?[(?=; )|$]");
+            Regex regex = new Regex($"(?<={name}=).*?[(?=; )|$]");
             if (regex.IsMatch(oldCookie) && regex.IsMatch(newCookie))
             {
                 oldCookie = regex.Replace(oldCookie, regex.Match(newCookie).Value);
@@ -190,10 +190,10 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string UpdateCookieValue(string oldCookie, string newCookie)
         {
-            var list = GetCookiesByHeader(newCookie);
+            CookieCollection list = GetCookiesByHeader(newCookie);
             foreach (Cookie cookie in list)
             {
-                var regex = new Regex($"(?<={cookie.Name}=).*?[(?=; )|$]");
+                Regex regex = new Regex($"(?<={cookie.Name}=).*?[(?=; )|$]");
                 oldCookie = regex.IsMatch(oldCookie) ? regex.Replace(oldCookie, cookie.Value) : $"{cookie.Name}={cookie.Value}; {oldCookie}";
             }
             return oldCookie;
