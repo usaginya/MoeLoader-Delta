@@ -221,7 +221,7 @@ namespace SitePack
             {
                 if (keyWord.Length > 0 && int.TryParse(keyWord.Trim(), out memberId))
                 {
-                    url = $"{SiteUrl}/member_illust.php?mode=medium&illust_id={memberId}";
+                    url = $"{SiteUrl}/artworks/{memberId}";
                 }
                 else
                 {
@@ -395,7 +395,7 @@ namespace SitePack
                                         foreach (JProperty jp in jToken)
                                         {
                                             JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                            Img img = GenerateImg(SiteUrl + "/member_illust.php?mode=medium&illust_id=" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
+                                            Img img = GenerateImg(SiteUrl + "/artworks/" + jp.Name, (string)nextJToken["url"], (string)nextJToken["id"]);
                                             if (img != null) imgs.Add(img);
                                         }
 
@@ -459,7 +459,7 @@ namespace SitePack
                                 foreach (JProperty jp in jToken)
                                 {
                                     JToken nextJToken = (((JObject)jsonObj["body"])["works"])[jp.Name];
-                                    Img img = GenerateImg($"{SiteUrl}/member_illust.php?mode=medium&illust_id={ jp.Name}", (string)nextJToken["url"], (string)nextJToken["id"]);
+                                    Img img = GenerateImg($"{SiteUrl}/artworks/{ jp.Name}", (string)nextJToken["url"], (string)nextJToken["id"]);
                                     if (keyWord == jp.Name) img.Source = "相关作品";
                                     if (img != null) imgs.Add(img);
                                 }
@@ -472,34 +472,58 @@ namespace SitePack
                 {
                     if (!Regex.Match(pageString, @"<h2.*?/h2>").Value.Contains("错误"))
                     {
+
                         int mangaCount = 1;
                         string id, SampleUrl;
                         id = SampleUrl = string.Empty;
-                        if (!pageString.Contains("globalInitData"))
+                        //if (pageString.Contains("globalInitData"))
+                        //{
+                        //    -----旧版 191120放弃此解析方法---- -
+                        //   SampleUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
+                        //    id = SampleUrl.Substring(SampleUrl.LastIndexOf("/") + 1, SampleUrl.IndexOf("_") - SampleUrl.LastIndexOf("/") - 1);
+
+                        //    string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
+                        //    if (dimension.EndsWith("P"))
+                        //        mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
+                        //}
+                        //else
+                        //{
+                        //    //----- 新版 -----
+                        //    Match strRex = Regex.Match(pageString, @"(?<=(?:,illust\:.{.))\d+(?=(?:\:.))");
+                        //    id = strRex.Value;
+
+                        //    strRex = Regex.Match(pageString, @"(?<=(?:" + id + ":.)).*?(?=(?:.},user))");
+
+                        //    JObject jobj = JObject.Parse(strRex.Value);
+                        //    try { mangaCount = int.Parse(jobj["pageCount"].ToSafeString()); } catch { }
+
+                        //    jobj = JObject.Parse(jobj["urls"].ToSafeString());
+                        //    SampleUrl = jobj["thumb"].ToSafeString();
+                        //}
+                        Match strRex = Regex.Match(pageString, @"(?<=(""meta-preload-data"")\s*content=').*?(?=('>))");
+
+                        JObject jobj = JObject.Parse(strRex.Value);
+
+                        //Root->illust->PID(图片id)
+                        //{"timestamp":"xx","illust":{"id":{xx}},"user":{xx}}
+                        JObject jobjPicInfo = (
+                            (JObject.Parse($@"{jobj["illust"].First.First.ToSafeString()}"))
+                            );
+                        id = jobjPicInfo["illustId"].ToSafeString();
+
+                        JObject jobjUrl = JObject.Parse(jobjPicInfo["urls"].ToSafeString());
+                        
+                        SampleUrl = jobjUrl["regular"].ToSafeString();
+
+                        string detailUrl = SiteUrl + "/artworks/" + id;
+
+                        try
                         {
-                            //----- 旧版 -----
-                            SampleUrl = doc.DocumentNode.SelectSingleNode("/html/head/meta[@property='og:image']").Attributes["content"].Value;
-                            id = SampleUrl.Substring(SampleUrl.LastIndexOf("/") + 1, SampleUrl.IndexOf("_") - SampleUrl.LastIndexOf("/") - 1);
-
-                            string dimension = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[2]").InnerText;
-                            if (dimension.EndsWith("P"))
-                                mangaCount = int.Parse(Regex.Match(dimension, @"\d+").Value);
+                            //判断是否为动图或者多图
+                            mangaCount = int.Parse(jobjPicInfo["pageCount"].ToSafeString()); 
                         }
-                        else
-                        {
-                            //----- 新版 -----
-                            Match strRex = Regex.Match(pageString, @"(?<=(?:,illust\:.{.))\d+(?=(?:\:.))");
-                            id = strRex.Value;
+                        catch { }
 
-                            strRex = Regex.Match(pageString, @"(?<=(?:" + id + ":.)).*?(?=(?:.},user))");
-
-                            JObject jobj = JObject.Parse(strRex.Value);
-                            try { mangaCount = int.Parse(jobj["pageCount"].ToSafeString()); } catch { }
-
-                            jobj = JObject.Parse(jobj["urls"].ToSafeString());
-                            SampleUrl = jobj["thumb"].ToSafeString();
-                        }
-                        string detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
                         for (int j = 0; j < mangaCount; j++)
                         {
                             Img img = GenerateImg(detailUrl, SampleUrl.Replace("_p0_", "_p" + j.ToString() + "_"), id);
@@ -582,7 +606,7 @@ namespace SitePack
                     if (obj["illustId"] != null)
                     {
                         id = obj["illustId"].ToString();
-                        detailUrl = SiteUrl + "/member_illust.php?mode=medium&illust_id=" + id;
+                        detailUrl = SiteUrl + "/artworks/" + id;
                     }
                     if (obj["url"] != null)
                     {
@@ -696,6 +720,7 @@ namespace SitePack
                 //------------------------
                 if (!page.Contains("preload-data") && !page.Contains("globalInitData"))
                 {
+                    #region 旧版详情页
                     //++++旧版详情页+++++
                     //04/16/2012 17:44｜600×800｜SAI  or 04/16/2012 17:44｜600×800 or 04/19/2012 22:57｜漫画 6P｜SAI
                     i.Date = doc.DocumentNode.SelectSingleNode("//ul[@class='meta']/li[1]").InnerText;
@@ -724,26 +749,36 @@ namespace SitePack
                         i.Height = int.Parse(Regex.Match(dimension.Substring(dimension.IndexOf('×') + 1), @"\d+").Value);
                     }
                     catch { }
+                    #endregion //旧版详情页
                 }
                 else
                 {
-                    //+++++新版详情页+++++
-                    Match strRex = Regex.Match(page, $@"(?<=(?:{i.Id}:.)).*?(?=(?:.}},user))");
+                    //+++++191120新版详情页+++++
+                    //Match strRex = Regex.Match(page, $@"(?<=(?:{i.Id}:.)).*?(?=(?:.}},user))");
+
+                    //匹配<meta name="global-data" id="meta-global-data" content='中的json数据
+                    Match strRex = Regex.Match(page, @"(?<=(""meta-preload-data"")\s*content=').*?(?=('>))");
 
                     JObject jobj = JObject.Parse(strRex.Value);
 
-                    i.Date = jobj["uploadDate"].ToSafeString();
+                    //Root->illust->PID(图片id)
+                    //{"timestamp":"xx","illust":{"id":{xx}},"user":{xx}}
+                    JObject jobjPicInfo = (
+                        (JObject.Parse($@"{jobj["illust"].First.First.ToSafeString()}"))
+                        );
+
+                    i.Date = jobjPicInfo["createDate"].ToSafeString();
 
                     try
                     {
-                        i.Score = int.Parse(jobj["likeCount"].ToSafeString());
-                        i.Width = int.Parse(jobj["width"].ToSafeString());
-                        i.Height = int.Parse(jobj["height"].ToSafeString());
-                        pageCount = int.Parse(jobj["pageCount"].ToSafeString());
+                        i.Score = int.Parse(jobjPicInfo["likeCount"].ToSafeString());
+                        i.Width = int.Parse(jobjPicInfo["width"].ToSafeString());
+                        i.Height = int.Parse(jobjPicInfo["height"].ToSafeString());
+                        pageCount = int.Parse(jobjPicInfo["pageCount"].ToSafeString());
                     }
                     catch { }
 
-                    jobj = JObject.Parse(jobj["urls"].ToSafeString());
+                    jobj = JObject.Parse(jobjPicInfo["urls"].ToSafeString());
                     Regex rex = new Regex(@"(?<=.*)p\d+(?=[^/]*[^\._]*$)");
                     i.PreviewUrl = rex.Replace(jobj["regular"].ToSafeString(), "p" + Pcount);
                     i.JpegUrl = rex.Replace(jobj["small"].ToSafeString(), "p" + Pcount);
@@ -771,38 +806,46 @@ namespace SitePack
                             string mangaPart = dimension.Substring(index, dimension.IndexOf('P') - index);
                             mangaCount = int.Parse(mangaPart);
                         }
-                        if (srcType == PixivSrcType.Pid)
+                        //if (srcType == PixivSrcType.Pid)
+                        //{
+                        //    try
+                        //    {
+                        //        page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Pcount, p, shc);
+                        //        ds.LoadHtml(page);
+                        //        i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
+                        //    }
+                        //    catch { }
+                        //}
+                        //else
+                        //{
+                        i.Dimension = "Manga " + mangaCount + "P";
+                        //+++++191120json 解析+++++
+                        page = Sweb.Get($@"{SiteUrl}/ajax/illust/{img.Id}/pages", p, shc);
+                        JObject jobj = JObject.Parse(page);
+                        JArray jArray = (JArray)(jobj["body"]);
+                        for (int j = 0; j < mangaCount; j++)
                         {
+                            //保存漫画时优先下载原图 找不到原图则下jpg
                             try
                             {
-                                page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + Pcount, p, shc);
-                                ds.LoadHtml(page);
-                                i.OriginalUrl = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
+                                //+++++旧方法+++++
+                                //page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, shc);
+                                //ds.LoadHtml(page);
+                                //oriul = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
+
+                                //+++++191120json 解析+++++
+                                oriul = jArray[j]["urls"]["original"].ToSafeString();
+                                img.OrignalUrlList.Add(oriul);
+                                if (j == 0)
+                                    img.OriginalUrl = oriul;
                             }
-                            catch { }
-                        }
-                        else
-                        {
-                            i.Dimension = "Manga " + mangaCount + "P";
-                            for (int j = 0; j < mangaCount; j++)
+                            catch
                             {
-                                //保存漫画时优先下载原图 找不到原图则下jpg
-                                try
-                                {
-                                    page = Sweb.Get(i.DetailUrl.Replace("medium", "manga_big") + "&page=" + j, p, shc);
-                                    ds.LoadHtml(page);
-                                    oriul = ds.DocumentNode.SelectSingleNode("/html/body/img").Attributes["src"].Value;
-                                    img.OrignalUrlList.Add(oriul);
-                                    if (j == 0)
-                                        img.OriginalUrl = oriul;
-                                }
-                                catch
-                                {
-                                    //oriUrl = "http://img" + imgsvr + ".pixiv.net/img/" + items[6].Split('/')[4] + "/" + id + "_p0." + ext;
-                                    img.OrignalUrlList.Add(i.OriginalUrl.Replace("_p0", "_p" + j));
-                                }
+                                //oriUrl = "http://img" + imgsvr + ".pixiv.net/img/" + items[6].Split('/')[4] + "/" + id + "_p0." + ext;
+                                img.OrignalUrlList.Add(i.OriginalUrl.Replace("_p0", "_p" + j));
                             }
                         }
+                        //}
                     }
                     else if (i.OriginalUrl.Contains("ugoira"))//动图 ugoira
                     {
