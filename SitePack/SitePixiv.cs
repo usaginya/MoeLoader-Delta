@@ -228,12 +228,13 @@ namespace SitePack
                     throw new Exception("请输入图片id");
                 }
             }
-            else
+            else if(srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
             {
                 if (keyWord.Length > 0)
                 {
-                    //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2
-                    url = $"{SiteUrl}/search.php?s_mode=s_tag{(srcType == PixivSrcType.TagFull ? "_full" : "")}&word={keyWord}&order=date_d&p={page}";
+                    //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2 //旧版
+                    //https://www.pixiv.net/ajax/search/artworks/hatsune?p=2&word=hatsune
+                    url = $"{SiteUrl}/ajax/search/artworks/{keyWord}?word={keyWord}&p={page}";  //默认按最新排序
                 }
                 else
                 {
@@ -300,12 +301,29 @@ namespace SitePack
             {
                 if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                 {
-                    tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
-                    //nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
-                    if (tagNode == null)
+                    //-----191121 tag解析方法用不上了------
+                    //tagNode = doc.DocumentNode.SelectSingleNode("//input[@id='js-mount-point-search-result-list']");
+                    ////nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[2]/div[1]/section[1]/ul").SelectNodes("li");
+                    //if (tagNode == null)
+                    //{
+                    //    nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[1]/div/ul").SelectNodes("li");
+                    //}
+
+                    string id, SampleUrl, detailUrl;
+                    detailUrl = id = SampleUrl = string.Empty;
+
+                    //Root->body->illustManga->data->illustId
+                    JObject jobj = JObject.Parse(pageString);
+                    JArray jArray = (JArray)(jobj["body"]["illustManga"]["data"]);
+                    foreach(JObject jobjPicInfo in jArray)
                     {
-                        nodes = doc.DocumentNode.SelectSingleNode("//div[@id='wrapper']/div[1]/div/ul").SelectNodes("li");
+                        id = jobjPicInfo["illustId"].ToSafeString();
+                        SampleUrl = jobjPicInfo["url"].ToSafeString();
+                        detailUrl = SiteUrl + "/artworks/" + id;
+                        Img img = GenerateImg(detailUrl, SampleUrl, id);
+                        if (img != null) imgs.Add(img);
                     }
+                    return imgs;
                 }
                 else if (srcType == PixivSrcType.Author)
                 {
@@ -474,8 +492,9 @@ namespace SitePack
                     {
 
                         int mangaCount = 1;
-                        string id, SampleUrl;
-                        id = SampleUrl = string.Empty;
+                        string id, SampleUrl, detailUrl;
+                        detailUrl = id = SampleUrl = string.Empty;
+
                         //if (pageString.Contains("globalInitData"))
                         //{
                         //    -----旧版 191120放弃此解析方法---- -
@@ -515,7 +534,7 @@ namespace SitePack
                         
                         SampleUrl = jobjUrl["regular"].ToSafeString();
 
-                        string detailUrl = SiteUrl + "/artworks/" + id;
+                        detailUrl = SiteUrl + "/artworks/" + id;
 
                         try
                         {
@@ -592,30 +611,32 @@ namespace SitePack
                     }
                 }
             }
-            else if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
-            {//Tag search js-mount-point-search-related-tags Json
-                string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
-                object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
-                foreach (object o in array)
-                {
-                    Dictionary<string, object> obj = o as Dictionary<string, object>;
-                    string
-                        detailUrl = "",
-                        SampleUrl = "",
-                        id = "";
-                    if (obj["illustId"] != null)
-                    {
-                        id = obj["illustId"].ToString();
-                        detailUrl = SiteUrl + "/artworks/" + id;
-                    }
-                    if (obj["url"] != null)
-                    {
-                        SampleUrl = obj["url"].ToString();
-                    }
-                    Img img = GenerateImg(detailUrl, SampleUrl, id);
-                    if (img != null) imgs.Add(img);
-                }
-            }
+            //-----191121 tag解析方法用不上了------
+            //else if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            //{
+            //    //Tag search js - mount - point - search - related - tags Json
+            //    string jsonData = tagNode.Attributes["data-items"].Value.Replace("&quot;", "\"");
+            //    object[] array = (new JavaScriptSerializer()).DeserializeObject(jsonData) as object[];
+            //    foreach (object o in array)
+            //    {
+            //        Dictionary<string, object> obj = o as Dictionary<string, object>;
+            //        string
+            //            detailUrl = "",
+            //            SampleUrl = "",
+            //            id = "";
+            //        if (obj["illustId"] != null)
+            //        {
+            //            id = obj["illustId"].ToString();
+            //            detailUrl = SiteUrl + "/artworks/" + id;
+            //        }
+            //        if (obj["url"] != null)
+            //        {
+            //            SampleUrl = obj["url"].ToString();
+            //        }
+            //        Img img = GenerateImg(detailUrl, SampleUrl, id);
+            //        if (img != null) imgs.Add(img);
+            //    }
+            //}
 
             return imgs;
         }
