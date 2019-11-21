@@ -2,7 +2,7 @@
  * version 1.91
  * by YIU
  * Create               20170106
- * Last Change     20190824
+ * Last Change     20191009
  */
 
 using System;
@@ -40,7 +40,7 @@ namespace MoeLoaderDelta
         public CookieContainer CookieContainer
         {
             get => m_Cookie ?? new CookieContainer();
-            set => m_Cookie = value;
+            set => m_Cookie = value ?? new CookieContainer();
         }
 
         public SessionClient()
@@ -103,8 +103,10 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, string UA)
         {
-            SessionHeadersCollection shc = new SessionHeadersCollection();
-            shc.UserAgent = UA;
+            SessionHeadersCollection shc = new SessionHeadersCollection
+            {
+                UserAgent = UA
+            };
             return Get(url, proxy, pageEncoding, shc);
         }
 
@@ -120,14 +122,20 @@ namespace MoeLoaderDelta
         {
             string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            HttpWebResponse reponse = null;
+            HttpWebResponse response = null;
             try
             {
                 SetHeader(request, url, proxy, shc);
 
-                reponse = (HttpWebResponse)request.GetResponse();
-                m_Cookie = request.CookieContainer;
-                Stream rspStream = reponse.GetResponseStream();
+                response = (HttpWebResponse)request.GetResponse();
+                //更新Cookie
+                m_Cookie = request.CookieContainer ?? m_Cookie;
+                string sc = response.Headers["Set-Cookie"];
+                if (!string.IsNullOrWhiteSpace(sc))
+                {
+                    m_Cookie.Add(CookiesHelper.GetCookiesByHeader(sc));
+                }
+                Stream rspStream = response.GetResponseStream();
                 StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
                 ret = sr.ReadToEnd();
                 sr.Close();
@@ -139,9 +147,9 @@ namespace MoeLoaderDelta
             }
             finally
             {
-                if (reponse != null)
+                if (response != null)
                 {
-                    reponse.Close();
+                    response.Close();
                 }
                 if (request != null)
                 {
@@ -197,10 +205,12 @@ namespace MoeLoaderDelta
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, string referer)
         {
-            SessionHeadersCollection shc = new SessionHeadersCollection();
-            shc.Referer = referer;
-            shc.Timeout = 20000;
-            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+            SessionHeadersCollection shc = new SessionHeadersCollection
+            {
+                Referer = referer,
+                Timeout = 20000,
+                ContentType = SessionHeadersValue.ContentTypeAuto
+            };
             return GetWebResponse(url, proxy, shc.Timeout, shc);
         }
 
@@ -252,8 +262,10 @@ namespace MoeLoaderDelta
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, string UA)
         {
             WebHeaderCollection whc = null;
-            SessionHeadersCollection shc = new SessionHeadersCollection();
-            shc.UserAgent = UA;
+            SessionHeadersCollection shc = new SessionHeadersCollection
+            {
+                UserAgent = UA
+            };
             return Post(url, postData, proxy, pageEncoding, shc, ref whc);
         }
 
@@ -298,7 +310,13 @@ namespace MoeLoaderDelta
                 requestStream.Close();
 
                 response = (HttpWebResponse)request.GetResponse();
-                m_Cookie = request.CookieContainer;//访问后更新Cookie
+                //更新Cookie
+                m_Cookie = request.CookieContainer ?? m_Cookie;
+                string sc = response.Headers["Set-Cookie"];
+                if (!string.IsNullOrWhiteSpace(sc))
+                {
+                    m_Cookie.Add(CookiesHelper.GetCookiesByHeader(sc));
+                }
                 responeHeaders = request.Headers;
                 Stream responseStream = response.GetResponseStream();
                 string resData = string.Empty;
@@ -511,7 +529,7 @@ namespace MoeLoaderDelta
                         foreach (Cookie c1 in colCookies) lstCookies.Add(c1);
                 }
 
-                string ret = "", uri = "";
+                string ret = string.Empty, uri = string.Empty;
                 switch (mode)
                 {
                     default:
@@ -520,11 +538,11 @@ namespace MoeLoaderDelta
                             if (uri != cookie.Domain)
                             {
                                 uri = cookie.Domain;
-                                ret += string.IsNullOrWhiteSpace(ret) ? "" : "$";
-                                ret += uri + ";";
+                                ret += string.IsNullOrWhiteSpace(ret) ? string.Empty : "$";
+                                ret += $"{uri};";
                             }
 
-                            ret += cookie.Name + "=" + cookie.Value + ";";
+                            ret += $"{cookie.Name}={cookie.Value};";
 
                         }
                         break;

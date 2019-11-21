@@ -8,7 +8,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 20190629
+    /// Last 191007
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -97,7 +97,7 @@ namespace SitePack
         private void SetHeaders(BooruProcessor.SourceType srcType)
         {
             shc.Referer = referer;
-            shc.Timeout = 12000;
+            shc.Timeout = 27000;
             shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
             shc.AutomaticDecompression = System.Net.DecompressionMethods.GZip;
 

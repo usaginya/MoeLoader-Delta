@@ -20,10 +20,10 @@ namespace SitePack
         private static string cookie = string.Empty, nowUser = null;
         private static bool startLogin, IsLoginSite;
 
-        public override string SiteUrl => "https://atfbooru.ninja";
+        public override string SiteUrl => "https://booru.allthefallen.moe";
         public override string SiteName => "atfbooru.ninja";
         public override string ShortName => "atfbooru";
-        public override string LoginURL => "https://atfbooru.ninja/session/new";
+        public override string LoginURL => "https://booru.allthefallen.moe/session/new";
         public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser => nowUser ?? base.LoginUser;
 

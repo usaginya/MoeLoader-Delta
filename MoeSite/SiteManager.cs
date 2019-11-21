@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 
 namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20190918
+    /// Last 20191006
     /// </summary>
     public class SiteManager
     {
@@ -202,5 +204,67 @@ namespace MoeLoaderDelta
         {
             EchoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
         }
+
+        #region 站点配置文件处理方法
+        /// <summary>
+        /// 读INI配置文件 API
+        /// </summary>
+        /// <param name="section">节</param>
+        /// <param name="key">项</param>
+        /// <param name="def">缺省值</param>
+        /// <param name="retval">lpReturnedString取得的内容</param>
+        /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
+        /// <param name="filePath">配置文件路径</param>
+        /// <returns></returns>
+        [DllImport("kernel32")]
+        public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
+
+        /// <summary>
+        /// 写INI配置文件 API
+        /// </summary>
+        /// <param name="section">节</param>
+        /// <param name="key">项</param>
+        /// <param name="val">值</param>
+        /// <param name="filepath">配置文件路径</param>
+        /// <returns></returns>
+        [DllImport("kernel32")]
+        public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
+
+        /// <summary>
+        /// 读INI配置文件
+        /// </summary>
+        /// <param name="section">节</param>
+        /// <param name="key">项</param>
+        /// <param name="filePath">配置文件路径</param>
+        /// <param name="def">缺省值</param>
+        /// <returns></returns>
+        public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
+        {
+            StringBuilder sb = new StringBuilder();
+            GetPrivateProfileString(section, key, string.Empty, sb, 255, filePath);
+            return sb.ToString();
+        }
+        #endregion
+
     }
+
+    /// <summary>
+    /// 站点扩展设置类
+    /// </summary>
+    public class SiteExtendedSetting
+    {
+        /// <summary>
+        /// 在菜单中显示的标题
+        /// </summary>
+        public string Title { get; set; } = "扩展";
+        /// <summary>
+        /// 是否是启用的图标
+        /// </summary>
+        public bool Enable { get; set; } = false;
+        /// <summary>
+        /// 点击菜单时执行的委托方法
+        /// </summary>
+        public Delegate SettingAction { get; set; }
+    }
+
 }

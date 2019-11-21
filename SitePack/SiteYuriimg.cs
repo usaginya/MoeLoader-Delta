@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using MoeLoaderDelta;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
-    /// Last change 180417
+    /// Last change 191109
     /// </summary>
     class SiteYuriimg : AbstractImageSite
     {
@@ -72,22 +72,21 @@ namespace SitePack
             {
                 HtmlNode imgNode = imageItem.SelectSingleNode("./div[1]/img");
                 string tags = imgNode.Attributes["alt"].Value;
-                Img item = new Img()
+                Img img = new Img()
                 {
                     Height = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-height"].Value),
                     Width = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-width"].Value),
-                    Author = imageItem.SelectSingleNode("//small/a").InnerText,
+                    Author = imageItem.SelectSingleNode(".//div[@class='artist']/a[2]").InnerText,
                     IsExplicit = false,
                     Tags = tags,
                     Desc = tags,
-                    SampleUrl = imgNode.Attributes["data-original"].Value.Replace("!single","!320px"),
+                    SampleUrl = imgNode.Attributes["data-original"].Value.Replace("!single", "!320px"),
                     //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
                     Id = StringToInt(imgNode.Attributes["id"].Value),
                     DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,
                     Score = Convert.ToInt32(imageItem.SelectSingleNode(".//span[@class='num']").InnerText)
                 };
-
-                item.DownloadDetail = (i, p) =>
+                img.DownloadDetail = (i, p) =>
                 {
                     string html = Sweb.Get(i.DetailUrl, proxy, shc);
 
@@ -119,7 +118,7 @@ namespace SitePack
                     }
                     i.JpegUrl = i.PreviewUrl.Length > 0 ? i.PreviewUrl : i.OriginalUrl;
                 };
-                list.Add(item);
+                list.Add(img);
             }
 
             return list;
@@ -156,6 +155,13 @@ namespace SitePack
                 try
                 {
                     string loginUrl = "http://yuriimg.com/account/login";
+
+
+                    string sg = Sweb.Get(loginUrl, proxy, shc);
+                    //重新访问修正cookie
+                    if (sg.Contains("cookie.Domain")) { Login(proxy); return; }
+                    //检查不能登录状态
+                    if (sg.Contains(">:(<")) { cookie = "otome_"; return; }
 
                     /*
                      * 开始边界符

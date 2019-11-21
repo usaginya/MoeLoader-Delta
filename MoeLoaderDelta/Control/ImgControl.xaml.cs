@@ -13,7 +13,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 190209
+    /// Last change 191109
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -30,6 +30,8 @@ namespace MoeLoaderDelta
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private HttpWebRequest req;
+        private WebResponse res;
+        private System.IO.Stream st;
 
         /// <summary>
         /// 构造函数
@@ -148,6 +150,10 @@ namespace MoeLoaderDelta
             {
                 try
                 {
+                    if (req != null) { req.Abort(); }
+                    if (res != null) { res.Close(); }
+                    if (st != null) { st.Dispose(); }
+
                     req = Sweb.CreateWebRequest(Image.SampleUrl, MainWindow.WebProxy, shc);
                     req.Proxy = MainWindow.WebProxy;
 
@@ -207,8 +213,8 @@ namespace MoeLoaderDelta
         {
             try
             {
-                WebResponse res = ((HttpWebRequest)(req.AsyncState)).EndGetResponse(req);
-                System.IO.Stream str = res.GetResponseStream();
+                res = ((HttpWebRequest)req.AsyncState).EndGetResponse(req);
+                st = res.GetResponseStream();
 
                 Dispatcher.BeginInvoke(new VoidDel(delegate ()
                 {
@@ -216,10 +222,11 @@ namespace MoeLoaderDelta
 
                     //bmpFrame.DownloadCompleted += new EventHandler(bmpFrame_DownloadCompleted);
                     //preview.Source = bmpFrame;
-                    preview.Source = BitmapFrame.Create(str, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
+                    preview.Source = BitmapFrame.Create(st, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
                     canRetry = false;
                 }));
             }
+            catch (WebException) { }
             catch (Exception ex)
             {
                 Program.Log(ex, "Download sample failed");
@@ -287,8 +294,9 @@ namespace MoeLoaderDelta
         /// </summary>
         public void StopLoadImg()
         {
-            if (req != null)
-                req.Abort();
+
+            if (req != null) { req.Abort(); }
+            if (res != null) { res.Close(); }
             preview.Source = new BitmapImage(new Uri("/Images/pic.png", UriKind.Relative));
 
             canRetry = true;
