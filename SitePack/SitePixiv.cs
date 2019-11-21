@@ -228,18 +228,21 @@ namespace SitePack
                     throw new Exception("请输入图片id");
                 }
             }
-            else if(srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
+            else
             {
-                if (keyWord.Length > 0)
+                if (srcType == PixivSrcType.Tag || srcType == PixivSrcType.TagFull)
                 {
-                    //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2 //旧版
-                    //https://www.pixiv.net/ajax/search/artworks/hatsune?p=2&word=hatsune
-                    url = $"{SiteUrl}/ajax/search/artworks/{keyWord}?word={keyWord}&p={page}";  //默认按最新排序
-                }
-                else
-                {
-                    //http://www.pixiv.net/new_illust.php?p=2
-                    url = $"{SiteUrl}/new_illust.php?p={page}";
+                    if (keyWord.Length > 0)
+                    {
+                        //http://www.pixiv.net/search.php?s_mode=s_tag&word=hatsune&order=date_d&p=2 //旧版
+                        //https://www.pixiv.net/ajax/search/artworks/hatsune?p=2&word=hatsune
+                        url = $"{SiteUrl}/ajax/search/artworks/{keyWord}?word={keyWord}&p={page}";  //默认按最新排序
+                    }
+                    else
+                    {
+                        //http://www.pixiv.net/new_illust.php?p=2
+                        url = $"{SiteUrl}/new_illust.php?p={page}";
+                    }
                 }
 
                 memberId = 0;
