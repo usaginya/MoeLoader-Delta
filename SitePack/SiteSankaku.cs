@@ -67,7 +67,7 @@ namespace SitePack
             //Fix date:
             try
             {
-                Regex reg = new Regex(@"date:\d{4}(?:-(?:0?[1-9]|1[0-2])+)?(?:-(?:0?[1-9]|[12][0-9]|3[01])+)?");
+                Regex reg = new Regex(@"date%3A\d{4}(?:-(?:0?[1-9]|1[0-2])+)?(?:-(?:0?[1-9]|[12][0-9]|3[01])+)?", RegexOptions.IgnoreCase);
                 MatchCollection mc = reg.Matches(keyWord);
                 int mcs = mc.Count;
 
