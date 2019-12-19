@@ -92,7 +92,7 @@ namespace MoeLoaderDelta
         /// <param name="word"></param>
         public void PreFetchPage(int page, int count, string word, ImageSite site)
         {
-            (new Thread(new ThreadStart(() =>
+            new Thread(new ThreadStart(() =>
             {
                 try
                 {
@@ -148,7 +148,7 @@ namespace MoeLoaderDelta
                 {
                     //Console.WriteLine("useless");
                 }
-            }))).Start();
+            })).Start();
         }
 
         /// <summary>

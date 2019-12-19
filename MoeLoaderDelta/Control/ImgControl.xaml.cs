@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -172,7 +173,7 @@ namespace MoeLoaderDelta
                 canRetry = true;
                 isRetrievingDetail = true;
                 chk.Text = "信息加载中...";
-                System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback((o) =>
+                ThreadPool.QueueUserWorkItem(new WaitCallback((o) =>
                 {
                     try
                     {

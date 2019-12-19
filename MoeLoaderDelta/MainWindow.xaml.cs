@@ -1052,6 +1052,8 @@ namespace MoeLoaderDelta
             if (SiteManager.Instance.Sites.Count < 1)
                 return;
 
+            Thread thread_getting = null;
+
             //获取
             if (!isGetting)
             {
@@ -1106,8 +1108,7 @@ namespace MoeLoaderDelta
                 //(new System.Threading.Thread(new System.Threading.ThreadStart(nowSession.ProcessSingleLink))).Start();
                 currentSession = new SessionState();
 
-
-                (new Thread(new ParameterizedThreadStart((o) =>
+                thread_getting = new Thread(new ParameterizedThreadStart((o) =>
                 {
                     List<Img> imgList = null;
                     try
@@ -1139,12 +1140,13 @@ namespace MoeLoaderDelta
                     {
                         Dispatcher.Invoke(new UIdelegate(LoadComplete), imgList);
                     }
-                }))).Start(currentSession);
-
+                }));
+                thread_getting.Start(currentSession);
                 GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
+                try { thread_getting.Abort(); } catch { }
                 if (statusText.Text == IMGLOADING)
                 {
                     for (int i = 0; i < imgs.Count; i++)

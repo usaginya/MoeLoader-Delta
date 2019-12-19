@@ -17,7 +17,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 191007
+    /// Last change 191121
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
