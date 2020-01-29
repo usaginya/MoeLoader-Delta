@@ -271,30 +271,42 @@ namespace MoeLoaderDelta
                     DownloadItem dlitem = DownloadItems[DownloadItems.Count - NumLeft];
 
                     bool fileExists = false;
-                    string url = dlitem.Url;
-                    string file = dlitem.FileName.Replace("\r\n", "");
-                    string path = GetLocalPath(dlitem);
+                    string url = dlitem.Url,
+                                file = dlitem.FileName.Replace("\r\n", string.Empty),
+                                path = GetLocalPath(dlitem),
+                                errTip = "路径太长";
+
 
                     //检查目录长度
-                    if (path.Length > 248)
+                    if (path.Length > 247)
                     {
                         DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
-                        DownloadItems[DownloadItems.Count - NumLeft].Size = "路径太长";
-                        WriteErrText(url + ": 路径太长");
+                        DownloadItems[DownloadItems.Count - NumLeft].Size = errTip;
+                        WriteErrText($"{url}: {errTip}");
                         j--;
                     }
                     else
                     {
                         dlitem.LocalFileName = ReplaceInvalidPathChars(file, path, 0);
-                        file = dlitem.LocalName = path + dlitem.LocalFileName;
-
-                        //检查全路径长度
-                        if (file.Length > 258)
+                        if (dlitem.LocalFileName.IsNullOrEmptyOrWhiteSpace())
                         {
                             DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
-                            DownloadItems[DownloadItems.Count - NumLeft].Size = "路径太长";
-                            WriteErrText(url + ": 路径太长");
+                            DownloadItems[DownloadItems.Count - NumLeft].Size = $"{errTip}或文件名格式错误";
+                            WriteErrText($"{url}: {errTip}或文件名格式错误");
                             j--;
+                        }
+                        else
+                        {
+                            file = dlitem.LocalName = path + dlitem.LocalFileName;
+
+                            //检查全路径长度
+                            if (file.Length > 257)
+                            {
+                                DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
+                                DownloadItems[DownloadItems.Count - NumLeft].Size = errTip;
+                                WriteErrText($"{url}: {errTip}");
+                                j--;
+                            }
                         }
                     }
 
@@ -715,12 +727,28 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string ReplaceInvalidPathChars(string file, string path, int any)
         {
-            if (path.Length + file.Length > 258 && file.Contains("<!<"))
+            if (path.Length + file.Length > 257 && file.Contains("<!<"))
             {
                 string last = file.Substring(file.LastIndexOf("<!<"));
-                file = file.Substring(0, 258 - last.Length - path.Length - last.Length) + last;
+                int endl = 257 - path.Length - last.Length;
+                file = file.Substring(0, endl > 0 ? endl : 0);
+
+                if (file.Length > 0)
+                {
+                    endl = file.LastIndexOf(' ');
+                    file = file.Substring(0, endl > 0 ? endl : file.Length);
+                    file += last;
+                }
+                else if (last.Length + endl > 0)
+                {
+                    file += last.Substring(0, last.Length + endl);
+                }
+                else
+                {
+                    file = string.Empty;
+                }
             }
-            file = file.Replace("<!<", "");
+            file = file.Replace("<!<", string.Empty);
             return ReplaceInvalidPathChars(file);
         }
 
@@ -1066,29 +1094,78 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
+        /// 清理下载列表任务
+        /// </summary>
+        /// <param name="cm">清除类型 Success完成的 Failed失败的 Cancel已取消和已存在</param>
+        private void ClearDlItems(DLStatus cm)
+        {
+            try
+            {
+                int s = DownloadItems.Count,
+                      i = 0;
+                while (i < s)
+                {
+                    DownloadItem item = DownloadItems[i];
+
+                    switch (cm)
+                    {
+                        case DLStatus.Success:
+                            if (item.StatusE == DLStatus.Success)
+                            {
+                                s--;
+                                DownloadItems.RemoveAt(i);
+                                downloadItemsDic.Remove(item.Url);
+                            }
+                            else
+                            {
+                                i++;
+                            }
+                            break;
+                        case DLStatus.Failed:
+                            if (item.StatusE == DLStatus.Failed)
+                            {
+                                s--;
+                                DownloadItems.RemoveAt(i);
+                                downloadItemsDic.Remove(item.Url);
+                                NumFail = NumFail > 0 ? --NumFail : 0;
+                            }
+                            else
+                            {
+                                i++;
+                            }
+                            break;
+                        case DLStatus.Cancel:
+                            if (item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
+                            {
+                                s--;
+                                DownloadItems.RemoveAt(i);
+                                downloadItemsDic.Remove(item.Url);
+                            }
+                            else
+                            {
+                                i++;
+                            }
+                            break;
+                    }
+                }
+
+                if (cm == DLStatus.Success)
+                {
+                    NumSaved = 0;
+                }
+                RefreshStatus();
+            }
+            catch { }
+        }
+
+        /// <summary>
         /// 清空已成功任务
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void itmClearDled_Click(object sender, RoutedEventArgs e)
         {
-            int i = 0;
-            while (true)
-            {
-                if (i >= DownloadItems.Count) break;
-                DownloadItem item = DownloadItems[i];
-                if (item.StatusE == DLStatus.Success)
-                {
-                    DownloadItems.RemoveAt(i);
-                    downloadItemsDic.Remove(item.Url);
-                }
-                else
-                {
-                    i++;
-                }
-            }
-            NumSaved = 0;
-            RefreshStatus();
+            ClearDlItems(DLStatus.Success);
         }
 
         /// <summary>
@@ -1287,23 +1364,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void itmClearDled_Click_1(object sender, RoutedEventArgs e)
         {
-            int i = 0;
-            while (true)
-            {
-                if (i >= DownloadItems.Count) break;
-                DownloadItem item = DownloadItems[i];
-                if (item.StatusE == DLStatus.Failed)
-                {
-                    DownloadItems.RemoveAt(i);
-                    downloadItemsDic.Remove(item.Url);
-                    NumFail = NumFail > 0 ? --NumFail : 0;
-                }
-                else
-                {
-                    i++;
-                }
-            }
-            RefreshStatus();
+            ClearDlItems(DLStatus.Failed);
         }
 
         /// <summary>
@@ -1311,23 +1372,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void itmClearDled_Click_2(object sender, RoutedEventArgs e)
         {
-            int i = 0;
-            while (true)
-            {
-                if (i >= DownloadItems.Count) break;
-                DownloadItem item = DownloadItems[i];
-
-                if (item.StatusE == DLStatus.Cancel || item.StatusE == DLStatus.IsHave)
-                {
-                    DownloadItems.RemoveAt(i);
-                    downloadItemsDic.Remove(item.Url);
-                }
-                else
-                {
-                    i++;
-                }
-            }
-            RefreshStatus();
+            ClearDlItems(DLStatus.Cancel);
         }
 
         /// <summary>

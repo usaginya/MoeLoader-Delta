@@ -17,7 +17,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 191121
+    /// Last change 200130
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -318,7 +318,7 @@ namespace SitePack
                     //Root->body->illustManga->data->illustId
                     JObject jobj = JObject.Parse(pageString);
                     JArray jArray = (JArray)(jobj["body"]["illustManga"]["data"]);
-                    foreach(JObject jobjPicInfo in jArray)
+                    foreach (JObject jobjPicInfo in jArray)
                     {
                         id = jobjPicInfo["illustId"].ToSafeString();
                         SampleUrl = jobjPicInfo["url"].ToSafeString();
@@ -534,7 +534,7 @@ namespace SitePack
                         id = jobjPicInfo["illustId"].ToSafeString();
 
                         JObject jobjUrl = JObject.Parse(jobjPicInfo["urls"].ToSafeString());
-                        
+
                         SampleUrl = jobjUrl["regular"].ToSafeString();
 
                         detailUrl = SiteUrl + "/artworks/" + id;
@@ -542,7 +542,7 @@ namespace SitePack
                         try
                         {
                             //判断是否为动图或者多图
-                            mangaCount = int.Parse(jobjPicInfo["pageCount"].ToSafeString()); 
+                            mangaCount = int.Parse(jobjPicInfo["pageCount"].ToSafeString());
                         }
                         catch { }
 
@@ -804,9 +804,9 @@ namespace SitePack
 
                     jobj = JObject.Parse(jobjPicInfo["urls"].ToSafeString());
                     Regex rex = new Regex(@"(?<=.*)p\d+(?=[^/]*[^\._]*$)");
-                    i.PreviewUrl = rex.Replace(jobj["regular"].ToSafeString(), "p" + Pcount);
-                    i.JpegUrl = rex.Replace(jobj["small"].ToSafeString(), "p" + Pcount);
-                    i.OriginalUrl = rex.Replace(jobj["original"].ToSafeString(), "p" + Pcount);
+                    i.PreviewUrl = ThirdPrtyUrl(rex.Replace(jobj["regular"].ToSafeString(), "p" + Pcount));
+                    i.JpegUrl = ThirdPrtyUrl(rex.Replace(jobj["small"].ToSafeString(), "p" + Pcount));
+                    i.OriginalUrl = ThirdPrtyUrl(rex.Replace(jobj["original"].ToSafeString(), "p" + Pcount));
                 }
                 //----------------------------
 
@@ -818,7 +818,7 @@ namespace SitePack
                         //i.JpegUrl = i.OriginalUrl;
                         //manga list
                         //漫画 6P
-                        string oriul = "";
+                        string oriul = string.Empty;
                         int mangaCount = pageCount;
                         if (pageCount > 1)
                         {
@@ -859,14 +859,15 @@ namespace SitePack
 
                                 //+++++191120json 解析+++++
                                 oriul = jArray[j]["urls"]["original"].ToSafeString();
+                                oriul = ThirdPrtyUrl(oriul);
                                 img.OrignalUrlList.Add(oriul);
-                                if (j == 0)
+                                if (j < 1)
                                     img.OriginalUrl = oriul;
                             }
                             catch
                             {
-                                //oriUrl = "http://img" + imgsvr + ".pixiv.net/img/" + items[6].Split('/')[4] + "/" + id + "_p0." + ext;
-                                img.OrignalUrlList.Add(i.OriginalUrl.Replace("_p0", "_p" + j));
+                                oriul = ThirdPrtyUrl(i.OriginalUrl.Replace("_p0", $"_p{ j }"));
+                                img.OrignalUrlList.Add(oriul);
                             }
                         }
                         //}
@@ -893,8 +894,11 @@ namespace SitePack
 
                                 i.Dimension = "Ugoira " + mangaCount + "P";
                                 for (int j = 0; j < mangaCount; j++)
+                                {
                                     //Generate urls for each frame
-                                    i.OrignalUrlList.Add(i.OriginalUrl.Replace("_ugoira0.", "_ugoira" + j.ToString() + "."));
+                                    i.OriginalUrl = ThirdPrtyUrl(i.OriginalUrl.Replace("_ugoira0.", $"_ugoira{ j.ToString() }."));
+                                    i.OrignalUrlList.Add(i.OriginalUrl);
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -1052,7 +1056,7 @@ namespace SitePack
         {
             IsLoginSite = false;
 
-            bool result = SiteManager.LoginSite(this, ref cookie, "/logout", ref Sweb, ref shc);
+            bool result = SiteManager.LoginSite(this, ref cookie, ".loggedIn = t", ref Sweb, ref shc);
 
             if (result && !string.IsNullOrWhiteSpace(cookie))
             {
