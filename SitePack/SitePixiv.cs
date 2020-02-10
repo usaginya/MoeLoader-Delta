@@ -17,7 +17,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200130
+    /// Last change 200210
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -872,18 +872,19 @@ namespace SitePack
                         }
                         //}
                     }
-                    else if (i.OriginalUrl.Contains("ugoira"))//动图 ugoira
+                    else if (i.OriginalUrl.Contains("ugoira"))//动图 ugoira  以上面的漫画解析为蓝本修改而来
                     {
-                        //以上面的漫画解析为蓝本修改而来
+                        //为预防Pixiv在未来修改动图页面机制，若连接格式有变则直接抛出异常。
                         if (!i.OriginalUrl.Contains("_ugoira0."))
-                            //为预防Pixiv在未来修改动图页面机制，若连接格式有变则直接抛出异常。
+                        {
                             throw new ArgumentException();
+                        }
 
                         try
                         {
                             i.PixivUgoira = true;//标记动图类型
                             int mangaCount = pageCount;
-                            string ugoira_meta = Sweb.Get("https://www.pixiv.net/ajax/illust/" + i.Id + "/ugoira_meta", p, shc);
+                            string ugoira_meta = Sweb.Get($"{SiteUrl}/ajax/illust/{i.Id}/ugoira_meta", p, shc);
 
                             if (!string.IsNullOrWhiteSpace(ugoira_meta))
                             {
@@ -896,8 +897,9 @@ namespace SitePack
                                 for (int j = 0; j < mangaCount; j++)
                                 {
                                     //Generate urls for each frame
-                                    i.OriginalUrl = ThirdPrtyUrl(i.OriginalUrl.Replace("_ugoira0.", $"_ugoira{ j.ToString() }."));
-                                    i.OrignalUrlList.Add(i.OriginalUrl);
+                                    i.OrignalUrlList.Add(
+                                        ThirdPrtyUrl(i.OriginalUrl.Replace("_ugoira0.", $"_ugoira{j}."))
+                                        );
                                 }
                             }
                         }
