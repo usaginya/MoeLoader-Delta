@@ -1123,7 +1123,6 @@ namespace MoeLoaderDelta
                         //过滤图片列表
                         imgList = SiteManager.Instance.Sites[nowSelectedIndex].FilterImg(
                             imgList, MaskInt, MaskRes, LastViewed, MaskViewed, showExplicit, true);
-
                     }
                     catch (Exception ex)
                     {
@@ -1138,7 +1137,7 @@ namespace MoeLoaderDelta
                     }
                     if (!(o as SessionState).IsStop)
                     {
-                        Dispatcher.Invoke(new UIdelegate(LoadComplete), imgList);
+                        Dispatcher.BeginInvoke(new UIdelegate(LoadComplete), imgList);
                     }
                 }));
                 thread_getting.Start(currentSession);
