@@ -2,7 +2,7 @@
  * version 1.91
  * by YIU
  * Create               20170106
- * Last Change     20191009
+ * Last Change     20200517
  */
 
 using System;
@@ -133,7 +133,7 @@ namespace MoeLoaderDelta
                 string sc = response.Headers["Set-Cookie"];
                 if (!string.IsNullOrWhiteSpace(sc))
                 {
-                    m_Cookie.Add(CookiesHelper.GetCookiesByHeader(sc));
+                    m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
                 }
                 Stream rspStream = response.GetResponseStream();
                 StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
@@ -315,7 +315,7 @@ namespace MoeLoaderDelta
                 string sc = response.Headers["Set-Cookie"];
                 if (!string.IsNullOrWhiteSpace(sc))
                 {
-                    m_Cookie.Add(CookiesHelper.GetCookiesByHeader(sc));
+                    m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
                 }
                 responeHeaders = request.Headers;
                 Stream responseStream = response.GetResponseStream();

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 
 namespace MoeLoaderDelta
 {
@@ -189,5 +190,12 @@ namespace MoeLoaderDelta
         /// <param name="updateViewed">更新已浏览列表</param>
         /// <returns></returns>
         List<Img> FilterImg(List<Img> imgs, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, bool showExplicit, bool updateViewed);
+
+        /// <summary>
+        /// 登录站点方法
+        /// </summary>
+        /// <param name="proxy">代理</param>
+        /// <returns></returns>
+        bool LoginCall(IWebProxy proxy);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using HtmlAgilityPack;
-using Microsoft.VisualBasic;
 using MoeLoaderDelta;
 using Newtonsoft.Json.Linq;
 using System;
@@ -17,7 +16,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200210
+    /// Last change 200517
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -94,7 +93,7 @@ namespace SitePack
         public override string ShortName => "pixiv";
         public override string Referer => referer;
         public override string SubReferer => ShortName + ",pximg";
-        public override string LoginURL => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
+        public override string LoginURL => SiteManager.SiteLoginType.Cookie.ToSafeString();
         public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser => nowUser ?? base.LoginUser;
 
@@ -134,6 +133,7 @@ namespace SitePack
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
         private string referer = "https://www.pixiv.net/";
+        private string LoginUrl => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
         private static bool IsLoginSite;
         private const string pixivCat = "i.pixiv.cat";
         private const string extSettingOff = "0";
@@ -148,6 +148,10 @@ namespace SitePack
         public SitePixiv(PixivSrcType srcType, IWebProxy proxy)
         {
             this.srcType = srcType;
+            if (string.IsNullOrWhiteSpace(SiteConfig("Login", "Cookie")))
+            {
+                SiteConfig("Login", "Cookie", true, string.Empty);
+            }
             Task.Factory.StartNew(() => FirstLogin(proxy));
             CreateExtSetting();
         }
@@ -166,7 +170,7 @@ namespace SitePack
             enableThirdParty = !string.IsNullOrWhiteSpace(cfgValue) && cfgValue.Trim() != extSettingOff;
             ses = new SiteExtendedSetting()
             {
-                Title = "使用第三方服务获取图片",
+                Title = "使用pixiv.cat服务下载图片",
                 Enable = enableThirdParty,
                 SettingAction = new delegateExtSetting(ExtSetting_EnableThirdParty)
             };
@@ -182,7 +186,7 @@ namespace SitePack
             if (startLogin < 1)
             {
                 startLogin = 1;
-                CookieRestore();
+                CookieRestore(proxy);
                 Login(proxy);
                 startLogin = 2;
             }
@@ -937,11 +941,11 @@ namespace SitePack
         /// <summary>
         /// 还原Cookie
         /// </summary>
-        private void CookieRestore()
+        private void CookieRestore(IWebProxy proxy)
         {
             if (!string.IsNullOrWhiteSpace(cookie)) return;
 
-            if (!IELogin())
+            if (!CookieLogin(proxy))
             {
                 string ck = Sweb.GetURLCookies(SiteUrl);
                 cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"pixiv;{ck}";
@@ -966,7 +970,7 @@ namespace SitePack
 
                     if (IsLoginSite)
                     {
-                        if (!IELogin())
+                        if (!CookieLogin(proxy))
                         {
                             return Login(proxy); //重新自动登录
                         }
@@ -987,7 +991,7 @@ namespace SitePack
                         HtmlAgilityPack.HtmlDocument hdoc = new HtmlAgilityPack.HtmlDocument();
 
                         //请求1 获取登录参数post_key
-                        data = Sweb.Get(LoginURL, proxy, shc);
+                        data = Sweb.Get(LoginUrl, proxy, shc);
                         hdoc.LoadHtml(data);
                         post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
                         if (post_key.Length < 9)
@@ -1023,6 +1027,7 @@ namespace SitePack
                                     string errinfo = $"自动登录失败 {Regex.Unescape(data)}";
                                     errinfo = IsLoginSite ? errinfo : $"{errinfo}\r\n\r\n请使用右键菜单[ 登录站点 ]登录\r\n" +
                                         $"账号：{user[index]}\r\n密码：{pass[index]}\r\n或使用自己的账号登录\r\n\r\n点击 [确定] 复制内置账号";
+
                                     if (MessageBox.Show(errinfo, ShortName, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
                                     {
                                         Thread newThread = new Thread(() => Clipboard.SetText($"{user[index]} {pass[index]}"));
@@ -1052,25 +1057,85 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 从IE登录
+        /// 用于菜单调用登录
         /// </summary>
-        private bool IELogin()
+        public override bool LoginCall(IWebProxy proxy)
+        {
+            return CookieLogin(proxy, false, true);
+        }
+
+        /// <summary>
+        /// 用本地Cookie登录
+        /// </summary>
+        /// <param name="callBack">判断是否回调</param>
+        /// <param name="call">以调用方式登录</param>
+        private bool CookieLogin(IWebProxy proxy, bool callBack = false, bool call = false)
         {
             IsLoginSite = false;
 
-            bool result = SiteManager.LoginSite(this, ref cookie, ".loggedIn = t", ref Sweb, ref shc);
+            bool result = IsLoginSite;
+            string tmp_cookie = SiteConfig("Login", "Cookie"),
+                loggedFlags = ".loggedIn = t";
 
-            if (result && !string.IsNullOrWhiteSpace(cookie))
+            if (string.IsNullOrWhiteSpace(tmp_cookie) || call)
             {
-                nowUser = "你的账号";
-                cookie = $"pixiv;{cookie}";
+                if ((!callBack && startLogin > 1) || call)
+                {
+                    DialogResult mdr = MessageBox.Show("需要查看登录教程吗？", ShortName,
+                          MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                    if (mdr == DialogResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start("https://docs.qq.com/doc/DWWhUcHlzbE9aeXZE?pub=1");
+                        return IsLoginSite;
+                    }
+                    else if (mdr == DialogResult.Cancel) { return IsLoginSite; }
+
+                    System.Diagnostics.Process.Start(siteINI);
+                    System.Diagnostics.Process.Start(LoginUrl);
+
+                    if (MessageBox.Show("请把Pixiv站点登录后的Cookie复制\r\n"
+                        + "粘贴到打开的记事本中Cookie=后面\r\n"
+                        + "然后保存并关闭记事本，再点击确定按钮",
+                        ShortName, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                    {
+                        //登录后回调一次
+                        CookieLogin(proxy, true);
+                    }
+                }
+                return IsLoginSite;
             }
-            else if (string.IsNullOrWhiteSpace(cookie))
+
+            try
             {
-                nowUser = null;
-                result = IsLoginSite = false;
+                shc.Timeout = shc.Timeout * 2;
+                shc.Set("Cookie", tmp_cookie);
+
+
+                string pageString = Sweb.Get(SiteUrl, proxy, shc);
+                result = !string.IsNullOrWhiteSpace(pageString);
+
+                if (result)
+                {
+                    string[] LFlagsArray = loggedFlags.Split('|');
+                    foreach (string Flag in LFlagsArray)
+                    {
+                        result &= pageString.Contains(Flag);
+                    }
+                }
+                if (result)
+                {
+                    IsLoginSite = result;
+                    cookie = tmp_cookie;
+                    nowUser = "你的账号";
+                    cookie = $"pixiv;{cookie}";
+                }
+                else
+                {
+                    nowUser = null;
+                    result = IsLoginSite = false;
+                }
             }
-            else
+            catch
             {
                 SiteManager.EchoErrLog(SiteName, "用户登录失败 ", startLogin < 2);
             }
@@ -1084,10 +1149,7 @@ namespace SitePack
         private void ExtSetting_EnableThirdParty()
         {
             const int ExtSettingId = 0;
-            const string Prompt = "使用第三方pixiv.cat站点服务获取图片\r\n启用输入 1\r\n禁用输入 0";
-            string title = $"{ShortName} 扩展设置";
-            string isEnable = Interaction.InputBox(Prompt, title,
-                ExtendedSettings.Count > 0 ? (ExtendedSettings[ExtSettingId].Enable ? extSettingOn : extSettingOff) : string.Empty);
+            string isEnable = ExtendedSettings.Count > 0 ? (ExtendedSettings[ExtSettingId].Enable ? extSettingOff : extSettingOn) : extSettingOff;
 
             if (string.IsNullOrWhiteSpace(isEnable)) { return; }
             enableThirdParty = isEnable.Trim() != extSettingOff;
