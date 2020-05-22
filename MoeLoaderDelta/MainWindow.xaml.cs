@@ -1130,7 +1130,11 @@ namespace MoeLoaderDelta
                         {
                             Dispatcher.Invoke(new VoidDel(() =>
                             {
-                                MessageBox.Show(this, $"获取图片：{SearchWord}\r\n错误：{ex.Message}",
+                                MessageBox.Show(this, $"获取图片：{SearchWord} " 
+                                                    + $"站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}" 
+                                                    + $"当前页码：{realPage}"
+                                                    + $"每页数量：{realNum}"
+                                                    + $"\r\n错误：{ex.Message}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
                         }
