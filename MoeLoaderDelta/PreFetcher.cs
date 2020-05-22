@@ -109,11 +109,13 @@ namespace MoeLoaderDelta
                         return;
 
                     SessionClient sweb = new SessionClient();
-                    SessionHeadersCollection shc = new SessionHeadersCollection();
-                    shc.Accept = null;
-                    shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+                    SessionHeadersCollection shc = new SessionHeadersCollection
+                    {
+                        Accept = null,
+                        ContentType = SessionHeadersValue.ContentTypeAuto,
+                        Referer = site.Referer
+                    };
                     shc.Add("Accept-Ranges", "bytes");
-                    shc.Referer = site.Referer;
 
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);

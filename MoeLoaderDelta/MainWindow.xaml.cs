@@ -384,7 +384,7 @@ namespace MoeLoaderDelta
             MenuItem item = sender as MenuItem;
             int index = (int)item.DataContext;
 
-            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction );
+            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction);
             item.Icon = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].Enable ? ExtSiteIconOn : ExtSiteIconOff;
         }
 
@@ -1130,10 +1130,11 @@ namespace MoeLoaderDelta
                         {
                             Dispatcher.Invoke(new VoidDel(() =>
                             {
-                                MessageBox.Show(this, $"获取图片：{SearchWord}  " 
-                                                    + $"站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  " 
-                                                    + $"当前页码：{realPage}  "
+                                MessageBox.Show(this, $"获取图片：{SearchWord}  "
+                                                    + $"\r\n站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
+                                                    + $"\r\n当前页码：{realPage}  "
                                                     + $"每页数量：{realNum}  "
+                                                    + $"代理模式：{ProxyType}"
                                                     + $"\r\n错误：{ex.Message}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
