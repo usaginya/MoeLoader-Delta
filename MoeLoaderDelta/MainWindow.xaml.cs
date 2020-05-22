@@ -384,7 +384,7 @@ namespace MoeLoaderDelta
             MenuItem item = sender as MenuItem;
             int index = (int)item.DataContext;
 
-            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction);
+            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction );
             item.Icon = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].Enable ? ExtSiteIconOn : ExtSiteIconOff;
         }
 
@@ -1052,6 +1052,8 @@ namespace MoeLoaderDelta
             if (SiteManager.Instance.Sites.Count < 1)
                 return;
 
+            Thread thread_getting = null;
+
             //获取
             if (!isGetting)
             {
@@ -1106,8 +1108,7 @@ namespace MoeLoaderDelta
                 //(new System.Threading.Thread(new System.Threading.ThreadStart(nowSession.ProcessSingleLink))).Start();
                 currentSession = new SessionState();
 
-
-                (new Thread(new ParameterizedThreadStart((o) =>
+                thread_getting = new Thread(new ParameterizedThreadStart((o) =>
                 {
                     List<Img> imgList = null;
                     try
@@ -1122,7 +1123,6 @@ namespace MoeLoaderDelta
                         //过滤图片列表
                         imgList = SiteManager.Instance.Sites[nowSelectedIndex].FilterImg(
                             imgList, MaskInt, MaskRes, LastViewed, MaskViewed, showExplicit, true);
-
                     }
                     catch (Exception ex)
                     {
@@ -1130,21 +1130,26 @@ namespace MoeLoaderDelta
                         {
                             Dispatcher.Invoke(new VoidDel(() =>
                             {
-                                MessageBox.Show(this, $"获取图片：{SearchWord}\r\n错误：{ex.Message}",
+                                MessageBox.Show(this, $"获取图片：{SearchWord}  " 
+                                                    + $"站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  " 
+                                                    + $"当前页码：{realPage}  "
+                                                    + $"每页数量：{realNum}  "
+                                                    + $"\r\n错误：{ex.Message}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
                         }
                     }
                     if (!(o as SessionState).IsStop)
                     {
-                        Dispatcher.Invoke(new UIdelegate(LoadComplete), imgList);
+                        Dispatcher.BeginInvoke(new UIdelegate(LoadComplete), imgList);
                     }
-                }))).Start(currentSession);
-
+                }));
+                thread_getting.Start(currentSession);
                 GC.Collect(2, GCCollectionMode.Optimized);
             }
             else
             {
+                try { thread_getting.Abort(); } catch { }
                 if (statusText.Text == IMGLOADING)
                 {
                     for (int i = 0; i < imgs.Count; i++)
@@ -1800,7 +1805,8 @@ namespace MoeLoaderDelta
                 if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
                 {
                     int LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt;
-                    if (SiteManager.Instance.Sites[comboBoxIndex].LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
+                    string LoginURL = SiteManager.Instance.Sites[comboBoxIndex].LoginURL;
+                    if (LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
                     {
                         //输入账号
                         string inputTitle = $"填写 {SiteManager.Instance.Sites[comboBoxIndex].ShortName} 登录信息";
@@ -1822,6 +1828,10 @@ namespace MoeLoaderDelta
                         SiteManager.Instance.Sites[comboBoxIndex].LoginUser = siteuser;
                         SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
                         SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
+                    }
+                    else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
+                    {
+                        SiteManager.Instance.Sites[comboBoxIndex].LoginCall(WebProxy);
                     }
                     else
                     {

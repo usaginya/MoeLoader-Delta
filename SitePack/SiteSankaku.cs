@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
 namespace SitePack
@@ -62,6 +63,22 @@ namespace SitePack
             {
                 ua = "SCChannelApp/3.2 (Android; idol)";
             }
+
+            //Fix date:
+            try
+            {
+                Regex reg = new Regex(@"date%3A\d{4}(?:-(?:0?[1-9]|1[0-2])+)?(?:-(?:0?[1-9]|[12][0-9]|3[01])+)?", RegexOptions.IgnoreCase);
+                MatchCollection mc = reg.Matches(keyWord);
+                int mcs = mc.Count;
+
+                for (int i = 0; i < mcs; i++)
+                {
+                    string newdate = mc[i].Value;
+                    newdate = Regex.Replace(newdate, "-", ".");
+                    keyWord = Regex.Replace(keyWord, mc[i].Value, newdate);
+                }
+            }
+            catch { }
 
             Login(proxy);
             return booru?.GetPageString(page, count, keyWord, proxy);

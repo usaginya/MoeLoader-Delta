@@ -11,15 +11,16 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20191006
+    /// Last 20200517
     /// </summary>
     public class SiteManager
     {
         /// <summary>
         /// 站点登录类型 用于LoginURL
         /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
+        /// Cookie 用于P站之类的
         /// </summary>
-        public enum SiteLoginType { FillIn }
+        public enum SiteLoginType { FillIn, Cookie }
 
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
@@ -240,8 +241,8 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
         {
-            StringBuilder sb = new StringBuilder();
-            GetPrivateProfileString(section, key, string.Empty, sb, 255, filePath);
+            StringBuilder sb = new StringBuilder(32767);
+            GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
             return sb.ToString();
         }
         #endregion
