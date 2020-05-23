@@ -11,16 +11,16 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200517
+    /// Last 20200523
     /// </summary>
     public class SiteManager
     {
         /// <summary>
         /// 站点登录类型 用于LoginURL
         /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
-        /// Cookie 用于P站之类的
+        /// Custom 调用站点独立登录方法
         /// </summary>
-        public enum SiteLoginType { FillIn, Cookie }
+        public enum SiteLoginType { FillIn, Custom }
 
         private static List<ImageSite> sites = new List<ImageSite>();
         private static SiteManager instance;
@@ -97,7 +97,8 @@ namespace MoeLoaderDelta
         /// <param name="shc">站点内部SessionHeadersCollection</param>
         /// <param name="PageString">返回验证登录时的页面HTML</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
+        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags,
+            ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
         {
             string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
             bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
@@ -176,7 +177,8 @@ namespace MoeLoaderDelta
             }
             if (!NoShow)
             {
-                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //压缩记录
             long sourceLength = new FileInfo(logPath).Length;

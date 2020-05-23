@@ -40,7 +40,8 @@ namespace SitePack
                     "https://danbooru.donmai.us",
                     "https://danbooru.donmai.us/posts.json?page={0}&limit={1}&tags={2}",
                     "https://danbooru.donmai.us/tags/autocomplete.json?search%5Bname_matches%5D={0}",
-                    "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON));
+                    "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON,
+                    "https://danbooru.donmai.us/login"));
 
             sites.Add(new SiteBooru(
                 "http://behoimi.org",

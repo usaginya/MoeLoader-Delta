@@ -16,7 +16,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200517
+    /// Last change 200524
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -93,7 +93,7 @@ namespace SitePack
         public override string ShortName => "pixiv";
         public override string Referer => referer;
         public override string SubReferer => ShortName + ",pximg";
-        public override string LoginURL => SiteManager.SiteLoginType.Cookie.ToSafeString();
+        public override string LoginURL => SiteManager.SiteLoginType.Custom.ToSafeString();
         public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser => nowUser ?? base.LoginUser;
 
@@ -1040,7 +1040,7 @@ namespace SitePack
                         else
                         {
                             cookie = $"pixiv;{cookie}";
-                            nowUser = "内置账号";
+                            nowUser = "内置已登录";
                             return true;
                         }
                         return false;
@@ -1053,6 +1053,7 @@ namespace SitePack
                     return false;
                 }
             }
+            nowUser = "已登录";
             return true;
         }
 
@@ -1126,7 +1127,7 @@ namespace SitePack
                 {
                     IsLoginSite = result;
                     cookie = tmp_cookie;
-                    nowUser = "你的账号";
+                    nowUser = "已登录";
                     cookie = $"pixiv;{cookie}";
                 }
                 else

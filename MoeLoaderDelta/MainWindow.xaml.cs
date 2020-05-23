@@ -388,6 +388,9 @@ namespace MoeLoaderDelta
             item.Icon = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].Enable ? ExtSiteIconOn : ExtSiteIconOff;
         }
 
+        /// <summary>
+        /// 点击选择站点
+        /// </summary>
         private void menuItem_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count < 1)
@@ -759,9 +762,11 @@ namespace MoeLoaderDelta
         private void PlayPreNextAnimation(int btnid)
         {
             Thickness mrg = (scrList.ComputedVerticalScrollBarVisibility == Visibility.Collapsed) ? new Thickness(0) : new Thickness(0, 0, 15, 0);
-            ThicknessAnimation btna = new ThicknessAnimation();
-            btna.To = mrg;
-            btna.Duration = TimeSpan.FromMilliseconds(666);
+            ThicknessAnimation btna = new ThicknessAnimation
+            {
+                To = mrg,
+                Duration = TimeSpan.FromMilliseconds(666)
+            };
             switch (btnid)
             {
 
@@ -1830,7 +1835,7 @@ namespace MoeLoaderDelta
                         SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
                         SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
                     }
-                    else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
+                    else if (LoginURL == SiteManager.SiteLoginType.Custom.ToSafeString())
                     {
                         SiteManager.Instance.Sites[comboBoxIndex].LoginCall(WebProxy);
                     }
@@ -2104,8 +2109,10 @@ namespace MoeLoaderDelta
                         url = img.SampleUrl;
                         break;
                 }
-                List<string> urls = new List<string>();
-                urls.Add(url);
+                List<string> urls = new List<string>
+                {
+                    url
+                };
                 return urls;
             }
         }
@@ -2161,8 +2168,10 @@ namespace MoeLoaderDelta
             Thread thread = new Thread(new ThreadStart(delegate
             {
                 DownloadThread();
-            }));
-            thread.IsBackground = true;
+            }))
+            {
+                IsBackground = true
+            };
             thread.Start();
         }
 
