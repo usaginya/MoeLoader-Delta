@@ -219,7 +219,7 @@ namespace MoeLoaderDelta
         /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
         /// <param name="filePath">配置文件路径</param>
         /// <returns></returns>
-        [DllImport("kernel32")]
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
         public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace MoeLoaderDelta
         /// <param name="val">值</param>
         /// <param name="filepath">配置文件路径</param>
         /// <returns></returns>
-        [DllImport("kernel32")]
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
         public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
 
         /// <summary>
@@ -243,8 +243,12 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
         {
-            StringBuilder sb = new StringBuilder(32767);
-            GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
+            StringBuilder sb = new StringBuilder(short.MaxValue);
+            try
+            {
+                GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
+            }
+            catch (Exception) { }
             return sb.ToString();
         }
         #endregion

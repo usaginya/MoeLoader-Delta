@@ -1140,7 +1140,7 @@ namespace MoeLoaderDelta
                                                     + $"\r\n当前页码：{realPage}  "
                                                     + $"每页数量：{realNum}  "
                                                     + $"代理模式：{ProxyType}"
-                                                    + $"\r\n错误：{ex.Message}",
+                                                    + $"\r\n错误：{(string.IsNullOrWhiteSpace(ex.Message) ? "没有找到图片" : ex.Message)}",
                                     ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                             }));
                         }
