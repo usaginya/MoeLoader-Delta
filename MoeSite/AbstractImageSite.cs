@@ -6,7 +6,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// 抽象图片站点
     /// </summary>
-    public abstract class AbstractImageSite : ImageSite
+    public abstract class AbstractImageSite : IMageSite
     {
         /// <summary>
         /// 默认的缩略图宽高
@@ -166,13 +166,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点列表中显示的图标
         /// </summary>
-        public virtual System.IO.Stream IconStream
-        {
-            get
-            {
-                return GetType().Assembly.GetManifestResourceStream("SitePack.image." + ShortName + ".ico");
-            }
-        }
+        public virtual System.IO.Stream IconStream => GetType().Assembly.GetManifestResourceStream($"SitePack.image.{ShortName}.ico");
 
         /// <summary>
         /// 获取图片列表

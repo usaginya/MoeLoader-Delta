@@ -11,7 +11,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200523
+    /// Last 20200722
     /// </summary>
     public class SiteManager
     {
@@ -22,7 +22,7 @@ namespace MoeLoaderDelta
         /// </summary>
         public enum SiteLoginType { FillIn, Custom }
 
-        private static List<ImageSite> sites = new List<ImageSite>();
+        private static List<IMageSite> sites = new List<IMageSite>();
         private static SiteManager instance;
 
         /// <summary>
@@ -34,8 +34,12 @@ namespace MoeLoaderDelta
 
         private SiteManager()
         {
-
-            string[] dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
+            string[] dlls= { };
+            try
+            {
+               dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
+            }
+            catch { }
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
@@ -58,7 +62,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<ImageSite>);
+                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<IMageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -85,7 +89,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点集合
         /// </summary>
-        public List<ImageSite> Sites => sites;
+        public List<IMageSite> Sites => sites;
 
         /// <summary>
         /// 站点登录处理 通过IE
@@ -97,7 +101,7 @@ namespace MoeLoaderDelta
         /// <param name="shc">站点内部SessionHeadersCollection</param>
         /// <param name="PageString">返回验证登录时的页面HTML</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags,
+        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags,
             ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
         {
             string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
@@ -142,7 +146,7 @@ namespace MoeLoaderDelta
         /// <param name="Sweb">站点内部SessionClient</param>
         /// <param name="shc">站点内部SessionHeadersCollection</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
         {
             string NullPageString = string.Empty;
             return LoginSite(imageSite, ref cookie, LoggedFlags, ref Sweb, ref shc, ref NullPageString);

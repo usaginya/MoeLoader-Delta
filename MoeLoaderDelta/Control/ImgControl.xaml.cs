@@ -14,19 +14,18 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 191109
+    /// Last change 200731
     /// </summary>
     public partial class ImgControl : UserControl
     {
-        private ImageSite site;
+        private IMageSite site;
         public Img Image { get; }
 
         private int index;
         private bool canRetry = false;
         private bool isRetrievingDetail = false, isDetailSucc = false;
         private bool imgLoaded = false;
-        private bool isChecked = false;
-
+        public bool IsChecked { get; private set; } = false;
 
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
@@ -40,7 +39,7 @@ namespace MoeLoaderDelta
         /// <param name="img">图片</param>
         /// <param name="index">缩略图位置索引</param>
         /// <param name="site">图片站点</param>
-        public ImgControl(Img img, int index, ImageSite site)
+        public ImgControl(Img img, int index, IMageSite site)
         {
             InitializeComponent();
             this.site = site;
@@ -251,14 +250,7 @@ namespace MoeLoaderDelta
         {
             if (e.ChangedButton == MouseButton.Left && e.LeftButton == MouseButtonState.Released)
             {
-                if (selBorder.Opacity == 0)
-                {
-                    chk_Checked(true);
-                }
-                else
-                {
-                    chk_Checked(false);
-                }
+                Chk_Checked(!IsChecked);
             }
         }
 
@@ -270,10 +262,10 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void chk_Checked(bool isChecked)
+        private void Chk_Checked(bool isChecked)
         {
             //未改变
-            if (this.isChecked == isChecked) return;
+            if (IsChecked == isChecked) { return; }
 
             if (isChecked)
             {
@@ -286,7 +278,7 @@ namespace MoeLoaderDelta
                 selRec.Opacity = 0;
             }
 
-            this.isChecked = isChecked;
+            IsChecked = isChecked;
             checkedChanged?.Invoke(index, null);
         }
 
@@ -311,9 +303,9 @@ namespace MoeLoaderDelta
         /// <param name="isChecked"></param>
         public bool SetChecked(bool isChecked)
         {
-            if (!isDetailSucc) return false;
+            if (!isDetailSucc) { return false; }
             //chk.IsChecked = isChecked;
-            chk_Checked(isChecked);
+            Chk_Checked(isChecked);
             return true;
         }
 

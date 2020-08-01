@@ -6,9 +6,9 @@ namespace SitePack
 {
     class SiteProvider
     {
-        public List<ImageSite> SiteList(IWebProxy proxy)
+        public List<IMageSite> SiteList(IWebProxy proxy)
         {
-            List<ImageSite> sites = new List<ImageSite>();
+            List<IMageSite> sites = new List<IMageSite>();
 
             bool ecchimode = System.IO.File.Exists(
                 $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"

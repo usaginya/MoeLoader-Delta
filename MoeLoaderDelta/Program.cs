@@ -56,8 +56,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                bool isRuned;
-                Mutex mutex = new Mutex(true, "MoeLoaderΔ", out isRuned);
+                Mutex mutex = new Mutex(true, "MoeLoaderΔ", out bool isRuned);
 
                 if (isRuned || args.Length > 0 && args[0] == multipleRunArg)
                 {
@@ -96,7 +95,7 @@ namespace MoeLoaderDelta
                 {
                     File.WriteAllText("moe_fatal.txt", ex.ToString());
                     System.Media.SystemSounds.Asterisk.Play();
-                    (new ErrForm(ex.ToString())).ShowDialog();
+                    new ErrForm(ex.ToString()).ShowDialog();
                     Process.GetCurrentProcess().Kill();
                 }
                 catch { }
@@ -109,7 +108,7 @@ namespace MoeLoaderDelta
             {
                 if (is_debug)
                 {
-                    File.AppendAllText("moe_log.txt", DateTime.Now + " " + desc + ": " + e.ToString() + "\r\n");
+                    File.AppendAllText("moe_log.txt", $"{DateTime.Now} {desc}: {e.ToString()} \r\n");
                 }
             }
             catch { }
@@ -138,7 +137,7 @@ namespace MoeLoaderDelta
         {
             SystemHelpers.KillProcess(UpdateAppName);
 
-            Thread.Sleep(233);
+            Thread.Sleep(666);
 
             string NewUpdate = updateTmpPath + "\\" + UpdateAppEXEName;
             if (File.Exists(NewUpdate))

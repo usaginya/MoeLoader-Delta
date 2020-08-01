@@ -47,10 +47,10 @@ namespace MoeLoaderDelta
         //public string PreFetchUrl { get; set; }
         private int prePage, preCount;
         private string preWord;
-        private ImageSite preSite;
+        private IMageSite preSite;
         private string preFetchedPage;
         //预加载的页面内容
-        public string GetPreFetchedPage(int page, int count, string word, ImageSite site)
+        public string GetPreFetchedPage(int page, int count, string word, IMageSite site)
         {
             if (page == prePage && count == preCount && word == preWord && site == preSite)
             {
@@ -90,7 +90,7 @@ namespace MoeLoaderDelta
         /// <param name="page"></param>
         /// <param name="count"></param>
         /// <param name="word"></param>
-        public void PreFetchPage(int page, int count, string word, ImageSite site)
+        public void PreFetchPage(int page, int count, string word, IMageSite site)
         {
             new Thread(new ThreadStart(() =>
             {

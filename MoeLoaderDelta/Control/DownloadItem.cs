@@ -16,6 +16,7 @@ namespace MoeLoaderDelta
         private double progress;
         private DLStatus statusE;
         private double speed;
+        private bool isSelected;
 
         public string FileName { get; set; }
         public string Host { get; set; }
@@ -27,11 +28,24 @@ namespace MoeLoaderDelta
         public string SearchWord { get; set; }
 
         /// <summary>
+        /// 是否选中
+        /// </summary>
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                isSelected = value;
+                OnPropertyChanged("IsSelected");
+            }
+        }
+
+        /// <summary>
         /// 大小
         /// </summary>
         public string Size
         {
-            get { return size; }
+            get => size;
             set
             {
                 size = value;
@@ -84,13 +98,12 @@ namespace MoeLoaderDelta
         /// </summary>
         public DLStatus StatusE
         {
-            get { return statusE; }
+            get => statusE;
             set
             {
                 statusE = value;
                 OnPropertyChanged("Status");
-                if (value != DLStatus.DLing)
-                    SetSpeed(0.0);
+                if (value != DLStatus.DLing) { SetSpeed(0.0); }
             }
         }
 
@@ -106,7 +119,7 @@ namespace MoeLoaderDelta
                            ? (speed / 1024.0).ToString("0.00 MB")
                            : speed.ToString("0.00 KB")) + "/s";
                 }
-                else return "";
+                else { return string.Empty; };
             }
         }
 

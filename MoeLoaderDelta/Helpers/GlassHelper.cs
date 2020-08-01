@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace MoeLoaderDelta
 {
@@ -75,6 +75,11 @@ namespace MoeLoaderDelta
         private static IntPtr _lastRegion = IntPtr.Zero;
         public static bool noBlur = true;
 
+        /// <summary>
+        /// 設置元素在窗口上半透明玻璃效果
+        /// </summary>
+        /// <param name="element">元素</param>
+        /// <param name="window">窗口</param>
         public static void EnableBlurBehindWindow(Border element, Window window)
         {
             if (noBlur) return;
@@ -106,12 +111,14 @@ namespace MoeLoaderDelta
                     _lastRegion = region;
 
                     // Set Margins
-                    DWM_BLURBEHIND blurBehind = new DWM_BLURBEHIND();
-                    blurBehind.fEnable = true;
-                    blurBehind.fTransitionOnMaximized = false;
-                    blurBehind.hRgnBlur = region;
-                    //blurBehind.dwFlags = DWM_BB.BlurRegion | DWM_BB.Enable | DWM_BB.TransitionMaximized;
-                    blurBehind.dwFlags = DWM_BB.BlurRegion | DWM_BB.Enable;
+                    DWM_BLURBEHIND blurBehind = new DWM_BLURBEHIND
+                    {
+                        fEnable = true,
+                        fTransitionOnMaximized = false,
+                        hRgnBlur = region,
+                        //blurBehind.dwFlags = DWM_BB.BlurRegion | DWM_BB.Enable | DWM_BB.TransitionMaximized;
+                        dwFlags = DWM_BB.BlurRegion | DWM_BB.Enable
+                    };
 
                     DwmEnableBlurBehindWindow(hwnd, ref blurBehind);
                 }
@@ -153,6 +160,9 @@ namespace MoeLoaderDelta
         //    public int m_buttom;
         //};
 
+        //private const int GWL_STYLE = -16;
+        //private const int WS_MAXIMIZEBOX = 0x00010000;
+
         [DllImport("user32.dll", EntryPoint = "GetWindowLong")]
         public static extern int GetWindowLong(IntPtr hwnd, int nIndex);
 
@@ -162,30 +172,29 @@ namespace MoeLoaderDelta
         //[DllImport("user32.dll")]
         //private static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, int uFlags);
 
-        ////进行禁用后必须进行界面的刷新，否则禁用状态不会立即显示在界面上。
-        //public static void DisableMaxmizebox(Window window, bool isDisable)
+        //进行禁用后必须进行界面的刷新，否则禁用状态不会立即显示在界面上。
+        //public static void DisableMaxmizebox(Window window, bool isDisable = true)
         //{
-        //    int GWL_STYLE = -16;
-        //    int WS_MAXIMIZEBOX = 0x00010000;
-        //    int SWP_NOSIZE = 0x0001;
-        //    int SWP_NOMOVE = 0x0002;
-        //    int SWP_FRAMECHANGED = 0x0020;
-
-        //    IntPtr handle = new WindowInteropHelper(window).Handle;
-
-        //    int nStyle = GetWindowLong(handle, GWL_STYLE);
         //    if (isDisable)
         //    {
-        //        nStyle &= ~(WS_MAXIMIZEBOX);
+        //        lock (window)
+        //        {
+        //            IntPtr hWnd = new WindowInteropHelper(window).Handle;
+        //            int windowStyle = GetWindowLong(hWnd, GWL_STYLE);
+        //            SetWindowLong(hWnd, GWL_STYLE, windowStyle & ~WS_MAXIMIZEBOX);
+        //        }
         //    }
         //    else
         //    {
-        //        nStyle |= WS_MAXIMIZEBOX;
+        //        lock (window)
+        //        {
+        //            IntPtr hWnd = new WindowInteropHelper(window).Handle;
+        //            int windowStyle = GetWindowLong(hWnd, GWL_STYLE);
+        //            SetWindowLong(hWnd, GWL_STYLE, windowStyle | WS_MAXIMIZEBOX);
+        //        }
         //    }
-
-        //    SetWindowLong(handle, GWL_STYLE, nStyle);
-        //    SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_FRAMECHANGED);
         //}
+
 
         #region 处理最大化
         [StructLayout(LayoutKind.Sequential)]

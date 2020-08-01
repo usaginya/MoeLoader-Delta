@@ -1,4 +1,6 @@
 ﻿using Microsoft.VisualBasic;
+using MoeLoaderDelta.Control;
+using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -46,44 +49,37 @@ namespace MoeLoaderDelta
         public static IntPtr Hwnd;
 
         /// <summary>
-        /// 程序名
-        /// </summary>
-        private static string programName;
-        /// <summary>
         /// 程序版本
         /// </summary>
-        public static Version ProgramVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        public static Version ProgramVersion => Assembly.GetExecutingAssembly().GetName().Version;
 
         /// <summary>
         /// 封装当前程序运行目录
         /// </summary>
-        public static string ProgramRunPath
-        {
-            get
-            {
-                return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            }
-        }
+        public static string ProgramRunPath => System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         /// <summary>
-        /// 封装的程序名
+        /// 程序名
         /// </summary>
         public static string ProgramName
         {
             get
             {
                 Assembly asm = Assembly.GetExecutingAssembly();
-                programName = ((AssemblyTitleAttribute)Attribute.GetCustomAttribute(asm, typeof(AssemblyTitleAttribute))).Title;
+                string programName = ((AssemblyTitleAttribute)Attribute.GetCustomAttribute(asm, typeof(AssemblyTitleAttribute))).Title;
                 return programName;
             }
         }
-
+        /// <summary>
+        /// 收藏夹文件路径
+        /// </summary>
+        private string FavoritePath => $"{ProgramRunPath}\\MLD_fav.mld";
 
         private const string IMGLOADING = "图片加载中...";
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
-        private static string SearchWord = "";
+        private static string SearchWord = string.Empty;
 
         //private Color backColor;
         //internal bool isAero = true;
@@ -113,6 +109,8 @@ namespace MoeLoaderDelta
         internal List<Img> imgs;
         internal List<int> selected = new List<int>();
 
+        internal FavoriteWnd favoriteWnd;
+        internal FavoriteAddWnd favoriteAddWnd;
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
         private bool isGetting = false;
@@ -131,12 +129,31 @@ namespace MoeLoaderDelta
         private bool naviMoved = false;
         private bool funcBtnShown = false;
 
-        //Microsoft.Windows.Shell.WindowChrome chrome;
+        //缩略图大小
+        private int thumbSize = 300;
 
+        //收藏按钮长按事件任务
+        private Thread fav_thread;
+
+        #region -- 拖框选功能变量 --
+        private Border dragSelectBorder = null;
+        private bool canDrag = false, dragIsCtrl = false, dragIsClear = false;
+        private Point dragStartPoint;
+        #endregion
+
+        #region ////// 公开可调用对象 ///////
         public static MainWindow MainW;
+        public MenuItem SelectedSite;
 
-        internal static int comboBoxIndex = 0;
+        /// <summary>
+        /// 收藏夹列表
+        /// </summary>
+        public TreeViewModel FavoriteTreeView = new TreeViewModel();
+        #endregion //////////////////////////
+
+        internal int comboBoxIndex = 0;
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
+        private const string NoFoundMsg = "没有找到图片喔~";
         internal string namePatter = DefaultPatter;
 
         internal double bgOp = 0.5;
@@ -148,6 +165,7 @@ namespace MoeLoaderDelta
         public BitmapImage ExtSiteIconOff { get; set; } = null;
         public BitmapImage ExtSiteIconOn { get; set; } = null;
 
+        #region Register/Unregister HotKey
         [DllImport("user32")]
         private static extern int RegisterHotKey(IntPtr hwnd, int id, int fsModifiers, System.Windows.Forms.Keys vk);
         [DllImport("user32")]
@@ -165,32 +183,51 @@ namespace MoeLoaderDelta
             }
             get { return bossKey; }
         }
+        #endregion
 
         /// <summary>
         /// 代理设置，eg. 127.0.0.1:1080
         /// </summary>
-        internal static string Proxy
-        {
-            set;
-            get;
-        }
+        internal static string Proxy { set; get; }
+        internal static ProxyType ProxyType { get; set; }
 
-        internal static ProxyType ProxyType
-        {
-            get;
-            set;
-        }
-
-        public static string SearchWordPu
-        {
-            get
-            {
-                return DownloadControl.ReplaceInvalidPathChars(SearchWord);
-            }
-        }
-
+        public static string SearchWordPu => DownloadControl.ReplaceInvalidPathChars(SearchWord);
         WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
 
+
+        #region Public Functions
+        /// <summary>
+        /// 当前选则的站点唯一原名、无结果将返回null
+        /// </summary>
+        public string SelectedSiteName()
+        {
+            string siteName = SiteManager.Instance.Sites.Count < 1 ? null : SiteManager.Instance.Sites[comboBoxIndex].SiteName;
+            if (string.IsNullOrWhiteSpace(siteName)) { return null; }
+            int space = siteName.IndexOf('[');
+            return space > 0 ? siteName.Substring(0, space).Trim() : siteName;
+        }
+
+        /// <summary>
+        /// 全部站点唯一原名表
+        /// </summary>
+        public List<string> AllSitesName()
+        {
+            List<string> sitesName = new List<string>();
+            string before = null;
+            foreach (MenuItem item in siteMenu.Items)
+            {
+                //如果站点和之前重复则跳过
+                if ((string)item.Header == before) { continue; }
+                before = (string)item.Header;
+                sitesName.Add(before);
+            }
+            return sitesName;
+        }
+        #endregion
+
+        /// <summary>
+        /// ################### Main Start ###################
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -203,10 +240,17 @@ namespace MoeLoaderDelta
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
 
-            //SessionClient.ReadCookiesFromFile($"{ProgramRunPath}\\SaveCk.mck");
+            //////////////////////////////////// animation style /////////////////////////////////
+            LinearGradientBrush brush = new LinearGradientBrush
+            {
+                StartPoint = new Point(1, 1),
+                EndPoint = new Point(0, 0)
+            };
+            brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 0));
+            brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 1));
+            brush.GradientStops.Add(new GradientStop(Color.FromArgb(255, 0, 0, 0), 1));
+            Window.OpacityMask = brush;
 
-            //MaxWidth = System.Windows.SystemParameters.MaximizedPrimaryScreenWidth;
-            //MaxHeight = System.Windows.SystemParameters.MaximizedPrimaryScreenHeight;
             /////////////////////////////////////// init image site list //////////////////////////////////
             SiteManager.Mainproxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
@@ -235,7 +279,7 @@ namespace MoeLoaderDelta
             ExtSiteIconOn = CreateBitmapImage("MoeLoaderDelta.Images.extsetting1.ico");
             #endregion
 
-            foreach (ImageSite site in SiteManager.Instance.Sites)
+            foreach (IMageSite site in SiteManager.Instance.Sites)
             {
                 MenuItem menuItem = null;
                 MenuItem subItem = null;
@@ -250,11 +294,16 @@ namespace MoeLoaderDelta
                 {
                     extindex = 0;
                     int space = site.SiteName.IndexOf('[');
-
+                    string siteName = space > 0 ? site.SiteName.Substring(0, space).Trim() : site.SiteName;
                     menuItem = new MenuItem()
                     {
-                        Header = space > 0 ? site.SiteName.Substring(0, space) : site.SiteName
+                        Header = siteName
                     };
+                    BitmapImage icon = new BitmapImage();
+                    icon.BeginInit();
+                    icon.StreamSource = site.IconStream;
+                    icon.EndInit();
+                    TreeViewModel.AddSites(siteName, icon);
 
                     menuItem.Style = (Style)Resources["SimpleMenuItem"];
                     dicSites.Add(site.ShortName, menuItem);
@@ -291,7 +340,7 @@ namespace MoeLoaderDelta
                 else
                 {
                     subItem = new MenuItem() { Icon = siteIcon, Header = site.SiteName, ToolTip = site.ToolTip, DataContext = index++ };
-                    subItem.Click += new RoutedEventHandler(menuItem_Click);
+                    subItem.Click += new RoutedEventHandler(MenuItem_Click);
                 }
                 subItem.Style = (Style)Resources["SimpleMenuItem"];
                 menuItem.Items.Add(subItem);
@@ -299,10 +348,10 @@ namespace MoeLoaderDelta
             }
 
             #region 添加主站菜单
-            foreach (ImageSite site in SiteManager.Instance.Sites)
+            foreach (IMageSite site in SiteManager.Instance.Sites)
             {
                 MenuItem menuItem = dicSites[site.ShortName];
-                if (menuItem == null) continue;
+                if (menuItem == null) { continue; }
                 if (menuItem.Items.Count == 1)
                 {
                     menuItem = menuItem.Items[0] as MenuItem;
@@ -311,42 +360,46 @@ namespace MoeLoaderDelta
             }
             #endregion
 
-            dicSites = null;
-            siteIcon = null;
-
+            #region 站点加载自检
             if (SiteManager.Instance.Sites.Count > 0)
             {
+                SelectedSite = (MenuItem)tempSites[0];
                 siteMenu.ItemsSource = tempSites;
-                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
-                siteMenu.Icon = ((MenuItem)tempSites[0]).Icon;
+                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+                if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
+                {
+                    siteMenu.Header += " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
+                }
+                siteMenu.Icon = SelectedSite.Icon;
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             }
             else
             {
-                MessageBox.Show("哎呀 Σ(>Д<。ﾉ)ﾉ");      //不知原因这里消息框会被跳过一次
-                MessageBoxResult msgSelect = MessageBox.Show("初始化站点库发生错误、要尝试备用方案吗？", ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                if (msgSelect == MessageBoxResult.Yes)
-                {
-                    string configPath = $"{ProgramRunPath}\\MoeLoaderDelta.exe.config";
-                    XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.Load(configPath);
+                string configPath = $"{ProgramRunPath}\\MoeLoaderDelta.exe.config";
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(configPath);
 
-                    XmlNode root = xmlDoc.SelectSingleNode("/configuration/runtime");
-                    if (root.SelectSingleNode("loadFromRemoteSources") == null)
+                XmlNode root = xmlDoc.SelectSingleNode("/configuration/runtime");
+                if (root.SelectSingleNode("loadFromRemoteSources") == null)
+                {
+                    MessageBox.Show("哎呀 Σ(>Д<。 )");      //不知原因这里消息框会被跳过一次
+                    MessageBoxResult msgSelect = MessageBox.Show("初始化站点库发生错误、要尝试备用方案吗？", ProgramName,
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (msgSelect == MessageBoxResult.Yes)
                     {
                         XmlElement insertNode = xmlDoc.CreateElement("loadFromRemoteSources");
                         insertNode.SetAttribute("enabled", "true");
                         root.AppendChild(insertNode);
 
                         xmlDoc.Save(configPath);
+                        Application.Current.Shutdown();
+                        System.Windows.Forms.Application.Restart();
+                        System.Diagnostics.Process.GetCurrentProcess().Kill();
                     }
-
-                    Application.Current.Shutdown();
-                    System.Windows.Forms.Application.Restart();
-                    System.Diagnostics.Process.GetCurrentProcess().Kill();
                 }
+                for (int i = 0; i < 2; i++) { MessageBox.Show("站点加载失败 (QAQ )", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning); }
             }
-
+            #endregion
 
             //comboBox1.ItemsSource = tempSites;
             //comboBox1.SelectedIndex = 0;
@@ -364,12 +417,16 @@ namespace MoeLoaderDelta
             bossKey = System.Windows.Forms.Keys.F9;
 
             LoadConfig();
+
             //itmxExplicit.IsChecked = !showExplicit;
 
             MainW = this;
 
             //删除上次临时目录
             DelTempDirectory();
+
+            //载入标签收藏、必须在MainW后
+            LoadFavorite();
         }
 
         /// <summary>
@@ -378,28 +435,35 @@ namespace MoeLoaderDelta
         /// <param name="siteSesd"></param>
         private void RunSiteExtendedSettingAction(object sender, RoutedEventArgs e)
         {
-            if (SiteManager.Instance.Sites.Count < 1)
-                return;
+            if (SiteManager.Instance.Sites.Count < 1) { return; }
 
             MenuItem item = sender as MenuItem;
             int index = (int)item.DataContext;
 
-            Dispatcher.Invoke(SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].SettingAction);
-            item.Icon = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag].Enable ? ExtSiteIconOn : ExtSiteIconOff;
+            SiteExtendedSetting siteExtended = SiteManager.Instance.Sites[index].ExtendedSettings[(int)item.Tag];
+
+            Dispatcher.Invoke(siteExtended.SettingAction);
+            item.Icon = siteExtended.Enable ? ExtSiteIconOn : ExtSiteIconOff;
+
+            Control_Toast.Show($"{siteExtended.Title} 已 {(siteExtended.Enable ? "开启" : "关闭")}");
         }
 
         /// <summary>
         /// 点击选择站点
         /// </summary>
-        private void menuItem_Click(object sender, RoutedEventArgs e)
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            if (SiteManager.Instance.Sites.Count < 1)
-                return;
+            if (SiteManager.Instance.Sites.Count < 1) { return; }
 
-            MenuItem item = sender as MenuItem;
-            comboBoxIndex = (int)item.DataContext;
-            siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName + " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
-            siteMenu.Icon = (item.Parent as MenuItem).Header.ToString() == item.Header.ToString() ? item.Icon : (item.Parent as MenuItem).Icon;
+            SelectedSite = sender as MenuItem;
+            comboBoxIndex = (int)SelectedSite.DataContext;
+            siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+            if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
+            {
+                siteMenu.Header += " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
+            }
+            siteMenu.Icon = (SelectedSite.Parent as MenuItem).Header.ToString() == SelectedSite.Header.ToString()
+                ? SelectedSite.Icon : (SelectedSite.Parent as MenuItem).Icon;
             //functionality support check
             itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
             stackPanel1.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount;
@@ -408,6 +472,11 @@ namespace MoeLoaderDelta
             UpdateLoginInfo();
         }
 
+        /// <summary>
+        /// 窗口载入完成
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             logo = FindResource("logoRotate") as Storyboard;
@@ -415,8 +484,10 @@ namespace MoeLoaderDelta
             BossKey = bossKey;
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
-            (new Thread(new ThreadStart(LoadBgImg))).Start();
-
+            new Thread(new ThreadStart(LoadBgImg)).Start();
+            //初始化右键菜单
+            scrList.ContextMenu.IsOpen = true;
+            scrList.ContextMenu.IsOpen = false;
         }
 
         /// <summary>
@@ -437,34 +508,73 @@ namespace MoeLoaderDelta
             loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : tmp_user;
         }
 
+        /// <summary>
+        /// 创建不占用文件的BitmapImage
+        /// </summary>
+        private BitmapImage AsynBitmapImage(string filePath)
+        {
+            BitmapImage bitmapImage;
+            using (BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+            {
+                FileInfo fi = new FileInfo(filePath);
+                byte[] bytes = reader.ReadBytes((int)fi.Length);
+                reader.Close();
+
+                bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = new MemoryStream(bytes);
+                bitmapImage.EndInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                reader.Dispose();
+            }
+            return bitmapImage;
+        }
+
+        /// <summary>
+        /// 加载背景图
+        /// </summary>
         private void LoadBgImg()
         {
             string bgPath = $"{ProgramRunPath}\\bg.png";
-            bgPath = File.Exists(bgPath) ? bgPath : $"{ProgramRunPath}\\bg.jpg";
             bool hasBg = File.Exists(bgPath);
+            bgPath = hasBg ? bgPath : string.Empty;
+            if (!hasBg) { return; }
 
-            if (hasBg)
+            Dispatcher.Invoke(new VoidDel(delegate
             {
-                Dispatcher.Invoke(new VoidDel(delegate
+                bgImg = new ImageBrush(AsynBitmapImage(bgPath))
                 {
-                    bgImg = new ImageBrush(new BitmapImage(new Uri(bgPath, UriKind.Absolute)))
-                    {
-                        Stretch = bgSt,
-                        AlignmentX = bgHe,
-                        AlignmentY = bgVe,
-                        Opacity = bgOp,
-                    };
-                    grdBg.Background = bgImg;
-                }));
-            }
+                    Stretch = bgSt,
+                    AlignmentX = bgHe,
+                    AlignmentY = bgVe,
+                    Opacity = bgOp,
+                };
+                grdBg.Background = bgImg;
+            }));
+        }
+
+        /// <summary>
+        /// 更改窗口背景
+        /// </summary>
+        /// <param name="loadBg">是否从文件加载背景图片</param>
+        public void ChangeBg(double opacity, bool loadBg = false)
+        {
+            opacity = opacity < 0.1 ? 0.1 : opacity > 1 ? 1 : opacity;
+            bgOp = opacity;
+            //从文件加载更改
+            if (loadBg) { LoadBgImg(); return; }
+            //从内存更改
+            Brush brush = grdBg.Background;
+            brush.Opacity = bgOp;
+            grdBg.Background = brush;
         }
 
         public static string IsNeedReferer(string url)
         {
             Uri uri = new Uri(url);
-            List<ImageSite> ISites = SiteManager.Instance.Sites;
+            List<IMageSite> ISites = SiteManager.Instance.Sites;
 
-            foreach (ImageSite site in SiteManager.Instance.Sites)
+            foreach (IMageSite site in SiteManager.Instance.Sites)
             {
                 if (site.SubReferer != null)
                 {
@@ -578,7 +688,8 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 7)
                         {
-                            itmSmallPre.IsChecked = parts[7].Equals("1");
+                            thumbSize = int.Parse(parts[7]);
+                            thumbSize = thumbSize < 150 ? 150 : thumbSize > 500 ? 500 : thumbSize;
                         }
                         if (parts.Length > 8)
                         {
@@ -711,6 +822,116 @@ namespace MoeLoaderDelta
             //}
             //else image.Source = new BitmapImage(new Uri("Images/logo1.png", UriKind.Relative));
         }
+        /// <summary>
+        /// 获取子控件
+        /// </summary>
+        public List<T> GetChildObjects<T>(DependencyObject obj) where T : FrameworkElement
+        {
+            DependencyObject child = null;
+            List<T> childList = new List<T>();
+
+            for (int i = 0; i <= VisualTreeHelper.GetChildrenCount(obj) - 1; i++)
+            {
+                child = VisualTreeHelper.GetChild(obj, i);
+
+                if (child is T)
+                {
+                    childList.Add((T)child);
+                }
+                childList.AddRange(GetChildObjects<T>(child));
+            }
+            return childList;
+        }
+
+        /// <summary>
+        /// 载入收藏夹
+        /// </summary>
+        private void LoadFavorite()
+        {
+            if (SiteManager.Instance.Sites.Count < 1) { return; }
+            TreeViewModel.LoadFavoriteFile(FavoritePath);
+            TreeViewModel.HideEmptySite();
+        }
+
+        /// <summary>
+        /// 保存收藏夹
+        /// </summary>
+        public void SaveFavorite()
+        {
+            if (SiteManager.Instance.Sites.Count < 1) { return; }
+            TreeViewModel.SaveFavoriteFile(FavoritePath);
+        }
+
+        /// <summary>
+        /// 收藏夹按钮按下事件 长按
+        /// </summary>
+        private void BtnFav_PreviewMouseDown(object sender, MouseButtonEventArgs args)
+        {
+            btnFav.Tag = 1;
+            if (fav_thread != null) { try { fav_thread.Abort(); } catch { } }
+
+            fav_thread = new Thread(() =>
+            {
+                Thread.Sleep(500);
+
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    if (btnFav.Tag != null && (int)btnFav.Tag == 1)
+                    {
+                        btnFav.Tag = 0;
+                        Point pMouse = args.GetPosition(btnFav);
+                        if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
+                        {
+                            if (favoriteAddWnd != null && favoriteAddWnd.IsLoaded)
+                            {
+                                favoriteAddWnd.Activate();
+                                favoriteAddWnd.Top = Top + (ActualHeight / 2) - (favoriteAddWnd.ActualHeight / 2);
+                                favoriteAddWnd.Left = Left + (ActualWidth / 2) - (favoriteAddWnd.ActualWidth / 2);
+                            }
+                            else if (!searchControl.Text.IsNullOrEmptyOrWhiteSpace())
+                            {
+                                favoriteAddWnd = new FavoriteAddWnd(searchControl.Text, FavoriteAddWnd.AddMode.Add, null, null, SelectedSiteName(), this);
+                                favoriteAddWnd.ShowDialog();
+                            }
+                            else
+                            {
+                                Control_Toast.Show("搜索框中没有可以收藏的关键词", Toast.MsgType.Warning, 2000);
+                            }
+                        }
+                    }
+                }));
+
+            });
+            fav_thread.Start();
+        }
+
+        /// <summary>
+        /// 收藏夹按钮放开事件 短按
+        /// </summary>
+        private void BtnFav_PreviewMouseUp(object sender, MouseButtonEventArgs args)
+        {
+            Dispatcher.Invoke(new Action(() =>
+            {
+                if (btnFav.Tag != null && (int)btnFav.Tag == 1)
+                {
+                    btnFav.Tag = 2;
+
+                    Point pMouse = args.GetPosition(btnFav);
+                    if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
+                    {
+                        if (favoriteWnd != null && favoriteWnd.IsLoaded)
+                        {
+                            favoriteWnd.Activate();
+                        }
+                        else
+                        {
+                            favoriteWnd = new FavoriteWnd(this);
+                            favoriteWnd.Show();
+                        }
+                    }
+                }
+            }));
+        }
 
         /// <summary>
         /// 启用翻页按钮
@@ -769,7 +990,6 @@ namespace MoeLoaderDelta
             };
             switch (btnid)
             {
-
                 case 0:
                     {
                         Storyboard sb = FindResource("sbShowPageBtnPrev") as Storyboard;
@@ -826,6 +1046,7 @@ namespace MoeLoaderDelta
                 //重新读取RToolStripMenuItem.Enabled = false;
 
                 imgPanel.Children.Clear();
+                Control_Toast.Show(NoFoundMsg);
             }
             else
             {
@@ -861,6 +1082,7 @@ namespace MoeLoaderDelta
                 if (imgs.Count == 0)
                 {
                     DocumentCompleted();
+                    Control_Toast.Show(NoFoundMsg);
                     return;
                 }
 
@@ -869,22 +1091,16 @@ namespace MoeLoaderDelta
                 {
                     //int id = Int32.Parse(imgs[i].Id);
 
-                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex]);
-
-                    img.imgDLed += img_imgDLed;
-                    img.imgClicked += Img_Click;
-                    img.ImgLoaded += img_ImgLoaded;
-                    img.checkedChanged += img_checkedChanged;
-
-                    // Default: 160x183 Large: 310x333
-                    //if ((nowSelectedIndex == 0 || nowSelectedIndex == 1) && !itmSmallPre.IsChecked)
-                    if (!itmSmallPre.IsChecked)
+                    ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex])
                     {
-                        img.Width = SiteManager.Instance.Sites[nowSelectedIndex].LargeImgSize.X;
-                        img.Height = SiteManager.Instance.Sites[nowSelectedIndex].LargeImgSize.Y;
-                    }
+                        Width = thumbSize,
+                        Height = thumbSize
+                    };
+                    img.imgDLed += Img_imgDLed;
+                    img.imgClicked += Img_Click;
+                    img.ImgLoaded += Img_ImgLoaded;
+                    img.checkedChanged += Img_checkedChanged;
 
-                    //WrapPanel.SetZIndex(img, imgs.Count - i);
                     imgPanel.Children.Add(img);
 
                     if (i < numOfLoading)
@@ -904,15 +1120,9 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void img_imgDLed(object sender, EventArgs e)
+        private void Img_imgDLed(object sender, EventArgs e)
         {
             int index = (int)sender;
-
-            if (!toggleDownload.IsChecked.Value)
-                toggleDownload.IsChecked = true;
-
-            ToggleDownload_Click(null, null);
-
             Img dlimg = imgs[index];
             List<string> oriUrls = GetImgAddress(dlimg);
             for (int c = 0; c < oriUrls.Count; c++)
@@ -920,16 +1130,18 @@ namespace MoeLoaderDelta
                 //设图册页数
                 if (oriUrls.Count > 1)
                 {
-                    imgs[index].ImgP = c + 0 + "";
+                    dlimg.ImgP = c + 0 + string.Empty;
                 }
                 string fileName = GenFileName(dlimg, oriUrls[c]);
                 string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                 downloadC.AddDownload(new MiniDownloadItem[] {
-                    new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify)
+                    new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify)
                 });
             }
+           ((ImgControl)imgPanel.Children[index]).SetChecked(false);
             //重置重试次数
             downloadC.ResetRetryCount();
+            Control_Toast.Show($"{dlimg.Id} 图片已添加到下载列表 →", Toast.MsgType.Success);
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
             //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
@@ -942,7 +1154,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void img_checkedChanged(object sender, EventArgs e)
+        void Img_checkedChanged(object sender, EventArgs e)
         {
             int preid = selected.Count == 0 ? -1 : selected[selected.Count - 1];
 
@@ -998,7 +1210,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void img_ImgLoaded(object sender, EventArgs e)
+        void Img_ImgLoaded(object sender, EventArgs e)
         {
             loaded.Add((int)sender);
 
@@ -1018,8 +1230,6 @@ namespace MoeLoaderDelta
                 StartPreLoad();
                 //显示上一页按钮
                 UpdatePreNextEnable();
-                //重设缩略图大小
-                itmSmallPre_Click(null, null);
             }
 
             //只要有下一页就显示翻页按钮
@@ -1055,7 +1265,10 @@ namespace MoeLoaderDelta
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count < 1)
+            {
+                Control_Toast.Show("没有站点可以用来搜索", Toast.MsgType.Warning);
                 return;
+            }
 
             Thread thread_getting = null;
 
@@ -1133,16 +1346,12 @@ namespace MoeLoaderDelta
                     {
                         if (!(o as SessionState).IsStop)
                         {
-                            Dispatcher.Invoke(new VoidDel(() =>
-                            {
-                                MessageBox.Show(this, $"获取图片：{SearchWord}  "
-                                                    + $"\r\n站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
-                                                    + $"\r\n当前页码：{realPage}  "
-                                                    + $"每页数量：{realNum}  "
-                                                    + $"代理模式：{ProxyType}"
-                                                    + $"\r\n错误：{(string.IsNullOrWhiteSpace(ex.Message) ? "没有找到图片" : ex.Message)}",
-                                    ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }));
+                            Control_Toast.Show(
+                                $"错误：{(string.IsNullOrWhiteSpace(ex.Message) ? "没有找到图片" : ex.Message)}"
+                                + $"\r\n获取图片：{(string.IsNullOrWhiteSpace(SearchWord) ? "<默认搜索>" : SearchWord) }"
+                                + $"\r\n站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
+                                + $"\r\n当前页码：{realPage}  每页数量：{realNum}  代理模式：{ProxyType}"
+                                , Toast.MsgType.Error, 8000);
                         }
                     }
                     if (!(o as SessionState).IsStop)
@@ -1160,18 +1369,17 @@ namespace MoeLoaderDelta
                 {
                     for (int i = 0; i < imgs.Count; i++)
                     {
-                        if (!loaded.Contains(i))
-                            ((ImgControl)imgPanel.Children[i]).StopLoadImg();
+                        if (!loaded.Contains(i)) { ((ImgControl)imgPanel.Children[i]).StopLoadImg(); }
                     }
                     unloaded.Clear();
                 }
+
                 currentSession.IsStop = true;
                 statusText.Text = "加载完毕，得到 0 张图片";
                 siteText.Text = "当前站点 " + SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
 
                 //尝试加载下一页
-                if (!HaveNextPage)
-                    StartPreLoad();
+                if (!HaveNextPage) { StartPreLoad(); }
 
                 //显示上一页按钮
                 UpdatePreNextEnable();
@@ -1277,7 +1485,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 所有缩略图加载完毕
         /// </summary>
-        void DocumentCompleted()
+        private void DocumentCompleted()
         {
             logo.Stop();
             bgLoading.Visibility = Visibility.Hidden;
@@ -1288,7 +1496,7 @@ namespace MoeLoaderDelta
                 viewedC = imgs[imgs.Count - 1].Id - LastViewed.ViewedBiggestId;
             }
             catch { }
-            string strSW = SearchWord.Length > 0 ? "，" + SearchWord : "";
+            string strSW = SearchWord.Length > 0 ? "，" + SearchWord : string.Empty;
             if (viewedC < 5 || SearchWord.Length > 0)
                 statusText.Text = "加载完毕，得到 " + imgs.Count + " 张图片";
             else
@@ -1303,7 +1511,9 @@ namespace MoeLoaderDelta
 
             //System.Media.SystemSounds.Beep.Play();
             if (GlassHelper.GetForegroundWindow() != Hwnd)
+            {
                 GlassHelper.FlashWindow(Hwnd, true);
+            }
 
             //无图时禁用菜单
             if (imgs.Count < 1)
@@ -1333,28 +1543,40 @@ namespace MoeLoaderDelta
                 if (IsCtrlDown())
                 {
                     double rmrg = MainW.Width / 2;
-                    ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, 2000, 0);
-                    ((ThicknessAnimationUsingKeyFrames)sb.Children[1]).KeyFrames[0].Value = new Thickness(0, 0, rmrg, 0);
-                    ((DoubleAnimationUsingKeyFrames)sb.Children[3]).KeyFrames[0].Value = rmrg;
-                    if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center) grdNavi.Visibility = Visibility.Hidden;
+                    ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, rmrg, 0);
+                    ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = rmrg;
                 }
                 else
                 {
-                    ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, 219, 0);
-                    ((ThicknessAnimationUsingKeyFrames)sb.Children[1]).KeyFrames[0].Value = new Thickness(0, 0, 220, 0);
-                    ((DoubleAnimationUsingKeyFrames)sb.Children[3]).KeyFrames[0].Value = 219;
+                    ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, 220, 0);
+                    ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = 220;
                 }
+
+                if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center) { grdNavi.Visibility = Visibility.Hidden; }
 
                 sb.Begin();
             }
             else
             {
                 grdNavi.Visibility = Visibility.Visible;
-                toggleDownload.ToolTip = "显示下载面板(按住Ctrl隐藏缩略图)";
+                toggleDownload.ToolTip = (string)toggleDownload.Tag;
                 sb = (Storyboard)FindResource("closeDownload");
                 sb.Begin();
             }
             sb.Completed += ToggleDownloadAni_Completed;
+        }
+
+        /// <summary>
+        /// 点击缩略图列表时收起下载列表
+        /// </summary>
+        private void HiddenToggleDownload(object sender, MouseButtonEventArgs e)
+        {
+            if (e.Source.GetType() == typeof(DownloadControl)) { return; }
+            if (toggleDownload.IsChecked.Value)
+            {
+                toggleDownload.IsChecked = false;
+                ToggleDownload_Click(sender, null);
+            }
         }
 
         /// <summary>
@@ -1458,7 +1680,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 限制页码设置只能输入数字的一种方法
         /// </summary>
-        private void txtPage_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
                 || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
@@ -1468,7 +1690,7 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void txtNum_TextChanged(object sender, TextChangedEventArgs e)
+        private void TxtNum_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             if (txt.Text.Length == 0) return;
@@ -1488,7 +1710,7 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void txtPage_LostFocus(object sender, RoutedEventArgs e)
+        private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             try
@@ -1510,25 +1732,25 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void pageUp_Click(object sender, RoutedEventArgs e)
+        private void PageUp_Click(object sender, RoutedEventArgs e)
         {
             if (page < 99999)
                 txtPage.Text = (page + 1).ToString();
         }
 
-        private void pageDown_Click(object sender, RoutedEventArgs e)
+        private void PageDown_Click(object sender, RoutedEventArgs e)
         {
             if (page > 1)
                 txtPage.Text = (page - 1).ToString();
         }
 
-        private void numUp_Click(object sender, RoutedEventArgs e)
+        private void NumUp_Click(object sender, RoutedEventArgs e)
         {
             if (num < 600)
                 txtNum.Text = (num + 1).ToString();
         }
 
-        private void numDown_Click(object sender, RoutedEventArgs e)
+        private void NumDown_Click(object sender, RoutedEventArgs e)
         {
             if (num > 1)
                 txtNum.Text = (num - 1).ToString();
@@ -1540,23 +1762,15 @@ namespace MoeLoaderDelta
         private static extern short GetAsyncKeyState(System.Windows.Forms.Keys key);
         public static bool IsKeyDown(System.Windows.Forms.Keys key)
         {
-            if ((GetAsyncKeyState(key) & 0x8000) == 0x8000)
-            {
-                return true;
-            }
-            else return false;
+            return (GetAsyncKeyState(key) & 0x8000) == 0x8000 ? true : false;
         }
         public static bool IsCtrlDown()
         {
-            if (IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey))
-                return true;
-            else return false;
+            return IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey) ? true : false;
         }
         public static bool IsShiftDown()
         {
-            if (IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey))
-                return true;
-            else return false;
+            return IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey) ? true : false;
         }
         #endregion
 
@@ -1572,7 +1786,7 @@ namespace MoeLoaderDelta
             //不支持预览的格式使用浏览来源页
             string supportFormat = "jpg jpeg png bmp gif",
              videoFormat = "mp4 webm avi mpg flv",
-             ext = BooruProcessor.FormattedImgUrl("", imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1)),
+             ext = BooruProcessor.FormattedImgUrl(string.Empty, imgs[index].PreviewUrl.Substring(imgs[index].PreviewUrl.LastIndexOf('.') + 1)),
              videoExe = DataHelpers.GetFileExecutable("mp4");
 
             //使用关联视频播放预览
@@ -1601,11 +1815,14 @@ namespace MoeLoaderDelta
             {
                 previewFrm = new PreviewWnd(this);
                 previewFrm.Show();
-                Focus();
-                //System.GC.Collect(2,GCCollectionMode.Optimized);
+                if (!IsShiftDown()) { Focus(); }
             }
             previewFrm.AddPreview(imgs[index], index, SiteManager.Instance.Sites[nowSelectedIndex].Referer);
-            //System.Media.SystemSounds.Exclamation.Play();
+            if (IsShiftDown())
+            {
+                previewFrm.Focus();
+                previewFrm.SwitchPreview(imgs[index].Id);
+            }
         }
 
         /// <summary>
@@ -1859,8 +2076,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ItmOpenSite_Click(object sender, RoutedEventArgs e)
         {
-            if (SiteManager.Instance.Sites.Count > 0)
-                System.Diagnostics.Process.Start(SiteManager.Instance.Sites[comboBoxIndex].SiteUrl);
+            if (SiteManager.Instance.Sites.Count > 0) { System.Diagnostics.Process.Start(SiteManager.Instance.Sites[comboBoxIndex].SiteUrl); }
         }
 
         /// <summary>
@@ -1869,6 +2085,7 @@ namespace MoeLoaderDelta
         private void ScrList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             UpdateLoginInfo();
+            SetThumbSize();
         }
 
         private void CanExecute_LoginSite(object sender, CanExecuteRoutedEventArgs e)
@@ -1898,7 +2115,7 @@ namespace MoeLoaderDelta
                 };
                 if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    string text = "";
+                    string text = string.Empty;
                     int success = 0, repeat = 0;
                     //读存在的lst内容
                     string[] flst = null;
@@ -1930,7 +2147,7 @@ namespace MoeLoaderDelta
                                 //设图册页数
                                 if (oriUrls.Count > 1)
                                 {
-                                    selectimg.ImgP = c + 0 + "";
+                                    selectimg.ImgP = c + 0 + string.Empty;
                                 }
 
                                 //url|文件名|域名|上传者|ID(用于判断重复)
@@ -1964,9 +2181,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void TextBlock_MouseDown1(object sender, MouseButtonEventArgs e)
         {
-            OptionWnd c = new OptionWnd(this);
-            c.ShowDialog();
-            return;
+            new OptionWnd(this).ShowDialog();
         }
 
         /// <summary>
@@ -1976,49 +2191,57 @@ namespace MoeLoaderDelta
         {
             try
             {
-                System.Diagnostics.Process.Start("http://usaginya.lofter.com/post/1d56d69b_d6b14fd");
+                System.Diagnostics.Process.Start("https://github.com/usaginya/MoeLoader-Delta/issues");
+            }
+            catch { }
+        }
+
+        private void TextBlock_MouseDownUpdateInfo(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/UpdateLog/update_history.txt");
+            }
+            catch { }
+        }
+
+        private void TextBlock_MouseDownDonate(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://usaginya.github.io/mkAppUpInfo/moeloaderdelta/donate");
             }
             catch { }
         }
 
         /// <summary>
-        /// 使用小缩略图
+        /// 缩略图滑块被改变
         /// </summary>
-        private void itmSmallPre_Click(object sender, RoutedEventArgs e)
+        private void SliderThumbValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (itmSmallPre.IsChecked)
+            thumbSize = Convert.ToInt32(e.NewValue);
+            SetThumbSize(true);
+        }
+
+        /// <summary>
+        /// 设置缩略图大小
+        /// </summary>
+        private void SetThumbSize(bool changed = false)
+        {
+            if (!changed)
             {
-                foreach (UIElement ele in imgPanel.Children)
-                {
-                    ImgControl img = (ImgControl)ele;
-                    int smallx = SiteManager.Instance.Sites[nowSelectedIndex].SmallImgSize.X;
-                    int smally = SiteManager.Instance.Sites[nowSelectedIndex].SmallImgSize.Y;
-                    if (img != null)
-                    {
-                        //如果比默认大小还小就用默认大小
-                        img.Width = smallx < 184 ? img.Width > 184 ? 184 : 184 : smallx;
-                        img.Height = smally < 204 ? img.Height > 204 ? 204 : 204 : smally;
-                    }
-                    //自适应评分数字区
-                    img.brdScr.Width = img.Width / 4;
-                }
+                if (!(itmThumbSize.Template.FindName("sliThumbSize", itmThumbSize) is Slider slider)) { return; }
+                slider.Value = thumbSize;
+                return;
             }
-            else
+
+            UIElementCollection imgControls = imgPanel.Children;
+            if (imgControls.Count < 1) { return; }
+            foreach (ImgControl imgc in imgControls)
             {
-                foreach (UIElement ele in imgPanel.Children)
-                {
-                    ImgControl img = (ImgControl)ele;
-                    int smallx = SiteManager.Instance.Sites[nowSelectedIndex].SmallImgSize.X;
-                    int smally = SiteManager.Instance.Sites[nowSelectedIndex].SmallImgSize.Y;
-                    if (img != null)
-                    {
-                        img.Width = SiteManager.Instance.Sites[nowSelectedIndex].LargeImgSize.X;
-                        img.Height = SiteManager.Instance.Sites[nowSelectedIndex].LargeImgSize.Y;
-                        img.Width = img.Width <= smallx ? smallx * 1.5 : img.Width;
-                        img.Height = img.Height <= smally ? smally * 1.5 : img.Height;
-                    }
-                    img.brdScr.Width = img.Width / 4;
-                }
+                imgc.Width = thumbSize;
+                imgc.Height = thumbSize;
+                imgc.brdScr.Width = thumbSize / 4;
             }
         }
 
@@ -2027,7 +2250,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void itmTypeOri_Checked(object sender, RoutedEventArgs e)
+        private void ItmTypeOri_Checked(object sender, RoutedEventArgs e)
         {
             if (sender == itmTypeOri)
             {
@@ -2109,10 +2332,7 @@ namespace MoeLoaderDelta
                         url = img.SampleUrl;
                         break;
                 }
-                List<string> urls = new List<string>
-                {
-                    url
-                };
+                List<string> urls = new List<string> { url };
                 return urls;
             }
         }
@@ -2120,7 +2340,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 显示或隐藏左下角搜索设置
         /// </summary>
-        private void togglePram_Click(object sender, RoutedEventArgs e)
+        private void TogglePram_Click(object sender, RoutedEventArgs e)
         {
             if (togglePram.IsChecked.Value)
             {
@@ -2139,7 +2359,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 上一页
         /// </summary>
-        private void btnPrev_Click(object sender, RoutedEventArgs e)
+        private void BtnPrev_Click(object sender, RoutedEventArgs e)
         {
             DelayPageTurn(1);
         }
@@ -2147,7 +2367,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 下一页
         /// </summary>
-        private void btnNext_Click(object sender, RoutedEventArgs e)
+        private void BtnNext_Click(object sender, RoutedEventArgs e)
         {
             DelayPageTurn(2);
         }
@@ -2156,22 +2376,9 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 下载
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void bDownload_MouseUp(object sender, MouseButtonEventArgs e)
         private void Download_Click(object sender, RoutedEventArgs e)
         {
-            if (!toggleDownload.IsChecked.Value)
-                toggleDownload.IsChecked = true;
-            ToggleDownload_Click(null, null);
-
-            Thread thread = new Thread(new ThreadStart(delegate
-            {
-                DownloadThread();
-            }))
-            {
-                IsBackground = true
-            };
+            Thread thread = new Thread(new ThreadStart(delegate { DownloadThread(); })) { IsBackground = true };
             thread.Start();
         }
 
@@ -2190,10 +2397,11 @@ namespace MoeLoaderDelta
         {
             ButtonMainDL.IsEnabled = false;
             //添加下载
-            if (selected.Count > 0)
+            List<int> selecteds = new List<int>(selected);
+            if (selecteds.Count > 0)
             {
                 List<MiniDownloadItem> urls = new List<MiniDownloadItem>();
-                foreach (int i in selected)
+                foreach (int i in selecteds)
                 {
                     Img dlimg = imgs[i];
                     List<string> oriUrls = GetImgAddress(dlimg);
@@ -2202,18 +2410,20 @@ namespace MoeLoaderDelta
                         //设图册页数
                         if (oriUrls.Count > 1)
                         {
-                            imgs[i].ImgP = c + 0 + "";
+                            imgs[i].ImgP = c + 0 + string.Empty;
                         }
                         string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
-                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, "", "", dlimg.Id, dlimg.NoVerify));
+                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify));
                     }
+                    ((ImgControl)imgPanel.Children[i]).SetChecked(false);
                 }
                 downloadC.AddDownload(urls);
             }
             ButtonMainDL.IsEnabled = true;
             //重置重试次数
             downloadC.ResetRetryCount();
+            Control_Toast.Show($"选择的图片已添加到下载列表 →", Toast.MsgType.Success);
         }
 
         /// <summary>
@@ -2235,9 +2445,9 @@ namespace MoeLoaderDelta
             //%site站点 %id编号 %tag标签 %desc描述 %author作者 %date图片时间 %imgid[2]图册中图片编号[补n个零]
             file = file.Replace("%site", SiteManager.Instance.Sites[nowSelectedIndex].ShortName);
             file = file.Replace("%id", img.Id.ToSafeString());
-            file = file.Replace("%tag", DownloadControl.ReplaceInvalidPathChars(img.Tags.Replace("\r\n", "")));
-            file = file.Replace("%desc", DownloadControl.ReplaceInvalidPathChars(img.Desc.Replace("\r\n", "")));
-            file = file.Replace("%author", DownloadControl.ReplaceInvalidPathChars(img.Author.Replace("\r\n", "")));
+            file = file.Replace("%tag", DownloadControl.ReplaceInvalidPathChars(img.Tags.Replace("\r\n", string.Empty)));
+            file = file.Replace("%desc", DownloadControl.ReplaceInvalidPathChars(img.Desc.Replace("\r\n", string.Empty)));
+            file = file.Replace("%author", DownloadControl.ReplaceInvalidPathChars(img.Author.Replace("\r\n", string.Empty)));
             file = file.Replace("%date", FormatFileDateTime(img.Date));
             #region 图册页数格式化
             try
@@ -2245,7 +2455,7 @@ namespace MoeLoaderDelta
                 Regex reg = new Regex(@"(?<all>%imgp\[(?<zf>[0-9]+)\])");
                 MatchCollection mc = reg.Matches(file);
                 Match result;
-                string imgpPatter = "";
+                string imgpPatter = string.Empty;
                 int zerofill = 0;
                 int resc = mc.Count;
 
@@ -2280,7 +2490,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private string FormatFileDateTime(string timeStr)
         {
-            if (timeStr.Trim() == "") return timeStr;
+            if (string.IsNullOrWhiteSpace(timeStr)) { return timeStr; }
             //空格切分日期时间
             timeStr = Regex.Replace(timeStr, @"\s", ">");
             //替换英文月份
@@ -2294,7 +2504,7 @@ namespace MoeLoaderDelta
                 {
                     if (timeStr.Contains(smonth[i], StringComparison.OrdinalIgnoreCase))
                     {
-                        timeStr = timeStr.Replace(smonth[i], i + 1 + "");
+                        timeStr = timeStr.Replace(smonth[i], i + 1 + string.Empty);
                     }
                 }
             }
@@ -2303,15 +2513,15 @@ namespace MoeLoaderDelta
             Match mcb = Regex.Match(timeStr, @">(?<num>\d{4})>");
             string yeara = mca.Groups["num"].ToSafeString();
             string yearb = mcb.Groups["num"].ToSafeString();
-            string month = "";
-            if (yeara != "")
+            string month = string.Empty;
+            if (!string.IsNullOrWhiteSpace(yeara))
             {
                 mca = Regex.Match(timeStr, @"(?<num>\d+)>");
                 month = mca.Groups["num"].ToSafeString();
                 timeStr = yeara + new Regex(@"(\d+)>").Replace(timeStr, month, 1);
                 timeStr = Regex.Replace(timeStr, yeara + @".*?>" + month, yeara + "<" + month);
             }
-            else if (yearb != "")
+            else if (!string.IsNullOrWhiteSpace(yearb))
             {
                 mcb = Regex.Match(timeStr, @"(?<num>\d+>\d+)");
                 month = mcb.Groups["num"].ToSafeString();
@@ -2357,17 +2567,14 @@ namespace MoeLoaderDelta
                     {
                         if (!isGetting)
                         {
-                            if (e.Key == Key.I)
-                            {   //反选
-                                ItmSelectInverse_Click(null, null);
-                            }
-                            else if (e.Key == Key.A)
-                            {   //全选
-                                ItmSelectAll_Click(null, null);
-                            }
-                            else if (e.Key == Key.Z)
-                            {   //全不选
-                                ItmUnSelectAll_Click(null, null);
+                            switch (e.Key)
+                            {
+                                //反选
+                                case Key.I: ItmSelectInverse_Click(null, null); break;
+                                //全选
+                                case Key.A: ItmSelectAll_Click(null, null); break;
+                                //全不选
+                                case Key.Z: ItmUnSelectAll_Click(null, null); break;
                             }
                         }
                         else if (e.Key == Key.S)
@@ -2375,48 +2582,36 @@ namespace MoeLoaderDelta
                             Button_Click(null, null);
                         }
 
-                        if (e.Key == Key.R)
-                        {//重试
-                            ItmReload_Click(null, null);
-                        }
-                        else if (e.Key == Key.Left)
-                        {//强制上一页
-                            e.Handled = true;
-                            DelayPageTurn(1, true);
-                        }
-                        else if (e.Key == Key.Right)
-                        {//强制下一页
-                            e.Handled = true;
-                            DelayPageTurn(2, true);
+                        switch (e.Key)
+                        {
+                            //重试
+                            case Key.R: ItmReload_Click(null, null); break;
+                            //强制上一页
+                            case Key.Left:
+                                e.Handled = true;
+                                DelayPageTurn(1, true);
+                                break;
+                            //强制下一页
+                            case Key.Right:
+                                e.Handled = true;
+                                DelayPageTurn(2, true);
+                                break;
                         }
                         return;
                     }
 
                     //滚动列表
-                    if (e.Key == Key.Down && scrList.ExtentHeight > 0)
+                    switch (e.Key)
                     {
-                        //避免焦点跑到其它地方
-                        e.Handled = true;
-                        //向下滚动列表
-                        scrList.ScrollToVerticalOffset(scrList.VerticalOffset + scrList.ViewportHeight * 0.5);
-                    }
-                    else if (e.Key == Key.Up && scrList.ExtentHeight > 0)
-                    {
-                        e.Handled = true;
-                        //向上滚动列表
-                        scrList.ScrollToVerticalOffset(scrList.VerticalOffset - scrList.ViewportHeight * 0.5);
-                    }
-                    else if (e.Key == Key.Home)
-                    {
-                        e.Handled = true;
-                        //滚动列表到顶部
-                        scrList.ScrollToTop();
-                    }
-                    else if (e.Key == Key.End)
-                    {
-                        e.Handled = true;
-                        //滚动列表到底部
-                        scrList.ScrollToBottom();
+                        case Key.Up:
+                        case Key.End:
+                        case Key.Down:
+                        case Key.Home:
+                        case Key.PageUp:
+                        case Key.PageDown:
+                            scrList.MoveScroll(null, e);
+                            e.Handled = true;
+                            break;
                     }
 
                     //左右键翻页
@@ -2453,11 +2648,12 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void itmxExplicit_Click(object sender, RoutedEventArgs e)
+        private void ItmxExplicit_Click(object sender, RoutedEventArgs e)
         {
             if (!itmxExplicit.IsChecked)
             {
-                if (MessageBox.Show(this, "Explicit评分的图片含有限制级内容，请确认您已年满18周岁", ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+                if (MessageBox.Show(this, "Explicit评分的图片含有限制级内容，请确认您已年满18周岁", ProgramName,
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                 {
                     itmxExplicit.IsChecked = true;
                 }
@@ -2469,8 +2665,7 @@ namespace MoeLoaderDelta
             try
             {
                 DragMove();
-                if (e.ClickCount < 2)
-                    ClickMaxButton = false;
+                ClickMaxButton = e.ClickCount < 2;
             }
             catch { }
         }
@@ -2510,8 +2705,8 @@ namespace MoeLoaderDelta
                 Max_Click(null, null);
                 GlassHelper.POINT mousep = new GlassHelper.POINT();
                 GlassHelper.GetCursorPos(out mousep);
-                this.Top = mousep.y - 50;
-                this.Left = mousep.x - this.Width / 2;
+                Top = mousep.y - 50;
+                Left = mousep.x - Width / 2;
                 Window_MouseDown_1(null, null);
             }
         }
@@ -2548,7 +2743,7 @@ namespace MoeLoaderDelta
             containerB.BorderBrush = new SolidColorBrush(Color.FromRgb(gray, gray, gray));
         }
 
-        private void contentWnd_SizeChanged_1(object sender, SizeChangedEventArgs e)
+        private void ContentWnd_SizeChanged_1(object sender, SizeChangedEventArgs e)
         {
             ContentPresenter cp = sender as ContentPresenter;
             Rectangle sn = Template.FindName("shadowN", this) as Rectangle;
@@ -2575,6 +2770,9 @@ namespace MoeLoaderDelta
             }
         }
 
+        /// <summary>
+        /// 主窗口关闭中
+        /// </summary>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             string CloseMsg = string.Empty;
@@ -2620,8 +2818,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void Window_Closed(object sender, EventArgs e)
         {
-            if (currentSession != null)
-                currentSession.IsStop = true;
+            if (currentSession != null) { currentSession.IsStop = true; }
 
             downloadC.StopAll();
 
@@ -2629,39 +2826,42 @@ namespace MoeLoaderDelta
             {
                 if (!IsCtrlDown())
                 {
-                    string words = "";
+                    string words = string.Empty;
                     foreach (string word in searchControl.UsedItems)
                     {
                         words += word + "|";
                     }
 
+                    const string qm = ";";
                     string text = downloadC.NumOnce + "\r\n"
                         + (DownloadControl.SaveLocation == ProgramRunPath
-                        ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + ";"
-                        + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + ";"
-                        + numOfLoading + ";"
-                        + (itmMaskViewed.IsChecked ? "1" : "0") + ";"
-                        + words + ";"
-                        + Proxy + ";"
-                        + BossKey + ";"
-                        + (itmSmallPre.IsChecked ? "1" : "0") + ";"
-                        + ProxyType + ";"
-                        + (int)ActualWidth + "," + (int)ActualHeight + ";"
-                        + (togglePram.IsChecked.Value ? "1" : "0") + ";"
-                        + PreFetcher.CachedImgCount + ";"
-                        + (downloadC.IsSepSave ? "1" : "0") + ";"
-                        + (itmxExplicit.IsChecked ? "1" : "0") + ";"
-                        + namePatter + ";"
-                        + num + ";"
-                        + bgSt + ";"
-                        + bgHe + ";"
-                        + bgVe + ";"
+                        ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + qm
+                        + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + qm
+                        + numOfLoading + qm
+                        + (itmMaskViewed.IsChecked ? "1" : "0") + qm
+                        + words + qm
+                        + Proxy + qm
+                        + BossKey + qm
+                        + thumbSize + qm
+                        + ProxyType + qm
+                        + (int)ActualWidth + "," + (int)ActualHeight + qm
+                        + (togglePram.IsChecked.Value ? "1" : "0") + qm
+                        + PreFetcher.CachedImgCount + qm
+                        + (downloadC.IsSepSave ? "1" : "0") + qm
+                        + (itmxExplicit.IsChecked ? "1" : "0") + qm
+                        + namePatter + qm
+                        + num + qm
+                        + bgSt + qm
+                        + bgHe + qm
+                        + bgVe + qm
                         + bgOp + "\r\n";
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
                         text += id.Key + ":" + id.Value + "\r\n";
                     }
                     File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
+                    DelDownloadResidual(DownloadControl.SaveLocation);
+                    SaveFavorite();
                 }
             }
             catch { }
@@ -2670,6 +2870,198 @@ namespace MoeLoaderDelta
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }
+
+        /// <summary>
+        /// 删除下载残留文件
+        /// </summary>
+        private void DelDownloadResidual(string dirPath)
+        {
+            DirectoryInfo d = new DirectoryInfo(dirPath);
+            FileSystemInfo[] fsInfos = d.GetFileSystemInfos();
+            if (fsInfos.Length > 1000) { return; }
+
+            foreach (FileSystemInfo fsInfo in fsInfos)
+            {
+                //判断是否为文件夹　　
+                if (fsInfo is DirectoryInfo)
+                {
+                    DelDownloadResidual(fsInfo.FullName);
+                    try { Directory.Delete(fsInfo.FullName, false); } catch { }
+                }
+                else if (System.IO.Path.GetExtension(fsInfo.FullName) == ".moe")
+                {
+                    fsInfo.Delete();
+                }
+            }
+        }
+        /// <summary>
+        /// 拖放文件到窗口
+        /// </summary>
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                if (e.Data.GetData(DataFormats.FileDrop).GetType().ToSafeString() != "System.String[]") { return; }
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                string file = files.FirstOrDefault(f =>
+                {
+                    string ext = System.IO.Path.GetExtension(f);
+                    switch (ext)
+                    {
+                        case ".jpg":
+                        case ".png":
+                        case ".gif":
+                            return true;
+                    }
+                    return false;
+                });
+
+                if (string.IsNullOrWhiteSpace(file)) { return; }
+                File.Copy(file, $"{ProgramRunPath}\\bg.png", true);
+                ChangeBg(bgOp, true);
+            }
+        }
+
+        #region ====== 缩略图列表拖选 ======
+        /// <summary>
+        /// 缩略图列表鼠标左键按下
+        /// </summary>
+        private void ImgList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            //记录拖选点
+            if (imgPanel.Children.Count > 0)
+            {
+                imgListPanel.CaptureMouse();
+                canDrag = e.Handled = true;
+                dragIsCtrl = IsCtrlDown();
+                dragStartPoint = e.GetPosition(imgListPanel);
+            }
+        }
+
+        /// <summary>
+        /// 缩略图列表鼠标左键放开
+        /// </summary>
+        private void ImgList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            //选中拖选框和缩略图交叉区域中的缩略图并删除拖选框
+            if (dragSelectBorder != null && dragSelectBorder.Width > 10 && dragSelectBorder.Height > 10 && imgPanel.Children.Count > 0)
+            {
+                e.Handled = true;
+                //循环选择必须在异步过程中、否则不能选择最后一个
+                UIElementCollection imgcs = imgPanel.Children;
+                Point dragEndPoint = e.GetPosition(imgListPanel);
+                Rect dragRect = new Rect(dragStartPoint, dragEndPoint);
+
+                foreach (ImgControl imgc in imgcs)
+                {
+                    Point imgcPoint = imgc.TranslatePoint(new Point(), imgListPanel);
+                    Rect imgcRect = new Rect(imgcPoint.X, imgcPoint.Y, imgc.Width, imgc.Height);
+
+                    async void DelayCalculation()
+                    {
+                        await Task.Delay(1);
+                        if (dragRect.IntersectsWith(imgcRect))
+                        {
+                            imgc.SetChecked(dragIsCtrl ? !imgc.IsChecked : true);
+                        }
+                    }
+                    DelayCalculation();
+                }
+            }
+            CancelDrawBox();
+            imgListPanel.ReleaseMouseCapture();
+        }
+
+        /// <summary>
+        /// 缩略图列表鼠标移动
+        /// </summary>
+        private void ImgList_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (canDrag && imgPanel.Children.Count > 0)
+            {
+                Point dragEndPoint = e.GetPosition(imgListPanel);
+                double dragWidth = Math.Abs(dragEndPoint.X - dragStartPoint.X),
+                    dragHeight = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+                if (dragWidth < -10 || dragWidth > 10 || dragHeight < -10 || dragHeight > 10)
+                {
+                    //如果没按住Ctrl则取消全部缩略图选中
+                    if (!dragIsCtrl && !dragIsClear) { ClearDrawSelected(); }
+                    //画拖选框
+                    DrawMultiselectBox(dragStartPoint, dragEndPoint);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 画拖选框
+        /// </summary>
+        /// <param name="dragStartPoint">起点</param>
+        /// <param name="dragEndPoint">终点</param>
+        private void DrawMultiselectBox(Point dragStartPoint, Point dragEndPoint)
+        {
+            if (dragSelectBorder == null)
+            {
+                dragSelectBorder = new Border
+                {
+                    VerticalAlignment = VerticalAlignment.Top,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Background = new SolidColorBrush(Color.FromArgb(68, 52, 163, 224)),
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(52, 163, 224))
+                };
+                dragSelectBorder.MouseLeftButtonUp += new MouseButtonEventHandler(ImgList_MouseLeftButtonUp);
+                dragSelectBorder.MouseMove += new MouseEventHandler(ImgList_MouseMove);
+                dragSelectBorder.PreviewMouseDown += new MouseButtonEventHandler(ImgList_PreviewMouseDown);
+                Panel.SetZIndex(dragSelectBorder, 200);
+                imgListPanel.Children.Add(dragSelectBorder);
+            }
+            dragSelectBorder.Width = Math.Abs(dragEndPoint.X - dragStartPoint.X);
+            dragSelectBorder.Height = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+
+            double dragLeft = 0, dragTop = 0;
+            dragLeft = dragEndPoint.X - dragStartPoint.X >= 0 ? dragStartPoint.X : dragEndPoint.X;
+            dragTop = dragEndPoint.Y - dragStartPoint.Y >= 0 ? dragStartPoint.Y : dragEndPoint.Y;
+            dragSelectBorder.Margin = new Thickness(dragLeft, dragTop, dragSelectBorder.Margin.Right, dragSelectBorder.Margin.Bottom);
+        }
+
+        /// <summary>
+        /// 缩略图列表按下任意键
+        /// </summary>
+        private void ImgList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //不是左键取消拖选框
+            if (canDrag && e.ChangedButton != MouseButton.Left) { CancelDrawBox(); }
+        }
+
+        /// <summary>
+        /// 清空多选
+        /// </summary>
+        private void ClearDrawSelected()
+        {
+            dragIsClear = true;
+            UIElementCollection imgcs = imgPanel.Children;
+            foreach (ImgControl imgc in imgcs)
+            {
+                if (imgc.IsChecked)
+                {
+                    imgc.SetChecked(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 取消拖选
+        /// </summary>
+        private void CancelDrawBox()
+        {
+            if (dragSelectBorder != null)
+            {
+                imgListPanel.Children.Remove(dragSelectBorder);
+                dragSelectBorder = null;
+            }
+            canDrag = dragIsClear = false;
+        }
+        #endregion ============
 
         #region 线程延迟执行翻页
         /// <summary>
@@ -2708,11 +3100,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-
-        }
-
         /// <summary>
         /// 线程延迟执行翻页
         /// </summary>
@@ -2732,7 +3119,7 @@ namespace MoeLoaderDelta
                     Button_Click(null, null);
                 }));
             }
-            Thread.Sleep(233);
+            Thread.Sleep(666);
             if (!isGetting)
             {
                 realPage--;
@@ -2753,7 +3140,7 @@ namespace MoeLoaderDelta
                     Button_Click(null, null);
                 }));
             }
-            Thread.Sleep(233);
+            Thread.Sleep(666);
             if (!isGetting)
             {
                 realPage++;
@@ -2766,4 +3153,6 @@ namespace MoeLoaderDelta
         #endregion
 
     }
+
+
 }

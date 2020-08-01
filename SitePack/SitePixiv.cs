@@ -15,7 +15,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200529
+    /// Last change 200722
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -125,7 +125,6 @@ namespace SitePack
         private static readonly string siteINI = $"{SiteManager.SitePacksPath}pixiv.ini";
         private static int startLogin = 0;
         private static string tempPage = null;
-        private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
@@ -250,7 +249,7 @@ namespace SitePack
                 {
                     if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                     {
-                        throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
+                        throw new Exception($"必须在关键词中指定画师 id{Environment.NewLine}如果想要使用标签进行搜索请选择 www.pixiv.net [TAG]");
                     }
                     //member id 
                     //url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
@@ -1040,7 +1039,14 @@ namespace SitePack
         /// <returns></returns>
         private string ThirdPrtyUrl(string imgUrl)
         {
-            return enableThirdParty ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
+            //随机数取16%概率使用原地址、减轻pixiv.cat服务器压力
+            Random rand = new Random(new Func<int>(() =>
+            {
+                byte[] bytes = new byte[4];
+                new System.Security.Cryptography.RNGCryptoServiceProvider().GetBytes(bytes);
+                return BitConverter.ToInt32(bytes, 0);
+            })());
+            return enableThirdParty && rand.Next(1, 100) > 16 ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
         }
 
         private void ShowMessage(string text)

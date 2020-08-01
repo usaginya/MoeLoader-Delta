@@ -58,16 +58,12 @@ namespace MoeLoaderDelta
     /// </summary>
     public partial class DownloadControl : UserControl
     {
-        public ScrollViewer Scrollviewer
-        {
-            get
-            {
-                return (ScrollViewer)dlList.Template.FindName("dlListSView", dlList);
-            }
-        }
+        public ScrollViewer Scrollviewer => (ScrollViewer)dlList.Template.FindName("dlListSView", dlList);
 
         public const string DLEXT = ".moe";
         private const string dlerrtxt = "下载失败下载未完成";
+
+        private bool isMouseSelect = false;
 
         //一个下载任务
         private class DownloadTask
@@ -278,7 +274,7 @@ namespace MoeLoaderDelta
 
 
                     //检查目录长度
-                    if (path.Length > 247)
+                    if (path.Length > 246)
                     {
                         DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
                         DownloadItems[DownloadItems.Count - NumLeft].Size = errTip;
@@ -300,7 +296,7 @@ namespace MoeLoaderDelta
                             file = dlitem.LocalName = path + dlitem.LocalFileName;
 
                             //检查全路径长度
-                            if (file.Length > 257)
+                            if (file.Length > 256)
                             {
                                 DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.Failed;
                                 DownloadItems[DownloadItems.Count - NumLeft].Size = errTip;
@@ -727,10 +723,10 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string ReplaceInvalidPathChars(string file, string path, int any)
         {
-            if (path.Length + file.Length > 257 && file.Contains("<!<"))
+            if (path.Length + file.Length > 256 && file.Contains("<!<"))
             {
                 string last = file.Substring(file.LastIndexOf("<!<"));
-                int endl = 257 - path.Length - last.Length;
+                int endl = 256 - path.Length - last.Length;
                 file = file.Substring(0, endl > 0 ? endl : 0);
 
                 if (file.Length > 0)
@@ -806,13 +802,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", MainWindow.ProgramName,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MainWindow.MainW.Control_Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", Control.Toast.MsgType.Success, 2500);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("保存失败:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MainWindow.MainW.Control_Toast.Show("保存失败:\r\n" + ex.Message, Control.Toast.MsgType.Error, 3600);
             }
         }
         /// <summary>
@@ -862,13 +857,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个图片地址已在列表中\r\n", MainWindow.ProgramName,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MainWindow.MainW.Control_Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", Control.Toast.MsgType.Success, 2500);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("保存失败:\r\n" + ex.Message, MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MainWindow.MainW.Control_Toast.Show("保存失败:\r\n" + ex.Message, Control.Toast.MsgType.Error, 3600);
             }
         }
         /// <summary>
@@ -968,16 +962,13 @@ namespace MoeLoaderDelta
                     case DLWorkMode.RemoveAll:
                         if (dlworkmode == DLWorkMode.Del && delitemfile < 1)
                         {
-                            if (MessageBox.Show("QwQ 真的要把任务和文件一起删除么？",
-                                MainWindow.ProgramName,
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Warning) == MessageBoxResult.No)
+                            if (MessageBox.Show("QwQ 真的要把任务和文件一起删除么？", MainWindow.ProgramName,
+                                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                             { delitemfile = 2; }
                             else
                             { delitemfile = 1; }
                         }
-                        if (delitemfile > 1)
-                            break;
+                        if (delitemfile > 1) { break; }
 
                         if (item.StatusE == DLStatus.DLing)
                         {
@@ -1331,14 +1322,19 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-
         /// 双击一个表项执行的操作
         /// </summary>
-        private void grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
+            DownloadItem dcitem = (DownloadItem)dlList.SelectedItem;
+
+            if (e.ClickCount == 1)
             {
-                DownloadItem dcitem = (DownloadItem)dlList.SelectedItem;
+                isMouseSelect = true;
+            }
+            else if (e.ClickCount == 2)
+            {
+
                 switch (dcitem.StatusE)
                 {
                     case DLStatus.Success:
@@ -1346,7 +1342,7 @@ namespace MoeLoaderDelta
                         if (File.Exists(dcitem.LocalName))
                             System.Diagnostics.Process.Start(dcitem.LocalName);
                         else
-                            MessageBox.Show("无法打开文件！可能已被更名、删除或移动", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MainWindow.MainW.Control_Toast.Show("无法打开文件！可能已被更名、删除或移动", Control.Toast.MsgType.Error);
                         break;
                     case DLStatus.Cancel:
                     case DLStatus.Failed:
@@ -1356,6 +1352,30 @@ namespace MoeLoaderDelta
                         ExecuteDownloadListTask(DLWorkMode.Stop);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 鼠标左键放开
+        /// </summary>
+        private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            isMouseSelect = false;
+            dlList.SelectionMode = SelectionMode.Extended;
+        }
+
+        /// <summary>
+        /// 鼠标移动事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Grid_MouseMove(object sender, MouseEventArgs e)
+        {
+            DownloadItem dlItem = (DownloadItem)((Grid)sender).DataContext;
+            if (isMouseSelect && dlItem != null && e.LeftButton == MouseButtonState.Pressed)
+            {
+                if(dlList.SelectionMode == SelectionMode.Extended) { dlList.SelectionMode = SelectionMode.Multiple; }
+                dlItem.IsSelected = true;
             }
         }
 
