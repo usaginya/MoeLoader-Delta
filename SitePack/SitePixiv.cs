@@ -7,7 +7,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -16,7 +15,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200517
+    /// Last change 200722
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -93,7 +92,7 @@ namespace SitePack
         public override string ShortName => "pixiv";
         public override string Referer => referer;
         public override string SubReferer => ShortName + ",pximg";
-        public override string LoginURL => SiteManager.SiteLoginType.Cookie.ToSafeString();
+        public override string LoginURL => SiteManager.SiteLoginType.Custom.ToSafeString();
         public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
         public override string LoginUser => nowUser ?? base.LoginUser;
 
@@ -123,12 +122,9 @@ namespace SitePack
         private int count = 1;
         private string keyWord = null;
         private static string cookie = string.Empty, nowUser = null;
-        private readonly string[] user = { "moe1user", "moe3user", "a-rin-a" };
-        private readonly string[] pass = { "630489372", "1515817701", "2422093014" };
         private static readonly string siteINI = $"{SiteManager.SitePacksPath}pixiv.ini";
         private static int startLogin = 0;
         private static string tempPage = null;
-        private Random rand = new Random();
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private PixivSrcType srcType = PixivSrcType.Tag;
@@ -183,11 +179,10 @@ namespace SitePack
         /// </summary>
         private void FirstLogin(IWebProxy proxy)
         {
-            if (startLogin < 1)
+            if (startLogin < 1 && srcType == PixivSrcType.Author)
             {
                 startLogin = 1;
-                CookieRestore(proxy);
-                Login(proxy);
+                CookieLogin(proxy, false, false);
                 startLogin = 2;
             }
         }
@@ -209,7 +204,7 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            if (!Login(proxy))
+            if (!IsLoginSite)
             {
                 return string.Empty;
             }
@@ -254,7 +249,7 @@ namespace SitePack
                 {
                     if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                     {
-                        throw new Exception("必须在关键词中指定画师 id；若需要使用标签进行搜索请使用 www.pixiv.net [TAG]");
+                        throw new Exception($"必须在关键词中指定画师 id{Environment.NewLine}如果想要使用标签进行搜索请选择 www.pixiv.net [TAG]");
                     }
                     //member id 
                     //url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
@@ -939,124 +934,6 @@ namespace SitePack
         }
 
         /// <summary>
-        /// 还原Cookie
-        /// </summary>
-        private void CookieRestore(IWebProxy proxy)
-        {
-            if (!string.IsNullOrWhiteSpace(cookie)) return;
-
-            if (!CookieLogin(proxy))
-            {
-                string ck = Sweb.GetURLCookies(SiteUrl);
-                cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"pixiv;{ck}";
-            }
-        }
-
-        /// <summary>
-        /// 登录
-        /// </summary>
-        /// <param name="proxy"></param>
-        /// <returns>返回登录状态</returns>
-        private bool Login(IWebProxy proxy)
-        {
-            if (string.IsNullOrWhiteSpace(cookie) || (!cookie.Contains("pixiv") && !cookie.Contains("token=")) || IsLoginSite)
-            {
-                try
-                {
-                    nowUser = null;
-                    cookie = string.Empty;
-                    string data = string.Empty, post_key = string.Empty,
-                        loginpost = "https://accounts.pixiv.net/api/login?lang=zh";
-
-                    if (IsLoginSite)
-                    {
-                        if (!CookieLogin(proxy))
-                        {
-                            return Login(proxy); //重新自动登录
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        int index = rand.Next(0, user.Length);
-
-                        shc.Referer = Referer;
-                        shc.Remove("X-Requested-With");
-                        shc.Remove("Accept-Ranges");
-                        shc.Remove("Cookie");
-                        shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-                        HtmlAgilityPack.HtmlDocument hdoc = new HtmlAgilityPack.HtmlDocument();
-
-                        //请求1 获取登录参数post_key
-                        data = Sweb.Get(LoginUrl, proxy, shc);
-                        hdoc.LoadHtml(data);
-                        post_key = hdoc.DocumentNode.SelectSingleNode("//input[@name='post_key']").Attributes["value"].Value;
-                        if (post_key.Length < 9)
-                        {
-                            SiteManager.EchoErrLog(SiteName, "自动登录失败 ", startLogin < 2);
-                            return false;
-                        }
-
-                        //请求2 POST取登录Cookie
-                        shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                        data = $@"&captcha=&g_recaptcha_response=
-&password={pass[index]}
-&pixiv_id={user[index]}
-&post_key={post_key}
-&source=accounts&ref=&return_to=https%3A%2F%2Fwww.pixiv.net%2F";
-                        data = Sweb.Post(loginpost, data, proxy, shc);
-                        cookie = Sweb.GetURLCookies(SiteUrl);
-
-                        if (!data.Contains("success"))
-                        {
-                            if (startLogin > 1)
-                            {
-                                if (data.Contains("locked"))
-                                {
-                                    ShowMessage($"登录Pixiv时IP被封锁，剩余时间：{Regex.Match(data, "lockout_time_by_ip\":\"(\\d+)\"").Groups[1].Value}");
-                                }
-                                else if (cookie.Length < 9)
-                                {
-                                    ShowMessage("自动登录失败 ");
-                                }
-                                else
-                                {
-                                    string errinfo = $"自动登录失败 {Regex.Unescape(data)}";
-                                    errinfo = IsLoginSite ? errinfo : $"{errinfo}\r\n\r\n请使用右键菜单[ 登录站点 ]登录\r\n" +
-                                        $"账号：{user[index]}\r\n密码：{pass[index]}\r\n或使用自己的账号登录\r\n\r\n点击 [确定] 复制内置账号";
-
-                                    if (MessageBox.Show(errinfo, ShortName, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
-                                    {
-                                        Thread newThread = new Thread(() => Clipboard.SetText($"{user[index]} {pass[index]}"));
-                                        newThread.SetApartmentState(ApartmentState.STA);
-                                        newThread.Start();
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            cookie = $"pixiv;{cookie}";
-                            nowUser = "内置账号";
-                            return true;
-                        }
-                        return false;
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    SiteManager.EchoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器", startLogin < 2);
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
         /// 用于菜单调用登录
         /// </summary>
         public override bool LoginCall(IWebProxy proxy)
@@ -1072,10 +949,9 @@ namespace SitePack
         private bool CookieLogin(IWebProxy proxy, bool callBack = false, bool call = false)
         {
             IsLoginSite = false;
-
             bool result = IsLoginSite;
             string tmp_cookie = SiteConfig("Login", "Cookie"),
-                loggedFlags = ".loggedIn = t";
+                loggedFlags = "login: 'yes'";
 
             if (string.IsNullOrWhiteSpace(tmp_cookie) || call)
             {
@@ -1126,8 +1002,7 @@ namespace SitePack
                 {
                     IsLoginSite = result;
                     cookie = tmp_cookie;
-                    nowUser = "你的账号";
-                    cookie = $"pixiv;{cookie}";
+                    nowUser = "已登录";
                 }
                 else
                 {
@@ -1135,9 +1010,9 @@ namespace SitePack
                     result = IsLoginSite = false;
                 }
             }
-            catch
+            catch (Exception e)
             {
-                SiteManager.EchoErrLog(SiteName, "用户登录失败 ", startLogin < 2);
+                SiteManager.EchoErrLog(SiteName, $"用户登录失败\r\n{e.Message}", startLogin < 2);
             }
 
             return result;
@@ -1164,7 +1039,14 @@ namespace SitePack
         /// <returns></returns>
         private string ThirdPrtyUrl(string imgUrl)
         {
-            return enableThirdParty ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
+            //随机数取16%概率使用原地址、减轻pixiv.cat服务器压力
+            Random rand = new Random(new Func<int>(() =>
+            {
+                byte[] bytes = new byte[4];
+                new System.Security.Cryptography.RNGCryptoServiceProvider().GetBytes(bytes);
+                return BitConverter.ToInt32(bytes, 0);
+            })());
+            return enableThirdParty && rand.Next(1, 100) > 16 ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
         }
 
         private void ShowMessage(string text)

@@ -13,6 +13,9 @@ namespace MoeLoaderDelta
     public partial class OptionWnd : Window
     {
         private MainWindow main;
+        private bool isSaved = false;
+        private double oldBgOp = 0;
+        private System.Windows.Forms.Keys keysBackup = MainWindow.BossKey;
 
         public OptionWnd(MainWindow main)
         {
@@ -20,10 +23,12 @@ namespace MoeLoaderDelta
             InitializeComponent();
             Title = MainWindow.ProgramName + " Option";
 
-            if (!System.IO.File.Exists(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\nofont.txt"))
+            if (!File.Exists(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\nofont.txt"))
             {
                 FontFamily = new FontFamily("Microsoft YaHei");
             }
+
+            oldBgOp = sBgOpacity.Value = main.bgOp;
 
             txtProxy.Text = MainWindow.Proxy;
 
@@ -38,8 +43,9 @@ namespace MoeLoaderDelta
                 txtProxy.IsEnabled = true;
             }
             txtBossKey.Text = MainWindow.BossKey.ToString();
+            MainWindow.BossKey = System.Windows.Forms.Keys.None;
             txtPattern.Text = main.namePatter;
-            chkProxy_Click(null, null);
+            ChkProxy_Click(null, null);
             //chkAero.IsChecked = main.isAero;
             txtCount.Text = PreFetcher.CachedImgCount.ToString();
             txtParal.Text = main.downloadC.NumOnce.ToString();
@@ -48,6 +54,7 @@ namespace MoeLoaderDelta
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
 
+            #region ---- bgSelect ----
             if (main.bgSt == Stretch.None)
             {
                 cbBgSt.SelectedIndex = 0;
@@ -86,6 +93,7 @@ namespace MoeLoaderDelta
             {
                 cbBgVe.SelectedIndex = 2;
             }
+            #endregion
 
             textNameHelp.ToolTip = "【以下必须是小写英文】\r\n%site 站点名\r\n%id 编号\r\n%tag 标签\r\n%desc 描述\r\n"
                 + "%author 作者名\r\n%date 上载时间\r\n%imgp[3] 图册页数[页数总长度(补0)]\r\n\r\n"
@@ -103,6 +111,17 @@ namespace MoeLoaderDelta
             FNRimgp.Click += new RoutedEventHandler(FNRinsert);
             FNRcut.Click += new RoutedEventHandler(FNRinsert);
             #endregion
+
+            //绑定背景可见度滑块
+            sBgOpacity.ValueChanged += new RoutedPropertyChangedEventHandler<double>(SBgOpacityChange);
+        }
+
+        /// <summary>
+        /// 背景可见度滑块改变
+        /// </summary>
+        private void SBgOpacityChange(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            main.ChangeBg(Math.Round(e.NewValue, 2));
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -113,13 +132,13 @@ namespace MoeLoaderDelta
                 MessageBox.Show("存储位置目录不正确，请重新设置", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (!System.IO.Directory.Exists(txtSaveLocation.Text))
+            if (!Directory.Exists(txtSaveLocation.Text))
             {
                 MessageBoxResult rsl = MessageBox.Show(this, txtSaveLocation.Text +
                     " 目录不存在，要创建它吗？", MainWindow.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (rsl == MessageBoxResult.Yes)
                 {
-                    System.IO.Directory.CreateDirectory(txtSaveLocation.Text);
+                    Directory.CreateDirectory(txtSaveLocation.Text);
                 }
                 else
                 {
@@ -133,8 +152,7 @@ namespace MoeLoaderDelta
                 if (System.Text.RegularExpressions.Regex.IsMatch(add, @"^.+:(\d+)$"))
                 //@"^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]):(\d+)$"))
                 {
-                    int port;
-                    if (int.TryParse(add.Substring(add.IndexOf(':') + 1), out port))
+                    if (int.TryParse(add.Substring(add.IndexOf(':') + 1), out int port))
                     {
                         if (port > 0 && port < 65535)
                         {
@@ -151,7 +169,7 @@ namespace MoeLoaderDelta
                 }
             }
             else
-                MainWindow.Proxy = "";
+                MainWindow.Proxy = string.Empty;
 
             if (txtPattern.Text.Trim().Length > 0)
             {
@@ -235,12 +253,13 @@ namespace MoeLoaderDelta
             main.downloadC.IsSaSave = chkSaSave.IsChecked.Value;
             main.downloadC.NumOnce = int.Parse(txtParal.Text);
 
+            isSaved = true;
             Close();
         }
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
@@ -251,25 +270,26 @@ namespace MoeLoaderDelta
             txtBossKey.Text = System.Windows.Forms.Keys.F9.ToString();
             rtNoProxy.IsChecked = true;
             txtCount.Text = "6";
-            chkProxy_Click(null, null);
+            ChkProxy_Click(null, null);
             txtParal.Text = "2";
             chkSepSave.IsChecked = chkSscSave.IsChecked = chkSaSave.IsChecked = false;
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
+            sBgOpacity.Value = 0.5;
             txtSaveLocation.Text = "MoeLoaderGallery";
         }
 
-        private void txtBossKey_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TxtBossKey_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.System && e.Key != Key.LeftAlt && e.Key != Key.LeftCtrl && e.Key != Key.LeftShift
+            if (e.Key != Key.System && e.Key != Key.LeftAlt && e.Key != Key.LeftCtrl && e.Key != Key.LeftShift && e.Key != Key.Tab
                 && e.Key != Key.RightAlt && e.Key != Key.RightCtrl && e.Key != Key.RightShift && e.Key != Key.LWin && e.Key != Key.RWin)
             {
                 txtBossKey.Text = ((System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key)).ToString();
+                e.Handled = true;
             }
-            e.Handled = true;
         }
 
-        private void chkProxy_Click(object sender, RoutedEventArgs e)
+        private void ChkProxy_Click(object sender, RoutedEventArgs e)
         {
             if (txtProxy != null)
             {
@@ -283,36 +303,36 @@ namespace MoeLoaderDelta
         }
 
         #region prefetch img count
-        private void txtPage_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back || e.Key == Key.Enter
+            if (!((e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9) || (e.Key >= Key.D0 && e.Key <= Key.D9) || e.Key == Key.Back || e.Key == Key.Enter
                 || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
             {
                 e.Handled = true;
             }
         }
 
-        private void pageUp_Click(object sender, RoutedEventArgs e)
+        private void PageUp_Click(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtCount.Text);
             if (value < 20)
                 txtCount.Text = (value + 1).ToString();
         }
 
-        private void pageDown_Click(object sender, RoutedEventArgs e)
+        private void PageDown_Click(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtCount.Text);
             if (value > 1)
                 txtCount.Text = (value - 1).ToString();
         }
-        private void pageUp_Click1(object sender, RoutedEventArgs e)
+        private void PageUp_Click1(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtParal.Text);
             if (value < 20)
                 txtParal.Text = (value + 1).ToString();
         }
 
-        private void pageDown_Click1(object sender, RoutedEventArgs e)
+        private void PageDown_Click1(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtParal.Text);
             if (value > 1)
@@ -328,7 +348,7 @@ namespace MoeLoaderDelta
                 + "\r\nMoeLoader ©2008-2013 esonic All rights reserved.\r\n\r\n"
                 + "Δ Version by YIU\r\n"
                 + "Email: degdod@qq.com\r\nSite: http://usaginya.lofter.com/"
-                + "\r\nMoeLoader Δ ©2016-" + DateTime.Now.Year.ToString()
+                + "\r\nMoeLoader Δ ©2016-2020"
                 + " Moekai All rights reserved.\r\n\r\n"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -350,7 +370,7 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void textNameHelp_MouseDown(object sender, MouseButtonEventArgs e)
+        private void TextNameHelp_MouseDown(object sender, MouseButtonEventArgs e)
         {
             MessageBox.Show(this, textNameHelp.ToolTip.ToString(), MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -389,5 +409,12 @@ namespace MoeLoaderDelta
             txtPattern.Focus();
         }
 
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (isSaved) { return; }
+            main.bgOp = oldBgOp;
+            main.ChangeBg(oldBgOp);
+            MainWindow.BossKey = keysBackup;
+        }
     }
 }

@@ -6,8 +6,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
     Width="400"
-    Height="490"
-    Icon="m.ico"
+    Height="522"
+    Closed="Window_Closed"
+    Icon="../m.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
     WindowStartupLocation="CenterScreen"
@@ -15,7 +16,7 @@
 
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
-            <RowDefinition Height="135" />
+            <RowDefinition Height="165" />
             <!--<RowDefinition Height="70"/>-->
             <RowDefinition Height="185" />
             <RowDefinition Height="90" />
@@ -48,7 +49,7 @@
                         x:FieldModifier="private"
                         InputMethod.IsInputMethodEnabled="False"
                         MaxLength="2"
-                        PreviewKeyDown="txtPage_PreviewKeyDown"
+                        PreviewKeyDown="TxtPage_PreviewKeyDown"
                         Style="{StaticResource SimpleTextBox}" />
                     <Button
                         x:Name="pageUp"
@@ -56,7 +57,7 @@
                         Margin="1,5,0,4"
                         x:FieldModifier="private"
                         BorderThickness="1"
-                        Click="pageUp_Click"
+                        Click="PageUp_Click"
                         Content="˄"
                         Style="{StaticResource SimpleButton}" />
                     <Button
@@ -65,7 +66,7 @@
                         Margin="1,5,0,4"
                         x:FieldModifier="private"
                         BorderThickness="1"
-                        Click="pageDown_Click"
+                        Click="PageDown_Click"
                         Content="˅"
                         Style="{StaticResource SimpleButton}" />
                 </StackPanel>
@@ -73,7 +74,7 @@
                     x:Name="txtBossKey"
                     Margin="95,45,114,0"
                     VerticalAlignment="Top"
-                    PreviewKeyDown="txtBossKey_PreviewKeyDown"
+                    PreviewKeyDown="TxtBossKey_PreviewKeyDown"
                     Text=""
                     TextWrapping="NoWrap" />
                 <TextBlock
@@ -149,6 +150,20 @@
                     MouseDown="TextBlock_MouseDown_1"
                     Text="?"
                     TextDecorations="Underline" />
+                <TextBlock
+                    Margin="10,112,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Text="背景可见度"
+                    TextWrapping="Wrap" />
+                <Slider
+                    Name="sBgOpacity"
+                    Margin="92,112,12,6"
+                    FontSize="12"
+                    IsMoveToPointEnabled="True"
+                    Maximum="1"
+                    Minimum="0.1"
+                    Style="{StaticResource DoubleSliderStyle}" />
             </Grid>
         </GroupBox>
         <GroupBox
@@ -167,21 +182,21 @@
                 <RadioButton
                     x:Name="rtNoProxy"
                     Margin="10,11,0,0"
-                    Checked="chkProxy_Click"
+                    Checked="ChkProxy_Click"
                     Content="不使用代理"
                     IsChecked="True" />
                 <RadioButton
                     x:Name="rtSystem"
                     Grid.Column="1"
                     Margin="0,11,0,0"
-                    Checked="chkProxy_Click"
+                    Checked="ChkProxy_Click"
                     Content="使用IE代理" />
                 <RadioButton
                     x:Name="rtCustom"
                     Grid.Row="1"
                     Grid.ColumnSpan="2"
                     Margin="10,5,0,0"
-                    Checked="chkProxy_Click"
+                    Checked="ChkProxy_Click"
                     Content="自定义" />
                 <TextBox
                     x:Name="txtProxy"
@@ -264,14 +279,14 @@
                         Width="15"
                         Margin="1,5,0,4"
                         BorderThickness="1"
-                        Click="pageUp_Click1"
+                        Click="PageUp_Click1"
                         Content="˄"
                         Style="{StaticResource SimpleButton}" />
                     <Button
                         Width="15"
                         Margin="1,5,0,4"
                         BorderThickness="1"
-                        Click="pageDown_Click1"
+                        Click="PageDown_Click1"
                         Content="˅"
                         Style="{StaticResource SimpleButton}" />
                 </StackPanel>
@@ -296,7 +311,7 @@
                     Cursor="Help"
                     FontSize="14"
                     FontWeight="Bold"
-                    MouseDown="textNameHelp_MouseDown"
+                    MouseDown="TextNameHelp_MouseDown"
                     Text="?"
                     TextDecorations="Underline" />
                 <Button

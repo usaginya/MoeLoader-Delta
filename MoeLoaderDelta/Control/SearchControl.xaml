@@ -20,6 +20,7 @@
         </Storyboard>
         <Style x:Key="MyComboBox" TargetType="{x:Type ComboBox}">
             <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="MaxDropDownHeight" Value="230" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ComboBox}">
@@ -50,16 +51,15 @@
                                 VerticalAlignment="Center"
                                 Background="Transparent"
                                 Focusable="True"
-                                Foreground="#AAAAAA"
+                                Foreground="#AAA"
                                 GotFocus="PART_EditableTextBox_GotFocus"
                                 IsReadOnly="{TemplateBinding IsReadOnly}"
                                 LostFocus="PART_EditableTextBox_LostFocus_1"
                                 Style="{x:Null}"
-                                Tag="输入想要搜索的图片关键字"
+                                Tag="输入想要搜索的图片关键词"
                                 Template="{DynamicResource ComboBoxTextBox}"
-                                Text="输入想要搜索的图片关键字"
-                                TextChanged="PART_EditableTextBox_TextChanged"
-                                Visibility="Visible" />
+                                Text="输入想要搜索的图片关键词"
+                                TextChanged="PART_EditableTextBox_TextChanged" />
 
                             <!--  The Popup shows the list of items in the ComboBox. IsOpen is databound to IsDropDownOpen which is toggled via the ComboBoxToggleButton  -->
                             <Popup
@@ -74,6 +74,7 @@
                                     MinWidth="{TemplateBinding ActualWidth}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                     Focusable="False"
+                                    Opacity="0.86"
                                     SnapsToDevicePixels="True">
                                     <Border
                                         x:Name="DropDownBorder"
@@ -188,13 +189,13 @@
     <Grid x:Name="LayoutRoot">
         <ComboBox
             x:Name="txtSearch"
-            DropDownOpened="txtSearch_DropDownOpened"
+            DropDownOpened="TxtSearch_DropDownOpened"
             IsEditable="False"
             IsReadOnly="False"
             IsTextSearchEnabled="False"
             ItemContainerStyle="{DynamicResource ComboBoxItemStyle1}"
             PreviewKeyDown="PART_EditableTextBox_KeyDown"
-            SelectionChanged="txtSearch_SelectionChanged"
+            SelectionChanged="TxtSearch_SelectionChanged"
             StaysOpenOnEdit="True"
             Style="{StaticResource MyComboBox}" />
         <Path

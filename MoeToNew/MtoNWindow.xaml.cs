@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 20170510       by YIU
-    /// Last 20180808
+    /// Last 20200801
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -47,7 +47,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 需要更新的文件表信息
         /// </summary>
-        private string UpdateFilesInfo = "";
+        private string UpdateFilesInfo = string.Empty;
 
         /// <summary>
         /// 更新文件暂存目录
@@ -142,8 +142,10 @@ namespace MoeLoaderDelta
         {
 
             #region 取更新信息
-            MyWebClient web = new MyWebClient();
-            web.Proxy = WebRequest.DefaultWebProxy;
+            MyWebClient web = new MyWebClient
+            {
+                Proxy = WebRequest.DefaultWebProxy
+            };
             string updatejson = web.DownloadString(updateInfoUrl);
             #endregion
 
@@ -238,12 +240,14 @@ namespace MoeLoaderDelta
             try
             {
                 string nowDy = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = nowDy + "MoeLoaderDelta.exe";
-                psi.UseShellExecute = false;
-                psi.WorkingDirectory = nowDy;
-                psi.CreateNoWindow = true;
-                psi.Arguments = arg;
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = nowDy + "MoeLoaderDelta.exe",
+                    UseShellExecute = false,
+                    WorkingDirectory = nowDy,
+                    CreateNoWindow = true,
+                    Arguments = arg
+                };
                 Process.Start(psi);
             }
             catch { }
@@ -294,8 +298,10 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ReplaceNewFile()
         {
-            List<string> exculde = new List<string>();
-            exculde.Add(UpdateAppName);
+            List<string> exculde = new List<string>
+            {
+                UpdateAppName
+            };
             DataHelpers.MoveFolder(updateTmpPath, ".", exculde);
         }
 

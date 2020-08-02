@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -17,8 +14,7 @@ namespace MoeLoaderDelta
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                ScrollBar sc = sender as ScrollBar;
-                if (sc != null)
+                if (sender is ScrollBar sc)
                 {
                     ScrollViewer sv = sc.TemplatedParent as ScrollViewer;
                     double pos = e.GetPosition(sc).Y;
@@ -35,8 +31,7 @@ namespace MoeLoaderDelta
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                ScrollBar sc = sender as ScrollBar;
-                if (sc != null)
+                if (sender is ScrollBar sc)
                 {
                     ScrollViewer sv = sc.TemplatedParent as ScrollViewer;
                     //sv.ScrollToHorizontalOffset(e.GetPosition(sc).X / sc.ActualWidth * sv.ExtentWidth);

@@ -104,11 +104,20 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LZ4, Version=1.0.15.93, Culture=neutral, PublicKeyToken=62e1b5ec1eec9bdd, processorArchitecture=MSIL">
+      <HintPath>..\packages\lz4net.1.0.15.93\lib\net4-client\LZ4.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.Expression.Drawing">
       <HintPath>..\lib\Microsoft.Expression.Drawing.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -134,9 +143,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Control\AnimatedGIF.cs" />
+    <Compile Include="Control\PopupEx.cs" />
     <Compile Include="Control\PreviewImg.xaml.cs">
       <DependentUpon>PreviewImg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Control\SmoothScrollViewer.cs" />
+    <Compile Include="Control\Toast.xaml.cs">
+      <DependentUpon>Toast.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Control\TreeViewModel.cs" />
     <Compile Include="Converter\BackgroundToForegroundConverter.cs" />
     <Compile Include="Converter\Converters.cs" />
     <Compile Include="Converter\PercentToAngleConverter.cs" />
@@ -145,10 +160,11 @@
     <Compile Include="Converter\TreeViewMarginConverter.cs" />
     <Compile Include="Converter\TrueToFalseConverter.cs" />
     <Compile Include="Control\DownloadItem.cs" />
-    <Compile Include="ErrForm.cs">
+    <Compile Include="Converter\NullToCollapsedConverter.cs" />
+    <Compile Include="Windows\ErrForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ErrForm.Designer.cs">
+    <Compile Include="Windows\ErrForm.Designer.cs">
       <DependentUpon>ErrForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers\DataHelpers.cs" />
@@ -165,7 +181,31 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="OptionWnd.xaml">
+    <Page Include="Control\Toast.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Style\WindowControlButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Style\TreeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\SingleTextInputWnd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Windows\FavoriteAddWnd.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Windows\FavoriteWnd.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\OptionWnd.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -173,7 +213,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PreviewWnd.xaml">
+    <Page Include="Windows\PreviewWnd.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -185,7 +225,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -198,7 +238,16 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Helpers\GlassHelper.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\SingleTextInputWnd.xaml.cs">
+      <DependentUpon>SingleTextInputWnd.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\FavoriteAddWnd.xaml.cs">
+      <DependentUpon>FavoriteAddWnd.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\FavoriteWnd.xaml.cs">
+      <DependentUpon>FavoriteWnd.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -206,9 +255,13 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Style\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OptionWnd.xaml.cs">
+    <Compile Include="Windows\OptionWnd.xaml.cs">
       <DependentUpon>OptionWnd.xaml</DependentUpon>
     </Compile>
     <Compile Include="Control\DownloadControl.xaml.cs">
@@ -217,7 +270,7 @@
     <Compile Include="Control\ImgControl.xaml.cs">
       <DependentUpon>ImgControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PreviewWnd.xaml.cs">
+    <Compile Include="Windows\PreviewWnd.xaml.cs">
       <DependentUpon>PreviewWnd.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -233,7 +286,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <EmbeddedResource Include="ErrForm.resx">
+    <EmbeddedResource Include="Windows\ErrForm.resx">
       <DependentUpon>ErrForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -241,6 +294,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -327,6 +381,23 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images\extsetting1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\favorites.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\treeclose.png" />
+    <Resource Include="Images\treeopen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\adddir.png" />
+    <Resource Include="Images\closedir.png" />
+    <Resource Include="Images\opendir.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\chk_f.png" />
+    <Resource Include="Images\chk_n.png" />
+    <Resource Include="Images\chk_t.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

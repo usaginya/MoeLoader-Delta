@@ -21,7 +21,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// 图片站点的接口
     /// </summary>
-    public interface ImageSite
+    public interface IMageSite
     {
         /// <summary>
         /// 站点URL，用于打开该站点主页。eg. http://yande.re
@@ -150,7 +150,7 @@ namespace MoeLoaderDelta
         /// <param name="keyWord">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>图片信息列表</returns>
-        List<Img> GetImages(int page, int count, string keyWord, System.Net.IWebProxy proxy);
+        List<Img> GetImages(int page, int count, string keyWord, IWebProxy proxy);
 
         /// <summary>
         /// 获取页面的源代码，例如HTML
@@ -160,7 +160,7 @@ namespace MoeLoaderDelta
         /// <param name="keyWord">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>页面源代码</returns>
-        string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy);
+        string GetPageString(int page, int count, string keyWord, IWebProxy proxy);
 
         /// <summary>
         /// 从页面源代码获取图片列表
@@ -168,7 +168,7 @@ namespace MoeLoaderDelta
         /// <param name="pageString">页面源代码</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>图片信息列表</returns>
-        List<Img> GetImages(string pageString, System.Net.IWebProxy proxy);
+        List<Img> GetImages(string pageString, IWebProxy proxy);
 
         /// <summary>
         /// 获取关键词自动提示列表
@@ -176,7 +176,7 @@ namespace MoeLoaderDelta
         /// <param name="word">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>提示列表项集合</returns>
-        List<TagItem> GetTags(string word, System.Net.IWebProxy proxy);
+        List<TagItem> GetTags(string word, IWebProxy proxy);
 
         /// <summary>
         /// 图片过滤

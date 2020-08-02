@@ -11,18 +11,18 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200517
+    /// Last 20200722
     /// </summary>
     public class SiteManager
     {
         /// <summary>
         /// 站点登录类型 用于LoginURL
         /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
-        /// Cookie 用于P站之类的
+        /// Custom 调用站点独立登录方法
         /// </summary>
-        public enum SiteLoginType { FillIn, Cookie }
+        public enum SiteLoginType { FillIn, Custom }
 
-        private static List<ImageSite> sites = new List<ImageSite>();
+        private static List<IMageSite> sites = new List<IMageSite>();
         private static SiteManager instance;
 
         /// <summary>
@@ -34,8 +34,12 @@ namespace MoeLoaderDelta
 
         private SiteManager()
         {
-
-            string[] dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
+            string[] dlls= { };
+            try
+            {
+               dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
+            }
+            catch { }
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
@@ -58,7 +62,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<ImageSite>);
+                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<IMageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -85,7 +89,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点集合
         /// </summary>
-        public List<ImageSite> Sites => sites;
+        public List<IMageSite> Sites => sites;
 
         /// <summary>
         /// 站点登录处理 通过IE
@@ -97,7 +101,8 @@ namespace MoeLoaderDelta
         /// <param name="shc">站点内部SessionHeadersCollection</param>
         /// <param name="PageString">返回验证登录时的页面HTML</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
+        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags,
+            ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
         {
             string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
             bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
@@ -141,7 +146,7 @@ namespace MoeLoaderDelta
         /// <param name="Sweb">站点内部SessionClient</param>
         /// <param name="shc">站点内部SessionHeadersCollection</param>
         /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
         {
             string NullPageString = string.Empty;
             return LoginSite(imageSite, ref cookie, LoggedFlags, ref Sweb, ref shc, ref NullPageString);
@@ -176,7 +181,8 @@ namespace MoeLoaderDelta
             }
             if (!NoShow)
             {
-                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //压缩记录
             long sourceLength = new FileInfo(logPath).Length;
@@ -217,7 +223,7 @@ namespace MoeLoaderDelta
         /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
         /// <param name="filePath">配置文件路径</param>
         /// <returns></returns>
-        [DllImport("kernel32")]
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
         public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
 
         /// <summary>
@@ -228,7 +234,7 @@ namespace MoeLoaderDelta
         /// <param name="val">值</param>
         /// <param name="filepath">配置文件路径</param>
         /// <returns></returns>
-        [DllImport("kernel32")]
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
         public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
 
         /// <summary>
@@ -241,8 +247,12 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
         {
-            StringBuilder sb = new StringBuilder(32767);
-            GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
+            StringBuilder sb = new StringBuilder(short.MaxValue);
+            try
+            {
+                GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
+            }
+            catch (Exception) { }
             return sb.ToString();
         }
         #endregion

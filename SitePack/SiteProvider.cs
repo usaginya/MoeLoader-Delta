@@ -6,9 +6,9 @@ namespace SitePack
 {
     class SiteProvider
     {
-        public List<ImageSite> SiteList(IWebProxy proxy)
+        public List<IMageSite> SiteList(IWebProxy proxy)
         {
-            List<ImageSite> sites = new List<ImageSite>();
+            List<IMageSite> sites = new List<IMageSite>();
 
             bool ecchimode = System.IO.File.Exists(
                 $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
@@ -40,7 +40,8 @@ namespace SitePack
                     "https://danbooru.donmai.us",
                     "https://danbooru.donmai.us/posts.json?page={0}&limit={1}&tags={2}",
                     "https://danbooru.donmai.us/tags/autocomplete.json?search%5Bname_matches%5D={0}",
-                    "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON));
+                    "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON,
+                    "https://danbooru.donmai.us/login"));
 
             sites.Add(new SiteBooru(
                 "http://behoimi.org",
