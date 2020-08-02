@@ -75,7 +75,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private string FavoritePath => $"{ProgramRunPath}\\MLD_fav.mld";
 
-        private const string IMGLOADING = "图片加载中...";
+        private const string IMGLOADING = "少女加载中...";
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
@@ -535,9 +535,20 @@ namespace MoeLoaderDelta
         /// </summary>
         private void LoadBgImg()
         {
-            string bgPath = $"{ProgramRunPath}\\bg.png";
-            bool hasBg = File.Exists(bgPath);
-            bgPath = hasBg ? bgPath : string.Empty;
+            string bgPath = $"{ProgramRunPath}\\bg.";
+            bool hasBg = false;
+            string[] bgExt = { "png", "jpg", "gif" };
+            int bgExtLength = bgExt.Length;
+
+            for (int i = 0; i < bgExtLength; i++)
+            {
+                hasBg = File.Exists(bgPath + bgExt[i]);
+                if (hasBg)
+                {
+                    bgPath += bgExt[i];
+                    break;
+                }
+            }
             if (!hasBg) { return; }
 
             Dispatcher.Invoke(new VoidDel(delegate
@@ -563,10 +574,15 @@ namespace MoeLoaderDelta
             bgOp = opacity;
             //从文件加载更改
             if (loadBg) { LoadBgImg(); return; }
+
             //从内存更改
-            Brush brush = grdBg.Background;
-            brush.Opacity = bgOp;
-            grdBg.Background = brush;
+            if (bgImg == null) { return; }
+            Dispatcher.Invoke(new VoidDel(delegate
+            {
+                ImageBrush newBg = bgImg.Clone();
+                newBg.Opacity = opacity;
+                grdBg.Background = newBg;
+            }));
         }
 
         public static string IsNeedReferer(string url)
@@ -2860,7 +2876,7 @@ namespace MoeLoaderDelta
                         text += id.Key + ":" + id.Value + "\r\n";
                     }
                     File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
-                    DelDownloadResidual(DownloadControl.SaveLocation);
+                    DeleteTheSpecifiedFile(DownloadControl.SaveLocation, null, ".moe");
                     SaveFavorite();
                 }
             }
@@ -2872,10 +2888,14 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 删除下载残留文件
+        /// 删除指定文件 含子目录 目录文件小于1000个
         /// </summary>
-        private void DelDownloadResidual(string dirPath)
+        private void DeleteTheSpecifiedFile(string dirPath, string fileName = null, string fileExt = null)
         {
+            if (string.IsNullOrWhiteSpace(dirPath)
+                || string.IsNullOrWhiteSpace(fileName) && string.IsNullOrWhiteSpace(fileExt))
+            { return; }
+
             DirectoryInfo d = new DirectoryInfo(dirPath);
             FileSystemInfo[] fsInfos = d.GetFileSystemInfos();
             if (fsInfos.Length > 1000) { return; }
@@ -2885,10 +2905,11 @@ namespace MoeLoaderDelta
                 //判断是否为文件夹　　
                 if (fsInfo is DirectoryInfo)
                 {
-                    DelDownloadResidual(fsInfo.FullName);
+                    DeleteTheSpecifiedFile(fsInfo.FullName, fileExt);
                     try { Directory.Delete(fsInfo.FullName, false); } catch { }
                 }
-                else if (System.IO.Path.GetExtension(fsInfo.FullName) == ".moe")
+                else if ((!string.IsNullOrWhiteSpace(fileName) && fsInfo.FullName == fileName)
+                    || (!string.IsNullOrWhiteSpace(fileExt) && System.IO.Path.GetExtension(fsInfo.FullName) == fileExt))
                 {
                     fsInfo.Delete();
                 }
@@ -2903,21 +2924,28 @@ namespace MoeLoaderDelta
             {
                 if (e.Data.GetData(DataFormats.FileDrop).GetType().ToSafeString() != "System.String[]") { return; }
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                string file = files.FirstOrDefault(f =>
-                {
-                    string ext = System.IO.Path.GetExtension(f);
-                    switch (ext)
-                    {
-                        case ".jpg":
-                        case ".png":
-                        case ".gif":
-                            return true;
-                    }
-                    return false;
-                });
+                string ext = string.Empty, file = files.FirstOrDefault(f =>
+                  {
+                      ext = System.IO.Path.GetExtension(f);
+                      switch (ext)
+                      {
+                          case ".jpg":
+                          case ".png":
+                          case ".gif":
+                              return true;
+                      }
+                      return false;
+                  });
 
                 if (string.IsNullOrWhiteSpace(file)) { return; }
-                File.Copy(file, $"{ProgramRunPath}\\bg.png", true);
+                try
+                {
+                    File.Delete($"{ ProgramRunPath}\\bg.jpg");
+                    File.Delete($"{ ProgramRunPath}\\bg.png");
+                    File.Delete($"{ ProgramRunPath}\\bg.gif");
+                }
+                catch { }
+                File.Copy(file, $"{ProgramRunPath}\\bg{ext}", true);
                 ChangeBg(bgOp, true);
             }
         }

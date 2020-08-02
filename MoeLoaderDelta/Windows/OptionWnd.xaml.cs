@@ -136,14 +136,8 @@ namespace MoeLoaderDelta
             {
                 MessageBoxResult rsl = MessageBox.Show(this, txtSaveLocation.Text +
                     " 目录不存在，要创建它吗？", MainWindow.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (rsl == MessageBoxResult.Yes)
-                {
-                    Directory.CreateDirectory(txtSaveLocation.Text);
-                }
-                else
-                {
-                    return;
-                }
+                if (rsl == MessageBoxResult.No) { return; }
+                Directory.CreateDirectory(txtSaveLocation.Text);
             }
             if (txtProxy.Text.Trim().Length > 0)
             {
@@ -377,7 +371,7 @@ namespace MoeLoaderDelta
 
         private void TextBlock_MouseDown_1(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(this, "将图片文件重命名为 bg.png 或 bg.jpg 后放入 MoeLoaderDelta.exe 所在目录，重启 MoeLoader Δ 即可",
+            MessageBox.Show(this, "直接将图片拖入主窗口中就可以设置背景图片啦~",
                 MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -412,7 +406,6 @@ namespace MoeLoaderDelta
         private void Window_Closed(object sender, EventArgs e)
         {
             if (isSaved) { return; }
-            main.bgOp = oldBgOp;
             main.ChangeBg(oldBgOp);
             MainWindow.BossKey = keysBackup;
         }
