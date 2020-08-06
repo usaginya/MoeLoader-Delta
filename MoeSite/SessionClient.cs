@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.91
+ * version 1.92
  * by YIU
  * Create               20170106
- * Last Change     20200517
+ * Last Change     20200806
  */
 
 using System;
@@ -58,6 +58,8 @@ namespace MoeLoaderDelta
             request.Timeout = shc.Timeout;
             request.KeepAlive = shc.KeepAlive;
             request.UserAgent = shc.UserAgent;
+            request.PreAuthenticate = !string.IsNullOrWhiteSpace(shc.Get("Authorization"));
+            request.AuthenticationLevel = System.Net.Security.AuthenticationLevel.MutualAuthRequested;
             request.CookieContainer = string.IsNullOrWhiteSpace(shc.Get("Cookie")) ? CookieContainer : request.CookieContainer;
             request.AllowAutoRedirect = shc.AllowAutoRedirect;
             request.AutomaticDecompression = shc.AutomaticDecompression;

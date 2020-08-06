@@ -14,7 +14,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 200731
+    /// Last change 200806
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -48,7 +48,7 @@ namespace MoeLoaderDelta
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
             shc.Referer = site.Referer;
-            shc.Timeout = 8000;
+            shc.Timeout = 12000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
@@ -171,7 +171,7 @@ namespace MoeLoaderDelta
             {
                 canRetry = true;
                 isRetrievingDetail = true;
-                chk.Text = "信息加载中...";
+                chk.Text = "少女加载中...";
                 ThreadPool.QueueUserWorkItem(new WaitCallback((o) =>
                 {
                     try
@@ -196,7 +196,7 @@ namespace MoeLoaderDelta
                             preview_ImageFailed(null, null);
                             isRetrievingDetail = false;
                             canRetry = true;
-                            chk.Text = "信息加载失败";
+                            chk.Text = "图片加载失败";
                             if (imgLoaded && ImgLoaded != null)
                                 ImgLoaded(index, null);
                         }));

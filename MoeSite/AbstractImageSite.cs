@@ -88,14 +88,9 @@ namespace MoeLoaderDelta
         public virtual string LoginURL => null;
 
         /// <summary>
-        /// 由界面传递给站点登录动作
+        /// 当前站点是否已登录
         /// </summary>
-        public virtual bool LoginSite { get; set; }
-
-        /// <summary>
-        /// 由界面传递给站点登录动作 int
-        /// </summary>
-        public virtual int LoginSiteInt { get; set; }
+        public virtual bool LoginSiteIsLogged => false;
 
         /// <summary>
         /// 当前登录站点的用户
@@ -108,25 +103,31 @@ namespace MoeLoaderDelta
         private static string loginUser = null;
 
         /// <summary>
-        /// 当前登录站点的蜜码
+        /// 当前登录站点的密码，Get仅用于判断是否有密码，无法取得原始密码
         /// </summary>
-        public virtual string LoginPwd { get; set; }
+        public virtual string LoginPwd
+        {
+            get => string.IsNullOrWhiteSpace(loginPwd) ? string.Empty : "6";
+            set => loginPwd = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+        }
+        private static string loginPwd = null;
+
+        /// <summary>
+        /// 登录帮助链接
+        /// </summary>
+        public virtual string LoginHelpUrl => string.Empty;
+
+        /// <summary>
+        /// 调用登录站点方法
+        /// </summary>
+        /// <param name="loginArgs">登录信息</param>
+        public virtual void LoginCall(LoginSiteArgs loginArgs) { throw new System.NotImplementedException(); }
 
         /// <summary>
         /// 该站点在站点列表中是否可见
         /// 提示：若该站点默认不希望被看到可以设为false，当满足一定条件时（例如存在某个文件）再显示
         /// </summary>
         public virtual bool IsVisible => true;
-
-        /// <summary>
-        /// 大缩略图尺寸
-        /// </summary>
-        public virtual System.Drawing.Point LargeImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
-        /// <summary>
-        /// 小缩略图尺寸
-        /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
-        /// </summary>
-        public virtual System.Drawing.Point SmallImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
 
         /// <summary>
         /// 站点扩展设置，用于在站点子菜单加入扩展设置选项
@@ -220,13 +221,6 @@ namespace MoeLoaderDelta
             }
             return re;
         }
-
-        /// <summary>
-        /// 调用登录站点方法
-        /// </summary>
-        /// <param name="proxy">代理</param>
-        /// <returns></returns>
-        public virtual bool LoginCall(IWebProxy proxy) { return false; }
         #endregion
     }
 }

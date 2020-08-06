@@ -17,9 +17,6 @@ namespace SitePack
         //public override bool IsSupportPreview { get { return true; } }
         public override bool IsSupportTag { get { return false; } }
 
-        //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(175, 175); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(180, 180); } }
-
         /// <summary>
         /// worldcosplay.net site
         /// </summary>
@@ -32,9 +29,11 @@ namespace SitePack
             //http://worldcosplay.net/api/photo/list?page=3&limit=2&sort=created_at&direction=descend
             string url = SiteUrl + "/api/photo/list?page=" + page + "&limit=" + count + "&sort=created_at&direction=descend";
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
+            MyWebClient web = new MyWebClient
+            {
+                Proxy = proxy,
+                Encoding = Encoding.UTF8
+            };
 
             if (keyWord.Length > 0)
             {
@@ -83,8 +82,7 @@ namespace SitePack
         private Img GenerateImg(string preview_url, string chara, string member, string twidth, string theight, string date, string sscore, string id, string detailUrl)
         {
             int intId = int.Parse(id);
-            int score;
-            int.TryParse(sscore, out score);
+            int.TryParse(sscore, out int score);
 
             int width = 0, height = 0;
             try

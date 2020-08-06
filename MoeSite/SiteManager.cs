@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoeLoaderDelta.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -11,19 +12,16 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200722
+    /// Last 20200805
     /// </summary>
     public class SiteManager
     {
         /// <summary>
-        /// 站点登录类型 用于LoginURL
-        /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
-        /// Custom 调用站点独立登录方法
+        /// 站点登录类型 用于判断调用登录方式 登录参数保存到LoginSiteArgs
+        /// FillIn 弹出账号填写窗口
+        /// Cookie 登录
         /// </summary>
-        public enum SiteLoginType { FillIn, Custom }
-
-        private static List<IMageSite> sites = new List<IMageSite>();
-        private static SiteManager instance;
+        public enum SiteLoginType { FillIn, Cookie }
 
         /// <summary>
         /// 参数共享传递
@@ -32,24 +30,34 @@ namespace MoeLoaderDelta
         public static string RunPath { get; set; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static string SitePacksPath { get; set; } = $"{RunPath}\\SitePacks\\";
 
+        /// <summary>
+        /// 初始化aesKey
+        /// </summary>
+        private static readonly string aesKey = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{MachineInfo.GetBLOSSerialNumber()}${MachineInfo.GetCPUSerialNumber()}"));
+
+        /// <summary>
+        /// 站点集合
+        /// </summary>
+        public List<IMageSite> Sites { get; } = new List<IMageSite>();
+
+        /// <summary>
+        /// 站点定义管理者
+        /// </summary>
+        public static SiteManager Instance { get; } = new SiteManager();
+
         private SiteManager()
         {
-            string[] dlls= { };
-            try
-            {
-               dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
-            }
+            string[] dlls = { };
+            try { dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories); }
             catch { }
 
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
             {
-                List<string> dlll = new List<string>();
                 string basisdll = SitePacksPath + "SitePack.dll";
-
                 if (File.Exists(basisdll))
                 {
-                    dlll.Add(basisdll);
+                    List<string> dlll = new List<string> { basisdll };
                     dlls = dlll.ToArray();
                 }
             }
@@ -62,7 +70,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<IMageSite>);
+                    Sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<IMageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -72,100 +80,29 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 站点定义管理者
+        /// 调用站点登录
         /// </summary>
-        public static SiteManager Instance
+        /// <param name="site">站点</param>
+        /// <param name="loginArgs">登录参数</param>
+        public static void LoginSiteCall(IMageSite site, LoginSiteArgs loginArgs)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new SiteManager();
-                }
-                return instance;
-            }
-        }
-
-        /// <summary>
-        /// 站点集合
-        /// </summary>
-        public List<IMageSite> Sites => sites;
-
-        /// <summary>
-        /// 站点登录处理 通过IE
-        /// </summary>
-        /// <param name="imageSite">站点</param>
-        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
-        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
-        /// <param name="Sweb">站点内部SessionClient</param>
-        /// <param name="shc">站点内部SessionHeadersCollection</param>
-        /// <param name="PageString">返回验证登录时的页面HTML</param>
-        /// <returns></returns>
-        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags,
-            ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
-        {
-            string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
-            bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
-
-            if (result)
-            {
-                shc.Timeout = shc.Timeout * 2;
-                shc.Set("Cookie", tmp_cookie);
-                try
-                {
-                    pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
-                    result = !string.IsNullOrWhiteSpace(pageString);
-
-                    if (result && LoggedFlags != null)
-                    {
-                        string[] LFlagsArray = LoggedFlags.Split('|');
-                        foreach (string Flag in LFlagsArray)
-                        {
-                            result &= pageString.Contains(Flag);
-                        }
-                    }
-
-                    cookie = result ? tmp_cookie : cookie;
-                }
-                catch
-                {
-                    //有cookie访问时发生超时之类的错误 还是作为用户登录状态 返回true
-                    cookie = string.Empty;
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 站点登录处理 通过IE
-        /// </summary>
-        /// <param name="imageSite">站点</param>
-        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
-        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
-        /// <param name="Sweb">站点内部SessionClient</param>
-        /// <param name="shc">站点内部SessionHeadersCollection</param>
-        /// <returns></returns>
-        public static bool LoginSite(IMageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
-        {
-            string NullPageString = string.Empty;
-            return LoginSite(imageSite, ref cookie, LoggedFlags, ref Sweb, ref shc, ref NullPageString);
+            try { site.LoginCall(loginArgs); } catch { }
         }
 
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
-        /// <param name="SiteShortName">站点短名</param>
+        /// <param name="siteName">站点短名</param>
         /// <param name="ex">错误信息</param>
         /// <param name="extra_info">附加错误信息</param>
-        /// <param name="NoShow">不显示信息</param>
-        /// <param name="NoLog">不记录Log</param>
-        public static void EchoErrLog(string SiteShortName, Exception ex = null, string extra_info = null, bool NoShow = false, bool NoLog = false)
+        /// <param name="noShow">不显示信息</param>
+        /// <param name="noLog">不记录Log</param>
+        public static void EchoErrLog(string siteName, Exception ex = null, string extra_info = null, bool noShow = false, bool noLog = false)
         {
             int maxlog = 4096;
             bool exisnull = ex == null;
             string logPath = SitePacksPath + "site_error.log",
-                wstr = "[异常站点]: " + SiteShortName + "\r\n";
+                wstr = "[异常站点]: " + siteName + "\r\n";
             wstr += "[异常时间]: " + DateTime.Now.ToString() + "\r\n";
             wstr += "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
             if (!exisnull)
@@ -175,13 +112,13 @@ namespace MoeLoaderDelta
                 wstr += "[调用堆栈]: " + ex.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
-            if (!NoLog)
+            if (!noLog)
             {
                 File.AppendAllText(logPath, wstr + "\r\n");
             }
-            if (!NoShow)
+            if (!noShow)
             {
-                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误",
+                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{siteName} 错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //压缩记录
@@ -205,11 +142,11 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
-        /// <param name="SiteShortName">站点短名</param>
+        /// <param name="siteName">站点短名</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void EchoErrLog(string SiteShortName, string extra_info, bool NoShow = false, bool NoLog = false)
+        public static void EchoErrLog(string siteName, string extra_info, bool noShow = false, bool noLog = false)
         {
-            EchoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
+            EchoErrLog(siteName, null, extra_info, noShow, noLog);
         }
 
         #region 站点配置文件处理方法
@@ -248,15 +185,61 @@ namespace MoeLoaderDelta
         public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
         {
             StringBuilder sb = new StringBuilder(short.MaxValue);
-            try
-            {
-                GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
-            }
+            try { GetPrivateProfileString(section, key, def ?? string.Empty, sb, sb.Capacity, filePath); }
             catch (Exception) { }
             return sb.ToString();
         }
+
+        /// <summary>
+        /// 读取或保存站点设置
+        /// </summary>
+        /// <param name="siteShortName">站点短名</param>
+        /// <param name="section">项名</param>
+        /// <param name="key">键名</param>
+        /// <param name="value">值</param>
+        /// <param name="save">False读取,True保存</param>
+        /// <returns></returns>
+        public static string SiteConfig(string siteShortName, string section, string key, string value = null, bool save = false)
+        {
+            string siteini = $"{SitePacksPath}{siteShortName}.ini";
+            string akey = string.Empty, iv = string.Empty;
+            if (save)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    akey = aesKey;
+                    iv = RandomRNG(100000, 999999).ToString();
+                    value = $"{iv}{AESHelper.AesEncrypt(value, akey, iv)}";
+                }
+                return WritePrivateProfileString(section, key, value, siteini).ToString();
+            }
+            else
+            {
+                string getVal = GetPrivateProfileString(section, key, siteini);
+                if (string.IsNullOrWhiteSpace(getVal) || getVal.Length < 7) { return string.Empty; }
+                akey = aesKey;
+                iv = getVal.Substring(0, 6);
+                return AESHelper.AesDecrypt(getVal.Substring(6), akey, iv);
+            }
+        }
         #endregion
 
+        /// <summary>
+        /// 取不重复随机整数
+        /// </summary>
+        /// <param name="minValue">最小整数</param>
+        /// <param name="maxValue">最大整数</param>
+        public static int RandomRNG(int minValue, int maxValue)
+        {
+            if (minValue > maxValue) { maxValue = minValue + 1; }
+            Random rand = new Random(new Func<int>(() =>
+            {
+                byte[] bytes = new byte[4];
+                new System.Security.Cryptography.RNGCryptoServiceProvider().GetBytes(bytes);
+                return BitConverter.ToInt32(bytes, 0);
+            })());
+            return rand.Next(minValue, maxValue);
+        }
     }
 
     /// <summary>
@@ -276,6 +259,25 @@ namespace MoeLoaderDelta
         /// 点击菜单时执行的委托方法
         /// </summary>
         public Delegate SettingAction { get; set; }
+    }
+
+    /// <summary>
+    /// 站点登录参数
+    /// </summary>
+    public class LoginSiteArgs
+    {
+        /// <summary>
+        /// 登录账号
+        /// </summary>
+        public string User { get; set; } = string.Empty;
+        /// <summary>
+        /// 登录密码
+        /// </summary>
+        public string Pwd { get; set; } = string.Empty;
+        /// <summary>
+        /// 登录Cookie
+        /// </summary>
+        public string Cookie { get; set; } = string.Empty;
     }
 
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using MoeLoaderDelta.Control;
+﻿using MoeLoaderDelta.Control;
 using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
@@ -113,6 +112,7 @@ namespace MoeLoaderDelta
         internal FavoriteAddWnd favoriteAddWnd;
         internal PreviewWnd previewFrm;
         private SessionState currentSession;
+        private LoginSiteArgs loginSiteArgs = new LoginSiteArgs();
         private bool isGetting = false;
 
         /// <summary>
@@ -445,7 +445,7 @@ namespace MoeLoaderDelta
             Dispatcher.Invoke(siteExtended.SettingAction);
             item.Icon = siteExtended.Enable ? ExtSiteIconOn : ExtSiteIconOff;
 
-            Control_Toast.Show($"{siteExtended.Title} 已 {(siteExtended.Enable ? "开启" : "关闭")}");
+            Control_Toast.Show($"{siteExtended.Title}已{(siteExtended.Enable ? "开启" : "关闭")}");
         }
 
         /// <summary>
@@ -496,16 +496,17 @@ namespace MoeLoaderDelta
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
+            IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
             if (SiteManager.Instance.Sites.Count > 0)
             {
-                itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(site.LoginURL);
             }
 
-            if (itmLoginSite.IsEnabled)
+            if (itmLoginSite.IsEnabled && site.LoginSiteIsLogged)
             {
-                tmp_user = SiteManager.Instance.Sites[comboBoxIndex].LoginUser;
+                tmp_user = site.LoginUser;
             }
-            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : tmp_user;
+            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : $"{tmp_user}已登录";
         }
 
         /// <summary>
@@ -2041,49 +2042,79 @@ namespace MoeLoaderDelta
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
+                IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
+                string LoginURL = site.LoginURL, helpUrl = site.LoginHelpUrl;
+
+                if (!string.IsNullOrWhiteSpace(LoginURL))
                 {
-                    int LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt;
-                    string LoginURL = SiteManager.Instance.Sites[comboBoxIndex].LoginURL;
+                    //显示登录教程提示
+                    if (!string.IsNullOrWhiteSpace(helpUrl))
+                    {
+                        MessageBoxResult result = MessageBox.Show("需要查看登录教程吗？", $"登录{site.ShortName}",
+                           MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(helpUrl);
+                        }
+                        else if (result == MessageBoxResult.Cancel) { return; }
+                    }
+
+                    //登录信息输入
+                    SingleTextInputWnd inputWnd;
+                    string inputTitle = $"登录{site.ShortName}";
                     if (LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
                     {
-                        //输入账号
-                        string inputTitle = $"填写 {SiteManager.Instance.Sites[comboBoxIndex].ShortName} 登录信息";
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入登录账号");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.User)) { return; }
 
-                        string siteuser = Interaction.InputBox("登录账号：", inputTitle, string.Empty);
-                        if (string.IsNullOrWhiteSpace(siteuser))
-                        {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
-                            return;
-                        }
-
-                        string sitepwd = Interaction.InputBox("登录密码：", inputTitle, string.Empty);
-                        if (sitepwd.Length < 1)
-                        {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
-                            return;
-                        }
-
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginUser = siteuser;
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入登录密码");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.Pwd)) { loginSiteArgs.User = null; ItmLoginSite_Click(sender, e); }
+                        SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
-                    else if (LoginURL == SiteManager.SiteLoginType.Custom.ToSafeString())
+                    else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
                     {
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginCall(WebProxy);
-                    }
-                    else
-                    {
-                        //IE登录
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
-                        System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.Cookie)) { return; }
+                        SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
                 }
             }
-            catch
+            catch { }
+        }
+
+        /// <summary>
+        /// 登录站点输入完成事件
+        /// </summary>
+        private void LoginInputEvent(object sender, SingleTextInputEventArgs e)
+        {
+            string LoginURL = SiteManager.Instance.Sites[comboBoxIndex].LoginURL;
+
+            if (LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
             {
-                SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 0;
-                SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false;
+                if (string.IsNullOrWhiteSpace(loginSiteArgs.User))
+                {
+                    string siteuser = e.ToStringArray()[0];
+                    if (string.IsNullOrWhiteSpace(siteuser)) { siteuser = string.Empty; }
+                    loginSiteArgs.User = siteuser;
+                }
+                else
+                {
+                    string sitepwd = e.ToStringArray()[0];
+                    if (string.IsNullOrWhiteSpace(sitepwd)) { sitepwd = string.Empty; }
+                    loginSiteArgs.Pwd = sitepwd;
+                }
+            }
+            else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
+            {
+                string cookie = e.ToStringArray()[0];
+                if (string.IsNullOrWhiteSpace(cookie)) { cookie = string.Empty; }
+                loginSiteArgs.Cookie = cookie;
             }
         }
 

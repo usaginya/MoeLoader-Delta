@@ -13,19 +13,18 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
-        private Random rand = new Random();
         private const string Cookieflag = "atfbooru=t;";
-        private readonly string[] user = { "mload1901" };
-        private readonly string[] pass = { "mload1901pw" };
-        private static string cookie = string.Empty, nowUser = null;
-        private static bool startLogin, IsLoginSite;
+        private static string cookie = string.Empty, nowUser = cookie, nowPwd = cookie;
+        private static bool IsLoginSite = false, IsRunLogin = IsLoginSite, onceLogin = true;
+        private const string loginUrl = "https://booru.allthefallen.moe/session/new";
 
         public override string SiteUrl => "https://booru.allthefallen.moe";
         public override string SiteName => "atfbooru.ninja";
         public override string ShortName => "atfbooru";
-        public override string LoginURL => "https://booru.allthefallen.moe/session/new";
-        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
-        public override string LoginUser => nowUser ?? base.LoginUser;
+        public override string LoginURL => SiteManager.SiteLoginType.FillIn.ToSafeString();
+        public override bool LoginSiteIsLogged => IsLoginSite;
+        public override string LoginUser { get => nowUser; set => nowUser = value; }
+        public override string LoginPwd { get => nowPwd; set => nowPwd = value; }
 
         public SiteATFBooru()
         {
@@ -37,7 +36,12 @@ namespace SitePack
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            Login(proxy);
+            if (onceLogin && !IsLoginSite)
+            {
+                onceLogin = false;
+                LoadUser();
+                LoginCall(new LoginSiteArgs() { User = nowUser, Pwd = nowPwd });
+            }
             return booru.GetPageString(page, count, keyWord, proxy);
         }
 
@@ -52,113 +56,94 @@ namespace SitePack
         }
 
         /// <summary>
+        /// 调用登录
+        /// </summary>
+        public override void LoginCall(LoginSiteArgs loginArgs)
+        {
+            if (IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.User) || string.IsNullOrWhiteSpace(loginArgs.Pwd)) { return; }
+            nowUser = loginArgs.User;
+            nowPwd = loginArgs.Pwd;
+            Login(SiteManager.Mainproxy);
+        }
+
+        /// <summary>
         /// 还原Cookie
         /// </summary>
         private void CookieRestore()
         {
             if (!string.IsNullOrWhiteSpace(cookie) || cookie.Contains(Cookieflag)) return;
-
-            if (!IELogin())
-            {
-                string ck = Sweb.GetURLCookies(SiteUrl);
-                cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"{Cookieflag}{ck}";
-            }
-            
+            string ck = Sweb.GetURLCookies(SiteUrl);
+            cookie = string.IsNullOrWhiteSpace(ck) ? string.Empty : $"{Cookieflag}{ck}";
         }
 
         private void Login(IWebProxy proxy)
         {
+            IsLoginSite = false;
+            IsRunLogin = true;
             CookieRestore();
-            if (!cookie.Contains(Cookieflag) || IsLoginSite)
+            if (!cookie.Contains(Cookieflag))
             {
                 try
                 {
-                    nowUser = null;
                     cookie = string.Empty;
                     string pagedata = string.Empty, token = string.Empty;
 
-                    if (IsLoginSite)
+                    shc.Referer = $"{SiteUrl}/login";
+                    HtmlDocument hdoc = new HtmlDocument();
+
+                    //1 Get csrf-token
+                    pagedata = Sweb.Get(loginUrl, proxy, shc);
+                    hdoc.LoadHtml(pagedata);
+                    token = hdoc.DocumentNode.SelectSingleNode("//meta[@name='csrf-token']").Attributes["content"].Value;
+                    if (token.Length < 9)
                     {
-                        startLogin = false;
-                        if (!IELogin())
-                        {
-                            Login(proxy); //重新自动登录
-                        }
-                        startLogin = true;
-                    }
-                    else
-                    {
-                        int index = rand.Next(0, user.Length);
-
-                        shc.Referer = LoginURL;
-                        shc.Remove("Cookie");
-                        HtmlDocument hdoc = new HtmlDocument();
-
-                        //1 Get csrf-token
-                        pagedata = Sweb.Get(LoginURL, proxy, shc);
-                        hdoc.LoadHtml(pagedata);
-                        token = hdoc.DocumentNode.SelectSingleNode("//meta[@name='csrf-token']").Attributes["content"].Value;
-                        if (token.Length < 9)
-                        {
-                            SiteManager.EchoErrLog(SiteName, "自动登录失败[1] ");
-                            return;
-                        }
-
-                        //2 Post login
-                        pagedata = $"utf8=%E2%9C%93&authenticity_token={UrlEncode(token)}&url=&name={user[index]}&password={pass[index]}&commit=Submit";
-                        pagedata = Sweb.Post(LoginURL.Replace("/new", string.Empty), pagedata, proxy, shc);
-                        cookie = Sweb.GetURLCookies(SiteUrl);
-
-                        if (!pagedata.Contains("setUserId"))
-                        {
-                            SiteManager.EchoErrLog(SiteName, $"{SiteName} 自动登录失败");
-                        }
-                        else
-                        {
-                            cookie = $"{Cookieflag}{cookie}";
-                            nowUser = "内置账号";
-                        }
+                        nowUser = nowPwd = null;
+                        SiteManager.EchoErrLog(SiteName, "登录失败1 ", !onceLogin);
+                        return;
                     }
 
+                    //2 Post login
+                    pagedata = $"authenticity_token={UrlEncode(token)}&session%5Burl%5D=&session%5Bname%5D={nowUser}&session%5Bpassword%5D=={nowPwd}&commit=Login";
+                    pagedata = Sweb.Post(loginUrl.Replace("/new", string.Empty), pagedata, proxy, shc);
+                    cookie = Sweb.GetURLCookies(SiteUrl);
+
+                    //if (!pagedata.Contains("setUserId"))
+                    //{
+                    //    nowUser = nowPwd = null;
+                    //    SiteManager.EchoErrLog(SiteName, $"{SiteName} 登录失败", !onceLogin);
+                    //}
+                  //  else
+                   // {
+                        IsLoginSite = true;
+                        cookie = $"{Cookieflag}{cookie}";
+                        SaveUser();
+                 //   }
                 }
                 catch (Exception e)
                 {
-                    SiteManager.EchoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器");
+                    nowUser = nowPwd = null;
+                    SiteManager.EchoErrLog(SiteName, e, e.Message.Contains("IP") ? e.Message : "可能无法连接到服务器", !onceLogin);
                 }
             }
+            IsRunLogin = false;
         }
 
         /// <summary>
-        /// 从IE登录
+        /// 保存账号
         /// </summary>
-        private bool IELogin()
+        private void SaveUser()
         {
-            IsLoginSite = false;
-            cookie = string.Empty;
+            SiteManager.SiteConfig(ShortName, "Login", "User", nowUser, true);
+            SiteManager.SiteConfig(ShortName, "Login", "Pwd", nowPwd, true);
+        }
 
-            string pageString = string.Empty;
-            bool result = SiteManager.LoginSite(this, ref cookie, "setUserId", ref Sweb, ref shc, ref pageString);
-            HtmlDocument hdoc = new HtmlDocument();
-
-            if (result)
-            {
-                nowUser = "你的账号";
-                cookie = $"{Cookieflag}{cookie}";
-                try
-                {
-                    hdoc.LoadHtml(pageString);
-                    pageString = hdoc.DocumentNode.SelectSingleNode("//meta[@name='current-user-name']").Attributes["content"].Value;
-                    if (!pageString.IsNullOrEmptyOrWhiteSpace())
-                        nowUser += $": {pageString}";
-                }
-                catch { }
-            }
-            else if (startLogin)
-            {
-                SiteManager.EchoErrLog(SiteName, "用户未登录或登录失败 ");
-            }
-
-            return result;
+        /// <summary>
+        /// 载入账号
+        /// </summary>
+        private void LoadUser()
+        {
+            nowUser = SiteManager.SiteConfig(ShortName, "Login", "User");
+            nowPwd = SiteManager.SiteConfig(ShortName, "Login", "Pwd");
         }
 
         /// <summary>

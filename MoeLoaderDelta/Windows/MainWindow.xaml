@@ -1031,7 +1031,7 @@
                                                 Click="ItmLoginSite_Click"
                                                 Header="{Binding Loginuser}"
                                                 IsEnabled="False"
-                                                ToolTip="点击打开登录页面" />
+                                                ToolTip="打开登录窗口" />
                                             <MenuItem
                                                 x:Name="itmOpenSite"
                                                 Click="ItmOpenSite_Click"
