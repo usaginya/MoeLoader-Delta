@@ -9,13 +9,13 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-7-21
+    /// Last 2020-8-7
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
-            /// <summary>
-            /// 记录上一次的滚动位置
-            /// </summary>
+        /// <summary>
+        /// 记录上一次的滚动位置
+        /// </summary>
         private double LastLocation = 0;
 
         /// <summary>
@@ -23,8 +23,7 @@ namespace MoeLoaderDelta.Control
         /// </summary>
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            double factor = SystemParameters.PrimaryScreenHeight / 18;
-            MoveScroll(e.Delta + (e.Delta < 0 ? -factor : factor));
+            MoveScroll(e.Delta / 1.6);
             //通知ScrollViewer滚动完成
             e.Handled = true;
         }
@@ -54,13 +53,12 @@ namespace MoeLoaderDelta.Control
         private double GetDefaultWheelChange(KeyEventArgs e)
         {
             double wheelChange = 0;
-            double factor = SystemParameters.PrimaryScreenHeight / 3.2;
             switch (e.Key)
             {
                 case Key.Up: wheelChange = 100; break;
                 case Key.Down: wheelChange = -100; break;
-                case Key.PageUp: wheelChange = factor; break;
-                case Key.PageDown: wheelChange = -factor; break;
+                case Key.PageUp: wheelChange = 300; break;
+                case Key.PageDown: wheelChange = -300; break;
                 case Key.Home: wheelChange = ScrollableHeight; break;
                 case Key.End: wheelChange = -ScrollableHeight; break;
             }
