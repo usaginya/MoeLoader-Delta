@@ -9,7 +9,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-8-7
+    /// Last 2020-8-8
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
@@ -44,7 +44,7 @@ namespace MoeLoaderDelta.Control
         {
             //更新记录的位置
             LastLocation = e.VerticalOffset;
-            base.OnScrollChanged(e);
+           // base.OnScrollChanged(e);
         }
 
         /// <summary>
@@ -72,23 +72,27 @@ namespace MoeLoaderDelta.Control
         /// <param name="keyEvent">按键事件</param>
         public void MoveScroll(double? wheelChange, KeyEventArgs keyEvent = null)
         {
-            if (wheelChange == null && keyEvent != null)
+            try
             {
-                wheelChange = GetDefaultWheelChange(keyEvent);
+                if (wheelChange == null && keyEvent != null)
+                {
+                    wheelChange = GetDefaultWheelChange(keyEvent);
+                }
+                else if (wheelChange == null) { wheelChange = 0; }
+
+                //Animation并不会改变真正的VerticalOffset(只是它的依赖属性) 所以将VOffset设置到上一次的滚动位置 (相当于衔接上一个动画)
+                double newOffset = LastLocation - (double)(wheelChange * 2);
+
+                ScrollToVerticalOffset(LastLocation);
+
+                //碰到底部和顶部时的处理
+                if (newOffset < 0) { newOffset = 0; }
+                if (newOffset > ScrollableHeight) { newOffset = ScrollableHeight; }
+
+                AnimateScroll(newOffset);
+                LastLocation = newOffset;
             }
-            else if (wheelChange == null) { wheelChange = 0; }
-
-            //Animation并不会改变真正的VerticalOffset(只是它的依赖属性) 所以将VOffset设置到上一次的滚动位置 (相当于衔接上一个动画)
-            double newOffset = LastLocation - (double)(wheelChange * 2);
-
-            ScrollToVerticalOffset(LastLocation);
-
-            //碰到底部和顶部时的处理
-            if (newOffset < 0) { newOffset = 0; }
-            if (newOffset > ScrollableHeight) { newOffset = ScrollableHeight; }
-
-            AnimateScroll(newOffset);
-            LastLocation = newOffset;
+            catch { }
         }
 
         /// <summary>

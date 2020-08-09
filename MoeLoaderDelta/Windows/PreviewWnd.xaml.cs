@@ -453,7 +453,7 @@ namespace MoeLoaderDelta
         {
             if (!((imgGrid.Children[Imgs[selectedId]] as ScrollViewer).Content as PreviewImg).ImgLoaded)
             {
-                MainWindow.MainW.Control_Toast.Show("图片尚未加载完毕");
+                MainWindow.MainW.Toast.Show("图片尚未加载完毕");
             }
             else
             {

@@ -15,7 +15,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200806
+    /// Last change 200809
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -147,10 +147,6 @@ namespace SitePack
             if (string.IsNullOrWhiteSpace(cookie))
             {
                 cookie = SiteManager.SiteConfig(ShortName, "Login", "Cookie");
-                if (string.IsNullOrWhiteSpace(cookie))
-                {
-                    SiteManager.SiteConfig(ShortName, "Login", "Cookie", null, true);
-                }
             }
             if (!startLogin && srcType == PixivSrcType.Author)
             {

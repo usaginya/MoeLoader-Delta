@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 200806
+    /// Last 200809
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -59,8 +59,6 @@ namespace SitePack
             if (string.IsNullOrWhiteSpace(siteLoginCookie[shortName]))
             {
                 siteLoginCookie[shortName] = SiteManager.SiteConfig(shortName, "Login", "Cookie");
-                if (string.IsNullOrWhiteSpace(siteLoginCookie[shortName]))
-                { SiteManager.SiteConfig(shortName, "Login", "Cookie", string.Empty, true); }
             }
         }
 

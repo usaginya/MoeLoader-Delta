@@ -133,6 +133,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="ToastNotifications, Version=2.5.1.0, Culture=neutral, PublicKeyToken=e89d9d7314a7c797, processorArchitecture=MSIL">
+      <HintPath>..\packages\ToastNotifications.2.5.1\lib\net40\ToastNotifications.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -148,9 +152,13 @@
       <DependentUpon>PreviewImg.xaml</DependentUpon>
     </Compile>
     <Compile Include="Control\SmoothScrollViewer.cs" />
-    <Compile Include="Control\Toast.xaml.cs">
-      <DependentUpon>Toast.xaml</DependentUpon>
+    <Compile Include="Control\Toast\Core\MessageBase.cs" />
+    <Compile Include="Control\Toast\ToastBox.xaml.cs">
+      <DependentUpon>ToastBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Control\Toast\ToastBoxNotification.cs" />
+    <Compile Include="Control\Toast\ToastBoxNotificationExtensions.cs" />
+    <Compile Include="Control\Toast\ToastBoxWork.cs" />
     <Compile Include="Control\TreeViewModel.cs" />
     <Compile Include="Converter\BackgroundToForegroundConverter.cs" />
     <Compile Include="Converter\Converters.cs" />
@@ -181,7 +189,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Control\Toast.xaml">
+    <Page Include="Control\Toast\Themes\ToastStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Control\Toast\ToastBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -254,10 +266,6 @@
     <Page Include="Style\LoopProcessBar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Style\Generic.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -399,6 +407,7 @@
     <Resource Include="Images\chk_n.png" />
     <Resource Include="Images\chk_t.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>md $(TargetDir)lib

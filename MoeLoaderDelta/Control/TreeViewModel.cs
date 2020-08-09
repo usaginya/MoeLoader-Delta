@@ -1,4 +1,5 @@
 ﻿using LZ4;
+using MoeLoaderDelta.Control.Toast;
 using MoeLoaderDelta.Windows;
 using Newtonsoft.Json;
 using System;
@@ -19,7 +20,7 @@ using static MoeLoaderDelta.Control.JsonStructure;
 
 /// <summary>
 /// by YIU
-/// Last: 2020-7-29
+/// Last: 2020-8-9
 /// </summary>
 namespace MoeLoaderDelta.Control
 {
@@ -962,7 +963,7 @@ namespace MoeLoaderDelta.Control
                     {
                         string addWork = $"{(string.IsNullOrWhiteSpace(node.Mark) ? node.Name : node.Mark)}";
                         MainWindow.MainW.searchControl.Text += string.IsNullOrWhiteSpace(MainWindow.MainW.searchControl.Text) ? addWork : " " + addWork;
-                        MainWindow.MainW.Control_Toast.Show("已添加标签到搜索框");
+                        MainWindow.MainW.Toast.Show("已添加标签到搜索框");
                     }
                 }
             }

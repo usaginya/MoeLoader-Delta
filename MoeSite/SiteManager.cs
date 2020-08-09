@@ -1,4 +1,5 @@
-﻿using MoeLoaderDelta.Helpers;
+﻿using LZ4;
+using MoeLoaderDelta.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200805
+    /// Last 20200809
     /// </summary>
     public class SiteManager
     {
@@ -210,13 +211,16 @@ namespace MoeLoaderDelta
                     akey = aesKey;
                     iv = RandomRNG(100000, 999999).ToString();
                     value = $"{iv}{AESHelper.AesEncrypt(value, akey, iv)}";
+                    value = Convert.ToBase64String(LZ4Codec.Wrap(Encoding.UTF8.GetBytes(value)));
                 }
                 return WritePrivateProfileString(section, key, value, siteini).ToString();
             }
             else
             {
+                if (!File.Exists(siteini)) { return string.Empty; }
                 string getVal = GetPrivateProfileString(section, key, siteini);
                 if (string.IsNullOrWhiteSpace(getVal) || getVal.Length < 7) { return string.Empty; }
+                getVal = Encoding.UTF8.GetString(LZ4Codec.Unwrap(Convert.FromBase64String(getVal)));
                 akey = aesKey;
                 iv = getVal.Substring(0, 6);
                 return AESHelper.AesDecrypt(getVal.Substring(6), akey, iv);

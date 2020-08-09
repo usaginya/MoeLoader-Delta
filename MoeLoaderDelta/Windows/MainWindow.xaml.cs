@@ -1,4 +1,5 @@
 ﻿using MoeLoaderDelta.Control;
+using MoeLoaderDelta.Control.Toast;
 using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +21,8 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Xml;
+using static MoeLoaderDelta.Control.Toast.ToastBoxNotification;
+
 
 namespace MoeLoaderDelta
 {
@@ -111,8 +115,10 @@ namespace MoeLoaderDelta
         internal FavoriteWnd favoriteWnd;
         internal FavoriteAddWnd favoriteAddWnd;
         internal PreviewWnd previewFrm;
-        private SessionState currentSession;
+        internal ToastBoxWork Toast = new ToastBoxWork();
+
         private LoginSiteArgs loginSiteArgs = new LoginSiteArgs();
+        private SessionState currentSession;
         private bool isGetting = false;
 
         /// <summary>
@@ -445,7 +451,7 @@ namespace MoeLoaderDelta
             Dispatcher.Invoke(siteExtended.SettingAction);
             item.Icon = siteExtended.Enable ? ExtSiteIconOn : ExtSiteIconOff;
 
-            Control_Toast.Show($"{siteExtended.Title}已{(siteExtended.Enable ? "开启" : "关闭")}");
+            Toast.Show($"{siteExtended.Title}已{(siteExtended.Enable ? "开启" : "关闭")}");
         }
 
         /// <summary>
@@ -912,7 +918,7 @@ namespace MoeLoaderDelta
                             }
                             else
                             {
-                                Control_Toast.Show("搜索框中没有可以收藏的关键词", Toast.MsgType.Warning, 2000);
+                                Toast.Show("搜索框中没有可以收藏的关键词", MsgType.Warning);
                             }
                         }
                     }
@@ -1063,7 +1069,7 @@ namespace MoeLoaderDelta
                 //重新读取RToolStripMenuItem.Enabled = false;
 
                 imgPanel.Children.Clear();
-                Control_Toast.Show(NoFoundMsg);
+                Toast.Show(NoFoundMsg);
             }
             else
             {
@@ -1099,7 +1105,7 @@ namespace MoeLoaderDelta
                 if (imgs.Count == 0)
                 {
                     DocumentCompleted();
-                    Control_Toast.Show(NoFoundMsg);
+                    Toast.Show(NoFoundMsg);
                     return;
                 }
 
@@ -1158,7 +1164,7 @@ namespace MoeLoaderDelta
            ((ImgControl)imgPanel.Children[index]).SetChecked(false);
             //重置重试次数
             downloadC.ResetRetryCount();
-            Control_Toast.Show($"{dlimg.Id} 图片已添加到下载列表 →", Toast.MsgType.Success);
+            Toast.Show($"{dlimg.Id} 图片已添加到下载列表 →", MsgType.Success);
             //string url = GetImgAddress(imgs[index]);
             //string fileName = GenFileName(imgs[index]);
             //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
@@ -1283,7 +1289,7 @@ namespace MoeLoaderDelta
         {
             if (SiteManager.Instance.Sites.Count < 1)
             {
-                Control_Toast.Show("没有站点可以用来搜索", Toast.MsgType.Warning);
+                Toast.Show("没有站点可以用来搜索", MsgType.Warning);
                 return;
             }
 
@@ -1363,12 +1369,13 @@ namespace MoeLoaderDelta
                     {
                         if (!(o as SessionState).IsStop)
                         {
-                            Control_Toast.Show(
+                            Toast.Show(
                                 $"错误：{(string.IsNullOrWhiteSpace(ex.Message) ? "没有找到图片" : ex.Message)}"
-                                + $"\r\n获取图片：{(string.IsNullOrWhiteSpace(SearchWord) ? "<默认搜索>" : SearchWord) }"
-                                + $"\r\n站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
-                                + $"\r\n当前页码：{realPage}  每页数量：{realNum}  代理模式：{ProxyType}"
-                                , Toast.MsgType.Error, 8000);
+                                + $"{Environment.NewLine}获取图片：{(string.IsNullOrWhiteSpace(SearchWord) ? "<默认搜索>" : SearchWord) }"
+                                + $"{Environment.NewLine}站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
+                                + $"{Environment.NewLine}当前页码：{realPage}  每页数量：{realNum}"
+                                + $"{Environment.NewLine}代理模式：{ProxyType}"
+                                , MsgType.Error);
                         }
                     }
                     if (!(o as SessionState).IsStop)
@@ -2470,7 +2477,7 @@ namespace MoeLoaderDelta
             ButtonMainDL.IsEnabled = true;
             //重置重试次数
             downloadC.ResetRetryCount();
-            Control_Toast.Show($"选择的图片已添加到下载列表 →", Toast.MsgType.Success);
+            Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success);
         }
 
         /// <summary>
@@ -2867,17 +2874,15 @@ namespace MoeLoaderDelta
         {
             if (currentSession != null) { currentSession.IsStop = true; }
 
+            Toast.Dispose();
             downloadC.StopAll();
 
             try
             {
                 if (!IsCtrlDown())
                 {
-                    string words = string.Empty;
-                    foreach (string word in searchControl.UsedItems)
-                    {
-                        words += word + "|";
-                    }
+                    StringBuilder words = new StringBuilder();
+                    searchControl.UsedItems.ForEach(w => words.Append($"{w}|"));
 
                     const string qm = ";";
                     string text = downloadC.NumOnce + "\r\n"
@@ -2886,7 +2891,7 @@ namespace MoeLoaderDelta
                         + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + qm
                         + numOfLoading + qm
                         + (itmMaskViewed.IsChecked ? "1" : "0") + qm
-                        + words + qm
+                        + words.ToSafeString() + qm
                         + Proxy + qm
                         + BossKey + qm
                         + thumbSize + qm

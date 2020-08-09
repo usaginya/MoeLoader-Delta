@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using MoeLoaderDelta.Control;
+using MoeLoaderDelta.Control.Toast;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,12 +9,13 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using static MoeLoaderDelta.Control.Toast.ToastBoxNotification;
 
 namespace MoeLoaderDelta.Windows
 {
     /// <summary>
     /// FavoriteWnd.xaml 的交互逻辑
-    /// Last:2020-7-30
+    /// Last:2020-8-9
     /// </summary>
     public partial class FavoriteWnd : Window
     {
@@ -112,7 +114,7 @@ namespace MoeLoaderDelta.Windows
             string siteName = MainWindow.MainW.SelectedSiteName();
             TreeViewModel.FindNodes(siteName, TextBoxFind.Text);
             siteName = string.IsNullOrWhiteSpace(TextBoxFind.Text) ? "已显示全部标签收藏" : $"查找 {siteName} 站点收藏完成";
-            MainWindow.MainW.Control_Toast.Show(siteName, Toast.MsgType.Info);
+            MainWindow.MainW.Toast.Show(siteName);
         }
 
         /// <summary>
@@ -179,7 +181,7 @@ namespace MoeLoaderDelta.Windows
             //无站点无法导入
             if (string.IsNullOrWhiteSpace(MainWindow.MainW.SelectedSiteName()))
             {
-                MainWindow.MainW.Control_Toast.Show("当前没有站点，不能导入收藏", Toast.MsgType.Warning, 2000);
+                MainWindow.MainW.Toast.Show("当前没有站点，不能导入收藏", MsgType.Warning);
                 return;
             }
 
@@ -196,14 +198,14 @@ namespace MoeLoaderDelta.Windows
                 string exInfo = TreeViewModel.LoadFavoriteFile(openFileDialog.FileName, openFileDialog.FilterIndex == 1, out int imports, out int repetitions, out int failures);
                 if (!string.IsNullOrWhiteSpace(exInfo))
                 {
-                    MainWindow.MainW.Control_Toast.Show($"导入收藏出错{Environment.NewLine}{exInfo}", Toast.MsgType.Error, 4500);
+                    MainWindow.MainW.Toast.Show($"导入收藏出错{Environment.NewLine}{exInfo}", MsgType.Error);
                     return;
                 }
 
                 string completeMsg = $"导入收藏完成{Environment.NewLine}已导入{imports}个";
                 completeMsg += repetitions > 0 ? $"，已存在{repetitions}个" : string.Empty;
                 completeMsg += failures > 0 ? $"，失败{failures}个" : string.Empty;
-                MainWindow.MainW.Control_Toast.Show(completeMsg, imports < 1 ? Toast.MsgType.Warning : Toast.MsgType.Success, 4000);
+                MainWindow.MainW.Toast.Show(completeMsg, imports < 1 ? MsgType.Warning : MsgType.Success);
 
                 if (imports < 1) { return; }
                 //更新查找结果
@@ -232,7 +234,7 @@ namespace MoeLoaderDelta.Windows
             if ((bool)saveFileDialog.ShowDialog())
             {
                 TreeViewModel.SaveFavoriteFile(saveFileDialog.FileName, saveFileDialog.FilterIndex == 1);
-                MainWindow.MainW.Control_Toast.Show($"已导出标签收藏夹文件{Environment.NewLine}{saveFileDialog.FileName}", Toast.MsgType.Success, 2500);
+                MainWindow.MainW.Toast.Show($"已导出标签收藏夹文件{Environment.NewLine}{saveFileDialog.FileName}", MsgType.Success);
             }
         }
 
