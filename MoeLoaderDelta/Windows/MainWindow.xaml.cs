@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -143,7 +143,7 @@ namespace MoeLoaderDelta
 
         #region -- 拖框选功能变量 --
         private Border dragSelectBorder = null;
-        private bool canDrag = false, dragIsCtrl = false, dragIsClear = false;
+        private bool canDrag = false, catchMouse = false, dragIsCtrl = false, dragIsClear = false;
         private Point dragStartPoint;
         #endregion
 
@@ -258,7 +258,7 @@ namespace MoeLoaderDelta
             Window.OpacityMask = brush;
 
             /////////////////////////////////////// init image site list //////////////////////////////////
-            SiteManager.Mainproxy = WebProxy;
+            SiteManager.MainProxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             ObservableCollection<FrameworkElement> tempSites = new ObservableCollection<FrameworkElement>();
 
@@ -497,6 +497,37 @@ namespace MoeLoaderDelta
             //初始化右键菜单
             scrList.ContextMenu.IsOpen = true;
             scrList.ContextMenu.IsOpen = false;
+
+            #region 事件绑定
+            SiteManager.showToastMsgDelegate = ShowToastMsg;
+            SiteManager.getNetPorxyDelegate = GetWebProxy;
+            #endregion
+        }
+
+        /// <summary>
+        /// 调用显示Toast消息
+        /// </summary>
+        /// <param name="msg">消息</param>
+        /// <param name="msgType">类型</param>
+        private void ShowToastMsg(string msg, SiteManager.MsgType msgType)
+        {
+            MsgType type = MsgType.Info;
+            switch (msgType)
+            {
+                case SiteManager.MsgType.Error: type = MsgType.Error; break;
+                case SiteManager.MsgType.Success: type = MsgType.Success; break;
+                case SiteManager.MsgType.Warning: type = MsgType.Warning; break;
+            }
+            Toast.Show(msg, type);
+        }
+
+        /// <summary>
+        /// 调取当前网络代理
+        /// </summary>
+        /// <returns></returns>
+        private IWebProxy GetWebProxy()
+        {
+            return WebProxy;
         }
 
         /// <summary>
@@ -1122,10 +1153,10 @@ namespace MoeLoaderDelta
                         Width = thumbSize,
                         Height = thumbSize
                     };
-                    img.imgDLed += Img_imgDLed;
-                    img.imgClicked += Img_Click;
+                    img.ImgDLed += Img_imgDLed;
+                    img.ImgClicked += Img_Click;
                     img.ImgLoaded += Img_ImgLoaded;
-                    img.checkedChanged += Img_checkedChanged;
+                    img.CheckedChanged += Img_checkedChanged;
 
                     imgPanel.Children.Add(img);
 
@@ -2992,71 +3023,81 @@ namespace MoeLoaderDelta
 
         #region ====== 缩略图列表拖选 ======
         /// <summary>
-        /// 缩略图列表鼠标左键按下
+        /// 缩略图面板按下任意键
         /// </summary>
-        private void ImgList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void ImgList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            //记录拖选点
-            if (imgPanel.Children.Count > 0)
+            switch (e.ChangedButton)
             {
-                imgListPanel.CaptureMouse();
-                canDrag = e.Handled = true;
-                dragIsCtrl = IsCtrlDown();
-                dragStartPoint = e.GetPosition(imgListPanel);
-            }
-        }
-
-        /// <summary>
-        /// 缩略图列表鼠标左键放开
-        /// </summary>
-        private void ImgList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //选中拖选框和缩略图交叉区域中的缩略图并删除拖选框
-            if (dragSelectBorder != null && dragSelectBorder.Width > 10 && dragSelectBorder.Height > 10 && imgPanel.Children.Count > 0)
-            {
-                e.Handled = true;
-                //循环选择必须在异步过程中、否则不能选择最后一个
-                UIElementCollection imgcs = imgPanel.Children;
-                Point dragEndPoint = e.GetPosition(imgListPanel);
-                Rect dragRect = new Rect(dragStartPoint, dragEndPoint);
-
-                foreach (ImgControl imgc in imgcs)
-                {
-                    Point imgcPoint = imgc.TranslatePoint(new Point(), imgListPanel);
-                    Rect imgcRect = new Rect(imgcPoint.X, imgcPoint.Y, imgc.Width, imgc.Height);
-
-                    async void DelayCalculation()
+                //按下左键
+                case MouseButton.Left:
+                    //拖选初始化
+                    #region 排除点击区域
+                    //上页按钮
+                    Point mousePoint = e.GetPosition(imgListBg);
+                    Point uiPoint = btnFav.TranslatePoint(new Point(), imgListBg);
+                    Rect uiRect = new Rect(uiPoint.X, uiPoint.Y, btnFav.Width, btnFav.Height);
+                    if (uiRect.Contains(mousePoint)) { break; }
+                    //下页按钮
+                    uiPoint = btnNext.TranslatePoint(new Point(), imgListBg);
+                    uiRect = new Rect(uiPoint.X, uiPoint.Y, btnNext.Width, btnNext.Height);
+                    if (uiRect.Contains(mousePoint)) { break; }
+                    //滚动条
+                    if (mousePoint.X > scrList.ActualWidth - imgPanel.Margin.Right + 10) { break; }
+                    #endregion
+                    if (imgPanel.Children.Count > 0)
                     {
-                        await Task.Delay(1);
-                        if (dragRect.IntersectsWith(imgcRect))
-                        {
-                            imgc.SetChecked(dragIsCtrl ? !imgc.IsChecked : true);
-                        }
+                        canDrag = true;
+                        dragIsCtrl = IsCtrlDown();
+                        dragStartPoint = e.GetPosition(imgListPanel);
                     }
-                    DelayCalculation();
-                }
+                    break;
+
+                //按下其它键
+                default:
+                    if (canDrag) { CancelDrawBox(); }
+                    break;
             }
-            CancelDrawBox();
-            imgListPanel.ReleaseMouseCapture();
         }
 
         /// <summary>
-        /// 缩略图列表鼠标移动
+        /// 缩略图面板鼠标移动
         /// </summary>
         private void ImgList_MouseMove(object sender, MouseEventArgs e)
         {
-            if (canDrag && imgPanel.Children.Count > 0)
+            if (!canDrag || imgPanel.Children.Count < 1) { return; }
+
+            const int offset = 10;
+            Point dragEndPoint = e.GetPosition(imgListPanel);
+            double dragWidth = Math.Abs(dragEndPoint.X - dragStartPoint.X),
+                         dragHeight = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+
+            // 拖动距离在 X或Y ±10 进行框选
+            if (dragWidth < -offset || dragWidth > offset || dragHeight < -offset || dragHeight > offset)
             {
-                Point dragEndPoint = e.GetPosition(imgListPanel);
-                double dragWidth = Math.Abs(dragEndPoint.X - dragStartPoint.X),
-                    dragHeight = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
-                if (dragWidth < -10 || dragWidth > 10 || dragHeight < -10 || dragHeight > 10)
-                {
-                    //如果没按住Ctrl则取消全部缩略图选中
-                    if (!dragIsCtrl && !dragIsClear) { ClearDrawSelected(); }
-                    //画拖选框
-                    DrawMultiselectBox(dragStartPoint, dragEndPoint);
-                }
+                //全局定位鼠标
+                if (!catchMouse) { catchMouse = true; imgListPanel.CaptureMouse(); }
+                //如果没按住Ctrl则取消全部缩略图选中
+                if (!dragIsCtrl && !dragIsClear) { ClearDrawSelected(); }
+                //画拖选框
+                DrawMultiselectBox(dragStartPoint, dragEndPoint);
+                //自动滚动
+                DragMoveScroll(e);
+            }
+        }
+
+        /// <summary>
+        /// 缩略图面板放开任意键
+        /// </summary>
+        private void ImgList_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            switch (e.ChangedButton)
+            {
+                //放开左键
+                case MouseButton.Left:
+                    //记录拖选点
+                    DragSelected(e);
+                    break;
             }
         }
 
@@ -3065,56 +3106,86 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="dragStartPoint">起点</param>
         /// <param name="dragEndPoint">终点</param>
-        private void DrawMultiselectBox(Point dragStartPoint, Point dragEndPoint)
+        private async void DrawMultiselectBox(Point dragStartPoint, Point dragEndPoint)
         {
-            if (dragSelectBorder == null)
+            await Dispatcher.InvokeAsync(() =>
             {
-                dragSelectBorder = new Border
+                //创建Border框
+                if (dragSelectBorder == null)
                 {
-                    VerticalAlignment = VerticalAlignment.Top,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    Background = new SolidColorBrush(Color.FromArgb(68, 52, 163, 224)),
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(52, 163, 224))
-                };
-                dragSelectBorder.MouseLeftButtonUp += new MouseButtonEventHandler(ImgList_MouseLeftButtonUp);
-                dragSelectBorder.MouseMove += new MouseEventHandler(ImgList_MouseMove);
-                dragSelectBorder.PreviewMouseDown += new MouseButtonEventHandler(ImgList_PreviewMouseDown);
-                Panel.SetZIndex(dragSelectBorder, 200);
-                imgListPanel.Children.Add(dragSelectBorder);
-            }
-            dragSelectBorder.Width = Math.Abs(dragEndPoint.X - dragStartPoint.X);
-            dragSelectBorder.Height = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+                    dragSelectBorder = new Border
+                    {
+                        VerticalAlignment = VerticalAlignment.Top,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        Background = new SolidColorBrush(Color.FromArgb(68, 52, 163, 224)),
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = new SolidColorBrush(Color.FromRgb(52, 163, 224))
+                    };
+                    dragSelectBorder.PreviewMouseUp += new MouseButtonEventHandler(ImgList_PreviewMouseUp);
+                    dragSelectBorder.MouseMove += new MouseEventHandler(ImgList_MouseMove);
+                    dragSelectBorder.PreviewMouseDown += new MouseButtonEventHandler(ImgList_PreviewMouseDown);
+                    Panel.SetZIndex(dragSelectBorder, 200);
+                }
+                //插入到缩略图面板
+                if (!imgListPanel.Children.Contains(dragSelectBorder)) { imgListPanel.Children.Add(dragSelectBorder); }
 
-            double dragLeft = 0, dragTop = 0;
-            dragLeft = dragEndPoint.X - dragStartPoint.X >= 0 ? dragStartPoint.X : dragEndPoint.X;
-            dragTop = dragEndPoint.Y - dragStartPoint.Y >= 0 ? dragStartPoint.Y : dragEndPoint.Y;
-            dragSelectBorder.Margin = new Thickness(dragLeft, dragTop, dragSelectBorder.Margin.Right, dragSelectBorder.Margin.Bottom);
+                dragSelectBorder.Width = Math.Abs(dragEndPoint.X - dragStartPoint.X);
+                dragSelectBorder.Height = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+
+                double dragLeft = 0, dragTop = 0;
+                dragLeft = dragEndPoint.X - dragStartPoint.X >= 0 ? dragStartPoint.X : dragEndPoint.X;
+                dragTop = dragEndPoint.Y - dragStartPoint.Y >= 0 ? dragStartPoint.Y : dragEndPoint.Y;
+                dragSelectBorder.Margin = new Thickness(dragLeft, dragTop, dragSelectBorder.Margin.Right, dragSelectBorder.Margin.Bottom);
+            });
         }
 
         /// <summary>
-        /// 缩略图列表按下任意键
+        /// 选中拖选框和缩略图交叉区域中的缩略图并删除拖选框
         /// </summary>
-        private void ImgList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private async void DragSelected(MouseButtonEventArgs e)
         {
-            //不是左键取消拖选框
-            if (canDrag && e.ChangedButton != MouseButton.Left) { CancelDrawBox(); }
+            if (canDrag && dragSelectBorder != null && (dragSelectBorder.Width > 10 || dragSelectBorder.Height > 10) && imgPanel.Children.Count > 0)
+            {
+                e.Handled = true;
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    UIElementCollection imgcs = imgPanel.Children;
+                    Point dragEndPoint = e.GetPosition(imgListPanel);
+                    Rect dragRect = new Rect(dragStartPoint, dragEndPoint);
+
+                    foreach (ImgControl imgc in imgcs)
+                    {
+                        Point imgcPoint = imgc.TranslatePoint(new Point(), imgListPanel);
+                        Rect imgcRect = new Rect(imgcPoint.X, imgcPoint.Y, imgc.Width, imgc.Height);
+
+                        if (dragRect.IntersectsWith(imgcRect))
+                        {
+                            imgc.SetChecked(dragIsCtrl ? !imgc.IsChecked : true);
+                        }
+                    }
+                });
+            }
+            CancelDrawBox();
+            if (catchMouse) { catchMouse = false; imgListPanel.ReleaseMouseCapture(); }
         }
 
         /// <summary>
         /// 清空多选
         /// </summary>
-        private void ClearDrawSelected()
+        private async void ClearDrawSelected()
         {
-            dragIsClear = true;
-            UIElementCollection imgcs = imgPanel.Children;
-            foreach (ImgControl imgc in imgcs)
+            await Dispatcher.InvokeAsync(() =>
             {
-                if (imgc.IsChecked)
+                dragIsClear = true;
+                UIElementCollection imgcs = imgPanel.Children;
+                foreach (ImgControl imgc in imgcs)
                 {
-                    imgc.SetChecked(false);
+                    if (imgc.IsChecked)
+                    {
+                        imgc.SetChecked(false);
+                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -3122,13 +3193,37 @@ namespace MoeLoaderDelta
         /// </summary>
         private void CancelDrawBox()
         {
-            if (dragSelectBorder != null)
+            if (imgListPanel.Children.Contains(dragSelectBorder))
             {
+                dragSelectBorder.Width = dragSelectBorder.Height = 0;
                 imgListPanel.Children.Remove(dragSelectBorder);
-                dragSelectBorder = null;
             }
             canDrag = dragIsClear = false;
         }
+
+        /// <summary>
+        /// 拖选时判断鼠标位置自动滚动滚动条
+        /// </summary>
+        private async void DragMoveScroll(MouseEventArgs e)
+        {
+            await Dispatcher.InvokeAsync(() =>
+            {
+                const int offset = 10;
+                double maxY = Math.Abs(imgListBg.ActualHeight - offset);
+                Point mousePoint = e.GetPosition(imgListBg);
+
+                if (mousePoint.Y < offset)
+                {
+                    scrList.MoveScroll(Math.Abs(mousePoint.Y - offset) / 1.6);
+                }
+                else if (mousePoint.Y > maxY)
+                {
+                    double test = (maxY - mousePoint.Y - offset) / 1.6;
+                    scrList.MoveScroll(test);
+                }
+            });
+        }
+
         #endregion ============
 
         /// <summary>
@@ -3141,6 +3236,8 @@ namespace MoeLoaderDelta
                SiteManager.SiteConfig(site.ShortName, null, SiteManager.SiteConfigType.Save);
            });
         }
+
+
 
         #region 线程延迟执行翻页
         /// <summary>

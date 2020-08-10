@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 200810
+    /// Last 200811
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -318,7 +318,7 @@ namespace SitePack
                 shc.Set("Cookie", tmp_cookie);
                 shc.Accept = SessionHeadersValue.AcceptDefault;
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
-                pageString = Sweb.Get(SiteUrl, SiteManager.Mainproxy, shc);
+                pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
                 shc.Accept = oldAccept;
                 shc.ContentType = oldContentType;
                 result = !string.IsNullOrWhiteSpace(pageString);
@@ -361,11 +361,13 @@ namespace SitePack
                 }
 
             }
-            catch
+            catch (Exception e)
             {
                 IsLoginSite = false;
                 siteLoginUser[shortName] = siteLoginCookie[shortName] = null;
-                SiteManager.EchoErrLog(SiteName, "登录失败 内部错误");
+                string msg = $"登录失败{Environment.NewLine}{e.Message}";
+                SiteManager.EchoErrLog(SiteName,msg,true );
+                SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Error);
             }
             finally { IsRunLogin = false; }
         }

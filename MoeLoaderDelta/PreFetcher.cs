@@ -8,10 +8,9 @@ namespace MoeLoaderDelta
 {
     class PreFetcher
     {
-        
+
         private PreFetcher() { }
         private static PreFetcher fetcher;
-        private IWebProxy proxy = MainWindow.WebProxy;
         public static PreFetcher Fetcher
         {
             get
@@ -96,12 +95,12 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    preFetchedPage = site.GetPageString(page, count, word, proxy);
+                    preFetchedPage = site.GetPageString(page, count, word, MainWindow.WebProxy);
                     prePage = page;
                     preCount = count;
                     preWord = word;
                     preSite = site;
-                    List<Img> imgs = site.GetImages(preFetchedPage, proxy);
+                    List<Img> imgs = site.GetImages(preFetchedPage, MainWindow.WebProxy);
 
                     //获得所有图片列表后反馈得到的数量
                     PreListLoaded(imgs.Count, null);
@@ -132,7 +131,7 @@ namespace MoeLoaderDelta
                     int cacheCount = CachedImgCount < imgs.Count ? CachedImgCount : imgs.Count;
                     for (int i = 0; i < cacheCount; i++)
                     {
-                        WebResponse res = sweb.GetWebResponse(imgs[i].PreviewUrl,proxy,9000,shc);
+                        WebResponse res = sweb.GetWebResponse(imgs[i].PreviewUrl, MainWindow.WebProxy, 10000, shc);
                         System.IO.Stream str = res.GetResponseStream();
 
                         if (!preFetchedImg.ContainsKey(imgs[i].PreviewUrl))

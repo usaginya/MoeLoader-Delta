@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
-    /// Last change 200810
+    /// Last change 200811
     /// </summary>
     public class SiteYuriimg : AbstractImageSite
     {
@@ -211,7 +211,7 @@ namespace SitePack
                 string post = JsonConvert.SerializeObject(user);
 
                 //Post登录取Authorization
-                post = Sweb.Post(loginUrl, post, SiteManager.Mainproxy, shc);
+                post = Sweb.Post(loginUrl, post, SiteManager.GetWebProxy(), shc);
                 if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
                 {
                     IsRunLogin = false;

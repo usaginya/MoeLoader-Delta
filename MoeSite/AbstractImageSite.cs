@@ -9,11 +9,6 @@ namespace MoeLoaderDelta
     public abstract class AbstractImageSite : IMageSite
     {
         /// <summary>
-        /// 默认的缩略图宽高
-        /// </summary>
-        private const int PICWIDTH = 150;
-
-        /// <summary>
         /// 站点URL，用于打开该站点主页。eg. http://yande.re
         /// </summary>
         public abstract string SiteUrl { get; }
@@ -196,6 +191,7 @@ namespace MoeLoaderDelta
         public virtual List<Img> FilterImg(List<Img> imgs, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, bool showExplicit, bool updateViewed)
         {
             List<Img> re = new List<Img>();
+            if (imgs == null) { return re; }
             foreach (Img img in imgs)
             {
                 //标记已阅

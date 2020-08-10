@@ -17,11 +17,11 @@
     <Border Background="{Binding Background}" CornerRadius="8">
         <Grid
             MaxWidth="360"
-            MaxHeight="110"
+            MaxHeight="145"
             Margin="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="25" />
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Rectangle
@@ -39,6 +39,9 @@
                 FontSize="16"
                 Foreground="White"
                 Text="{Binding Message}"
+                TextOptions.TextFormattingMode="Display"
+                TextOptions.TextHintingMode="Animated"
+                TextOptions.TextRenderingMode="Auto"
                 TextWrapping="WrapWithOverflow" />
 
         </Grid>

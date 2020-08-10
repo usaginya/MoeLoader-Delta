@@ -20,7 +20,7 @@ namespace MoeLoaderDelta.Control.Toast
             notifier = new Notifier(cfg =>
             {
                 cfg.DisplayOptions.Width = 360;
-                cfg.DisplayOptions.TopMost = true;
+                cfg.DisplayOptions.TopMost = false;
                 cfg.PositionProvider = new WindowPositionProvider(Application.Current.MainWindow, Corner.BottomCenter, 0, 80);
                 cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(TimeSpan.FromSeconds(5), MaximumNotificationCount.FromCount(5));
                 cfg.Dispatcher = Dispatcher.CurrentDispatcher;

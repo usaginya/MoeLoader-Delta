@@ -16,7 +16,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200810
+    /// Last 20200811
     /// </summary>
     public class SiteManager
     {
@@ -34,10 +34,29 @@ namespace MoeLoaderDelta
         /// </summary>
         public enum SiteConfigType { Read, Change, Save }
 
+        #region 事件代理
+        /// <summary>
+        /// 显示Toast消息
+        /// </summary>
+        public static ShowToastMsgDelegate showToastMsgDelegate;
+        public delegate void ShowToastMsgDelegate(string msg, MsgType msgType);
+
+        /// <summary>
+        /// 获取当前网络代理
+        /// </summary>
+        public static GetNetProxyDelegate getNetPorxyDelegate;
+        public delegate IWebProxy GetNetProxyDelegate();
+        #endregion
+
+        /// <summary>
+        /// Toast消息类型
+        /// </summary>
+        public enum MsgType { Info, Success, Warning, Error }
+
         /// <summary>
         /// 参数共享传递
         /// </summary>
-        public static IWebProxy Mainproxy { get; set; }
+        public static IWebProxy MainProxy { get; set; }
         public static string RunPath { get; set; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static string SitePacksPath { get; set; } = $"{RunPath}\\SitePacks\\";
 
@@ -102,13 +121,33 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    Sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<IMageSite>);
+                    Sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { MainProxy }) as List<IMageSite>);
                 }
                 catch (Exception ex)
                 {
                     EchoErrLog("站点载入过程", ex);
                 }
             }
+        }
+
+        /// <summary>
+        /// 调用主窗口显示Toast消息
+        /// </summary>
+        /// <param name="msg">消息</param>
+        /// <param name="msgType">类型</param>
+        public static void ShowToastMsg(string msg, MsgType msgType = MsgType.Info)
+        {
+            if (showToastMsgDelegate == null) { return; }
+            showToastMsgDelegate(msg, msgType);
+        }
+
+        /// <summary>
+        /// 调用当前网络代理
+        /// </summary>
+        public static IWebProxy GetWebProxy()
+        {
+            if (getNetPorxyDelegate == null) { return new WebProxy(); }
+            return getNetPorxyDelegate();
         }
 
         /// <summary>

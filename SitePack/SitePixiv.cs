@@ -15,7 +15,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200810
+    /// Last change 200811
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -62,9 +62,9 @@ namespace SitePack
                 else if (srcType == PixivSrcType.TagFull)
                     return "搜索完整标签";
                 else if (srcType == PixivSrcType.Pid)
-                    return "搜索作品id";
+                    return "搜索作品ID";
                 else if (srcType == PixivSrcType.PidPlus)
-                    return "搜索作品id并显示相关作品";
+                    return "按作品ID搜索相关作品";
                 return "最新作品 & 搜索标签";
             }
         }
@@ -150,6 +150,7 @@ namespace SitePack
             }
             if (!startLogin && srcType == PixivSrcType.Author)
             {
+                startLogin = true;
                 FirstLogin();
             }
             CreateExtSetting();
@@ -185,15 +186,23 @@ namespace SitePack
             await Task.Run(() =>
             {
                 if (!IsLoginSite) { LoginCall(new LoginSiteArgs() { Cookie = cookie }); }
-                startLogin = true;
             });
         }
 
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            if (!IsLoginSite) { return string.Empty; }
+            if (string.IsNullOrWhiteSpace(cookie))
+            {
+                cookie = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie });
+                if (!string.IsNullOrWhiteSpace(cookie)) { LoginCall(new LoginSiteArgs() { Cookie = cookie }); }
+            }
+            if (!IsLoginSite)
+            {
+                SiteManager.ShowToastMsg("当前还未登录，需要登录后再获取", SiteManager.MsgType.Warning);
+                return string.Empty;
+            }
 
-            //if (page > 1000) throw new Exception("页码过大，若需浏览更多图片请使用关键词限定范围");
+            startLogin = false;
             this.keyWord = keyWord;
             int memberId = 0;
             string url = null;
@@ -208,7 +217,8 @@ namespace SitePack
                 }
                 else
                 {
-                    throw new Exception("请输入图片id");
+                    SiteManager.ShowToastMsg("必须输入作品ID再获取", SiteManager.MsgType.Warning);
+                    return string.Empty;
                 }
             }
             else
@@ -233,7 +243,8 @@ namespace SitePack
                 {
                     if (keyWord.Trim().Length == 0 || !int.TryParse(keyWord.Trim(), out memberId))
                     {
-                        throw new Exception($"必须在关键词中指定画师 id{Environment.NewLine}如果想要使用标签进行搜索请选择 www.pixiv.net [TAG]");
+                        SiteManager.ShowToastMsg($"必须在关键词中指定画师ID{Environment.NewLine}如果想要使用标签进行搜索请选择 www.pixiv.net [TAG]", SiteManager.MsgType.Warning);
+                        return string.Empty;
                     }
                     //member id 
                     //url = SiteUrl + "/member_illust.php?id=" + memberId + "&p=" + page;
@@ -943,7 +954,7 @@ namespace SitePack
                 shc.Timeout = shc.Timeout * 2;
                 shc.Set("Cookie", tmp_cookie);
 
-                string pageString = Sweb.Get(SiteUrl, SiteManager.Mainproxy, shc);
+                string pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
                 result = !string.IsNullOrWhiteSpace(pageString);
                 if (!result) { SiteManager.EchoErrLog(SiteName, "登录失败 站点没有响应", true); }
 
@@ -972,10 +983,11 @@ namespace SitePack
             {
                 IsLoginSite = false;
                 nowUser = nowPwd = cookie = null;
-                SiteManager.EchoErrLog(SiteName, $"登录失败\r\n{e.Message}", startLogin);
+                string msg = $"登录失败{Environment.NewLine}{e.Message}";
+                SiteManager.EchoErrLog(SiteName, msg, true);
+                if (!startLogin) { SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Warning); }
             }
             finally { IsRunLogin = false; }
-
         }
 
         /// <summary>

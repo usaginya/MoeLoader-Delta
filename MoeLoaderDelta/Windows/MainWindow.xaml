@@ -876,7 +876,11 @@
                             BorderBrush="#4C000000"
                             CornerRadius="0">
 
-                            <Grid x:Name="imgLstBg">
+                            <Grid
+                                x:Name="imgListBg"
+                                PreviewMouseDown="ImgList_PreviewMouseDown"
+                                PreviewMouseUp="ImgList_PreviewMouseUp"
+                                MouseMove="ImgList_MouseMove">
                                 <local2:SmoothScrollViewer
                                     x:Name="scrList"
                                     Margin="0,1,0,1"
@@ -1038,12 +1042,7 @@
                                                 Header="访问站点主页(_W)" />
                                         </ContextMenu>
                                     </local2:SmoothScrollViewer.ContextMenu>
-                                    <Grid
-                                        x:Name="imgListPanel"
-                                        PreviewMouseDown="ImgList_PreviewMouseDown"
-                                        PreviewMouseLeftButtonDown="ImgList_MouseLeftButtonDown"
-                                        PreviewMouseLeftButtonUp="ImgList_MouseLeftButtonUp"
-                                        PreviewMouseMove="ImgList_MouseMove">
+                                    <Grid x:Name="imgListPanel">
                                         <WrapPanel x:Name="imgPanel" Margin="20,0,30,0" />
                                     </Grid>
                                 </local2:SmoothScrollViewer>

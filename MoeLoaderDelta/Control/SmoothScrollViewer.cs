@@ -9,7 +9,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-8-8
+    /// Last 2020-8-10
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
@@ -66,7 +66,7 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 移动滚动条
+        /// 移动滚动条 正数页面向上滚动 负数反之
         /// </summary>
         /// <param name="multiple">移动倍数</param>
         /// <param name="keyEvent">按键事件</param>

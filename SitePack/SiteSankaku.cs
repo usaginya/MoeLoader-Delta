@@ -126,7 +126,11 @@ namespace SitePack
         /// </summary>
         public override void LoginCall(LoginSiteArgs loginArgs)
         {
-            if (IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.User) || string.IsNullOrWhiteSpace(loginArgs.Pwd)) { return; }
+            if (IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.User) || string.IsNullOrWhiteSpace(loginArgs.Pwd))
+            {
+                SiteManager.ShowToastMsg("当前还未登录，需要登录后再获取", SiteManager.MsgType.Warning);
+                return;
+            }
             nowUser = loginArgs.User;
             nowPwd = loginArgs.Pwd;
             Login();
@@ -174,12 +178,14 @@ namespace SitePack
                     shc.ContentType = SessionHeadersValue.AcceptAppJson;
                     Sweb.CookieContainer = null;
 
-                    post = Sweb.Post(loginhost + "/auth/token", post, SiteManager.Mainproxy, shc);
+                    post = Sweb.Post(loginhost + "/auth/token", post, SiteManager.GetWebProxy(), shc);
                     if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
                     {
                         IsRunLogin = false;
                         nowUser = nowPwd = null;
-                        SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
+                        string msg = $"登录失败{Environment.NewLine}{post}";
+                        SiteManager.EchoErrLog(ShortName, msg, true);
+                        SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Warning);
                         return;
                     }
 
@@ -193,7 +199,9 @@ namespace SitePack
                     {
                         IsRunLogin = false;
                         nowUser = nowPwd = null;
-                        SiteManager.EchoErrLog(ShortName, "登录失败 - 验证账号错误");
+                        string msg = "登录失败 - 验证账号错误";
+                        SiteManager.EchoErrLog(ShortName, msg, true);
+                        SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Warning);
                         return;
                     }
 
@@ -208,7 +216,9 @@ namespace SitePack
                 catch (Exception e)
                 {
                     nowUser = nowPwd = null;
-                    SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
+                    string msg = $"登录失败{Environment.NewLine}{e.Message}";
+                    SiteManager.EchoErrLog(ShortName, e, null, true);
+                    SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Error);
                 }
             }
             else
@@ -231,14 +241,16 @@ namespace SitePack
                         shc.UserAgent = ua;
                         shc.Accept = SessionHeadersValue.AcceptAppJson;
                         shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                        post = Sweb.Post($"{loginhost}/user/authenticate.json", post, SiteManager.Mainproxy, shc);
+                        post = Sweb.Post($"{loginhost}/user/authenticate.json", post, SiteManager.GetWebProxy(), shc);
                         cookie = Sweb.GetURLCookies(loginhost);
 
                         if (!cookie.Contains("sankakucomplex_session") || string.IsNullOrWhiteSpace(cookie))
                         {
                             IsRunLogin = false;
                             nowUser = nowPwd = null;
-                            SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}");
+                            string msg = $"登录失败{Environment.NewLine}{post}";
+                            SiteManager.EchoErrLog(ShortName, msg, true);
+                            SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Warning);
                             return;
                         }
                         else
@@ -257,7 +269,9 @@ namespace SitePack
                     catch (Exception e)
                     {
                         nowUser = nowPwd = null;
-                        SiteManager.EchoErrLog(ShortName, e, "登录失败 - 内部错误");
+                        string msg = $"登录失败{Environment.NewLine}{e.Message}";
+                        SiteManager.EchoErrLog(ShortName, e, null, true);
+                        SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Error);
                     }
                 }
             }

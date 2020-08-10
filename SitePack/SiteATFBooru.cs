@@ -59,7 +59,7 @@ namespace SitePack
             if (IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.Cookie)) { return; }
             nowUser = loginArgs.User;
             cookie = loginArgs.Cookie;
-            Login(SiteManager.Mainproxy);
+            Login(SiteManager.GetWebProxy());
         }
 
 
