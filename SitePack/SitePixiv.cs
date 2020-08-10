@@ -15,7 +15,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200809
+    /// Last change 200810
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -146,7 +146,7 @@ namespace SitePack
             this.srcType = srcType;
             if (string.IsNullOrWhiteSpace(cookie))
             {
-                cookie = SiteManager.SiteConfig(ShortName, "Login", "Cookie");
+                cookie = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie });
             }
             if (!startLogin && srcType == PixivSrcType.Author)
             {
@@ -165,7 +165,7 @@ namespace SitePack
             ExtendedSettings = new List<SiteExtendedSetting>();
             SiteExtendedSetting ses;
             #region 第三方站点服务选项设置
-            string cfgValue = SiteManager.SiteConfig(ShortName, "Cfg", "EnableThirdParty");
+            string cfgValue = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "EnableThirdParty" });
             enableThirdParty = !string.IsNullOrWhiteSpace(cfgValue) && cfgValue.Trim() != extSettingOff;
             ses = new SiteExtendedSetting()
             {
@@ -960,7 +960,7 @@ namespace SitePack
                     Regex rx = new Regex("pixivId\":\"(.*?)\",", RegexOptions.IgnoreCase);
                     GroupCollection group = rx.Match(pageString).Groups;
                     if (group.Count > 1) { nowUser = group[1].Value; }
-                    SiteManager.SiteConfig(ShortName, "Login", "Cookie", cookie, true);
+                    SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie }, SiteManager.SiteConfigType.Change);
                 }
                 else
                 {
@@ -989,7 +989,7 @@ namespace SitePack
             if (string.IsNullOrWhiteSpace(isEnable)) { return; }
             enableThirdParty = isEnable.Trim() != extSettingOff;
             ExtendedSettings[ExtSettingId].Enable = enableThirdParty;
-            SiteManager.SiteConfig(ShortName, "Cfg", "EnableThirdParty", isEnable, true);
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "EnableThirdParty", Value = isEnable }, SiteManager.SiteConfigType.Change);
         }
 
         /// <summary>

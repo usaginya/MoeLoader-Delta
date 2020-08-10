@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 200809
+    /// Last 200810
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -56,10 +56,6 @@ namespace SitePack
             SetHeaders(srcType);
             siteLoginUser.Add(shortName, null);
             siteLoginCookie.Add(shortName, null);
-            if (string.IsNullOrWhiteSpace(siteLoginCookie[shortName]))
-            {
-                siteLoginCookie[shortName] = SiteManager.SiteConfig(shortName, "Login", "Cookie");
-            }
         }
 
         /// <summary>
@@ -290,6 +286,16 @@ namespace SitePack
         {
             IsRunLogin = true;
             IsLoginSite = false;
+
+            if (string.IsNullOrWhiteSpace(siteLoginCookie[shortName]))
+            {
+                siteLoginCookie[shortName] = SiteManager.SiteConfig(shortName, new SiteConfigArgs()
+                {
+                    Section = "Login",
+                    Key = "Cookie"
+                });
+            }
+
             string tmp_cookie = siteLoginCookie[shortName], loggedFlags;
             if (string.IsNullOrWhiteSpace(tmp_cookie)) { IsRunLogin = false; return; }
 
@@ -332,7 +338,12 @@ namespace SitePack
                     IsLoginSite = result;
                     siteLoginUser[shortName] = LoginUser;
                     siteLoginCookie[shortName] = tmp_cookie;
-                    SiteManager.SiteConfig(shortName, "Login", "Cookie", tmp_cookie, true);
+                    SiteManager.SiteConfig(shortName, new SiteConfigArgs()
+                    {
+                        Section = "Login",
+                        Key = "Cookie",
+                        Value = tmp_cookie
+                    }, SiteManager.SiteConfigType.Change);
 
                     switch (shortName)
                     {

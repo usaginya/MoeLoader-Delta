@@ -12,6 +12,9 @@ namespace MoeLoaderDelta.Control.Toast
     {
         private Notifier notifier;
 
+        /// <summary>
+        /// Toast实现 调用此类进行工作
+        /// </summary>
         public ToastBoxWork()
         {
             notifier = new Notifier(cfg =>
@@ -44,7 +47,7 @@ namespace MoeLoaderDelta.Control.Toast
                 NotificationClickAction = n => { n.Close(); }
             };
 
-            notifier.ShowToast(message, msgType, options);
+            notifier.ShowToastAsync(message, msgType, options);
         }
 
     }

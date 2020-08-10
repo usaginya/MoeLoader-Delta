@@ -102,7 +102,7 @@ namespace SitePack
         /// </summary>
         private void SaveUser()
         {
-            SiteManager.SiteConfig(ShortName, "Login", "Cookie", cookie, true);
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie }, SiteManager.SiteConfigType.Change);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace SitePack
         /// </summary>
         private void LoadUser()
         {
-            cookie = SiteManager.SiteConfig(ShortName, "Login", "Cookie");
+            cookie = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie });
         }
     }
 }

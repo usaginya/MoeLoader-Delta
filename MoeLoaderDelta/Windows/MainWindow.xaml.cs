@@ -285,6 +285,9 @@ namespace MoeLoaderDelta
             ExtSiteIconOn = CreateBitmapImage("MoeLoaderDelta.Images.extsetting1.ico");
             #endregion
 
+            //初始化加载站点
+            SiteManager.Instance.Initialize();
+
             foreach (IMageSite site in SiteManager.Instance.Sites)
             {
                 MenuItem menuItem = null;
@@ -451,7 +454,7 @@ namespace MoeLoaderDelta
             Dispatcher.Invoke(siteExtended.SettingAction);
             item.Icon = siteExtended.Enable ? ExtSiteIconOn : ExtSiteIconOff;
 
-            Toast.Show($"{siteExtended.Title}已{(siteExtended.Enable ? "开启" : "关闭")}");
+            Toast.Show($"[已{(siteExtended.Enable ? "开启" : "关闭")}] {siteExtended.Title}");
         }
 
         /// <summary>
@@ -2874,7 +2877,6 @@ namespace MoeLoaderDelta
         {
             if (currentSession != null) { currentSession.IsStop = true; }
 
-            Toast.Dispose();
             downloadC.StopAll();
 
             try
@@ -2918,6 +2920,8 @@ namespace MoeLoaderDelta
             }
             catch { }
 
+            Toast.Dispose();
+            SaveSitesConfig();
             GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
@@ -3126,6 +3130,17 @@ namespace MoeLoaderDelta
             canDrag = dragIsClear = false;
         }
         #endregion ============
+
+        /// <summary>
+        /// 保存所有站点配置
+        /// </summary>
+        private void SaveSitesConfig()
+        {
+            SiteManager.Instance.Sites.ForEach((site) =>
+           {
+               SiteManager.SiteConfig(site.ShortName, null, SiteManager.SiteConfigType.Save);
+           });
+        }
 
         #region 线程延迟执行翻页
         /// <summary>

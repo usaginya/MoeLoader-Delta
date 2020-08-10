@@ -1,11 +1,14 @@
-﻿using LZ4;
+﻿using IniParser;
+using IniParser.Model;
+using IniParser.Parser;
+using LZ4;
 using MoeLoaderDelta.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -13,16 +16,23 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200809
+    /// Last 20200810
     /// </summary>
     public class SiteManager
     {
         /// <summary>
         /// 站点登录类型 用于判断调用登录方式 登录参数保存到LoginSiteArgs
-        /// FillIn 弹出账号填写窗口
+        /// FillIn      弹出账号填写窗口
         /// Cookie 登录
         /// </summary>
         public enum SiteLoginType { FillIn, Cookie }
+
+        /// <summary>
+        /// 站点保存方式类型
+        /// Change 修改配置
+        /// Save      保存配置
+        /// </summary>
+        public enum SiteConfigType { Read, Change, Save }
 
         /// <summary>
         /// 参数共享传递
@@ -37,6 +47,15 @@ namespace MoeLoaderDelta
         private static readonly string aesKey = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{MachineInfo.GetBLOSSerialNumber()}${MachineInfo.GetCPUSerialNumber()}"));
 
         /// <summary>
+        /// ini配置文件解析
+        /// </summary>
+        private static FileIniDataParser iniParser;
+        /// <summary>
+        /// ini配置数据库 SiteShortName, IniData
+        /// </summary>
+        private static Dictionary<string, IniData> inis = new Dictionary<string, IniData>();
+
+        /// <summary>
         /// 站点集合
         /// </summary>
         public List<IMageSite> Sites { get; } = new List<IMageSite>();
@@ -46,12 +65,24 @@ namespace MoeLoaderDelta
         /// </summary>
         public static SiteManager Instance { get; } = new SiteManager();
 
-        private SiteManager()
-        {
-            string[] dlls = { };
-            try { dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories); }
-            catch { }
+        private SiteManager() { }
 
+        /// <summary>
+        /// 初始化加载站点
+        /// </summary>
+        public void Initialize()
+        {
+            //设置加载站点配置解析
+            IniDataParser iniDataParser = new IniDataParser();
+            iniDataParser.Configuration.AllowCreateSectionsOnFly
+                = iniDataParser.Configuration.AllowDuplicateKeys
+                = iniDataParser.Configuration.AllowDuplicateSections
+                = iniDataParser.Configuration.SkipInvalidLines
+                = true;
+            iniParser = new FileIniDataParser(iniDataParser);
+
+            string[] dlls = { };
+            try { dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories); } catch { }
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
             {
@@ -152,79 +183,87 @@ namespace MoeLoaderDelta
 
         #region 站点配置文件处理方法
         /// <summary>
-        /// 读INI配置文件 API
+        /// 载入站点配置
         /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="def">缺省值</param>
-        /// <param name="retval">lpReturnedString取得的内容</param>
-        /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
-        /// <param name="filePath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32", CharSet = CharSet.Unicode)]
-        public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
-
-        /// <summary>
-        /// 写INI配置文件 API
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="val">值</param>
-        /// <param name="filepath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32", CharSet = CharSet.Unicode)]
-        public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
-
-        /// <summary>
-        /// 读INI配置文件
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="filePath">配置文件路径</param>
-        /// <param name="def">缺省值</param>
-        /// <returns></returns>
-        public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
+        /// <param name="siteShortName">站点短名</param>
+        public static void LoadSiteConfig(string siteShortName)
         {
-            StringBuilder sb = new StringBuilder(short.MaxValue);
-            try { GetPrivateProfileString(section, key, def ?? string.Empty, sb, sb.Capacity, filePath); }
-            catch (Exception) { }
-            return sb.ToString();
+            if (string.IsNullOrWhiteSpace(siteShortName)) { return; }
+
+            string content = string.Empty, iv = content, siteini = $"{SitePacksPath}{siteShortName}.ini";
+            if (string.IsNullOrWhiteSpace(siteShortName) || inis.Any(d => d.Key == siteShortName)) { return; }
+
+            if (File.Exists(siteini))
+            {
+                //读入并解压
+                content = File.ReadAllText(siteini);
+                if (string.IsNullOrWhiteSpace(content) || content.Length < 7) { return; }
+                content = Encoding.UTF8.GetString(LZ4Codec.Unwrap(Convert.FromBase64String(content)));
+                iv = content.Substring(0, 6);
+                content = AESHelper.AesDecrypt(content.Substring(6), aesKey, iv);
+                //解析并入库
+                IniData iniData = iniParser.Parser.Parse(content);
+                inis.Add(siteShortName, iniData);
+                return;
+            }
+            inis.Add(siteShortName, new IniData());
         }
 
         /// <summary>
-        /// 读取或保存站点设置
+        /// 保存站点配置
         /// </summary>
         /// <param name="siteShortName">站点短名</param>
-        /// <param name="section">项名</param>
-        /// <param name="key">键名</param>
-        /// <param name="value">值</param>
-        /// <param name="save">False读取,True保存</param>
-        /// <returns></returns>
-        public static string SiteConfig(string siteShortName, string section, string key, string value = null, bool save = false)
+        private static void SaveSiteConfig(string siteShortName)
         {
-            string siteini = $"{SitePacksPath}{siteShortName}.ini";
-            string akey = string.Empty, iv = string.Empty;
-            if (save)
+            if (!inis.ContainsKey(siteShortName)) { return; }
+            IniData iniData = inis[siteShortName];
+            if (!iniData.Sections.Any()) { return; }
+            string content = string.Empty, iv = content, siteini = $"{SitePacksPath}{siteShortName}.ini";
+
+            //写出指定站点配置并压缩
+            iniParser.WriteFile(siteini, iniData);
+            content = File.ReadAllText(siteini);
+            iv = RandomRNG(100000, 999999).ToString();
+            content = $"{iv}{AESHelper.AesEncrypt(content, aesKey, iv)}";
+            content = Convert.ToBase64String(LZ4Codec.Wrap(Encoding.UTF8.GetBytes(content)));
+            File.WriteAllText(siteini, content);
+        }
+
+        /// <summary>
+        /// 读取或更改站点设置
+        /// </summary>
+        /// <param name="siteShortName">站点短名</param>
+        /// <param name="siteConfig">设置参数表</param>
+        /// <param name="configType">设置方法</param>
+        public static string SiteConfig(string siteShortName, SiteConfigArgs siteConfig, SiteConfigType configType = SiteConfigType.Read)
+        {
+            if (string.IsNullOrWhiteSpace(siteShortName)) { return string.Empty; }
+
+            IniData iniData = new IniData();
+            if (inis.ContainsKey(siteShortName)) { iniData = inis[siteShortName]; }
+
+            switch (configType)
             {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    akey = aesKey;
-                    iv = RandomRNG(100000, 999999).ToString();
-                    value = $"{iv}{AESHelper.AesEncrypt(value, akey, iv)}";
-                    value = Convert.ToBase64String(LZ4Codec.Wrap(Encoding.UTF8.GetBytes(value)));
-                }
-                return WritePrivateProfileString(section, key, value, siteini).ToString();
+                case SiteConfigType.Change:
+                    if (string.IsNullOrWhiteSpace(siteConfig.Section) || string.IsNullOrWhiteSpace(siteConfig.Key)) { return string.Empty; }
+                    iniData[siteConfig.Section][siteConfig.Key] = siteConfig.Value;
+                    inis[siteShortName] = iniData;
+                    break;
+
+                case SiteConfigType.Save:
+                    SaveSiteConfig(siteShortName);
+                    break;
+
+                default:
+                    if (string.IsNullOrWhiteSpace(siteConfig.Section) || string.IsNullOrWhiteSpace(siteConfig.Key)) { return string.Empty; }
+                    if (string.IsNullOrWhiteSpace(iniData.GetKey(siteConfig.Section)))
+                    {
+                        LoadSiteConfig(siteShortName);
+                        iniData = inis[siteShortName];
+                    }
+                    return iniData[siteConfig.Section][siteConfig.Key] ?? string.Empty;
             }
-            else
-            {
-                if (!File.Exists(siteini)) { return string.Empty; }
-                string getVal = GetPrivateProfileString(section, key, siteini);
-                if (string.IsNullOrWhiteSpace(getVal) || getVal.Length < 7) { return string.Empty; }
-                getVal = Encoding.UTF8.GetString(LZ4Codec.Unwrap(Convert.FromBase64String(getVal)));
-                akey = aesKey;
-                iv = getVal.Substring(0, 6);
-                return AESHelper.AesDecrypt(getVal.Substring(6), akey, iv);
-            }
+            return string.Empty;
         }
         #endregion
 
@@ -282,6 +321,25 @@ namespace MoeLoaderDelta
         /// 登录Cookie
         /// </summary>
         public string Cookie { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// 站点设置参数
+    /// </summary>
+    public class SiteConfigArgs
+    {
+        /// <summary>
+        /// 项名
+        /// </summary>
+        public string Section { get; set; }
+        /// <summary>
+        /// 键名
+        /// </summary>
+        public string Key { get; set; }
+        /// <summary>
+        /// 值
+        /// </summary>
+        public string Value { get; set; }
     }
 
 }

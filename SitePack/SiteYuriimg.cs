@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
-    /// Last change 200807
+    /// Last change 200810
     /// </summary>
     public class SiteYuriimg : AbstractImageSite
     {
@@ -259,8 +259,8 @@ namespace SitePack
         /// </summary>
         private void SaveUser()
         {
-            SiteManager.SiteConfig(ShortName, "Login", "User", nowUser, true);
-            SiteManager.SiteConfig(ShortName, "Login", "Pwd", nowPwd, true);
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "User", Value = nowUser }, SiteManager.SiteConfigType.Change);
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Pwd", Value = nowPwd }, SiteManager.SiteConfigType.Change);
         }
 
         /// <summary>
@@ -268,8 +268,8 @@ namespace SitePack
         /// </summary>
         private void LoadUser()
         {
-            nowUser = SiteManager.SiteConfig(ShortName, "Login", "User");
-            nowPwd = SiteManager.SiteConfig(ShortName, "Login", "Pwd");
+            nowUser = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "User" });
+            nowPwd = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Pwd" });
         }
 
         /// <summary>

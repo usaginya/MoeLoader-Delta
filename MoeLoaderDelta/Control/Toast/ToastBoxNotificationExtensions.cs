@@ -6,9 +6,9 @@ namespace MoeLoaderDelta.Control.Toast
 {
     public static class ToastBoxNotificationExtensions
     {
-        public static void ShowToast(this Notifier notifier, string message, ToastBoxNotification.MsgType msgType, MessageOptions messageOptions = null)
+        public static async void ShowToastAsync(this Notifier notifier, string message, ToastBoxNotification.MsgType msgType, MessageOptions messageOptions = null)
         {
-            Application.Current.Dispatcher.InvokeAsync(() => notifier.Notify(() => new ToastBoxNotification(message, msgType, messageOptions)));
+            await Application.Current.Dispatcher.InvokeAsync(() => notifier.Notify(() => new ToastBoxNotification(message, msgType, messageOptions)));
         }
     }
 }
