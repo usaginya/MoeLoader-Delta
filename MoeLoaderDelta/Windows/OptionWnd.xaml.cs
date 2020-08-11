@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -42,6 +43,18 @@ namespace MoeLoaderDelta
                 rtCustom.IsChecked = true;
                 txtProxy.IsEnabled = true;
             }
+
+            RBDownPanlModeMLDB.IsChecked = true;
+            if (MainWindow.DownPanlModeValue == MainWindow.DownPanlMode.ML)
+            {
+                RBDownPanlModeML.IsChecked = true;
+            }
+            else if (MainWindow.DownPanlModeValue == MainWindow.DownPanlMode.MLDA)
+            {
+                RBDownPanlModeMLDA.IsChecked = true;
+            }
+            TextBoxScrollSpeed.Text = MainWindow.MainW.scrList.SpeedFactor.ToSafeString();
+
             txtBossKey.Text = MainWindow.BossKey.ToString();
             MainWindow.BossKey = System.Windows.Forms.Keys.None;
             txtPattern.Text = main.namePatter;
@@ -95,10 +108,11 @@ namespace MoeLoaderDelta
             }
             #endregion
 
-            textNameHelp.ToolTip = "【以下必须是小写英文】\r\n%site 站点名\r\n%id 编号\r\n%tag 标签\r\n%desc 描述\r\n"
-                + "%author 作者名\r\n%date 上载时间\r\n%imgp[3] 图册页数[页数总长度(补0)]\r\n\r\n"
-                + "<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】\r\n"
-                + "表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题\r\n"
+            textNameHelp.ToolTip = $"【以下必须是小写英文】{Environment.NewLine}%site 站点名{Environment.NewLine}"
+                + $"%id 编号{Environment.NewLine}%tag 标签{Environment.NewLine}%desc 描述{Environment.NewLine}"
+                + $"%author 作者名{Environment.NewLine}%date 上载时间{Environment.NewLine}%imgp[3] 图册页数[页数总长度(补0)]{Environment.NewLine}{Environment.NewLine}"
+                + $"<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】{Environment.NewLine}"
+                + $"表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题{Environment.NewLine}"
                + "建议把裁剪符号写在 标签%tag 或 描述%desc 后面";
 
             #region 文件名规则格式按钮绑定
@@ -124,6 +138,9 @@ namespace MoeLoaderDelta
             main.ChangeBg(Math.Round(e.NewValue, 2));
         }
 
+        /// <summary>
+        /// 确定设置
+        /// </summary>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             txtSaveLocation.Text = txtSaveLocation.Text.Trim();
@@ -139,11 +156,36 @@ namespace MoeLoaderDelta
                 if (rsl == MessageBoxResult.No) { return; }
                 Directory.CreateDirectory(txtSaveLocation.Text);
             }
+
+            if (txtPattern.Text.Trim().Length > 0)
+            {
+                foreach (char rInvalidChar in Path.GetInvalidFileNameChars())
+                {
+                    if (!rInvalidChar.Equals('<') && txtPattern.Text.Contains(rInvalidChar.ToSafeString()))
+                    {
+                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        txtPattern.SelectAll();
+                        txtPattern.Focus();
+                        return;
+                    }
+                }
+            }
+
+            double scrollSpeed = TextBoxScrollSpeed.Text.ToSafeDouble();
+            if (scrollSpeed < 1 || scrollSpeed > 12)
+            {
+                MessageBox.Show(this, $"{TextBlockScrollSpeed.Text}设置的数值不正确，只能是 1~12", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                TextBoxScrollSpeed.SelectAll();
+                TextBoxScrollSpeed.Focus();
+                return;
+            }
+            MainWindow.MainW.scrList.SpeedFactor = TextBoxScrollSpeed.Text.ToSafeDouble();
+
             if (txtProxy.Text.Trim().Length > 0)
             {
                 string add = txtProxy.Text.Trim();
                 bool right = false;
-                if (System.Text.RegularExpressions.Regex.IsMatch(add, @"^.+:(\d+)$"))
+                if (Regex.IsMatch(add, @"^.+:(\d+)$"))
                 //@"^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]):(\d+)$"))
                 {
                     if (int.TryParse(add.Substring(add.IndexOf(':') + 1), out int port))
@@ -157,26 +199,13 @@ namespace MoeLoaderDelta
                 }
                 if (!right)
                 {
-                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式",
-                        MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtProxy.SelectAll();
+                    txtProxy.Focus();
                     return;
                 }
             }
-            else
-                MainWindow.Proxy = string.Empty;
-
-            if (txtPattern.Text.Trim().Length > 0)
-            {
-                foreach (char rInvalidChar in Path.GetInvalidFileNameChars())
-                {
-                    if (!rInvalidChar.Equals('<') && txtPattern.Text.Contains(rInvalidChar.ToSafeString()))
-                    {
-                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符",
-                        MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-                }
-            }
+            else { MainWindow.Proxy = string.Empty; }
 
             if (rtNoProxy.IsChecked.Value)
             {
@@ -189,6 +218,17 @@ namespace MoeLoaderDelta
             else
             {
                 MainWindow.ProxyType = ProxyType.Custom;
+            }
+
+            if (RBDownPanlModeML.IsChecked.Value)
+            {
+                MainWindow.DownPanlModeValue = MainWindow.DownPanlMode.ML;
+            }
+            else
+            {
+                MainWindow.DownPanlModeValue = RBDownPanlModeMLDA.IsChecked.Value
+                    ? MainWindow.DownPanlMode.MLDA
+                    : MainWindow.DownPanlMode.MLDB;
             }
 
             MainWindow.BossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), txtBossKey.Text);
@@ -256,6 +296,9 @@ namespace MoeLoaderDelta
             Close();
         }
 
+        /// <summary>
+        /// 恢复默认设置
+        /// </summary>
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
             //default
@@ -270,6 +313,8 @@ namespace MoeLoaderDelta
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
             sBgOpacity.Value = 0.5;
+            TextBoxScrollSpeed.Text = "1.6";
+            RBDownPanlModeMLDB.IsChecked = true;
             txtSaveLocation.Text = "MoeLoaderGallery";
         }
 
@@ -337,13 +382,13 @@ namespace MoeLoaderDelta
         private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
             MessageBox.Show(this, MainWindow.ProgramName + " Ver" + MainWindow.ProgramVersion
-                + "\r\n\r\n"
-                + "Email: esonice@gmail.com\r\nSite: http://moeloader.sinaapp.com/"
-                + "\r\nMoeLoader ©2008-2013 esonic All rights reserved.\r\n\r\n"
-                + "Δ Version by YIU\r\n"
-                + "Email: degdod@qq.com\r\nSite: http://usaginya.lofter.com/"
-                + "\r\nMoeLoader Δ ©2016-2020"
-                + " Moekai All rights reserved.\r\n\r\n"
+                + $"{Environment.NewLine}{Environment.NewLine}"
+                + "Email: esonice@gmail.com{Environment.NewLine}Site: http://moeloader.sinaapp.com/"
+                + $"{Environment.NewLine}MoeLoader ©2008-2013 esonic All rights reserved.{Environment.NewLine}{Environment.NewLine}"
+                + $"Δ Version by YIU{Environment.NewLine}"
+                + "Email: degdod@qq.com{Environment.NewLine}Site: http://usaginya.lofter.com/"
+                + $"{Environment.NewLine}MoeLoader Δ ©2016-2020"
+                + $" Moekai All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -409,5 +454,33 @@ namespace MoeLoaderDelta
             main.ChangeBg(oldBgOp);
             MainWindow.BossKey = keysBackup;
         }
+
+        /// <summary>
+        /// 偏好设置滚动条速度文本框输入处理
+        /// </summary>
+        private void TextBoxScrollSpeed_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            Regex re = new Regex(@"[^0-9. ]+");
+            e.Handled = re.IsMatch(e.Text)
+                || (TextBoxScrollSpeed.Text.Length < 1 && e.Text == "0")
+                || (TextBoxScrollSpeed.Text.Length < 1 && e.Text == ".")
+                || (TextBoxScrollSpeed.Text.Length > 1 && TextBoxScrollSpeed.Text.Contains(".") && e.Text == ".");
+        }
+
+        /// <summary>
+        /// 偏好设置滚动条速度文本框按键按下处理
+        /// </summary>
+        private void TextBoxScrollSpeed_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            //屏蔽空格
+            if (e.Key == Key.Space) { e.Handled = true; }
+        }
+
+        private void ChkDownPanlMode_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+
     }
 }

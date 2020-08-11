@@ -9,7 +9,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-8-10
+    /// Last 2020-8-12
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
@@ -19,11 +19,21 @@ namespace MoeLoaderDelta.Control
         private double LastLocation = 0;
 
         /// <summary>
+        /// 滚动速度因子属性
+        /// </summary>
+        public double SpeedFactor
+        {
+            get => speedFactor;
+            set => speedFactor = value < 0.1 ? 0.1 : value > 12 ? 12 : value;
+        }
+        private double speedFactor = 1.6;
+
+        /// <summary>
         /// 重写鼠标滚动事件
         /// </summary>
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            MoveScroll(e.Delta / 1.6);
+            MoveScroll(e.Delta / speedFactor);
             //通知ScrollViewer滚动完成
             e.Handled = true;
         }
@@ -44,7 +54,6 @@ namespace MoeLoaderDelta.Control
         {
             //更新记录的位置
             LastLocation = e.VerticalOffset;
-           // base.OnScrollChanged(e);
         }
 
         /// <summary>
@@ -109,12 +118,13 @@ namespace MoeLoaderDelta.Control
                 From = VerticalOffset,
                 To = ToValue,
                 //动画速度
-                Duration = TimeSpan.FromMilliseconds(600)
+                Duration = TimeSpan.FromMilliseconds(380)
             };
             //固定帧数
             Timeline.SetDesiredFrameRate(Animation, 60);
             BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, Animation);
         }
+
     }
 
     public static class ScrollViewerBehavior

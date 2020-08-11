@@ -19,9 +19,6 @@
     Deactivated="Window_Deactivated_1"
     Drop="Window_Drop"
     Loaded="Window_Loaded"
-    MouseDoubleClick="Window_MouseDoubleClick_1"
-    MouseDown="Window_MouseDown_1"
-    MouseMove="Window_MouseMove"
     PreviewKeyDown="Window_KeyDown"
     ResizeMode="CanResizeWithGrip"
     StateChanged="Window_StateChanged_1"
@@ -30,7 +27,10 @@
     WindowStyle="None"
     mc:Ignorable="d">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" ResizeBorderThickness="10" />
+        <WindowChrome
+            CaptionHeight="{Binding ElementName=bdDecorate, Path=Height}"
+            GlassFrameThickness="0"
+            ResizeBorderThickness="10" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <Style TargetType="{x:Type local:MainWindow}">
@@ -838,28 +838,29 @@
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
-
-                <Button
-                    Margin="0,0,68,0"
-                    Click="Min_Click"
-                    Style="{StaticResource sysbtn}" />
-                <Rectangle Style="{StaticResource min}" />
-                <Button
-                    Margin="0,0,34,0"
-                    Click="Max_Click"
-                    Style="{StaticResource sysbtn}" />
-                <Rectangle Style="{StaticResource max}" />
-                <Button
-                    Margin="0,0,0,0"
-                    Click="Close_Click"
-                    Style="{StaticResource sysbtn}"
-                    ToolTip="按住Ctrl不保存这次设置" />
-                <Rectangle Style="{StaticResource close}" />
-                <Rectangle
-                    x:Name="maxBtn"
-                    Fill="{StaticResource maxB}"
-                    Style="{DynamicResource max}" />
-                <Rectangle Style="{StaticResource min}" />
+                <Grid WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button
+                        Margin="0,0,68,0"
+                        Click="Min_Click"
+                        Style="{StaticResource sysbtn}" />
+                    <Rectangle Style="{StaticResource min}" />
+                    <Button
+                        Margin="0,0,34,0"
+                        Click="Max_Click"
+                        Style="{StaticResource sysbtn}" />
+                    <Rectangle Style="{StaticResource max}" />
+                    <Button
+                        Margin="0,0,0,0"
+                        Click="Close_Click"
+                        Style="{StaticResource sysbtn}"
+                        ToolTip="按住Ctrl不保存这次设置" />
+                    <Rectangle Style="{StaticResource close}" />
+                    <Rectangle
+                        x:Name="maxBtn"
+                        Fill="{StaticResource maxB}"
+                        Style="{DynamicResource max}" />
+                    <Rectangle Style="{StaticResource min}" />
+                </Grid>
                 <Grid Margin="0,35,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="341*" />
@@ -878,9 +879,9 @@
 
                             <Grid
                                 x:Name="imgListBg"
+                                MouseMove="ImgList_MouseMove"
                                 PreviewMouseDown="ImgList_PreviewMouseDown"
-                                PreviewMouseUp="ImgList_PreviewMouseUp"
-                                MouseMove="ImgList_MouseMove">
+                                PreviewMouseUp="ImgList_PreviewMouseUp">
                                 <local2:SmoothScrollViewer
                                     x:Name="scrList"
                                     Margin="0,1,0,1"
@@ -1087,7 +1088,8 @@
                             Height="30"
                             Margin="0,-10,10,0"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                             <Grid.RenderTransform>
                                 <TransformGroup>
                                     <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
@@ -1405,7 +1407,8 @@
             <Grid
                 Margin="0,7,130,0"
                 HorizontalAlignment="Right"
-                VerticalAlignment="Top">
+                VerticalAlignment="Top"
+                WindowChrome.IsHitTestVisibleInChrome="True">
                 <TextBlock
                     x:Name="txtSetting"
                     Margin="0"

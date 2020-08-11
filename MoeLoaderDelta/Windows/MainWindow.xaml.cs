@@ -4,6 +4,7 @@ using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -84,13 +85,6 @@ namespace MoeLoaderDelta
         private int page = 1, realPage = 1, lastPage = 1;
         private static string SearchWord = string.Empty;
 
-        //private Color backColor;
-        //internal bool isAero = true;
-        /// <summary>
-        /// 使用最大化按钮最大化
-        /// </summary>
-        private bool ClickMaxButton = false;
-
         /// <summary>
         /// 是否还有下一页
         /// </summary>
@@ -157,6 +151,11 @@ namespace MoeLoaderDelta
         public TreeViewModel FavoriteTreeView = new TreeViewModel();
         #endregion //////////////////////////
 
+        #region  -- 下载面板模式 --
+        internal enum DownPanlMode { ML, MLDA, MLDB }
+        internal static DownPanlMode DownPanlModeValue { get; set; } = DownPanlMode.MLDA;
+        #endregion
+
         internal int comboBoxIndex = 0;
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         private const string NoFoundMsg = "没有找到图片喔~";
@@ -200,7 +199,6 @@ namespace MoeLoaderDelta
         public static string SearchWordPu => DownloadControl.ReplaceInvalidPathChars(SearchWord);
         WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
 
-
         #region Public Functions
         /// <summary>
         /// 当前选则的站点唯一原名、无结果将返回null
@@ -230,6 +228,23 @@ namespace MoeLoaderDelta
             return sitesName;
         }
         #endregion
+
+        internal static IWebProxy WebProxy
+        {
+            get
+            {
+                if (ProxyType == ProxyType.Custom)
+                {
+                    if (Proxy.Length > 0)
+                        return new WebProxy(Proxy, true);
+                }
+                else if (ProxyType == ProxyType.None)
+                {
+                    return null;
+                }
+                return WebRequest.DefaultWebProxy;
+            }
+        }
 
         /// <summary>
         /// ################### Main Start ###################
@@ -823,6 +838,10 @@ namespace MoeLoaderDelta
                         {
                             bgOp = double.Parse(parts[19]);
                         }
+                        if (parts.Length > 20)
+                        {
+                            scrList.SpeedFactor = double.Parse(parts[20]);
+                        }
                     }
                     //else itmJpg.IsChecked = lines[2].Trim().Equals("1");
                     else addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
@@ -1146,8 +1165,6 @@ namespace MoeLoaderDelta
                 //生成缩略图控件
                 for (int i = 0; i < imgs.Count; i++)
                 {
-                    //int id = Int32.Parse(imgs[i].Id);
-
                     ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex])
                     {
                         Width = thumbSize,
@@ -1573,7 +1590,7 @@ namespace MoeLoaderDelta
                 GlassHelper.FlashWindow(Hwnd, true);
             }
 
-            //无图时禁用菜单
+            //无图时禁用
             if (imgs.Count < 1)
             {
                 itmSelectInverse.IsEnabled =
@@ -1647,190 +1664,6 @@ namespace MoeLoaderDelta
             PlayPreNextAnimation();
             PlayPreNextAnimation(1);
         }
-
-        #region Window Related
-        private void Window_MouseDoubleClick_1(object sender, MouseButtonEventArgs e)
-        {
-            //maxmize
-            if (e.OriginalSource is Grid && e.GetPosition(this).Y < bdDecorate.ActualHeight) Max_Click(null, null);
-        }
-
-        /// <summary>
-        /// 窗口资源初始化
-        /// </summary>
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-
-            Hwnd = new WindowInteropHelper(this).Handle;
-            HwndSource.FromHwnd(Hwnd).AddHook(new HwndSourceHook(WndProc));
-        }
-
-        /// <summary>
-        /// 按键监听事件
-        /// </summary>
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (msg == 0x0312)
-            {
-                // 老板键
-                if (wParam.ToInt32() == (int)bossKey)
-                {
-                    Visibility = Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
-                }
-            }
-            else if (msg == 0x0024)
-            {
-                WmGetMinMaxInfo(hwnd, lParam);
-                handled = true;
-            }
-            else if (msg == 0x0112)
-            {
-                //WM_SYSCOMMAND   0x0112
-                if (wParam.ToInt32() == 0xF020)
-                {
-                    //SC_MINIMIZE  0xF020
-                    //WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
-                    //GWL_STYLE -16
-                    int nStyle = GlassHelper.GetWindowLong(hwnd, -16);
-                    nStyle |= 0x00C00000;
-                    //WS_CAPTION 0x00C00000L
-                    GlassHelper.SetWindowLong(hwnd, -16, nStyle);
-                    //isStyleNone = false;
-
-                    WindowState = WindowState.Minimized;
-                    handled = true;
-                }
-            }
-
-            return wParam;
-        }
-
-        private void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
-        {
-            GlassHelper.MINMAXINFO mmi = (GlassHelper.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(GlassHelper.MINMAXINFO));
-
-            int MONITOR_DEFAULTTONEAREST = 0x00000002;
-            IntPtr monitor = GlassHelper.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-
-            if (monitor != IntPtr.Zero)
-            {
-                GlassHelper.MONITORINFO monitorInfo = new GlassHelper.MONITORINFO();
-                GlassHelper.GetMonitorInfo(monitor, monitorInfo);
-                GlassHelper.RECT rcWorkArea = monitorInfo.rcWork;
-                GlassHelper.RECT rcMonitorArea = monitorInfo.rcMonitor;
-                mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 6;
-                mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 6;
-                mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 18;
-                mmi.ptMaxSize.y = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 13;
-                //mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 12;
-                //mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 16;
-                //int maxHeight = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 43;
-                //mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 27;
-                //mmi.ptMaxSize.y = maxHeight;
-                mmi.ptMinTrackSize.x = (int)MinWidth;
-                mmi.ptMinTrackSize.y = (int)MinHeight;
-            }
-
-            Marshal.StructureToPtr(mmi, lParam, true);
-        }
-
-        /// <summary>
-        /// 限制页码设置只能输入数字的一种方法
-        /// </summary>
-        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
-                || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
-                || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void TxtNum_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox txt = sender as TextBox;
-            if (txt.Text.Length == 0) return;
-            try
-            {
-                num = int.Parse(txtNum.Text);
-                page = int.Parse(txtPage.Text);
-
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-            catch (NullReferenceException) { }
-            catch (FormatException)
-            {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-        }
-
-        private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
-        {
-            TextBox txt = sender as TextBox;
-            try
-            {
-                num = int.Parse(txtNum.Text);
-                page = int.Parse(txtPage.Text);
-
-                num = num > 0 ? (num > 600 ? 600 : num) : 1;
-                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
-
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-            catch (NullReferenceException) { }
-            catch (FormatException)
-            {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-        }
-
-        private void PageUp_Click(object sender, RoutedEventArgs e)
-        {
-            if (page < 99999)
-                txtPage.Text = (page + 1).ToString();
-        }
-
-        private void PageDown_Click(object sender, RoutedEventArgs e)
-        {
-            if (page > 1)
-                txtPage.Text = (page - 1).ToString();
-        }
-
-        private void NumUp_Click(object sender, RoutedEventArgs e)
-        {
-            if (num < 600)
-                txtNum.Text = (num + 1).ToString();
-        }
-
-        private void NumDown_Click(object sender, RoutedEventArgs e)
-        {
-            if (num > 1)
-                txtNum.Text = (num - 1).ToString();
-        }
-        #endregion
-
-        #region keyCheck
-        [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(System.Windows.Forms.Keys key);
-        public static bool IsKeyDown(System.Windows.Forms.Keys key)
-        {
-            return (GetAsyncKeyState(key) & 0x8000) == 0x8000 ? true : false;
-        }
-        public static bool IsCtrlDown()
-        {
-            return IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey) ? true : false;
-        }
-        public static bool IsShiftDown()
-        {
-            return IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey) ? true : false;
-        }
-        #endregion
 
         /// <summary>
         /// 预览图片
@@ -2719,23 +2552,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        internal static System.Net.IWebProxy WebProxy
-        {
-            get
-            {
-                if (ProxyType == ProxyType.Custom)
-                {
-                    if (Proxy.Length > 0)
-                        return new System.Net.WebProxy(Proxy, true);
-                }
-                else if (ProxyType == ProxyType.None)
-                {
-                    return null;
-                }
-                return System.Net.WebRequest.DefaultWebProxy;
-            }
-        }
-
         private void ItmxExplicit_Click(object sender, RoutedEventArgs e)
         {
             if (!itmxExplicit.IsChecked)
@@ -2746,16 +2562,6 @@ namespace MoeLoaderDelta
                     itmxExplicit.IsChecked = true;
                 }
             }
-        }
-
-        private void Window_MouseDown_1(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                DragMove();
-                ClickMaxButton = e.ClickCount < 2;
-            }
-            catch { }
         }
 
         private void Min_Click(object sender, RoutedEventArgs e)
@@ -2770,7 +2576,6 @@ namespace MoeLoaderDelta
             if (WindowState == WindowState.Normal)
             {
                 WindowState = WindowState.Maximized;
-                ClickMaxButton = true;
             }
             else
             {
@@ -2781,22 +2586,6 @@ namespace MoeLoaderDelta
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Close();
-        }
-
-        /// <summary>
-        /// 最大化时拖动还原窗口
-        /// </summary>
-        private void Window_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed && !ClickMaxButton && WindowState == WindowState.Maximized)
-            {
-                Max_Click(null, null);
-                GlassHelper.POINT mousep = new GlassHelper.POINT();
-                GlassHelper.GetCursorPos(out mousep);
-                Top = mousep.y - 50;
-                Left = mousep.x - Width / 2;
-                Window_MouseDown_1(null, null);
-            }
         }
 
         private void Window_StateChanged_1(object sender, EventArgs e)
@@ -2845,6 +2634,197 @@ namespace MoeLoaderDelta
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
         }
+
+        #region Window Related
+        /// <summary>
+        /// 窗口鼠标双击
+        /// </summary>
+        private void Window_MouseDoubleClick_1(object sender, MouseButtonEventArgs e)
+        {
+            //maxmize
+            if (e.OriginalSource is Grid && e.GetPosition(this).Y < bdDecorate.ActualHeight)
+            {
+                Max_Click(null, null);
+            }
+        }
+
+        /// <summary>
+        /// 窗口资源初始化
+        /// </summary>
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            Hwnd = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(Hwnd).AddHook(new HwndSourceHook(WndProc));
+        }
+
+        /// <summary>
+        /// 按键监听事件
+        /// </summary>
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == 0x0312)
+            {
+                // 老板键
+                if (wParam.ToInt32() == (int)bossKey)
+                {
+                    Visibility = Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+                }
+            }
+            else if (msg == 0x0024)
+            {
+                WmGetMinMaxInfo(hwnd, lParam);
+                handled = true;
+            }
+            else if (msg == 0x0112)
+            {
+                //WM_SYSCOMMAND   0x0112
+                if (wParam.ToInt32() == 0xF020)
+                {
+                    //SC_MINIMIZE  0xF020
+                    //WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
+                    //GWL_STYLE -16
+                    int nStyle = GlassHelper.GetWindowLong(hwnd, -16);
+                    nStyle |= 0x00C00000;
+                    //WS_CAPTION 0x00C00000L
+                    GlassHelper.SetWindowLong(hwnd, -16, nStyle);
+                    //isStyleNone = false;
+
+                    WindowState = WindowState.Minimized;
+                    handled = true;
+                }
+            }
+
+            return wParam;
+        }
+
+        private void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
+        {
+            GlassHelper.MINMAXINFO mmi = (GlassHelper.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(GlassHelper.MINMAXINFO));
+
+            int MONITOR_DEFAULTTONEAREST = 0x00000002;
+            IntPtr monitor = GlassHelper.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+            if (monitor != IntPtr.Zero)
+            {
+                GlassHelper.MONITORINFO monitorInfo = new GlassHelper.MONITORINFO();
+                GlassHelper.GetMonitorInfo(monitor, monitorInfo);
+                GlassHelper.RECT rcWorkArea = monitorInfo.rcWork;
+                GlassHelper.RECT rcMonitorArea = monitorInfo.rcMonitor;
+                mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 6;
+                mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 6;
+                mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 18;
+                mmi.ptMaxSize.y = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 13;
+                //mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 12;
+                //mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 16;
+                //int maxHeight = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 43;
+                //mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 27;
+                //mmi.ptMaxSize.y = maxHeight;
+                mmi.ptMinTrackSize.x = (int)MinWidth;
+                mmi.ptMinTrackSize.y = (int)MinHeight;
+            }
+
+            Marshal.StructureToPtr(mmi, lParam, true);
+        }
+
+        /// <summary>
+        /// 限制页码设置只能输入数字的一种方法
+        /// </summary>
+        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
+                || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
+                || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TxtNum_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt.Text.Length == 0) return;
+            try
+            {
+                num = int.Parse(txtNum.Text);
+                page = int.Parse(txtPage.Text);
+
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+            catch (NullReferenceException) { }
+            catch (FormatException)
+            {
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+        }
+
+        private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            try
+            {
+                num = int.Parse(txtNum.Text);
+                page = int.Parse(txtPage.Text);
+
+                num = num > 0 ? (num > 600 ? 600 : num) : 1;
+                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
+
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+            catch (NullReferenceException) { }
+            catch (FormatException)
+            {
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+        }
+
+        private void PageUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (page < 99999)
+                txtPage.Text = (page + 1).ToString();
+        }
+
+        private void PageDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (page > 1)
+                txtPage.Text = (page - 1).ToString();
+        }
+
+        private void NumUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (num < 600)
+                txtNum.Text = (num + 1).ToString();
+        }
+
+        private void NumDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (num > 1)
+                txtNum.Text = (num - 1).ToString();
+        }
+        #endregion
+
+        #region keyCheck
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(System.Windows.Forms.Keys key);
+        public static bool IsKeyDown(System.Windows.Forms.Keys key)
+        {
+            return (GetAsyncKeyState(key) & 0x8000) == 0x8000 ? true : false;
+        }
+        public static bool IsCtrlDown()
+        {
+            return IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey) ? true : false;
+        }
+        public static bool IsShiftDown()
+        {
+            return IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey) ? true : false;
+        }
+        #endregion
+
         /// <summary>
         /// 删除临时缓存目录
         /// </summary>
@@ -2918,9 +2898,9 @@ namespace MoeLoaderDelta
                     searchControl.UsedItems.ForEach(w => words.Append($"{w}|"));
 
                     const string qm = ";";
-                    string text = downloadC.NumOnce + "\r\n"
+                    string text = downloadC.NumOnce + Environment.NewLine
                         + (DownloadControl.SaveLocation == ProgramRunPath
-                        ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + qm
+                        ? "." : DownloadControl.SaveLocation) + Environment.NewLine + addressType + qm
                         + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + qm
                         + numOfLoading + qm
                         + (itmMaskViewed.IsChecked ? "1" : "0") + qm
@@ -2939,10 +2919,11 @@ namespace MoeLoaderDelta
                         + bgSt + qm
                         + bgHe + qm
                         + bgVe + qm
-                        + bgOp + "\r\n";
+                        + bgOp + qm
+                        + scrList.SpeedFactor + Environment.NewLine;
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
-                        text += id.Key + ":" + id.Value + "\r\n";
+                        text += id.Key + ":" + id.Value + Environment.NewLine;
                     }
                     File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
                     DeleteTheSpecifiedFile(DownloadControl.SaveLocation, null, ".moe");
@@ -3214,11 +3195,11 @@ namespace MoeLoaderDelta
 
                 if (mousePoint.Y < offset)
                 {
-                    scrList.MoveScroll(Math.Abs(mousePoint.Y - offset) / 1.6);
+                    scrList.MoveScroll(Math.Abs(mousePoint.Y - offset) / scrList.SpeedFactor);
                 }
                 else if (mousePoint.Y > maxY)
                 {
-                    double test = (maxY - mousePoint.Y - offset) / 1.6;
+                    double test = (maxY - mousePoint.Y - offset) / scrList.SpeedFactor;
                     scrList.MoveScroll(test);
                 }
             });
