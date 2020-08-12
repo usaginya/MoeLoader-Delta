@@ -189,31 +189,31 @@
                     Grid.ColumnSpan="2"
                     Margin="10,0,5,0"
                     VerticalAlignment="Center"
-                    Text="缩略图滚动条速度因子" />
-                <TextBox
-                    x:Name="TextBoxScrollSpeed"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Width="38"
-                    Margin="30,0,5,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    InputMethod.IsInputMethodEnabled="False"
-                    MaxLength="3"
-                    PreviewKeyDown="TextBoxScrollSpeed_PreviewKeyDown"
-                    PreviewTextInput="TextBoxScrollSpeed_PreviewTextInput"
-                    Text="1.6"
-                    TextAlignment="Center"
-                    TextWrapping="NoWrap" />
+                    Text="缩略图滚动条速度" />
                 <TextBlock
                     Grid.Row="0"
                     Grid.Column="1"
-                    Grid.ColumnSpan="4"
-                    Margin="75,0,5,0"
+                    Margin="30,0,5,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    Text="范围1~12，因子数越大滚动速度越慢" />
-
+                    Text="快" />
+                <Slider
+                    Name="SliderScrollSpeed"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="3"
+                    MaxHeight="16"
+                    Margin="46,0,3,0"
+                    FontSize="12"
+                    IsMoveToPointEnabled="True"
+                    Maximum="12"
+                    Minimum="1"
+                    Style="{StaticResource DoubleSliderStyle}" />
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="4"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Text="慢" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="0"

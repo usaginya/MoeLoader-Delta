@@ -21,19 +21,14 @@ namespace MoeLoaderDelta.Control
         /// <summary>
         /// 滚动速度因子属性
         /// </summary>
-        public double SpeedFactor
-        {
-            get => speedFactor;
-            set => speedFactor = value < 0.1 ? 0.1 : value > 12 ? 12 : value;
-        }
-        private double speedFactor = 1.6;
+        public double SpeedFactor { get; set; } = 2.3;
 
         /// <summary>
         /// 重写鼠标滚动事件
         /// </summary>
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            MoveScroll(e.Delta / speedFactor);
+            MoveScroll(e.Delta / SpeedFactor);
             //通知ScrollViewer滚动完成
             e.Handled = true;
         }
@@ -64,10 +59,10 @@ namespace MoeLoaderDelta.Control
             double wheelChange = 0;
             switch (e.Key)
             {
-                case Key.Up: wheelChange = 100; break;
-                case Key.Down: wheelChange = -100; break;
-                case Key.PageUp: wheelChange = 300; break;
-                case Key.PageDown: wheelChange = -300; break;
+                case Key.Up: wheelChange = 118 - (SpeedFactor * 9); break;
+                case Key.Down: wheelChange = -(118 - (SpeedFactor * 9)); break;
+                case Key.PageUp: wheelChange = 218 - (SpeedFactor * 9); break;
+                case Key.PageDown: wheelChange = -(218 - (SpeedFactor * 9)); break;
                 case Key.Home: wheelChange = ScrollableHeight; break;
                 case Key.End: wheelChange = -ScrollableHeight; break;
             }
@@ -118,7 +113,7 @@ namespace MoeLoaderDelta.Control
                 From = VerticalOffset,
                 To = ToValue,
                 //动画速度
-                Duration = TimeSpan.FromMilliseconds(380)
+                Duration = TimeSpan.FromMilliseconds(360)
             };
             //固定帧数
             Timeline.SetDesiredFrameRate(Animation, 60);

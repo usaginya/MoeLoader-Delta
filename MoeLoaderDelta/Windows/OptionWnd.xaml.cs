@@ -53,7 +53,7 @@ namespace MoeLoaderDelta
             {
                 RBDownPanlModeMLDA.IsChecked = true;
             }
-            TextBoxScrollSpeed.Text = MainWindow.MainW.scrList.SpeedFactor.ToSafeString();
+            SliderScrollSpeed.Value = Math.Round(MainWindow.MainW.scrList.SpeedFactor, 2);
 
             txtBossKey.Text = MainWindow.BossKey.ToString();
             MainWindow.BossKey = System.Windows.Forms.Keys.None;
@@ -171,15 +171,7 @@ namespace MoeLoaderDelta
                 }
             }
 
-            double scrollSpeed = TextBoxScrollSpeed.Text.ToSafeDouble();
-            if (scrollSpeed < 1 || scrollSpeed > 12)
-            {
-                MessageBox.Show(this, $"{TextBlockScrollSpeed.Text}设置的数值不正确，只能是 1~12", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
-                TextBoxScrollSpeed.SelectAll();
-                TextBoxScrollSpeed.Focus();
-                return;
-            }
-            MainWindow.MainW.scrList.SpeedFactor = TextBoxScrollSpeed.Text.ToSafeDouble();
+            MainWindow.MainW.scrList.SpeedFactor = SliderScrollSpeed.Value;
 
             if (txtProxy.Text.Trim().Length > 0)
             {
@@ -313,7 +305,7 @@ namespace MoeLoaderDelta
             cbBgHe.SelectedIndex = cbBgVe.SelectedIndex = 2;
             cbBgSt.SelectedIndex = 0;
             sBgOpacity.Value = 0.5;
-            TextBoxScrollSpeed.Text = "1.6";
+            SliderScrollSpeed.Value = 2.3;
             RBDownPanlModeMLDB.IsChecked = true;
             txtSaveLocation.Text = "MoeLoaderGallery";
         }
@@ -453,27 +445,6 @@ namespace MoeLoaderDelta
             if (isSaved) { return; }
             main.ChangeBg(oldBgOp);
             MainWindow.BossKey = keysBackup;
-        }
-
-        /// <summary>
-        /// 偏好设置滚动条速度文本框输入处理
-        /// </summary>
-        private void TextBoxScrollSpeed_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            Regex re = new Regex(@"[^0-9. ]+");
-            e.Handled = re.IsMatch(e.Text)
-                || (TextBoxScrollSpeed.Text.Length < 1 && e.Text == "0")
-                || (TextBoxScrollSpeed.Text.Length < 1 && e.Text == ".")
-                || (TextBoxScrollSpeed.Text.Length > 1 && TextBoxScrollSpeed.Text.Contains(".") && e.Text == ".");
-        }
-
-        /// <summary>
-        /// 偏好设置滚动条速度文本框按键按下处理
-        /// </summary>
-        private void TextBoxScrollSpeed_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            //屏蔽空格
-            if (e.Key == Key.Space) { e.Handled = true; }
         }
 
         private void ChkDownPanlMode_Click(object sender, RoutedEventArgs e)
