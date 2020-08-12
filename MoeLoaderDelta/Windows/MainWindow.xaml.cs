@@ -4,7 +4,6 @@ using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -151,9 +150,15 @@ namespace MoeLoaderDelta
         public TreeViewModel FavoriteTreeView = new TreeViewModel();
         #endregion //////////////////////////
 
-        #region  -- 下载面板模式 --
+        #region  -- 下载面板相关变量 --
         internal enum DownPanlMode { ML, MLDA, MLDB }
-        internal static DownPanlMode DownPanlModeValue { get; set; } = DownPanlMode.MLDA;
+        internal static DownPanlMode DownPanlModeValue = DownPanlMode.MLDB;
+        internal static bool AutoOpenDownloadPanl = true;
+        internal static bool ClearDownloadSelected = true;
+        private ThicknessAnimationUsingKeyFrames thicknessMLOpen;
+        private ThicknessAnimationUsingKeyFrames thicknessMLClose;
+        private SplineThicknessKeyFrame splineMLOpen;
+        private SplineThicknessKeyFrame splineMLClose;
         #endregion
 
         internal int comboBoxIndex = 0;
@@ -167,8 +172,8 @@ namespace MoeLoaderDelta
         internal AlignmentX bgHe = AlignmentX.Right;
         internal AlignmentY bgVe = AlignmentY.Bottom;
 
-        public BitmapImage ExtSiteIconOff { get; set; } = null;
-        public BitmapImage ExtSiteIconOn { get; set; } = null;
+        public BitmapImage ExtSiteIconOff;
+        public BitmapImage ExtSiteIconOn;
 
         #region Register/Unregister HotKey
         [DllImport("user32")]
@@ -300,7 +305,7 @@ namespace MoeLoaderDelta
             ExtSiteIconOn = CreateBitmapImage("MoeLoaderDelta.Images.extsetting1.ico");
             #endregion
 
-            //初始化加载站点
+            #region 初始化加载站点
             SiteManager.Instance.Initialize();
 
             foreach (IMageSite site in SiteManager.Instance.Sites)
@@ -370,6 +375,7 @@ namespace MoeLoaderDelta
                 menuItem.Items.Add(subItem);
                 #endregion
             }
+            #endregion
 
             #region 添加主站菜单
             foreach (IMageSite site in SiteManager.Instance.Sites)
@@ -441,8 +447,6 @@ namespace MoeLoaderDelta
             bossKey = System.Windows.Forms.Keys.F9;
 
             LoadConfig();
-
-            //itmxExplicit.IsChecked = !showExplicit;
 
             MainW = this;
 
@@ -626,19 +630,23 @@ namespace MoeLoaderDelta
         /// <param name="loadBg">是否从文件加载背景图片</param>
         public void ChangeBg(double opacity, bool loadBg = false)
         {
-            opacity = opacity < 0.1 ? 0.1 : opacity > 1 ? 1 : opacity;
-            bgOp = opacity;
-            //从文件加载更改
-            if (loadBg) { LoadBgImg(); return; }
-
-            //从内存更改
-            if (bgImg == null) { return; }
-            Dispatcher.Invoke(new VoidDel(delegate
+            try
             {
-                ImageBrush newBg = bgImg.Clone();
-                newBg.Opacity = opacity;
-                grdBg.Background = newBg;
-            }));
+                opacity = opacity < 0.1 ? 0.1 : opacity > 1 ? 1 : opacity;
+                bgOp = opacity;
+                //从文件加载更改
+                if (loadBg) { LoadBgImg(); return; }
+
+                //从内存更改
+                if (bgImg == null) { return; }
+                Dispatcher.Invoke(new VoidDel(delegate
+                {
+                    ImageBrush newBg = bgImg.Clone();
+                    newBg.Opacity = opacity;
+                    grdBg.Background = newBg;
+                }));
+            }
+            catch { }
         }
 
         public static string IsNeedReferer(string url)
@@ -679,14 +687,8 @@ namespace MoeLoaderDelta
 
                     if (Regex.IsMatch(lines[0], @"^[+-]?\d*$"))
                     {
-                        try
-                        {
-                            checked { downloadC.NumOnce = int.Parse(lines[0]); }
-                        }
-                        catch (OverflowException)
-                        {
-                            downloadC.NumOnce = 2;
-                        }
+                        downloadC.NumOnce = lines[0].ToSafeInt();
+                        downloadC.NumOnce = downloadC.NumOnce < 1 ? 2 : downloadC.NumOnce;
                     }
                     else
                     {
@@ -694,7 +696,7 @@ namespace MoeLoaderDelta
                     }
 
                     if (lines[1] != "." && Directory.Exists(lines[1]))
-                        DownloadControl.SaveLocation = lines[1];
+                    { DownloadControl.SaveLocation = lines[1]; }
 
                     if (lines[2].Contains(';'))
                     {
@@ -704,63 +706,41 @@ namespace MoeLoaderDelta
 
                         if (parts.Length > 1)
                         {
-                            try
-                            {
-                                int tpart = Convert.ToInt32(parts[1]);
-                                downloadC.IsSscSave = tpart > 1;
-                                downloadC.IsSaSave = tpart > 0 && tpart < 3;
-                            }
-                            catch { }
+                            int tpart = parts[1].ToSafeInt();
+                            downloadC.IsSscSave = tpart > 1;
+                            downloadC.IsSaSave = tpart > 0 && tpart < 3;
                         }
                         if (parts.Length > 2)
                         {
                             if (Regex.IsMatch(parts[2], @"^[+-]?\d*$"))
                             {
-                                try
-                                {
-                                    checked
-                                    {
-                                        numOfLoading = int.Parse(parts[2]);
-                                        if (numOfLoading < 4) numOfLoading = 5;
-                                    }
-                                }
-                                catch (OverflowException)
-                                {
-                                    numOfLoading = 5;
-                                }
-                            }
-                            else
-                            {
-                                numOfLoading = 5;
+                                numOfLoading = parts[2].ToSafeInt();
+                                if (numOfLoading < 4) { numOfLoading = 5; }
                             }
                         }
+
                         if (parts.Length > 3)
-                        {
-                            itmMaskViewed.IsChecked = parts[3].Equals("1");
-                        }
+                        { itmMaskViewed.IsChecked = parts[3].Equals("1"); }
+
                         if (parts.Length > 4)
                         {
                             string[] words = parts[4].Split('|');
                             foreach (string word in words)
                             {
-                                //if (word.Trim().Length > 0)
-                                //txtSearch.Items.Add(word);
                                 searchControl.LoadUsedItems(word);
                             }
                         }
-                        //if (!txtSearch.Items.Contains("thighhighs"))
-                        //txtSearch.Items.Add("thighhighs");
+
                         if (parts.Length > 5)
-                        {
-                            Proxy = parts[5];
-                        }
+                        { Proxy = parts[5]; }
+
                         if (parts.Length > 6)
                         {
                             bossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), parts[6]);
                         }
                         if (parts.Length > 7)
                         {
-                            thumbSize = int.Parse(parts[7]);
+                            thumbSize = parts[7].ToSafeInt();
                             thumbSize = thumbSize < 150 ? 150 : thumbSize > 500 ? 500 : thumbSize;
                         }
                         if (parts.Length > 8)
@@ -769,23 +749,13 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 9)
                         {
-                            try
+                            string[] posItem = parts[9].Split(',');
+                            Size pos = new Size(posItem[0].ToSafeInt(), posItem[1].ToSafeInt());
+                            if (pos.Width > MinWidth && pos.Height > MinHeight)
                             {
-                                //Size pos = Size.Parse(parts[9]);
-                                var posItem = parts[9].Split(',');
-                                Size pos = new Size(int.Parse(posItem[0]), int.Parse(posItem[1]));
-                                if (pos.Width > MinWidth && pos.Height > MinHeight)
-                                {
-                                    //rememberPos = true;
-                                    //Left = pos.X;
-                                    //Top = pos.Y;
-                                    //startPos.Width = pos.Width;
-                                    //startPos.Height = pos.Height;
-                                    Width = pos.Width;
-                                    Height = pos.Height;
-                                }
+                                Width = pos.Width;
+                                Height = pos.Height;
                             }
-                            catch { }
                         }
                         if (parts.Length > 10)
                         {
@@ -803,7 +773,7 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 11)
                         {
-                            PreFetcher.CachedImgCount = int.Parse(parts[11]);
+                            PreFetcher.CachedImgCount = parts[11].ToSafeInt();
                         }
                         if (parts.Length > 12)
                         {
@@ -814,14 +784,13 @@ namespace MoeLoaderDelta
                             itmxExplicit.IsChecked = parts[13].Equals("1");
                             showExplicit = !itmxExplicit.IsChecked;
                         }
+
                         if (parts.Length > 14)
-                        {
-                            namePatter = parts[14];
-                        }
+                        { namePatter = parts[14]; }
+
                         if (parts.Length > 15)
-                        {
-                            txtNum.Text = parts[15];
-                        }
+                        { txtNum.Text = parts[15]; }
+
                         if (parts.Length > 16)
                         {
                             bgSt = (Stretch)Enum.Parse(typeof(Stretch), parts[16]);
@@ -836,42 +805,62 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 19)
                         {
-                            bgOp = double.Parse(parts[19]);
+                            bgOp = parts[19].ToSafeDouble();
                         }
                         if (parts.Length > 20)
                         {
-                            scrList.SpeedFactor = double.Parse(parts[20]);
+                            scrList.SpeedFactor = parts[20].ToSafeDouble();
+                        }
+                        if (parts.Length > 21)
+                        {
+                            Array dpms = Enum.GetValues(typeof(DownPanlMode));
+                            foreach (int dpm in dpms)
+                            {
+                                if (dpm.ToSafeString() == parts[21])
+                                {
+                                    DownPanlModeValue = (DownPanlMode)Enum.ToObject(typeof(DownPanlMode), parts[21].ToSafeInt());
+                                    break;
+                                }
+                            }
+                        }
+                        if (parts.Length > 22)
+                        {
+                            AutoOpenDownloadPanl = parts[22].ToSafeInt() > 0;
+                        }
+                        if (parts.Length > 23)
+                        {
+                            ClearDownloadSelected = parts[23].ToSafeInt() > 0;
                         }
                     }
-                    //else itmJpg.IsChecked = lines[2].Trim().Equals("1");
-                    else addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
+                    else
+                    {
+                        addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
+                    }
 
                     for (int i = 3; i < lines.Length; i++)
                     {
-                        if (lines[i].Trim().Length > 0)
+                        if (lines[i].Trim().Length < 1) { break; }
+
+                        if (lines[i].Contains(':'))
                         {
-                            if (lines[i].Contains(':'))
-                            {
-                                string[] parts = lines[i].Trim().Split(':');
-                                viewedIds[parts[0]] = new ViewedID();
-                                viewedIds[parts[0]].AddViewedRange(parts[1]);
-                            }
-                            else
-                            {
-                                //向前兼容
-                                if (i - 3 >= SiteManager.Instance.Sites.Count) break;
-                                else if (SiteManager.Instance.Sites.Count > 0)
-                                {
-                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
-                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
-                                }
-                            }
+                            string[] parts = lines[i].Trim().Split(':');
+                            viewedIds[parts[0]] = new ViewedID();
+                            viewedIds[parts[0]].AddViewedRange(parts[1]);
+                            continue;
+                        }
+                        //向前兼容
+                        if (i - 3 >= SiteManager.Instance.Sites.Count)
+                        { break; }
+                        else if (SiteManager.Instance.Sites.Count > 0)
+                        {
+                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
+                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "读取配置文件失败\r\n" + ex.Message, ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Toast.Show($"读取配置文件失败{Environment.NewLine}{ex.Message}", MsgType.Error);
                 }
             }
 
@@ -890,13 +879,6 @@ namespace MoeLoaderDelta
                     itmTypeSmall.IsChecked = true;
                     break;
             }
-
-            //string logoPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\logo.png";
-            //if (System.IO.File.Exists(logoPath))
-            //{
-            //image.Source = new BitmapImage(new Uri(logoPath, UriKind.Absolute));
-            //}
-            //else image.Source = new BitmapImage(new Uri("Images/logo1.png", UriKind.Relative));
         }
         /// <summary>
         /// 获取子控件
@@ -952,31 +934,29 @@ namespace MoeLoaderDelta
 
                 Dispatcher.Invoke(new Action(() =>
                 {
-                    if (btnFav.Tag != null && (int)btnFav.Tag == 1)
+                    if (btnFav.Tag == null || (int)btnFav.Tag != 1) { return; }
+                    btnFav.Tag = 0;
+
+                    Point pMouse = args.GetPosition(btnFav);
+                    if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
                     {
-                        btnFav.Tag = 0;
-                        Point pMouse = args.GetPosition(btnFav);
-                        if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
+                        if (favoriteAddWnd != null && favoriteAddWnd.IsLoaded)
                         {
-                            if (favoriteAddWnd != null && favoriteAddWnd.IsLoaded)
-                            {
-                                favoriteAddWnd.Activate();
-                                favoriteAddWnd.Top = Top + (ActualHeight / 2) - (favoriteAddWnd.ActualHeight / 2);
-                                favoriteAddWnd.Left = Left + (ActualWidth / 2) - (favoriteAddWnd.ActualWidth / 2);
-                            }
-                            else if (!searchControl.Text.IsNullOrEmptyOrWhiteSpace())
-                            {
-                                favoriteAddWnd = new FavoriteAddWnd(searchControl.Text, FavoriteAddWnd.AddMode.Add, null, null, SelectedSiteName(), this);
-                                favoriteAddWnd.ShowDialog();
-                            }
-                            else
-                            {
-                                Toast.Show("搜索框中没有可以收藏的关键词", MsgType.Warning);
-                            }
+                            favoriteAddWnd.Activate();
+                            favoriteAddWnd.Top = Top + (ActualHeight / 2) - (favoriteAddWnd.ActualHeight / 2);
+                            favoriteAddWnd.Left = Left + (ActualWidth / 2) - (favoriteAddWnd.ActualWidth / 2);
+                        }
+                        else if (!searchControl.Text.IsNullOrEmptyOrWhiteSpace())
+                        {
+                            favoriteAddWnd = new FavoriteAddWnd(searchControl.Text, FavoriteAddWnd.AddMode.Add, null, null, SelectedSiteName(), this);
+                            favoriteAddWnd.ShowDialog();
+                        }
+                        else
+                        {
+                            Toast.Show("搜索框中没有可以收藏的关键词", MsgType.Warning);
                         }
                     }
                 }));
-
             });
             fav_thread.Start();
         }
@@ -1212,15 +1192,19 @@ namespace MoeLoaderDelta
                     new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify)
                 });
             }
-           ((ImgControl)imgPanel.Children[index]).SetChecked(false);
+            if (ClearDownloadSelected)
+            {
+                ((ImgControl)imgPanel.Children[index]).SetChecked(false);
+            }
             //重置重试次数
             downloadC.ResetRetryCount();
-            Toast.Show($"{dlimg.Id} 图片已添加到下载列表 →", MsgType.Success);
-            //string url = GetImgAddress(imgs[index]);
-            //string fileName = GenFileName(imgs[index]);
-            //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
-
-            //System.Media.SystemSounds.Exclamation.Play();
+            if (AutoOpenDownloadPanl && !toggleDownload.IsChecked.Value)
+            {
+                toggleDownload.IsChecked = true;
+                ToggleDownload_Click(null, null);
+            }
+            else
+            { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
         /// <summary>
@@ -1604,50 +1588,98 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 显示下载列表
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ToggleDownload_Click(object sender, RoutedEventArgs e)
         {
-            Storyboard sb;
+            Storyboard sb = (Storyboard)FindResource("showDownload");
+
+            #region 创建ML动画
+            PropertyPath propertyMargin = new PropertyPath("(FrameworkElement.Margin)");
+            //移除ML动画
+            if (DownPanlModeValue != DownPanlMode.ML)
+            {
+                if (sb.Children.Contains(thicknessMLOpen))
+                { sb.Children.Remove(thicknessMLOpen); }
+                sb = (Storyboard)FindResource("closeDownload");
+                if (sb.Children.Contains(thicknessMLClose))
+                { sb.Children.Remove(thicknessMLClose); }
+            }
+            else if (!sb.Children.Contains(thicknessMLOpen))
+            {
+                //打开
+                thicknessMLOpen = new ThicknessAnimationUsingKeyFrames();
+                splineMLOpen = new SplineThicknessKeyFrame()
+                {
+                    KeyTime = KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 20)),
+                    Value = new Thickness(0, 0, 219, 0)
+                };
+                thicknessMLOpen.SetValue(Storyboard.TargetNameProperty, "imgBorder");
+                thicknessMLOpen.SetValue(Storyboard.TargetPropertyProperty, propertyMargin);
+                thicknessMLOpen.KeyFrames.Add(splineMLOpen);
+                sb.Children.Add(thicknessMLOpen);
+            }
+            else if (!sb.Children.Contains(thicknessMLClose))
+            {
+                //关闭
+                thicknessMLClose = new ThicknessAnimationUsingKeyFrames();
+                splineMLClose = new SplineThicknessKeyFrame()
+                {
+                    KeyTime = KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 20)),
+                    Value = new Thickness()
+                };
+                thicknessMLClose.SetValue(Storyboard.TargetNameProperty, "imgBorder");
+                thicknessMLClose.SetValue(Storyboard.TargetPropertyProperty, propertyMargin);
+                thicknessMLClose.KeyFrames.Add(splineMLClose);
+                sb = (Storyboard)FindResource("closeDownload");
+                sb.Children.Add(thicknessMLClose);
+            }
+            #endregion
 
             if (toggleDownload.IsChecked.Value)
             {
-                toggleDownload.ToolTip = "隐藏下载面板";
                 sb = (Storyboard)FindResource("showDownload");
+                toggleDownload.ToolTip = "隐藏下载面板";
 
                 if (IsCtrlDown())
                 {
                     double rmrg = MainW.Width / 2;
                     ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, rmrg, 0);
                     ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = rmrg;
+                    if (DownPanlModeValue == DownPanlMode.ML)
+                    {
+                        ((ThicknessAnimationUsingKeyFrames)sb.Children.Last()).KeyFrames[0].Value = new Thickness(0, 0, rmrg - 1, 0);
+                    }
                 }
                 else
                 {
                     ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, 220, 0);
                     ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = 220;
+                    if (DownPanlModeValue == DownPanlMode.ML)
+                    {
+                        ((ThicknessAnimationUsingKeyFrames)sb.Children.Last()).KeyFrames[0].Value = new Thickness(0, 0, 219, 0);
+                    }
                 }
 
-                if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center) { grdNavi.Visibility = Visibility.Hidden; }
-
-                sb.Begin();
+                if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center)
+                { grdNavi.Visibility = Visibility.Hidden; }
             }
             else
             {
                 grdNavi.Visibility = Visibility.Visible;
                 toggleDownload.ToolTip = (string)toggleDownload.Tag;
                 sb = (Storyboard)FindResource("closeDownload");
-                sb.Begin();
             }
+
             sb.Completed += ToggleDownloadAni_Completed;
+            sb.Begin();
         }
 
         /// <summary>
-        /// 点击缩略图列表时收起下载列表
+        /// 点击下载列表以外位置收起列表
         /// </summary>
         private void HiddenToggleDownload(object sender, MouseButtonEventArgs e)
         {
             if (e.Source.GetType() == typeof(DownloadControl)) { return; }
-            if (toggleDownload.IsChecked.Value)
+            if (DownPanlModeValue == DownPanlMode.MLDA && toggleDownload.IsChecked.Value)
             {
                 toggleDownload.IsChecked = false;
                 ToggleDownload_Click(sender, null);
@@ -1657,10 +1689,9 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 下载列表动画结束时
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ToggleDownloadAni_Completed(object sender, EventArgs e)
         {
+            if (DownPanlModeValue != DownPanlMode.ML) { return; }
             PlayPreNextAnimation();
             PlayPreNextAnimation(1);
         }
@@ -1668,8 +1699,6 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 预览图片
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         void Img_Click(object sender, EventArgs e)
         {
             int index = (int)sender;
@@ -2023,7 +2052,7 @@ namespace MoeLoaderDelta
             {
                 if (selected.Count == 0)
                 {
-                    MessageBox.Show(this, "未选择图片", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Toast.Show("图片都还没选啊？", MsgType.Warning);
                     return;
                 }
 
@@ -2079,7 +2108,7 @@ namespace MoeLoaderDelta
                                     + "|" + selectimg.Id
                                     + "|" + (selectimg.NoVerify ? 'v' : 'x')
                                     + "|" + SearchWordPu
-                                    + "\r\n";
+                                    + Environment.NewLine;
                                 success++;
                             }
                         }
@@ -2087,13 +2116,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", ProgramName,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    Toast.Show($"成功保存 {success} 个地址{Environment.NewLine}{repeat} 个地址已在列表中", MsgType.Success);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show(this, "保存失败", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                Toast.Show($"保存失败{Environment.NewLine}{ex.Message}", MsgType.Error);
             }
         }
 
@@ -2151,7 +2179,8 @@ namespace MoeLoaderDelta
         {
             if (!changed)
             {
-                if (!(itmThumbSize.Template.FindName("sliThumbSize", itmThumbSize) is Slider slider)) { return; }
+                if (!(itmThumbSize.Template.FindName("sliThumbSize", itmThumbSize) is Slider slider))
+                { return; }
                 slider.Value = thumbSize;
                 return;
             }
@@ -2337,14 +2366,21 @@ namespace MoeLoaderDelta
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                         urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify));
                     }
-                    ((ImgControl)imgPanel.Children[i]).SetChecked(false);
+                    if (ClearDownloadSelected)
+                    { ((ImgControl)imgPanel.Children[i]).SetChecked(false); }
                 }
                 downloadC.AddDownload(urls);
             }
             ButtonMainDL.IsEnabled = true;
             //重置重试次数
             downloadC.ResetRetryCount();
-            Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success);
+            if (AutoOpenDownloadPanl && !toggleDownload.IsChecked.Value)
+            {
+                toggleDownload.IsChecked = true;
+                ToggleDownload_Click(null, null);
+            }
+            else
+            { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
         /// <summary>
@@ -2847,17 +2883,15 @@ namespace MoeLoaderDelta
 
             if (downloadC.IsWorking)
             {
-                CloseMsg = "还有正在下载的图片，确定要关闭程序吗？未下载完成的图片不会保存";
-
+                CloseMsg = "还有正在下载的图片，确定要结束吗？未下载完成的图片不会保存";
             }
             else if (downloadC.NumFail > 0)
             {
-                CloseMsg = "还有下载失败的图片，确定要关闭程序吗？未下载完成的图片不会保存";
+                CloseMsg = "还有下载失败的图片，确定要结束吗？未下载完成的图片不会保存";
             }
 
             if (!string.IsNullOrWhiteSpace(CloseMsg)
-                && MessageBox.Show(this, CloseMsg, ProgramName,
-                        MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel)
+                && MessageBox.Show(this, CloseMsg, ProgramName, MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel)
             {
                 e.Cancel = true;
                 return;
@@ -2866,7 +2900,6 @@ namespace MoeLoaderDelta
             if (previewFrm != null && previewFrm.IsLoaded)
             {
                 previewFrm.Close();
-                //previewFrm = null;
             }
             //prevent from saving invalid window size
             WindowState = WindowState.Normal;
@@ -2920,7 +2953,11 @@ namespace MoeLoaderDelta
                         + bgHe + qm
                         + bgVe + qm
                         + bgOp + qm
-                        + scrList.SpeedFactor + Environment.NewLine;
+                        + scrList.SpeedFactor + qm
+                        + (int)DownPanlModeValue + qm
+                        + (AutoOpenDownloadPanl ? "1" : "0") + qm
+                        + (ClearDownloadSelected ? "1" : "0") + Environment.NewLine;
+
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
                         text += id.Key + ":" + id.Value + Environment.NewLine;
@@ -2928,15 +2965,26 @@ namespace MoeLoaderDelta
                     File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
                     DeleteTheSpecifiedFile(DownloadControl.SaveLocation, null, ".moe");
                     SaveFavorite();
+                    SaveSitesConfig();
                 }
             }
             catch { }
 
             Toast.Dispose();
-            SaveSitesConfig();
             GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
+        }
+
+        /// <summary>
+        /// 保存所有站点配置
+        /// </summary>
+        private void SaveSitesConfig()
+        {
+            SiteManager.Instance.Sites.ForEach((site) =>
+            {
+                SiteManager.SiteConfig(site.ShortName, null, SiteManager.SiteConfigType.Save);
+            });
         }
 
         /// <summary>
@@ -3207,20 +3255,7 @@ namespace MoeLoaderDelta
 
         #endregion ============
 
-        /// <summary>
-        /// 保存所有站点配置
-        /// </summary>
-        private void SaveSitesConfig()
-        {
-            SiteManager.Instance.Sites.ForEach((site) =>
-           {
-               SiteManager.SiteConfig(site.ShortName, null, SiteManager.SiteConfigType.Save);
-           });
-        }
-
-
-
-        #region 线程延迟执行翻页
+        #region 延迟执行翻页
         /// <summary>
         /// 线程延迟执行翻页
         /// </summary>

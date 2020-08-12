@@ -59,13 +59,14 @@ namespace MoeLoaderDelta
             MainWindow.BossKey = System.Windows.Forms.Keys.None;
             txtPattern.Text = main.namePatter;
             ChkProxy_Click(null, null);
-            //chkAero.IsChecked = main.isAero;
             txtCount.Text = PreFetcher.CachedImgCount.ToString();
             txtParal.Text = main.downloadC.NumOnce.ToString();
             chkSepSave.IsChecked = main.downloadC.IsSepSave;
             chkSscSave.IsChecked = main.downloadC.IsSscSave;
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
+            ChkAutoOpenDownloadPanl.IsChecked = MainWindow.AutoOpenDownloadPanl;
+            ChkClearDownloadSelected.IsChecked = MainWindow.ClearDownloadSelected;
 
             #region ---- bgSelect ----
             if (main.bgSt == Stretch.None)
@@ -108,12 +109,20 @@ namespace MoeLoaderDelta
             }
             #endregion
 
+            #region Set help tool tip
+            TextBlockBgHelp.ToolTip = "直接将图片拖入主窗口中就可以设置背景图片啦~";
+
+            TextBlockHelpDownPanlMode.ToolTip = $"[推动占位] MoeLoader经典显示方式，显示下载列表不会覆盖缩略图，但会改变缩略图排版{Environment.NewLine}{Environment.NewLine}"
+                + $"[覆盖自动] 显示下载列表会覆盖缩略图，不会改变缩略图排版，点击其它位置会自动收起{Environment.NewLine}{Environment.NewLine}"
+                + $"[覆盖手动] 显示下载列表会覆盖缩略图，不会改变缩略图排版，必须手动关闭下载列表才不会挡住缩略图";
+
             textNameHelp.ToolTip = $"【以下必须是小写英文】{Environment.NewLine}%site 站点名{Environment.NewLine}"
                 + $"%id 编号{Environment.NewLine}%tag 标签{Environment.NewLine}%desc 描述{Environment.NewLine}"
                 + $"%author 作者名{Environment.NewLine}%date 上载时间{Environment.NewLine}%imgp[3] 图册页数[页数总长度(补0)]{Environment.NewLine}{Environment.NewLine}"
                 + $"<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】{Environment.NewLine}"
                 + $"表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题{Environment.NewLine}"
                + "建议把裁剪符号写在 标签%tag 或 描述%desc 后面";
+            #endregion
 
             #region 文件名规则格式按钮绑定
             FNRsite.Click += new RoutedEventHandler(FNRinsert);
@@ -279,6 +288,9 @@ namespace MoeLoaderDelta
             main.downloadC.IsSaSave = chkSaSave.IsChecked.Value;
             main.downloadC.NumOnce = int.Parse(txtParal.Text);
 
+            MainWindow.AutoOpenDownloadPanl = ChkAutoOpenDownloadPanl.IsChecked.Value;
+            MainWindow.ClearDownloadSelected = ChkClearDownloadSelected.IsChecked.Value;
+
             isSaved = true;
             Close();
         }
@@ -308,6 +320,7 @@ namespace MoeLoaderDelta
             SliderScrollSpeed.Value = 2.3;
             RBDownPanlModeMLDB.IsChecked = true;
             txtSaveLocation.Text = "MoeLoaderGallery";
+            ChkAutoOpenDownloadPanl.IsChecked = ChkClearDownloadSelected.IsChecked = true;
         }
 
         private void TxtBossKey_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -401,15 +414,9 @@ namespace MoeLoaderDelta
             }
         }
 
-        private void TextNameHelp_MouseDown(object sender, MouseButtonEventArgs e)
+        private void TextBlockHelp_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(this, textNameHelp.ToolTip.ToString(), MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void TextBlock_MouseDown_1(object sender, MouseButtonEventArgs e)
-        {
-            MessageBox.Show(this, "直接将图片拖入主窗口中就可以设置背景图片啦~",
-                MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, ((TextBlock)sender).ToolTip.ToString(), MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>
@@ -446,12 +453,6 @@ namespace MoeLoaderDelta
             main.ChangeBg(oldBgOp);
             MainWindow.BossKey = keysBackup;
         }
-
-        private void ChkDownPanlMode_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
 
     }
 }

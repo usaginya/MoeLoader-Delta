@@ -1017,7 +1017,6 @@
                                                         Checked="Itmx5_Checked"
                                                         Header="1920x1080 以上(_5)"
                                                         IsCheckable="True" />
-                                                    <!--<MenuItem x:Name="itmx40" Header="1920x1080 以上(_6)" IsCheckable="True" Checked="itmx5_Checked"/>-->
                                                 </MenuItem>
                                                 <Separator />
                                                 <MenuItem
@@ -1028,7 +1027,8 @@
                                                     x:Name="itmxExplicit"
                                                     Click="ItmxExplicit_Click"
                                                     Header="过滤限制级图片(_E)"
-                                                    IsCheckable="True" />
+                                                    IsCheckable="True"
+                                                    IsChecked="True" />
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem
