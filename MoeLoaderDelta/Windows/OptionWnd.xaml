@@ -223,7 +223,7 @@
                     Margin="16,0,3,0"
                     FontSize="12"
                     IsMoveToPointEnabled="True"
-                    Maximum="12"
+                    Maximum="20"
                     Minimum="1"
                     Style="{StaticResource DoubleSliderStyle}" />
                 <TextBlock

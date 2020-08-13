@@ -9,7 +9,7 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-8-12
+    /// Last 2020-8-14
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
@@ -56,13 +56,13 @@ namespace MoeLoaderDelta.Control
         /// </summary>
         private double GetDefaultWheelChange(KeyEventArgs e)
         {
-            double wheelChange = 0;
+            double wheelChange = 0, keyStep = 51 - SpeedFactor;
             switch (e.Key)
             {
-                case Key.Up: wheelChange = 118 - (SpeedFactor * 9); break;
-                case Key.Down: wheelChange = -(118 - (SpeedFactor * 9)); break;
-                case Key.PageUp: wheelChange = 218 - (SpeedFactor * 9); break;
-                case Key.PageDown: wheelChange = -(218 - (SpeedFactor * 9)); break;
+                case Key.Up: wheelChange = keyStep * 2; break;
+                case Key.Down: wheelChange = -(keyStep * 2); break;
+                case Key.PageUp: wheelChange = keyStep * 4; break;
+                case Key.PageDown: wheelChange = -(keyStep * 4); break;
                 case Key.Home: wheelChange = ScrollableHeight; break;
                 case Key.End: wheelChange = -ScrollableHeight; break;
             }
@@ -93,7 +93,7 @@ namespace MoeLoaderDelta.Control
                 if (newOffset < 0) { newOffset = 0; }
                 if (newOffset > ScrollableHeight) { newOffset = ScrollableHeight; }
 
-                AnimateScroll(newOffset);
+                AnimateScrollAsync(newOffset);
                 LastLocation = newOffset;
             }
             catch { }
@@ -103,7 +103,7 @@ namespace MoeLoaderDelta.Control
         /// 进度条滚动动画
         /// </summary>
         /// <param name="ToValue">滚动位置</param>
-        private void AnimateScroll(double ToValue)
+        private async void AnimateScrollAsync(double ToValue)
         {
             //避免动画重复 先结束掉上一个动画
             BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, null);
@@ -117,7 +117,7 @@ namespace MoeLoaderDelta.Control
             };
             //固定帧数
             Timeline.SetDesiredFrameRate(Animation, 60);
-            BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, Animation);
+            await Dispatcher.InvokeAsync(() => BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, Animation));
         }
 
     }

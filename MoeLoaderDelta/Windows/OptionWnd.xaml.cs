@@ -180,7 +180,7 @@ namespace MoeLoaderDelta
                 }
             }
 
-            MainWindow.MainW.scrList.SpeedFactor = SliderScrollSpeed.Value;
+            MainWindow.MainW.scrList.SpeedFactor = Math.Round(SliderScrollSpeed.Value, 2);
 
             if (txtProxy.Text.Trim().Length > 0)
             {
