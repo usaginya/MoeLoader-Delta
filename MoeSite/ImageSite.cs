@@ -66,14 +66,9 @@ namespace MoeLoaderDelta
         string LoginURL { get; }
 
         /// <summary>
-        /// 由界面传递给站点登录动作
+        /// 获取站点是否已登录
         /// </summary>
-        bool LoginSite { get; set; }
-
-        /// <summary>
-        /// 由界面传递给站点登录动作 int
-        /// </summary>
-        int LoginSiteInt { get; set; }
+        bool LoginSiteIsLogged { get; }
 
         /// <summary>
         /// 当前登录站点的用户
@@ -81,9 +76,14 @@ namespace MoeLoaderDelta
         string LoginUser { get; set; }
 
         /// <summary>
-        /// 当前登录站点的蜜码
+        /// 当前登录站点的密码，Get只用于判断是否有密码，不可用于获取原密码
         /// </summary>
-        string LoginPwd { set; }
+        string LoginPwd { get; set; }
+
+        /// <summary>
+        /// 站点登录帮助链接
+        /// </summary>
+        string LoginHelpUrl { get; }
 
         /// <summary>
         /// 是否支持设置单页数量，若为false则单页数量不可修改
@@ -114,17 +114,6 @@ namespace MoeLoaderDelta
         /// 是否支持搜索框自动提示，若为false则输入关键词时无自动提示
         /// </summary>
         bool IsSupportTag { get; }
-
-        /// <summary>
-        /// 大缩略图尺寸
-        /// </summary>
-        System.Drawing.Point LargeImgSize { get; }
-
-        /// <summary>
-        /// 小缩略图尺寸
-        /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
-        /// </summary>
-        System.Drawing.Point SmallImgSize { get; }
 
         /// <summary>
         /// 该站点在站点列表中是否可见
@@ -192,10 +181,9 @@ namespace MoeLoaderDelta
         List<Img> FilterImg(List<Img> imgs, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, bool showExplicit, bool updateViewed);
 
         /// <summary>
-        /// 登录站点方法
+        /// 传递登录信息登录站点
         /// </summary>
-        /// <param name="proxy">代理</param>
-        /// <returns></returns>
-        bool LoginCall(IWebProxy proxy);
+        /// <param name="loginArgs">登录信息</param>
+        void LoginCall(LoginSiteArgs loginArgs);
     }
 }

@@ -14,7 +14,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 200731
+    /// Last change 200810
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -48,7 +48,7 @@ namespace MoeLoaderDelta
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
             shc.Referer = site.Referer;
-            shc.Timeout = 8000;
+            shc.Timeout = 12000;
             shc.ContentType = SessionHeadersValue.ContentTypeAuto;
 
             if (img.IsViewed)
@@ -72,7 +72,7 @@ namespace MoeLoaderDelta
             //RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.Fant);
             preview.DataContext = img;
 
-            preview.SizeChanged += new SizeChangedEventHandler(preview_SizeChanged);
+            preview.SizeChanged += new SizeChangedEventHandler(Preview_SizeChanged);
             preview.ImageFailed += new EventHandler<ExceptionRoutedEventArgs>(preview_ImageFailed);
             preview.MouseUp += new MouseButtonEventHandler(preview_MouseUp);
             statusBorder.MouseUp += new MouseButtonEventHandler(preview_MouseUp);
@@ -171,7 +171,7 @@ namespace MoeLoaderDelta
             {
                 canRetry = true;
                 isRetrievingDetail = true;
-                chk.Text = "信息加载中...";
+                chk.Text = "少女加载中...";
                 ThreadPool.QueueUserWorkItem(new WaitCallback((o) =>
                 {
                     try
@@ -196,7 +196,7 @@ namespace MoeLoaderDelta
                             preview_ImageFailed(null, null);
                             isRetrievingDetail = false;
                             canRetry = true;
-                            chk.Text = "信息加载失败";
+                            chk.Text = "图片加载失败";
                             if (imgLoaded && ImgLoaded != null)
                                 ImgLoaded(index, null);
                         }));
@@ -258,7 +258,7 @@ namespace MoeLoaderDelta
         {
             if (e.ChangedButton == MouseButton.Left && e.LeftButton == MouseButtonState.Released)
             {
-                imgClicked?.Invoke(index, null);
+                ImgClicked?.Invoke(index, null);
             }
         }
 
@@ -279,7 +279,7 @@ namespace MoeLoaderDelta
             }
 
             IsChecked = isChecked;
-            checkedChanged?.Invoke(index, null);
+            CheckedChanged?.Invoke(index, null);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace MoeLoaderDelta
         /// <param name="isChecked"></param>
         public bool SetChecked(bool isChecked)
         {
-            if (!isDetailSucc) { return false; }
+            if (!isDetailSucc || !imgLoaded) { return false; }
             //chk.IsChecked = isChecked;
             Chk_Checked(isChecked);
             return true;
@@ -318,11 +318,11 @@ namespace MoeLoaderDelta
         /// 图像加载完毕
         /// </summary>
         public event EventHandler ImgLoaded;
-        public event EventHandler checkedChanged;
-        public event EventHandler imgClicked;
-        public event EventHandler imgDLed;
+        public event EventHandler CheckedChanged;
+        public event EventHandler ImgClicked;
+        public event EventHandler ImgDLed;
 
-        void preview_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (e.NewSize.Width > 1 && e.NewSize.Height > 1)
             {
@@ -359,7 +359,7 @@ namespace MoeLoaderDelta
         {
             if (e.ChangedButton == MouseButton.Left && e.LeftButton == MouseButtonState.Released)
             {
-                imgDLed?.Invoke(index, null);
+                ImgDLed?.Invoke(index, null);
             }
         }
 

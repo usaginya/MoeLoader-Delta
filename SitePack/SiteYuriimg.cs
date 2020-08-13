@@ -1,228 +1,284 @@
-﻿using HtmlAgilityPack;
-using MoeLoaderDelta;
+﻿using MoeLoaderDelta;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
-    /// Last change 191109
+    /// Last change 200811
     /// </summary>
-    class SiteYuriimg : AbstractImageSite
+    public class SiteYuriimg : AbstractImageSite
     {
+        public override string SiteUrl => "https://yuriimg.com";
+        public override string ShortName => "yuriimg";
+        public override string SiteName => "yuriimg.com";
+        public override bool IsSupportCount => false;
+        public override string Referer => "https://yuriimg.com";
+        public override bool IsSupportTag => false;
+        public override string SubReferer => ShortName;
+        public override string LoginURL => SiteManager.SiteLoginType.FillIn.ToSafeString();
+        public override string LoginUser { get => nowUser; set => nowUser = value; }
+        public override string LoginPwd { get => nowPwd; set => nowPwd = value; }
+        public override bool LoginSiteIsLogged => IsLoginSite;
+
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
-        private static string cookie = "";
-        private string user = "mluser1";
-        private string pass = "ml1yuri";
-        public override string SiteUrl { get { return "http://yuriimg.com"; } }
-        public override string ShortName { get { return "yuriimg"; } }
-        public override string SiteName { get { return "yuriimg.com"; } }
-        public override bool IsSupportCount { get { return false; } }
-        public override string Referer { get { return "http://yuriimg.com"; } }
-        public override bool IsSupportTag { get { return false; } }
-        public override string SubReferer { get { return ShortName; } }
-        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(250, 250); } }
+        private static string authorization = string.Empty, nowUser = authorization, nowPwd = authorization;
+        private static bool IsLoginSite = false, IsRunLogin = IsLoginSite, onceLogin = true;
 
+        private const string mainApiUrl = "https://api.yuriimg.com/";
+        private readonly string loginUrl = $"{mainApiUrl}login";
+        private readonly string postsUrl = $"{mainApiUrl}posts?";
+        private readonly string postUrl = $"{mainApiUrl}post/";
+        private readonly string imgHostUrl = "https://i.yuriimg.com/";
+
+        /// <summary>
+        /// 初始狗子
+        /// </summary>
         public SiteYuriimg()
         {
-            CookieRestore();
-        }
-
-        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
-        {
-            Login(proxy);
-            //http://yuriimg.com/post/?.html
-            string url = SiteUrl + "/post/" + page + ".html";
-            // string url = "http://yuriimg.com/show/ge407xd5o.jpg";
-
-            if (keyWord.Length > 0)
-            {
-                //http://yuriimg.com/search/index/tags/?/p/?.html
-                url = SiteUrl + "/search/index/tags/" + keyWord + "/p/" + page + ".html";
-            }
-
-            shc.Remove("Accept-Ranges");
-            shc.Accept = SessionHeadersValue.AcceptTextHtml;
-            shc.ContentType = SessionHeadersValue.AcceptTextHtml;
-            string pageString = Sweb.Get(url, proxy, shc);
-
-            return pageString;
-        }
-
-        public override List<Img> GetImages(string pageString, IWebProxy proxy)
-        {
-            shc.Add("Accept-Ranges", "bytes");
-            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
-            List<Img> list = new List<Img>();
-
-            HtmlDocument dococument = new HtmlDocument();
-            dococument.LoadHtml(pageString);
-            HtmlNodeCollection imageItems = dococument.DocumentNode.SelectNodes("//*[@class='image-list cl']");
-            if (imageItems == null)
-            {
-                return list;
-            }
-            foreach (HtmlNode imageItem in imageItems)
-            {
-                HtmlNode imgNode = imageItem.SelectSingleNode("./div[1]/img");
-                string tags = imgNode.Attributes["alt"].Value;
-                Img img = new Img()
-                {
-                    Height = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-height"].Value),
-                    Width = Convert.ToInt32(imageItem.SelectSingleNode(".//div[@class='image']").Attributes["data-width"].Value),
-                    Author = imageItem.SelectSingleNode(".//div[@class='artist']/a[2]").InnerText,
-                    IsExplicit = false,
-                    Tags = tags,
-                    Desc = tags,
-                    SampleUrl = imgNode.Attributes["data-original"].Value.Replace("!single", "!320px"),
-                    //JpegUrl = SiteUrl + imgNode.Attributes["data-viewersss"].Value,
-                    Id = StringToInt(imgNode.Attributes["id"].Value),
-                    DetailUrl = SiteUrl + imgNode.Attributes["data-href"].Value,
-                    Score = Convert.ToInt32(imageItem.SelectSingleNode(".//span[@class='num']").InnerText)
-                };
-                img.DownloadDetail = (i, p) =>
-                {
-                    string html = Sweb.Get(i.DetailUrl, proxy, shc);
-
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(html);
-                    HtmlNode showIndexs = doc.DocumentNode.SelectSingleNode("//div[@class='logo']");
-                    HtmlNode imgDownNode = showIndexs.SelectSingleNode("//div[@class='img-control']");
-                    string nodeHtml = showIndexs.OuterHtml;
-                    i.Date = TimeConvert(nodeHtml);
-
-                    if (nodeHtml.Contains("pixiv page"))
-                    {
-                        i.Source = showIndexs.SelectSingleNode(".//a[@target='_blank']").Attributes["href"].Value;
-                    }
-                    else
-                    {
-                        i.Source = Regex.Match(nodeHtml, @"(?<=源地址).*?(?=</p>)").Value.Trim();
-                    }
-                    i.PreviewUrl = doc.DocumentNode.SelectSingleNode("//figure[@class=\'show-image\']/img").Attributes["src"].Value;
-                    if (Regex.Matches(imgDownNode.OuterHtml, "href").Count > 1)
-                    {
-                        i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a[1]").Attributes["href"].Value;
-                        i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a[1]").InnerText, @"(?<=().*?(?=))").Value;
-                    }
-                    else
-                    {
-                        i.OriginalUrl = SiteUrl + imgDownNode.SelectSingleNode("./a").Attributes["href"].Value;
-                        i.FileSize = Regex.Match(imgDownNode.SelectSingleNode("./a").InnerText, @"(?<=().*?(?=))").Value;
-                    }
-                    i.JpegUrl = i.PreviewUrl.Length > 0 ? i.PreviewUrl : i.OriginalUrl;
-                };
-                list.Add(img);
-            }
-
-            return list;
-        }
-
-        private int StringToInt(string id)
-        {
-            string str = id.Trim();                            // 去掉字符串首尾处的空格
-            char[] charBuf = str.ToArray();                    // 将字符串转换为字符数组
-            ASCIIEncoding charToASCII = new ASCIIEncoding();
-            byte[] TxdBuf = new byte[charBuf.Length];          // 定义发送缓冲区；
-            TxdBuf = charToASCII.GetBytes(charBuf);
-            int idOut = BitConverter.ToInt32(TxdBuf, 0);
-            return idOut;
+            shc.Referer = SiteUrl;
+            shc.Accept = SessionHeadersValue.AcceptAppJson;
+            shc.ContentType = SessionHeadersValue.AcceptAppJson;
+            shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
         }
 
         /// <summary>
-        /// 还原Cookie
+        /// 取页面内容
         /// </summary>
-        private void CookieRestore()
+        public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
-            if (!string.IsNullOrWhiteSpace(cookie)) return;
+            //自动登录
+            if (onceLogin && !IsLoginSite)
+            {
+                onceLogin = false;
+                LoadUser();
+                LoginCall(new LoginSiteArgs() { User = nowUser, Pwd = nowPwd });
+            }
 
-            string ck = Sweb.GetURLCookies(SiteUrl);
-            if (!string.IsNullOrWhiteSpace(ck))
-                cookie = ck;
+            //获取
+            string pageString = Sweb.Get($"{postsUrl}{(string.IsNullOrWhiteSpace(keyWord) ? string.Empty : $"tags={keyWord}&")}mode=&page={page}", proxy, shc);
+            return string.IsNullOrWhiteSpace(pageString) ? string.Empty : pageString;
         }
 
-        private void Login(IWebProxy proxy)
+        /// <summary>
+        /// 解析图片
+        /// </summary>
+        public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
-            //第二次上传账户密码,使cookie可以用于登录
-            if (!cookie.Contains("otome_"))
+            List<Img> imgs = new List<Img>();
+            JArray jPage = (JArray)JObject.Parse(pageString)["posts"];
+
+            foreach (JObject post in jPage)
             {
-                try
+                Img img = new Img()
                 {
-                    string loginUrl = "http://yuriimg.com/account/login";
+                    Desc = $"{post["id"]}",
+                    Id = $"{post["pid"]}".ToSafeInt(),
+                    Width = $"{post["width"]}".ToSafeInt(),
+                    Height = $"{post["height"]}".ToSafeInt(),
+                    IsExplicit = $"{post["rating"]}" == "e",
+                    DetailUrl = $"{SiteUrl}/show/{post["id"]}",
+                    SampleUrl = ParseImageUrl(post),
+                    DownloadDetail = new DetailHandler(ImgDetail)
+                };
+                if (!IsLoginSite && img.IsExplicit) { continue; }
+                imgs.Add(img);
+            }
+            return imgs;
+        }
 
+        /// <summary>
+        /// 详细图片详情页
+        /// </summary>
+        private void ImgDetail(Img img, IWebProxy proxy)
+        {
+            string pageString = Sweb.Get($"{postUrl}{img.Desc}", proxy, shc);
+            if (string.IsNullOrWhiteSpace(pageString)) { return; }
+            JObject json = JObject.Parse(pageString);
 
-                    string sg = Sweb.Get(loginUrl, proxy, shc);
-                    //重新访问修正cookie
-                    if (sg.Contains("cookie.Domain")) { Login(proxy); return; }
-                    //检查不能登录状态
-                    if (sg.Contains(">:(<")) { cookie = "otome_"; return; }
+            img.Tags = ParseTags(json);
+            img.Desc = img.Tags;
+            img.Author = json["artist"].Type == JTokenType.Object
+                ? $"{json["artist"]["name"]}"
+                : $"{json["user"]["name"]}";
+            img.Score = $"{json["praise"]}".ToSafeInt();
+            img.Date = $"{json["format_date"]}";
+            img.FileSize = ParseFileSize(json);
+            img.PreviewUrl = ParseImageUrl(json, 1);
+            img.OriginalUrl = ParseImageUrl(json, 2);
+            img.JpegUrl = img.PreviewUrl;
 
-                    /*
-                     * 开始边界符
-                     * 分隔边界符
-                     * 结束边界符
-                     * Post数据
-                     */
-                    string
-                        boundary = "---------------" + DateTime.Now.Ticks.ToString("x"),
-                        pboundary = "--" + boundary,
-                        endBoundary = "--" + boundary + "--\r\n",
-                        postData = pboundary + "\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n"
-                        + user + "\r\n" + pboundary
-                        + "\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n"
-                        + pass + "\r\n" + endBoundary;
+            // if 多图
+            if ($"{json["page_count"]}".ToSafeInt() > 1)
+            {
+                img.Desc = $"P{json["page_count"]} {img.Desc}";
+                pageString = Sweb.Get($"{postUrl}{json["pid"]}/multi", proxy, shc);
+                if (string.IsNullOrWhiteSpace(pageString)) { return; }
+                JArray json2 = JArray.Parse(pageString);
 
-                    string retData = "";
-
-                    cookie = "";
-                    shc.Referer = Referer;
-                    shc.AllowAutoRedirect = false;
-                    shc.Accept = SessionHeadersValue.AcceptAppJson;
-                    shc.AcceptEncoding = SessionHeadersValue.AcceptEncodingGzip;
-                    shc.ContentType = SessionHeadersValue.ContentTypeFormData + "; boundary=" + boundary;
-                    shc.AutomaticDecompression = DecompressionMethods.GZip;
-                    shc.Remove("Accept-Ranges");
-
-                    retData = Sweb.Post(loginUrl, postData, proxy, shc);
-                    cookie = Sweb.GetURLCookies(SiteUrl);
-
-                    if (retData.Contains("-2"))
-                    {
-                        throw new Exception("密码错误");
-                    }
-                    else if ((!cookie.Contains("otome_")))
-                    {
-                        throw new Exception("登录时出错");
-                    }
-                }
-                catch (Exception ex)
+                foreach (JObject img2 in json2)
                 {
-                    throw new Exception(ex.Message.TrimEnd("。".ToCharArray()) + "自动登录失败");
+                    img.OrignalUrlList.Add(ParseImageUrl(img2, 2));
                 }
             }
         }
-        private string TimeConvert(string html)
+
+        /// <summary>
+        /// 转换FileSize
+        /// </summary>
+        private string ParseFileSize(JObject json)
         {
-            string date = Regex.Match(html, @"(?<=<span>).*?(?=</span>)").Value;
-            if (date.Contains("时前"))
+            int fileSize = $"{json["size"]}".ToSafeInt();
+            return fileSize > 1048576 ? (fileSize / 1048576.0).ToString("0.00MB") : (fileSize / 1024.0).ToString("0.00KB");
+        }
+
+        /// <summary>
+        /// 拼接Tags
+        /// </summary>
+        private string ParseTags(JObject json)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            JObject tags = (JObject)json["tags"];
+            List<JArray> tagsArray = new List<JArray>();
+            if (CheckJsonKey(tags, "character")) { tagsArray.Add((JArray)tags["character"]); }
+            if (CheckJsonKey(tags, "copyright")) { tagsArray.Add((JArray)tags["copyright"]); }
+            if (CheckJsonKey(tags, "general")) { tagsArray.Add((JArray)tags["general"]); }
+            foreach (JArray tag in tagsArray)
             {
-                date = DateTime.Now.AddHours(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
+                tag.ForEach(t => stringBuilder.Append($"{t["tags"]["jp"]} "));
             }
-            else if (date.Contains("天前"))
+            return stringBuilder.ToSafeString();
+        }
+
+        /// <summary>
+        /// 图片地址拼接
+        /// </summary>
+        /// <param name="type">图片类型 0缩略图 1预览图 2原图</param>
+        private string ParseImageUrl(JObject json, int type = 0)
+        {
+            //注意连接字符前后空格
+            string fileExt = $"{json["file_ext"]}";
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append($"{imgHostUrl}{json["src"]}/");
+            stringBuilder.Append($"{SiteName} ");
+            stringBuilder.Append($"{json["id"]} ");
+            if (!string.IsNullOrWhiteSpace(fileExt))
             {
-                date = DateTime.Now.AddDays(-Convert.ToDouble(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
+                switch (type)
+                {
+                    case 1: stringBuilder.Append("thumb"); break;
+                    case 2: stringBuilder.Append($"{fileExt}"); break;
+                    default: stringBuilder.Append("contain"); break;
+                }
             }
-            else if (date.Contains("月前"))
+            else { stringBuilder.Append("contain"); }
+            stringBuilder.Append($"{(json["page"] == null ? string.Empty : $" p{ $"{ json["page"]}".ToSafeInt() + 1 }")}");
+            stringBuilder.Append($".{(string.IsNullOrWhiteSpace(fileExt) ? "webp" : fileExt)}");
+            return stringBuilder.ToSafeString();
+        }
+
+        /// <summary>
+        /// 登录调用
+        /// </summary>
+        public override void LoginCall(LoginSiteArgs loginArgs)
+        {
+            if (IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.User) || string.IsNullOrWhiteSpace(loginArgs.Pwd)) { return; }
+            nowUser = loginArgs.User;
+            nowPwd = loginArgs.Pwd;
+            Login();
+        }
+
+        /// <summary>
+        /// 登录
+        /// </summary>
+        private void Login()
+        {
+            IsRunLogin = true;
+            IsLoginSite = false;
+            try
             {
-                date = DateTime.Now.AddMonths(-Convert.ToInt32(Regex.Match(date, @"\d+").Value)).ToString("yyyy-MM-dd hh.mm");
+                JObject user = new JObject
+                {
+                    ["name"] = nowUser,
+                    ["password"] = nowPwd
+                };
+                string post = JsonConvert.SerializeObject(user);
+
+                //Post登录取Authorization
+                post = Sweb.Post(loginUrl, post, SiteManager.GetWebProxy(), shc);
+                if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
+                {
+                    IsRunLogin = false;
+                    nowUser = nowPwd = null;
+                    SiteManager.EchoErrLog(ShortName, $"登录失败 - {post}{(post.Contains("401") ? $"{Environment.NewLine}账号不正确？" : string.Empty)}", !onceLogin);
+                    return;
+                }
+
+                JObject jobj = JObject.Parse(post);
+                if (jobj.Property("token") != null)
+                {
+                    authorization = $"Bearer {jobj["token"]}";
+                }
+                else if (jobj.Property("message") != null)
+                {
+                    IsRunLogin = false;
+                    nowUser = nowPwd = null;
+                    SiteManager.EchoErrLog(ShortName, $"登录失败 - {jobj["message"]}", !onceLogin);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(authorization))
+                {
+                    IsRunLogin = false;
+                    nowUser = nowPwd = null;
+                    SiteManager.EchoErrLog(ShortName, "登录失败 - 获取账号令牌失败", !onceLogin);
+                    return;
+                }
+
+                //登录成功
+                shc.Add(HttpRequestHeader.Authorization, authorization);
+                IsLoginSite = true;
+                SaveUser();
             }
-            return date;
+            catch (Exception e)
+            {
+                nowUser = nowPwd = null;
+                SiteManager.EchoErrLog(ShortName, e, $"登录失败 - {e.Message}", !onceLogin);
+            }
+            IsRunLogin = false;
+        }
+
+        /// <summary>
+        /// 保存账号
+        /// </summary>
+        private void SaveUser()
+        {
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "User", Value = nowUser }, SiteManager.SiteConfigType.Change);
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Pwd", Value = nowPwd }, SiteManager.SiteConfigType.Change);
+        }
+
+        /// <summary>
+        /// 载入账号
+        /// </summary>
+        private void LoadUser()
+        {
+            nowUser = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "User" });
+            nowPwd = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Pwd" });
+        }
+
+        /// <summary>
+        /// 检查JSON对象是否存在某键值
+        /// </summary>
+        private bool CheckJsonKey(JObject jObject, string jKey)
+        {
+            return !string.IsNullOrWhiteSpace(jObject.Property(jKey).ToSafeString());
         }
     }
+
 }

@@ -9,22 +9,26 @@ namespace MoeLoaderDelta.Control
     /// <summary>
     /// 流畅滚动条 只支持垂直滚动
     /// https://www.cnblogs.com/TwilightLemon/p/13112206.html
-    /// Last 2020-7-21
+    /// Last 2020-8-12
     /// </summary>
     public class SmoothScrollViewer : ScrollViewer
     {
-            /// <summary>
-            /// 记录上一次的滚动位置
-            /// </summary>
+        /// <summary>
+        /// 记录上一次的滚动位置
+        /// </summary>
         private double LastLocation = 0;
+
+        /// <summary>
+        /// 滚动速度因子属性
+        /// </summary>
+        public double SpeedFactor { get; set; } = 2.3;
 
         /// <summary>
         /// 重写鼠标滚动事件
         /// </summary>
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            double factor = SystemParameters.PrimaryScreenHeight / 18;
-            MoveScroll(e.Delta + (e.Delta < 0 ? -factor : factor));
+            MoveScroll(e.Delta / SpeedFactor);
             //通知ScrollViewer滚动完成
             e.Handled = true;
         }
@@ -45,7 +49,6 @@ namespace MoeLoaderDelta.Control
         {
             //更新记录的位置
             LastLocation = e.VerticalOffset;
-            base.OnScrollChanged(e);
         }
 
         /// <summary>
@@ -54,13 +57,12 @@ namespace MoeLoaderDelta.Control
         private double GetDefaultWheelChange(KeyEventArgs e)
         {
             double wheelChange = 0;
-            double factor = SystemParameters.PrimaryScreenHeight / 3.2;
             switch (e.Key)
             {
-                case Key.Up: wheelChange = 100; break;
-                case Key.Down: wheelChange = -100; break;
-                case Key.PageUp: wheelChange = factor; break;
-                case Key.PageDown: wheelChange = -factor; break;
+                case Key.Up: wheelChange = 118 - (SpeedFactor * 9); break;
+                case Key.Down: wheelChange = -(118 - (SpeedFactor * 9)); break;
+                case Key.PageUp: wheelChange = 218 - (SpeedFactor * 9); break;
+                case Key.PageDown: wheelChange = -(218 - (SpeedFactor * 9)); break;
                 case Key.Home: wheelChange = ScrollableHeight; break;
                 case Key.End: wheelChange = -ScrollableHeight; break;
             }
@@ -68,29 +70,33 @@ namespace MoeLoaderDelta.Control
         }
 
         /// <summary>
-        /// 移动滚动条
+        /// 移动滚动条 正数页面向上滚动 负数反之
         /// </summary>
         /// <param name="multiple">移动倍数</param>
         /// <param name="keyEvent">按键事件</param>
         public void MoveScroll(double? wheelChange, KeyEventArgs keyEvent = null)
         {
-            if (wheelChange == null && keyEvent != null)
+            try
             {
-                wheelChange = GetDefaultWheelChange(keyEvent);
+                if (wheelChange == null && keyEvent != null)
+                {
+                    wheelChange = GetDefaultWheelChange(keyEvent);
+                }
+                else if (wheelChange == null) { wheelChange = 0; }
+
+                //Animation并不会改变真正的VerticalOffset(只是它的依赖属性) 所以将VOffset设置到上一次的滚动位置 (相当于衔接上一个动画)
+                double newOffset = LastLocation - (double)(wheelChange * 2);
+
+                ScrollToVerticalOffset(LastLocation);
+
+                //碰到底部和顶部时的处理
+                if (newOffset < 0) { newOffset = 0; }
+                if (newOffset > ScrollableHeight) { newOffset = ScrollableHeight; }
+
+                AnimateScroll(newOffset);
+                LastLocation = newOffset;
             }
-            else if (wheelChange == null) { wheelChange = 0; }
-
-            //Animation并不会改变真正的VerticalOffset(只是它的依赖属性) 所以将VOffset设置到上一次的滚动位置 (相当于衔接上一个动画)
-            double newOffset = LastLocation - (double)(wheelChange * 2);
-
-            ScrollToVerticalOffset(LastLocation);
-
-            //碰到底部和顶部时的处理
-            if (newOffset < 0) { newOffset = 0; }
-            if (newOffset > ScrollableHeight) { newOffset = ScrollableHeight; }
-
-            AnimateScroll(newOffset);
-            LastLocation = newOffset;
+            catch { }
         }
 
         /// <summary>
@@ -107,12 +113,13 @@ namespace MoeLoaderDelta.Control
                 From = VerticalOffset,
                 To = ToValue,
                 //动画速度
-                Duration = TimeSpan.FromMilliseconds(600)
+                Duration = TimeSpan.FromMilliseconds(360)
             };
             //固定帧数
             Timeline.SetDesiredFrameRate(Animation, 60);
             BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, Animation);
         }
+
     }
 
     public static class ScrollViewerBehavior

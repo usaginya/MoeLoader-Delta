@@ -4,7 +4,7 @@ using System.Net;
 
 namespace SitePack
 {
-    class SiteProvider
+   public class SiteProvider
     {
         public List<IMageSite> SiteList(IWebProxy proxy)
         {
@@ -14,15 +14,15 @@ namespace SitePack
                 $"{System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\\", string.Empty)}\\SitePacks\\18x.txt"
                 );
 
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus, proxy));
-            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.ExtStteing_0, proxy));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Author));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Tag));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.TagFull));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Day));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Week));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Month));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.ExtStteing_0));
 
             sites.Add(new SiteLargeBooru(
                 "https://yande.re",

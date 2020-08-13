@@ -1,16 +1,17 @@
-﻿using Microsoft.VisualBasic;
-using MoeLoaderDelta.Control;
+﻿using MoeLoaderDelta.Control;
+using MoeLoaderDelta.Control.Toast;
 using MoeLoaderDelta.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,6 +21,8 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Xml;
+using static MoeLoaderDelta.Control.Toast.ToastBoxNotification;
+
 
 namespace MoeLoaderDelta
 {
@@ -75,18 +78,11 @@ namespace MoeLoaderDelta
         /// </summary>
         private string FavoritePath => $"{ProgramRunPath}\\MLD_fav.mld";
 
-        private const string IMGLOADING = "图片加载中...";
+        private const string IMGLOADING = "少女加载中...";
 
         private int num = 50, realNum = 50;
         private int page = 1, realPage = 1, lastPage = 1;
         private static string SearchWord = string.Empty;
-
-        //private Color backColor;
-        //internal bool isAero = true;
-        /// <summary>
-        /// 使用最大化按钮最大化
-        /// </summary>
-        private bool ClickMaxButton = false;
 
         /// <summary>
         /// 是否还有下一页
@@ -112,6 +108,9 @@ namespace MoeLoaderDelta
         internal FavoriteWnd favoriteWnd;
         internal FavoriteAddWnd favoriteAddWnd;
         internal PreviewWnd previewFrm;
+        internal ToastBoxWork Toast = new ToastBoxWork();
+
+        private LoginSiteArgs loginSiteArgs = new LoginSiteArgs();
         private SessionState currentSession;
         private bool isGetting = false;
 
@@ -137,7 +136,7 @@ namespace MoeLoaderDelta
 
         #region -- 拖框选功能变量 --
         private Border dragSelectBorder = null;
-        private bool canDrag = false, dragIsCtrl = false, dragIsClear = false;
+        private bool canDrag = false, catchMouse = false, dragIsCtrl = false, dragIsClear = false;
         private Point dragStartPoint;
         #endregion
 
@@ -151,6 +150,17 @@ namespace MoeLoaderDelta
         public TreeViewModel FavoriteTreeView = new TreeViewModel();
         #endregion //////////////////////////
 
+        #region  -- 下载面板相关变量 --
+        internal enum DownPanlMode { ML, MLDA, MLDB }
+        internal static DownPanlMode DownPanlModeValue = DownPanlMode.MLDB;
+        internal static bool AutoOpenDownloadPanl = true;
+        internal static bool ClearDownloadSelected = true;
+        private ThicknessAnimationUsingKeyFrames thicknessMLOpen;
+        private ThicknessAnimationUsingKeyFrames thicknessMLClose;
+        private SplineThicknessKeyFrame splineMLOpen;
+        private SplineThicknessKeyFrame splineMLClose;
+        #endregion
+
         internal int comboBoxIndex = 0;
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         private const string NoFoundMsg = "没有找到图片喔~";
@@ -162,8 +172,8 @@ namespace MoeLoaderDelta
         internal AlignmentX bgHe = AlignmentX.Right;
         internal AlignmentY bgVe = AlignmentY.Bottom;
 
-        public BitmapImage ExtSiteIconOff { get; set; } = null;
-        public BitmapImage ExtSiteIconOn { get; set; } = null;
+        public BitmapImage ExtSiteIconOff;
+        public BitmapImage ExtSiteIconOn;
 
         #region Register/Unregister HotKey
         [DllImport("user32")]
@@ -193,7 +203,6 @@ namespace MoeLoaderDelta
 
         public static string SearchWordPu => DownloadControl.ReplaceInvalidPathChars(SearchWord);
         WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
-
 
         #region Public Functions
         /// <summary>
@@ -225,6 +234,23 @@ namespace MoeLoaderDelta
         }
         #endregion
 
+        internal static IWebProxy WebProxy
+        {
+            get
+            {
+                if (ProxyType == ProxyType.Custom)
+                {
+                    if (Proxy.Length > 0)
+                        return new WebProxy(Proxy, true);
+                }
+                else if (ProxyType == ProxyType.None)
+                {
+                    return null;
+                }
+                return WebRequest.DefaultWebProxy;
+            }
+        }
+
         /// <summary>
         /// ################### Main Start ###################
         /// </summary>
@@ -252,7 +278,7 @@ namespace MoeLoaderDelta
             Window.OpacityMask = brush;
 
             /////////////////////////////////////// init image site list //////////////////////////////////
-            SiteManager.Mainproxy = WebProxy;
+            SiteManager.MainProxy = WebProxy;
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             ObservableCollection<FrameworkElement> tempSites = new ObservableCollection<FrameworkElement>();
 
@@ -278,6 +304,9 @@ namespace MoeLoaderDelta
             ExtSiteIconOff = CreateBitmapImage("MoeLoaderDelta.Images.extsetting0.ico");
             ExtSiteIconOn = CreateBitmapImage("MoeLoaderDelta.Images.extsetting1.ico");
             #endregion
+
+            #region 初始化加载站点
+            SiteManager.Instance.Initialize();
 
             foreach (IMageSite site in SiteManager.Instance.Sites)
             {
@@ -346,6 +375,7 @@ namespace MoeLoaderDelta
                 menuItem.Items.Add(subItem);
                 #endregion
             }
+            #endregion
 
             #region 添加主站菜单
             foreach (IMageSite site in SiteManager.Instance.Sites)
@@ -418,8 +448,6 @@ namespace MoeLoaderDelta
 
             LoadConfig();
 
-            //itmxExplicit.IsChecked = !showExplicit;
-
             MainW = this;
 
             //删除上次临时目录
@@ -445,7 +473,7 @@ namespace MoeLoaderDelta
             Dispatcher.Invoke(siteExtended.SettingAction);
             item.Icon = siteExtended.Enable ? ExtSiteIconOn : ExtSiteIconOff;
 
-            Control_Toast.Show($"{siteExtended.Title} 已 {(siteExtended.Enable ? "开启" : "关闭")}");
+            Toast.Show($"[已{(siteExtended.Enable ? "开启" : "关闭")}] {siteExtended.Title}");
         }
 
         /// <summary>
@@ -488,6 +516,37 @@ namespace MoeLoaderDelta
             //初始化右键菜单
             scrList.ContextMenu.IsOpen = true;
             scrList.ContextMenu.IsOpen = false;
+
+            #region 事件绑定
+            SiteManager.showToastMsgDelegate = ShowToastMsg;
+            SiteManager.getNetPorxyDelegate = GetWebProxy;
+            #endregion
+        }
+
+        /// <summary>
+        /// 调用显示Toast消息
+        /// </summary>
+        /// <param name="msg">消息</param>
+        /// <param name="msgType">类型</param>
+        private void ShowToastMsg(string msg, SiteManager.MsgType msgType)
+        {
+            MsgType type = MsgType.Info;
+            switch (msgType)
+            {
+                case SiteManager.MsgType.Error: type = MsgType.Error; break;
+                case SiteManager.MsgType.Success: type = MsgType.Success; break;
+                case SiteManager.MsgType.Warning: type = MsgType.Warning; break;
+            }
+            Toast.Show(msg, type);
+        }
+
+        /// <summary>
+        /// 调取当前网络代理
+        /// </summary>
+        /// <returns></returns>
+        private IWebProxy GetWebProxy()
+        {
+            return WebProxy;
         }
 
         /// <summary>
@@ -496,16 +555,17 @@ namespace MoeLoaderDelta
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
+            IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
             if (SiteManager.Instance.Sites.Count > 0)
             {
-                itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(site.LoginURL);
             }
 
-            if (itmLoginSite.IsEnabled)
+            if (itmLoginSite.IsEnabled && site.LoginSiteIsLogged)
             {
-                tmp_user = SiteManager.Instance.Sites[comboBoxIndex].LoginUser;
+                tmp_user = site.LoginUser;
             }
-            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : tmp_user;
+            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : $"{tmp_user}已登录";
         }
 
         /// <summary>
@@ -535,9 +595,20 @@ namespace MoeLoaderDelta
         /// </summary>
         private void LoadBgImg()
         {
-            string bgPath = $"{ProgramRunPath}\\bg.png";
-            bool hasBg = File.Exists(bgPath);
-            bgPath = hasBg ? bgPath : string.Empty;
+            string bgPath = $"{ProgramRunPath}\\bg.";
+            bool hasBg = false;
+            string[] bgExt = { "png", "jpg", "gif" };
+            int bgExtLength = bgExt.Length;
+
+            for (int i = 0; i < bgExtLength; i++)
+            {
+                hasBg = File.Exists(bgPath + bgExt[i]);
+                if (hasBg)
+                {
+                    bgPath += bgExt[i];
+                    break;
+                }
+            }
             if (!hasBg) { return; }
 
             Dispatcher.Invoke(new VoidDel(delegate
@@ -559,14 +630,23 @@ namespace MoeLoaderDelta
         /// <param name="loadBg">是否从文件加载背景图片</param>
         public void ChangeBg(double opacity, bool loadBg = false)
         {
-            opacity = opacity < 0.1 ? 0.1 : opacity > 1 ? 1 : opacity;
-            bgOp = opacity;
-            //从文件加载更改
-            if (loadBg) { LoadBgImg(); return; }
-            //从内存更改
-            Brush brush = grdBg.Background;
-            brush.Opacity = bgOp;
-            grdBg.Background = brush;
+            try
+            {
+                opacity = opacity < 0.1 ? 0.1 : opacity > 1 ? 1 : opacity;
+                bgOp = opacity;
+                //从文件加载更改
+                if (loadBg) { LoadBgImg(); return; }
+
+                //从内存更改
+                if (bgImg == null) { return; }
+                Dispatcher.Invoke(new VoidDel(delegate
+                {
+                    ImageBrush newBg = bgImg.Clone();
+                    newBg.Opacity = opacity;
+                    grdBg.Background = newBg;
+                }));
+            }
+            catch { }
         }
 
         public static string IsNeedReferer(string url)
@@ -607,14 +687,8 @@ namespace MoeLoaderDelta
 
                     if (Regex.IsMatch(lines[0], @"^[+-]?\d*$"))
                     {
-                        try
-                        {
-                            checked { downloadC.NumOnce = int.Parse(lines[0]); }
-                        }
-                        catch (OverflowException)
-                        {
-                            downloadC.NumOnce = 2;
-                        }
+                        downloadC.NumOnce = lines[0].ToSafeInt();
+                        downloadC.NumOnce = downloadC.NumOnce < 1 ? 2 : downloadC.NumOnce;
                     }
                     else
                     {
@@ -622,7 +696,7 @@ namespace MoeLoaderDelta
                     }
 
                     if (lines[1] != "." && Directory.Exists(lines[1]))
-                        DownloadControl.SaveLocation = lines[1];
+                    { DownloadControl.SaveLocation = lines[1]; }
 
                     if (lines[2].Contains(';'))
                     {
@@ -632,63 +706,41 @@ namespace MoeLoaderDelta
 
                         if (parts.Length > 1)
                         {
-                            try
-                            {
-                                int tpart = Convert.ToInt32(parts[1]);
-                                downloadC.IsSscSave = tpart > 1;
-                                downloadC.IsSaSave = tpart > 0 && tpart < 3;
-                            }
-                            catch { }
+                            int tpart = parts[1].ToSafeInt();
+                            downloadC.IsSscSave = tpart > 1;
+                            downloadC.IsSaSave = tpart > 0 && tpart < 3;
                         }
                         if (parts.Length > 2)
                         {
                             if (Regex.IsMatch(parts[2], @"^[+-]?\d*$"))
                             {
-                                try
-                                {
-                                    checked
-                                    {
-                                        numOfLoading = int.Parse(parts[2]);
-                                        if (numOfLoading < 4) numOfLoading = 5;
-                                    }
-                                }
-                                catch (OverflowException)
-                                {
-                                    numOfLoading = 5;
-                                }
-                            }
-                            else
-                            {
-                                numOfLoading = 5;
+                                numOfLoading = parts[2].ToSafeInt();
+                                if (numOfLoading < 4) { numOfLoading = 5; }
                             }
                         }
+
                         if (parts.Length > 3)
-                        {
-                            itmMaskViewed.IsChecked = parts[3].Equals("1");
-                        }
+                        { itmMaskViewed.IsChecked = parts[3].Equals("1"); }
+
                         if (parts.Length > 4)
                         {
                             string[] words = parts[4].Split('|');
                             foreach (string word in words)
                             {
-                                //if (word.Trim().Length > 0)
-                                //txtSearch.Items.Add(word);
                                 searchControl.LoadUsedItems(word);
                             }
                         }
-                        //if (!txtSearch.Items.Contains("thighhighs"))
-                        //txtSearch.Items.Add("thighhighs");
+
                         if (parts.Length > 5)
-                        {
-                            Proxy = parts[5];
-                        }
+                        { Proxy = parts[5]; }
+
                         if (parts.Length > 6)
                         {
                             bossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), parts[6]);
                         }
                         if (parts.Length > 7)
                         {
-                            thumbSize = int.Parse(parts[7]);
+                            thumbSize = parts[7].ToSafeInt();
                             thumbSize = thumbSize < 150 ? 150 : thumbSize > 500 ? 500 : thumbSize;
                         }
                         if (parts.Length > 8)
@@ -697,23 +749,13 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 9)
                         {
-                            try
+                            string[] posItem = parts[9].Split(',');
+                            Size pos = new Size(posItem[0].ToSafeInt(), posItem[1].ToSafeInt());
+                            if (pos.Width > MinWidth && pos.Height > MinHeight)
                             {
-                                //Size pos = Size.Parse(parts[9]);
-                                var posItem = parts[9].Split(',');
-                                Size pos = new Size(int.Parse(posItem[0]), int.Parse(posItem[1]));
-                                if (pos.Width > MinWidth && pos.Height > MinHeight)
-                                {
-                                    //rememberPos = true;
-                                    //Left = pos.X;
-                                    //Top = pos.Y;
-                                    //startPos.Width = pos.Width;
-                                    //startPos.Height = pos.Height;
-                                    Width = pos.Width;
-                                    Height = pos.Height;
-                                }
+                                Width = pos.Width;
+                                Height = pos.Height;
                             }
-                            catch { }
                         }
                         if (parts.Length > 10)
                         {
@@ -731,7 +773,7 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 11)
                         {
-                            PreFetcher.CachedImgCount = int.Parse(parts[11]);
+                            PreFetcher.CachedImgCount = parts[11].ToSafeInt();
                         }
                         if (parts.Length > 12)
                         {
@@ -742,14 +784,13 @@ namespace MoeLoaderDelta
                             itmxExplicit.IsChecked = parts[13].Equals("1");
                             showExplicit = !itmxExplicit.IsChecked;
                         }
+
                         if (parts.Length > 14)
-                        {
-                            namePatter = parts[14];
-                        }
+                        { namePatter = parts[14]; }
+
                         if (parts.Length > 15)
-                        {
-                            txtNum.Text = parts[15];
-                        }
+                        { txtNum.Text = parts[15]; }
+
                         if (parts.Length > 16)
                         {
                             bgSt = (Stretch)Enum.Parse(typeof(Stretch), parts[16]);
@@ -764,38 +805,62 @@ namespace MoeLoaderDelta
                         }
                         if (parts.Length > 19)
                         {
-                            bgOp = double.Parse(parts[19]);
+                            bgOp = parts[19].ToSafeDouble();
+                        }
+                        if (parts.Length > 20)
+                        {
+                            scrList.SpeedFactor = parts[20].ToSafeDouble();
+                        }
+                        if (parts.Length > 21)
+                        {
+                            Array dpms = Enum.GetValues(typeof(DownPanlMode));
+                            foreach (int dpm in dpms)
+                            {
+                                if (dpm.ToSafeString() == parts[21])
+                                {
+                                    DownPanlModeValue = (DownPanlMode)Enum.ToObject(typeof(DownPanlMode), parts[21].ToSafeInt());
+                                    break;
+                                }
+                            }
+                        }
+                        if (parts.Length > 22)
+                        {
+                            AutoOpenDownloadPanl = parts[22].ToSafeInt() > 0;
+                        }
+                        if (parts.Length > 23)
+                        {
+                            ClearDownloadSelected = parts[23].ToSafeInt() > 0;
                         }
                     }
-                    //else itmJpg.IsChecked = lines[2].Trim().Equals("1");
-                    else addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
+                    else
+                    {
+                        addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
+                    }
 
                     for (int i = 3; i < lines.Length; i++)
                     {
-                        if (lines[i].Trim().Length > 0)
+                        if (lines[i].Trim().Length < 1) { break; }
+
+                        if (lines[i].Contains(':'))
                         {
-                            if (lines[i].Contains(':'))
-                            {
-                                string[] parts = lines[i].Trim().Split(':');
-                                viewedIds[parts[0]] = new ViewedID();
-                                viewedIds[parts[0]].AddViewedRange(parts[1]);
-                            }
-                            else
-                            {
-                                //向前兼容
-                                if (i - 3 >= SiteManager.Instance.Sites.Count) break;
-                                else if (SiteManager.Instance.Sites.Count > 0)
-                                {
-                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
-                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
-                                }
-                            }
+                            string[] parts = lines[i].Trim().Split(':');
+                            viewedIds[parts[0]] = new ViewedID();
+                            viewedIds[parts[0]].AddViewedRange(parts[1]);
+                            continue;
+                        }
+                        //向前兼容
+                        if (i - 3 >= SiteManager.Instance.Sites.Count)
+                        { break; }
+                        else if (SiteManager.Instance.Sites.Count > 0)
+                        {
+                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
+                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "读取配置文件失败\r\n" + ex.Message, ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Toast.Show($"读取配置文件失败{Environment.NewLine}{ex.Message}", MsgType.Error);
                 }
             }
 
@@ -814,13 +879,6 @@ namespace MoeLoaderDelta
                     itmTypeSmall.IsChecked = true;
                     break;
             }
-
-            //string logoPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\logo.png";
-            //if (System.IO.File.Exists(logoPath))
-            //{
-            //image.Source = new BitmapImage(new Uri(logoPath, UriKind.Absolute));
-            //}
-            //else image.Source = new BitmapImage(new Uri("Images/logo1.png", UriKind.Relative));
         }
         /// <summary>
         /// 获取子控件
@@ -876,31 +934,29 @@ namespace MoeLoaderDelta
 
                 Dispatcher.Invoke(new Action(() =>
                 {
-                    if (btnFav.Tag != null && (int)btnFav.Tag == 1)
+                    if (btnFav.Tag == null || (int)btnFav.Tag != 1) { return; }
+                    btnFav.Tag = 0;
+
+                    Point pMouse = args.GetPosition(btnFav);
+                    if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
                     {
-                        btnFav.Tag = 0;
-                        Point pMouse = args.GetPosition(btnFav);
-                        if (pMouse.X >= 0 && pMouse.X < btnFav.ActualWidth && pMouse.Y >= 0 && pMouse.Y < btnFav.ActualHeight)
+                        if (favoriteAddWnd != null && favoriteAddWnd.IsLoaded)
                         {
-                            if (favoriteAddWnd != null && favoriteAddWnd.IsLoaded)
-                            {
-                                favoriteAddWnd.Activate();
-                                favoriteAddWnd.Top = Top + (ActualHeight / 2) - (favoriteAddWnd.ActualHeight / 2);
-                                favoriteAddWnd.Left = Left + (ActualWidth / 2) - (favoriteAddWnd.ActualWidth / 2);
-                            }
-                            else if (!searchControl.Text.IsNullOrEmptyOrWhiteSpace())
-                            {
-                                favoriteAddWnd = new FavoriteAddWnd(searchControl.Text, FavoriteAddWnd.AddMode.Add, null, null, SelectedSiteName(), this);
-                                favoriteAddWnd.ShowDialog();
-                            }
-                            else
-                            {
-                                Control_Toast.Show("搜索框中没有可以收藏的关键词", Toast.MsgType.Warning, 2000);
-                            }
+                            favoriteAddWnd.Activate();
+                            favoriteAddWnd.Top = Top + (ActualHeight / 2) - (favoriteAddWnd.ActualHeight / 2);
+                            favoriteAddWnd.Left = Left + (ActualWidth / 2) - (favoriteAddWnd.ActualWidth / 2);
+                        }
+                        else if (!searchControl.Text.IsNullOrEmptyOrWhiteSpace())
+                        {
+                            favoriteAddWnd = new FavoriteAddWnd(searchControl.Text, FavoriteAddWnd.AddMode.Add, null, null, SelectedSiteName(), this);
+                            favoriteAddWnd.ShowDialog();
+                        }
+                        else
+                        {
+                            Toast.Show("搜索框中没有可以收藏的关键词", MsgType.Warning);
                         }
                     }
                 }));
-
             });
             fav_thread.Start();
         }
@@ -1046,7 +1102,7 @@ namespace MoeLoaderDelta
                 //重新读取RToolStripMenuItem.Enabled = false;
 
                 imgPanel.Children.Clear();
-                Control_Toast.Show(NoFoundMsg);
+                Toast.Show(NoFoundMsg);
             }
             else
             {
@@ -1082,24 +1138,22 @@ namespace MoeLoaderDelta
                 if (imgs.Count == 0)
                 {
                     DocumentCompleted();
-                    Control_Toast.Show(NoFoundMsg);
+                    Toast.Show(NoFoundMsg);
                     return;
                 }
 
                 //生成缩略图控件
                 for (int i = 0; i < imgs.Count; i++)
                 {
-                    //int id = Int32.Parse(imgs[i].Id);
-
                     ImgControl img = new ImgControl(imgs[i], i, SiteManager.Instance.Sites[nowSelectedIndex])
                     {
                         Width = thumbSize,
                         Height = thumbSize
                     };
-                    img.imgDLed += Img_imgDLed;
-                    img.imgClicked += Img_Click;
+                    img.ImgDLed += Img_imgDLed;
+                    img.ImgClicked += Img_Click;
                     img.ImgLoaded += Img_ImgLoaded;
-                    img.checkedChanged += Img_checkedChanged;
+                    img.CheckedChanged += Img_checkedChanged;
 
                     imgPanel.Children.Add(img);
 
@@ -1138,15 +1192,19 @@ namespace MoeLoaderDelta
                     new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify)
                 });
             }
-           ((ImgControl)imgPanel.Children[index]).SetChecked(false);
+            if (ClearDownloadSelected)
+            {
+                ((ImgControl)imgPanel.Children[index]).SetChecked(false);
+            }
             //重置重试次数
             downloadC.ResetRetryCount();
-            Control_Toast.Show($"{dlimg.Id} 图片已添加到下载列表 →", Toast.MsgType.Success);
-            //string url = GetImgAddress(imgs[index]);
-            //string fileName = GenFileName(imgs[index]);
-            //downloadC.AddDownload(new MiniDownloadItem[] { new MiniDownloadItem(fileName, url) });
-
-            //System.Media.SystemSounds.Exclamation.Play();
+            if (AutoOpenDownloadPanl && !toggleDownload.IsChecked.Value)
+            {
+                toggleDownload.IsChecked = true;
+                ToggleDownload_Click(null, null);
+            }
+            else
+            { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
         /// <summary>
@@ -1266,7 +1324,7 @@ namespace MoeLoaderDelta
         {
             if (SiteManager.Instance.Sites.Count < 1)
             {
-                Control_Toast.Show("没有站点可以用来搜索", Toast.MsgType.Warning);
+                Toast.Show("没有站点可以用来搜索", MsgType.Warning);
                 return;
             }
 
@@ -1346,12 +1404,13 @@ namespace MoeLoaderDelta
                     {
                         if (!(o as SessionState).IsStop)
                         {
-                            Control_Toast.Show(
+                            Toast.Show(
                                 $"错误：{(string.IsNullOrWhiteSpace(ex.Message) ? "没有找到图片" : ex.Message)}"
-                                + $"\r\n获取图片：{(string.IsNullOrWhiteSpace(SearchWord) ? "<默认搜索>" : SearchWord) }"
-                                + $"\r\n站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
-                                + $"\r\n当前页码：{realPage}  每页数量：{realNum}  代理模式：{ProxyType}"
-                                , Toast.MsgType.Error, 8000);
+                                + $"{Environment.NewLine}获取图片：{(string.IsNullOrWhiteSpace(SearchWord) ? "<默认搜索>" : SearchWord) }"
+                                + $"{Environment.NewLine}站点名称：{SiteManager.Instance.Sites[nowSelectedIndex].SiteName}  "
+                                + $"{Environment.NewLine}当前页码：{realPage}  每页数量：{realNum}"
+                                + $"{Environment.NewLine}代理模式：{ProxyType}"
+                                , MsgType.Error);
                         }
                     }
                     if (!(o as SessionState).IsStop)
@@ -1515,7 +1574,7 @@ namespace MoeLoaderDelta
                 GlassHelper.FlashWindow(Hwnd, true);
             }
 
-            //无图时禁用菜单
+            //无图时禁用
             if (imgs.Count < 1)
             {
                 itmSelectInverse.IsEnabled =
@@ -1529,50 +1588,98 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 显示下载列表
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ToggleDownload_Click(object sender, RoutedEventArgs e)
         {
-            Storyboard sb;
+            Storyboard sb = (Storyboard)FindResource("showDownload");
+
+            #region 创建ML动画
+            PropertyPath propertyMargin = new PropertyPath("(FrameworkElement.Margin)");
+            //移除ML动画
+            if (DownPanlModeValue != DownPanlMode.ML)
+            {
+                if (sb.Children.Contains(thicknessMLOpen))
+                { sb.Children.Remove(thicknessMLOpen); }
+                sb = (Storyboard)FindResource("closeDownload");
+                if (sb.Children.Contains(thicknessMLClose))
+                { sb.Children.Remove(thicknessMLClose); }
+            }
+            else if (!sb.Children.Contains(thicknessMLOpen))
+            {
+                //打开
+                thicknessMLOpen = new ThicknessAnimationUsingKeyFrames();
+                splineMLOpen = new SplineThicknessKeyFrame()
+                {
+                    KeyTime = KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 20)),
+                    Value = new Thickness(0, 0, 219, 0)
+                };
+                thicknessMLOpen.SetValue(Storyboard.TargetNameProperty, "imgBorder");
+                thicknessMLOpen.SetValue(Storyboard.TargetPropertyProperty, propertyMargin);
+                thicknessMLOpen.KeyFrames.Add(splineMLOpen);
+                sb.Children.Add(thicknessMLOpen);
+            }
+            else if (!sb.Children.Contains(thicknessMLClose))
+            {
+                //关闭
+                thicknessMLClose = new ThicknessAnimationUsingKeyFrames();
+                splineMLClose = new SplineThicknessKeyFrame()
+                {
+                    KeyTime = KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 20)),
+                    Value = new Thickness()
+                };
+                thicknessMLClose.SetValue(Storyboard.TargetNameProperty, "imgBorder");
+                thicknessMLClose.SetValue(Storyboard.TargetPropertyProperty, propertyMargin);
+                thicknessMLClose.KeyFrames.Add(splineMLClose);
+                sb = (Storyboard)FindResource("closeDownload");
+                sb.Children.Add(thicknessMLClose);
+            }
+            #endregion
 
             if (toggleDownload.IsChecked.Value)
             {
-                toggleDownload.ToolTip = "隐藏下载面板";
                 sb = (Storyboard)FindResource("showDownload");
+                toggleDownload.ToolTip = "隐藏下载面板";
 
                 if (IsCtrlDown())
                 {
                     double rmrg = MainW.Width / 2;
                     ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, rmrg, 0);
                     ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = rmrg;
+                    if (DownPanlModeValue == DownPanlMode.ML)
+                    {
+                        ((ThicknessAnimationUsingKeyFrames)sb.Children.Last()).KeyFrames[0].Value = new Thickness(0, 0, rmrg - 1, 0);
+                    }
                 }
                 else
                 {
                     ((ThicknessAnimationUsingKeyFrames)sb.Children[0]).KeyFrames[0].Value = new Thickness(0, 0, 220, 0);
                     ((DoubleAnimationUsingKeyFrames)sb.Children[2]).KeyFrames[0].Value = 220;
+                    if (DownPanlModeValue == DownPanlMode.ML)
+                    {
+                        ((ThicknessAnimationUsingKeyFrames)sb.Children.Last()).KeyFrames[0].Value = new Thickness(0, 0, 219, 0);
+                    }
                 }
 
-                if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center) { grdNavi.Visibility = Visibility.Hidden; }
-
-                sb.Begin();
+                if (grdNavi.HorizontalAlignment == HorizontalAlignment.Center)
+                { grdNavi.Visibility = Visibility.Hidden; }
             }
             else
             {
                 grdNavi.Visibility = Visibility.Visible;
                 toggleDownload.ToolTip = (string)toggleDownload.Tag;
                 sb = (Storyboard)FindResource("closeDownload");
-                sb.Begin();
             }
+
             sb.Completed += ToggleDownloadAni_Completed;
+            sb.Begin();
         }
 
         /// <summary>
-        /// 点击缩略图列表时收起下载列表
+        /// 点击下载列表以外位置收起列表
         /// </summary>
         private void HiddenToggleDownload(object sender, MouseButtonEventArgs e)
         {
             if (e.Source.GetType() == typeof(DownloadControl)) { return; }
-            if (toggleDownload.IsChecked.Value)
+            if (DownPanlModeValue == DownPanlMode.MLDA && toggleDownload.IsChecked.Value)
             {
                 toggleDownload.IsChecked = false;
                 ToggleDownload_Click(sender, null);
@@ -1582,203 +1689,16 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 下载列表动画结束时
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ToggleDownloadAni_Completed(object sender, EventArgs e)
         {
+            if (DownPanlModeValue != DownPanlMode.ML) { return; }
             PlayPreNextAnimation();
             PlayPreNextAnimation(1);
         }
 
-        #region Window Related
-        private void Window_MouseDoubleClick_1(object sender, MouseButtonEventArgs e)
-        {
-            //maxmize
-            if (e.OriginalSource is Grid && e.GetPosition(this).Y < bdDecorate.ActualHeight) Max_Click(null, null);
-        }
-
-        /// <summary>
-        /// 窗口资源初始化
-        /// </summary>
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-
-            Hwnd = new WindowInteropHelper(this).Handle;
-            HwndSource.FromHwnd(Hwnd).AddHook(new HwndSourceHook(WndProc));
-        }
-
-        /// <summary>
-        /// 按键监听事件
-        /// </summary>
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (msg == 0x0312)
-            {
-                // 老板键
-                if (wParam.ToInt32() == (int)bossKey)
-                {
-                    Visibility = Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
-                }
-            }
-            else if (msg == 0x0024)
-            {
-                WmGetMinMaxInfo(hwnd, lParam);
-                handled = true;
-            }
-            else if (msg == 0x0112)
-            {
-                //WM_SYSCOMMAND   0x0112
-                if (wParam.ToInt32() == 0xF020)
-                {
-                    //SC_MINIMIZE  0xF020
-                    //WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
-                    //GWL_STYLE -16
-                    int nStyle = GlassHelper.GetWindowLong(hwnd, -16);
-                    nStyle |= 0x00C00000;
-                    //WS_CAPTION 0x00C00000L
-                    GlassHelper.SetWindowLong(hwnd, -16, nStyle);
-                    //isStyleNone = false;
-
-                    WindowState = WindowState.Minimized;
-                    handled = true;
-                }
-            }
-
-            return wParam;
-        }
-
-        private void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
-        {
-            GlassHelper.MINMAXINFO mmi = (GlassHelper.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(GlassHelper.MINMAXINFO));
-
-            int MONITOR_DEFAULTTONEAREST = 0x00000002;
-            IntPtr monitor = GlassHelper.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-
-            if (monitor != IntPtr.Zero)
-            {
-                GlassHelper.MONITORINFO monitorInfo = new GlassHelper.MONITORINFO();
-                GlassHelper.GetMonitorInfo(monitor, monitorInfo);
-                GlassHelper.RECT rcWorkArea = monitorInfo.rcWork;
-                GlassHelper.RECT rcMonitorArea = monitorInfo.rcMonitor;
-                mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 6;
-                mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 6;
-                mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 18;
-                mmi.ptMaxSize.y = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 13;
-                //mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 12;
-                //mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 16;
-                //int maxHeight = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 43;
-                //mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 27;
-                //mmi.ptMaxSize.y = maxHeight;
-                mmi.ptMinTrackSize.x = (int)MinWidth;
-                mmi.ptMinTrackSize.y = (int)MinHeight;
-            }
-
-            Marshal.StructureToPtr(mmi, lParam, true);
-        }
-
-        /// <summary>
-        /// 限制页码设置只能输入数字的一种方法
-        /// </summary>
-        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
-                || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
-                || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void TxtNum_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox txt = sender as TextBox;
-            if (txt.Text.Length == 0) return;
-            try
-            {
-                num = int.Parse(txtNum.Text);
-                page = int.Parse(txtPage.Text);
-
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-            catch (NullReferenceException) { }
-            catch (FormatException)
-            {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-        }
-
-        private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
-        {
-            TextBox txt = sender as TextBox;
-            try
-            {
-                num = int.Parse(txtNum.Text);
-                page = int.Parse(txtPage.Text);
-
-                num = num > 0 ? (num > 600 ? 600 : num) : 1;
-                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
-
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-            catch (NullReferenceException) { }
-            catch (FormatException)
-            {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
-            }
-        }
-
-        private void PageUp_Click(object sender, RoutedEventArgs e)
-        {
-            if (page < 99999)
-                txtPage.Text = (page + 1).ToString();
-        }
-
-        private void PageDown_Click(object sender, RoutedEventArgs e)
-        {
-            if (page > 1)
-                txtPage.Text = (page - 1).ToString();
-        }
-
-        private void NumUp_Click(object sender, RoutedEventArgs e)
-        {
-            if (num < 600)
-                txtNum.Text = (num + 1).ToString();
-        }
-
-        private void NumDown_Click(object sender, RoutedEventArgs e)
-        {
-            if (num > 1)
-                txtNum.Text = (num - 1).ToString();
-        }
-        #endregion
-
-        #region keyCheck
-        [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(System.Windows.Forms.Keys key);
-        public static bool IsKeyDown(System.Windows.Forms.Keys key)
-        {
-            return (GetAsyncKeyState(key) & 0x8000) == 0x8000 ? true : false;
-        }
-        public static bool IsCtrlDown()
-        {
-            return IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey) ? true : false;
-        }
-        public static bool IsShiftDown()
-        {
-            return IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey) ? true : false;
-        }
-        #endregion
-
         /// <summary>
         /// 预览图片
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         void Img_Click(object sender, EventArgs e)
         {
             int index = (int)sender;
@@ -2025,49 +1945,79 @@ namespace MoeLoaderDelta
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL))
+                IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
+                string LoginURL = site.LoginURL, helpUrl = site.LoginHelpUrl;
+
+                if (!string.IsNullOrWhiteSpace(LoginURL))
                 {
-                    int LoginState = SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt;
-                    string LoginURL = SiteManager.Instance.Sites[comboBoxIndex].LoginURL;
+                    //显示登录教程提示
+                    if (!string.IsNullOrWhiteSpace(helpUrl))
+                    {
+                        MessageBoxResult result = MessageBox.Show("需要查看登录教程吗？", $"登录{site.ShortName}",
+                           MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(helpUrl);
+                        }
+                        else if (result == MessageBoxResult.Cancel) { return; }
+                    }
+
+                    //登录信息输入
+                    SingleTextInputWnd inputWnd;
+                    string inputTitle = $"登录{site.ShortName}";
                     if (LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
                     {
-                        //输入账号
-                        string inputTitle = $"填写 {SiteManager.Instance.Sites[comboBoxIndex].ShortName} 登录信息";
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入登录账号");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.User)) { return; }
 
-                        string siteuser = Interaction.InputBox("登录账号：", inputTitle, string.Empty);
-                        if (string.IsNullOrWhiteSpace(siteuser))
-                        {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
-                            return;
-                        }
-
-                        string sitepwd = Interaction.InputBox("登录密码：", inputTitle, string.Empty);
-                        if (sitepwd.Length < 1)
-                        {
-                            SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = LoginState;
-                            return;
-                        }
-
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginUser = siteuser;
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginPwd = sitepwd;
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 2;
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入登录密码");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.Pwd)) { loginSiteArgs.User = null; ItmLoginSite_Click(sender, e); }
+                        SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
-                    else if (LoginURL == SiteManager.SiteLoginType.Custom.ToSafeString())
+                    else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
                     {
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginCall(WebProxy);
-                    }
-                    else
-                    {
-                        //IE登录
-                        SiteManager.Instance.Sites[comboBoxIndex].LoginSite = true;
-                        System.Diagnostics.Process.Start("iexplore.exe", SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie");
+                        inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
+                        inputWnd.ShowDialog();
+                        if (string.IsNullOrWhiteSpace(loginSiteArgs.Cookie)) { return; }
+                        SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
                 }
             }
-            catch
+            catch { }
+        }
+
+        /// <summary>
+        /// 登录站点输入完成事件
+        /// </summary>
+        private void LoginInputEvent(object sender, SingleTextInputEventArgs e)
+        {
+            string LoginURL = SiteManager.Instance.Sites[comboBoxIndex].LoginURL;
+
+            if (LoginURL == SiteManager.SiteLoginType.FillIn.ToSafeString())
             {
-                SiteManager.Instance.Sites[comboBoxIndex].LoginSiteInt = 0;
-                SiteManager.Instance.Sites[comboBoxIndex].LoginSite = false;
+                if (string.IsNullOrWhiteSpace(loginSiteArgs.User))
+                {
+                    string siteuser = e.ToStringArray()[0];
+                    if (string.IsNullOrWhiteSpace(siteuser)) { siteuser = string.Empty; }
+                    loginSiteArgs.User = siteuser;
+                }
+                else
+                {
+                    string sitepwd = e.ToStringArray()[0];
+                    if (string.IsNullOrWhiteSpace(sitepwd)) { sitepwd = string.Empty; }
+                    loginSiteArgs.Pwd = sitepwd;
+                }
+            }
+            else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
+            {
+                string cookie = e.ToStringArray()[0];
+                if (string.IsNullOrWhiteSpace(cookie)) { cookie = string.Empty; }
+                loginSiteArgs.Cookie = cookie;
             }
         }
 
@@ -2102,7 +2052,7 @@ namespace MoeLoaderDelta
             {
                 if (selected.Count == 0)
                 {
-                    MessageBox.Show(this, "未选择图片", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Toast.Show("图片都还没选啊？", MsgType.Warning);
                     return;
                 }
 
@@ -2158,7 +2108,7 @@ namespace MoeLoaderDelta
                                     + "|" + selectimg.Id
                                     + "|" + (selectimg.NoVerify ? 'v' : 'x')
                                     + "|" + SearchWordPu
-                                    + "\r\n";
+                                    + Environment.NewLine;
                                 success++;
                             }
                         }
@@ -2166,13 +2116,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MessageBox.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中\r\n", ProgramName,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    Toast.Show($"成功保存 {success} 个地址{Environment.NewLine}{repeat} 个地址已在列表中", MsgType.Success);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show(this, "保存失败", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                Toast.Show($"保存失败{Environment.NewLine}{ex.Message}", MsgType.Error);
             }
         }
 
@@ -2230,7 +2179,8 @@ namespace MoeLoaderDelta
         {
             if (!changed)
             {
-                if (!(itmThumbSize.Template.FindName("sliThumbSize", itmThumbSize) is Slider slider)) { return; }
+                if (!(itmThumbSize.Template.FindName("sliThumbSize", itmThumbSize) is Slider slider))
+                { return; }
                 slider.Value = thumbSize;
                 return;
             }
@@ -2416,14 +2366,21 @@ namespace MoeLoaderDelta
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
                         urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify));
                     }
-                    ((ImgControl)imgPanel.Children[i]).SetChecked(false);
+                    if (ClearDownloadSelected)
+                    { ((ImgControl)imgPanel.Children[i]).SetChecked(false); }
                 }
                 downloadC.AddDownload(urls);
             }
             ButtonMainDL.IsEnabled = true;
             //重置重试次数
             downloadC.ResetRetryCount();
-            Control_Toast.Show($"选择的图片已添加到下载列表 →", Toast.MsgType.Success);
+            if (AutoOpenDownloadPanl && !toggleDownload.IsChecked.Value)
+            {
+                toggleDownload.IsChecked = true;
+                ToggleDownload_Click(null, null);
+            }
+            else
+            { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
         /// <summary>
@@ -2631,23 +2588,6 @@ namespace MoeLoaderDelta
             }
         }
 
-        internal static System.Net.IWebProxy WebProxy
-        {
-            get
-            {
-                if (ProxyType == ProxyType.Custom)
-                {
-                    if (Proxy.Length > 0)
-                        return new System.Net.WebProxy(Proxy, true);
-                }
-                else if (ProxyType == ProxyType.None)
-                {
-                    return null;
-                }
-                return System.Net.WebRequest.DefaultWebProxy;
-            }
-        }
-
         private void ItmxExplicit_Click(object sender, RoutedEventArgs e)
         {
             if (!itmxExplicit.IsChecked)
@@ -2658,16 +2598,6 @@ namespace MoeLoaderDelta
                     itmxExplicit.IsChecked = true;
                 }
             }
-        }
-
-        private void Window_MouseDown_1(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                DragMove();
-                ClickMaxButton = e.ClickCount < 2;
-            }
-            catch { }
         }
 
         private void Min_Click(object sender, RoutedEventArgs e)
@@ -2682,7 +2612,6 @@ namespace MoeLoaderDelta
             if (WindowState == WindowState.Normal)
             {
                 WindowState = WindowState.Maximized;
-                ClickMaxButton = true;
             }
             else
             {
@@ -2693,22 +2622,6 @@ namespace MoeLoaderDelta
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Close();
-        }
-
-        /// <summary>
-        /// 最大化时拖动还原窗口
-        /// </summary>
-        private void Window_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed && !ClickMaxButton && WindowState == WindowState.Maximized)
-            {
-                Max_Click(null, null);
-                GlassHelper.POINT mousep = new GlassHelper.POINT();
-                GlassHelper.GetCursorPos(out mousep);
-                Top = mousep.y - 50;
-                Left = mousep.x - Width / 2;
-                Window_MouseDown_1(null, null);
-            }
         }
 
         private void Window_StateChanged_1(object sender, EventArgs e)
@@ -2757,6 +2670,197 @@ namespace MoeLoaderDelta
 
             GlassHelper.EnableBlurBehindWindow(containerB, this);
         }
+
+        #region Window Related
+        /// <summary>
+        /// 窗口鼠标双击
+        /// </summary>
+        private void Window_MouseDoubleClick_1(object sender, MouseButtonEventArgs e)
+        {
+            //maxmize
+            if (e.OriginalSource is Grid && e.GetPosition(this).Y < bdDecorate.ActualHeight)
+            {
+                Max_Click(null, null);
+            }
+        }
+
+        /// <summary>
+        /// 窗口资源初始化
+        /// </summary>
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            Hwnd = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(Hwnd).AddHook(new HwndSourceHook(WndProc));
+        }
+
+        /// <summary>
+        /// 按键监听事件
+        /// </summary>
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == 0x0312)
+            {
+                // 老板键
+                if (wParam.ToInt32() == (int)bossKey)
+                {
+                    Visibility = Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+                }
+            }
+            else if (msg == 0x0024)
+            {
+                WmGetMinMaxInfo(hwnd, lParam);
+                handled = true;
+            }
+            else if (msg == 0x0112)
+            {
+                //WM_SYSCOMMAND   0x0112
+                if (wParam.ToInt32() == 0xF020)
+                {
+                    //SC_MINIMIZE  0xF020
+                    //WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
+                    //GWL_STYLE -16
+                    int nStyle = GlassHelper.GetWindowLong(hwnd, -16);
+                    nStyle |= 0x00C00000;
+                    //WS_CAPTION 0x00C00000L
+                    GlassHelper.SetWindowLong(hwnd, -16, nStyle);
+                    //isStyleNone = false;
+
+                    WindowState = WindowState.Minimized;
+                    handled = true;
+                }
+            }
+
+            return wParam;
+        }
+
+        private void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
+        {
+            GlassHelper.MINMAXINFO mmi = (GlassHelper.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(GlassHelper.MINMAXINFO));
+
+            int MONITOR_DEFAULTTONEAREST = 0x00000002;
+            IntPtr monitor = GlassHelper.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+            if (monitor != IntPtr.Zero)
+            {
+                GlassHelper.MONITORINFO monitorInfo = new GlassHelper.MONITORINFO();
+                GlassHelper.GetMonitorInfo(monitor, monitorInfo);
+                GlassHelper.RECT rcWorkArea = monitorInfo.rcWork;
+                GlassHelper.RECT rcMonitorArea = monitorInfo.rcMonitor;
+                mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 6;
+                mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 6;
+                mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 18;
+                mmi.ptMaxSize.y = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 13;
+                //mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left) - 12;
+                //mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top) - 16;
+                //int maxHeight = Math.Abs(rcWorkArea.bottom - rcWorkArea.top) + 43;
+                //mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left) + 27;
+                //mmi.ptMaxSize.y = maxHeight;
+                mmi.ptMinTrackSize.x = (int)MinWidth;
+                mmi.ptMinTrackSize.y = (int)MinHeight;
+            }
+
+            Marshal.StructureToPtr(mmi, lParam, true);
+        }
+
+        /// <summary>
+        /// 限制页码设置只能输入数字的一种方法
+        /// </summary>
+        private void TxtPage_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 || e.Key >= Key.D0 && e.Key <= Key.D9 || e.Key == Key.Back
+                || e.Key == Key.Delete || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.LeftShift || e.Key == Key.Left
+                || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TxtNum_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt.Text.Length == 0) return;
+            try
+            {
+                num = int.Parse(txtNum.Text);
+                page = int.Parse(txtPage.Text);
+
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+            catch (NullReferenceException) { }
+            catch (FormatException)
+            {
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+        }
+
+        private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            try
+            {
+                num = int.Parse(txtNum.Text);
+                page = int.Parse(txtPage.Text);
+
+                num = num > 0 ? (num > 600 ? 600 : num) : 1;
+                page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
+
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+            catch (NullReferenceException) { }
+            catch (FormatException)
+            {
+                txtNum.Text = num.ToString();
+                txtPage.Text = page.ToString();
+            }
+        }
+
+        private void PageUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (page < 99999)
+                txtPage.Text = (page + 1).ToString();
+        }
+
+        private void PageDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (page > 1)
+                txtPage.Text = (page - 1).ToString();
+        }
+
+        private void NumUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (num < 600)
+                txtNum.Text = (num + 1).ToString();
+        }
+
+        private void NumDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (num > 1)
+                txtNum.Text = (num - 1).ToString();
+        }
+        #endregion
+
+        #region keyCheck
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(System.Windows.Forms.Keys key);
+        public static bool IsKeyDown(System.Windows.Forms.Keys key)
+        {
+            return (GetAsyncKeyState(key) & 0x8000) == 0x8000 ? true : false;
+        }
+        public static bool IsCtrlDown()
+        {
+            return IsKeyDown(System.Windows.Forms.Keys.LControlKey) || IsKeyDown(System.Windows.Forms.Keys.RControlKey) ? true : false;
+        }
+        public static bool IsShiftDown()
+        {
+            return IsKeyDown(System.Windows.Forms.Keys.LShiftKey) || IsKeyDown(System.Windows.Forms.Keys.RShiftKey) ? true : false;
+        }
+        #endregion
+
         /// <summary>
         /// 删除临时缓存目录
         /// </summary>
@@ -2779,17 +2883,15 @@ namespace MoeLoaderDelta
 
             if (downloadC.IsWorking)
             {
-                CloseMsg = "还有正在下载的图片，确定要关闭程序吗？未下载完成的图片不会保存";
-
+                CloseMsg = "还有正在下载的图片，确定要结束吗？未下载完成的图片不会保存";
             }
             else if (downloadC.NumFail > 0)
             {
-                CloseMsg = "还有下载失败的图片，确定要关闭程序吗？未下载完成的图片不会保存";
+                CloseMsg = "还有下载失败的图片，确定要结束吗？未下载完成的图片不会保存";
             }
 
             if (!string.IsNullOrWhiteSpace(CloseMsg)
-                && MessageBox.Show(this, CloseMsg, ProgramName,
-                        MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel)
+                && MessageBox.Show(this, CloseMsg, ProgramName, MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel)
             {
                 e.Cancel = true;
                 return;
@@ -2798,7 +2900,6 @@ namespace MoeLoaderDelta
             if (previewFrm != null && previewFrm.IsLoaded)
             {
                 previewFrm.Close();
-                //previewFrm = null;
             }
             //prevent from saving invalid window size
             WindowState = WindowState.Normal;
@@ -2826,20 +2927,17 @@ namespace MoeLoaderDelta
             {
                 if (!IsCtrlDown())
                 {
-                    string words = string.Empty;
-                    foreach (string word in searchControl.UsedItems)
-                    {
-                        words += word + "|";
-                    }
+                    StringBuilder words = new StringBuilder();
+                    searchControl.UsedItems.ForEach(w => words.Append($"{w}|"));
 
                     const string qm = ";";
-                    string text = downloadC.NumOnce + "\r\n"
+                    string text = downloadC.NumOnce + Environment.NewLine
                         + (DownloadControl.SaveLocation == ProgramRunPath
-                        ? "." : DownloadControl.SaveLocation) + "\r\n" + addressType + qm
+                        ? "." : DownloadControl.SaveLocation) + Environment.NewLine + addressType + qm
                         + (downloadC.IsSaSave ? (downloadC.IsSscSave ? "2" : "1") : (downloadC.IsSscSave ? "3" : "0")) + qm
                         + numOfLoading + qm
                         + (itmMaskViewed.IsChecked ? "1" : "0") + qm
-                        + words + qm
+                        + words.ToSafeString() + qm
                         + Proxy + qm
                         + BossKey + qm
                         + thumbSize + qm
@@ -2854,28 +2952,50 @@ namespace MoeLoaderDelta
                         + bgSt + qm
                         + bgHe + qm
                         + bgVe + qm
-                        + bgOp + "\r\n";
+                        + bgOp + qm
+                        + scrList.SpeedFactor + qm
+                        + (int)DownPanlModeValue + qm
+                        + (AutoOpenDownloadPanl ? "1" : "0") + qm
+                        + (ClearDownloadSelected ? "1" : "0") + Environment.NewLine;
+
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
-                        text += id.Key + ":" + id.Value + "\r\n";
+                        text += id.Key + ":" + id.Value + Environment.NewLine;
                     }
                     File.WriteAllText($"{ProgramRunPath}\\Moe_config.ini", text);
-                    DelDownloadResidual(DownloadControl.SaveLocation);
+                    DeleteTheSpecifiedFile(DownloadControl.SaveLocation, null, ".moe");
                     SaveFavorite();
+                    SaveSitesConfig();
                 }
             }
             catch { }
 
+            Toast.Dispose();
             GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
             Environment.Exit(0);
         }
 
         /// <summary>
-        /// 删除下载残留文件
+        /// 保存所有站点配置
         /// </summary>
-        private void DelDownloadResidual(string dirPath)
+        private void SaveSitesConfig()
         {
+            SiteManager.Instance.Sites.ForEach((site) =>
+            {
+                SiteManager.SiteConfig(site.ShortName, null, SiteManager.SiteConfigType.Save);
+            });
+        }
+
+        /// <summary>
+        /// 删除指定文件 含子目录 目录文件小于1000个
+        /// </summary>
+        private void DeleteTheSpecifiedFile(string dirPath, string fileName = null, string fileExt = null)
+        {
+            if (string.IsNullOrWhiteSpace(dirPath)
+                || string.IsNullOrWhiteSpace(fileName) && string.IsNullOrWhiteSpace(fileExt))
+            { return; }
+
             DirectoryInfo d = new DirectoryInfo(dirPath);
             FileSystemInfo[] fsInfos = d.GetFileSystemInfos();
             if (fsInfos.Length > 1000) { return; }
@@ -2885,10 +3005,11 @@ namespace MoeLoaderDelta
                 //判断是否为文件夹　　
                 if (fsInfo is DirectoryInfo)
                 {
-                    DelDownloadResidual(fsInfo.FullName);
+                    DeleteTheSpecifiedFile(fsInfo.FullName, fileExt);
                     try { Directory.Delete(fsInfo.FullName, false); } catch { }
                 }
-                else if (System.IO.Path.GetExtension(fsInfo.FullName) == ".moe")
+                else if ((!string.IsNullOrWhiteSpace(fileName) && fsInfo.FullName == fileName)
+                    || (!string.IsNullOrWhiteSpace(fileExt) && System.IO.Path.GetExtension(fsInfo.FullName) == fileExt))
                 {
                     fsInfo.Delete();
                 }
@@ -2903,92 +3024,109 @@ namespace MoeLoaderDelta
             {
                 if (e.Data.GetData(DataFormats.FileDrop).GetType().ToSafeString() != "System.String[]") { return; }
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                string file = files.FirstOrDefault(f =>
-                {
-                    string ext = System.IO.Path.GetExtension(f);
-                    switch (ext)
-                    {
-                        case ".jpg":
-                        case ".png":
-                        case ".gif":
-                            return true;
-                    }
-                    return false;
-                });
+                string ext = string.Empty, file = files.FirstOrDefault(f =>
+                  {
+                      ext = System.IO.Path.GetExtension(f);
+                      switch (ext)
+                      {
+                          case ".jpg":
+                          case ".png":
+                          case ".gif":
+                              return true;
+                      }
+                      return false;
+                  });
 
                 if (string.IsNullOrWhiteSpace(file)) { return; }
-                File.Copy(file, $"{ProgramRunPath}\\bg.png", true);
+                try
+                {
+                    File.Delete($"{ ProgramRunPath}\\bg.jpg");
+                    File.Delete($"{ ProgramRunPath}\\bg.png");
+                    File.Delete($"{ ProgramRunPath}\\bg.gif");
+                }
+                catch { }
+                File.Copy(file, $"{ProgramRunPath}\\bg{ext}", true);
                 ChangeBg(bgOp, true);
             }
         }
 
         #region ====== 缩略图列表拖选 ======
         /// <summary>
-        /// 缩略图列表鼠标左键按下
+        /// 缩略图面板按下任意键
         /// </summary>
-        private void ImgList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void ImgList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            //记录拖选点
-            if (imgPanel.Children.Count > 0)
+            switch (e.ChangedButton)
             {
-                imgListPanel.CaptureMouse();
-                canDrag = e.Handled = true;
-                dragIsCtrl = IsCtrlDown();
-                dragStartPoint = e.GetPosition(imgListPanel);
-            }
-        }
-
-        /// <summary>
-        /// 缩略图列表鼠标左键放开
-        /// </summary>
-        private void ImgList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //选中拖选框和缩略图交叉区域中的缩略图并删除拖选框
-            if (dragSelectBorder != null && dragSelectBorder.Width > 10 && dragSelectBorder.Height > 10 && imgPanel.Children.Count > 0)
-            {
-                e.Handled = true;
-                //循环选择必须在异步过程中、否则不能选择最后一个
-                UIElementCollection imgcs = imgPanel.Children;
-                Point dragEndPoint = e.GetPosition(imgListPanel);
-                Rect dragRect = new Rect(dragStartPoint, dragEndPoint);
-
-                foreach (ImgControl imgc in imgcs)
-                {
-                    Point imgcPoint = imgc.TranslatePoint(new Point(), imgListPanel);
-                    Rect imgcRect = new Rect(imgcPoint.X, imgcPoint.Y, imgc.Width, imgc.Height);
-
-                    async void DelayCalculation()
+                //按下左键
+                case MouseButton.Left:
+                    //拖选初始化
+                    #region 排除点击区域
+                    //上页按钮
+                    Point mousePoint = e.GetPosition(imgListBg);
+                    Point uiPoint = btnFav.TranslatePoint(new Point(), imgListBg);
+                    Rect uiRect = new Rect(uiPoint.X, uiPoint.Y, btnFav.Width, btnFav.Height);
+                    if (uiRect.Contains(mousePoint)) { break; }
+                    //下页按钮
+                    uiPoint = btnNext.TranslatePoint(new Point(), imgListBg);
+                    uiRect = new Rect(uiPoint.X, uiPoint.Y, btnNext.Width, btnNext.Height);
+                    if (uiRect.Contains(mousePoint)) { break; }
+                    //滚动条
+                    if (mousePoint.X > scrList.ActualWidth - imgPanel.Margin.Right + 10) { break; }
+                    #endregion
+                    if (imgPanel.Children.Count > 0)
                     {
-                        await Task.Delay(1);
-                        if (dragRect.IntersectsWith(imgcRect))
-                        {
-                            imgc.SetChecked(dragIsCtrl ? !imgc.IsChecked : true);
-                        }
+                        canDrag = true;
+                        dragIsCtrl = IsCtrlDown();
+                        dragStartPoint = e.GetPosition(imgListPanel);
                     }
-                    DelayCalculation();
-                }
+                    break;
+
+                //按下其它键
+                default:
+                    if (canDrag) { CancelDrawBox(); }
+                    break;
             }
-            CancelDrawBox();
-            imgListPanel.ReleaseMouseCapture();
         }
 
         /// <summary>
-        /// 缩略图列表鼠标移动
+        /// 缩略图面板鼠标移动
         /// </summary>
         private void ImgList_MouseMove(object sender, MouseEventArgs e)
         {
-            if (canDrag && imgPanel.Children.Count > 0)
+            if (!canDrag || imgPanel.Children.Count < 1) { return; }
+
+            const int offset = 10;
+            Point dragEndPoint = e.GetPosition(imgListPanel);
+            double dragWidth = Math.Abs(dragEndPoint.X - dragStartPoint.X),
+                         dragHeight = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+
+            // 拖动距离在 X或Y ±10 进行框选
+            if (dragWidth < -offset || dragWidth > offset || dragHeight < -offset || dragHeight > offset)
             {
-                Point dragEndPoint = e.GetPosition(imgListPanel);
-                double dragWidth = Math.Abs(dragEndPoint.X - dragStartPoint.X),
-                    dragHeight = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
-                if (dragWidth < -10 || dragWidth > 10 || dragHeight < -10 || dragHeight > 10)
-                {
-                    //如果没按住Ctrl则取消全部缩略图选中
-                    if (!dragIsCtrl && !dragIsClear) { ClearDrawSelected(); }
-                    //画拖选框
-                    DrawMultiselectBox(dragStartPoint, dragEndPoint);
-                }
+                //全局定位鼠标
+                if (!catchMouse) { catchMouse = true; imgListPanel.CaptureMouse(); }
+                //如果没按住Ctrl则取消全部缩略图选中
+                if (!dragIsCtrl && !dragIsClear) { ClearDrawSelected(); }
+                //画拖选框
+                DrawMultiselectBox(dragStartPoint, dragEndPoint);
+                //自动滚动
+                DragMoveScroll(e);
+            }
+        }
+
+        /// <summary>
+        /// 缩略图面板放开任意键
+        /// </summary>
+        private void ImgList_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            switch (e.ChangedButton)
+            {
+                //放开左键
+                case MouseButton.Left:
+                    //记录拖选点
+                    DragSelected(e);
+                    break;
             }
         }
 
@@ -2997,56 +3135,86 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="dragStartPoint">起点</param>
         /// <param name="dragEndPoint">终点</param>
-        private void DrawMultiselectBox(Point dragStartPoint, Point dragEndPoint)
+        private async void DrawMultiselectBox(Point dragStartPoint, Point dragEndPoint)
         {
-            if (dragSelectBorder == null)
+            await Dispatcher.InvokeAsync(() =>
             {
-                dragSelectBorder = new Border
+                //创建Border框
+                if (dragSelectBorder == null)
                 {
-                    VerticalAlignment = VerticalAlignment.Top,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    Background = new SolidColorBrush(Color.FromArgb(68, 52, 163, 224)),
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(52, 163, 224))
-                };
-                dragSelectBorder.MouseLeftButtonUp += new MouseButtonEventHandler(ImgList_MouseLeftButtonUp);
-                dragSelectBorder.MouseMove += new MouseEventHandler(ImgList_MouseMove);
-                dragSelectBorder.PreviewMouseDown += new MouseButtonEventHandler(ImgList_PreviewMouseDown);
-                Panel.SetZIndex(dragSelectBorder, 200);
-                imgListPanel.Children.Add(dragSelectBorder);
-            }
-            dragSelectBorder.Width = Math.Abs(dragEndPoint.X - dragStartPoint.X);
-            dragSelectBorder.Height = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+                    dragSelectBorder = new Border
+                    {
+                        VerticalAlignment = VerticalAlignment.Top,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        Background = new SolidColorBrush(Color.FromArgb(68, 52, 163, 224)),
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = new SolidColorBrush(Color.FromRgb(52, 163, 224))
+                    };
+                    dragSelectBorder.PreviewMouseUp += new MouseButtonEventHandler(ImgList_PreviewMouseUp);
+                    dragSelectBorder.MouseMove += new MouseEventHandler(ImgList_MouseMove);
+                    dragSelectBorder.PreviewMouseDown += new MouseButtonEventHandler(ImgList_PreviewMouseDown);
+                    Panel.SetZIndex(dragSelectBorder, 200);
+                }
+                //插入到缩略图面板
+                if (!imgListPanel.Children.Contains(dragSelectBorder)) { imgListPanel.Children.Add(dragSelectBorder); }
 
-            double dragLeft = 0, dragTop = 0;
-            dragLeft = dragEndPoint.X - dragStartPoint.X >= 0 ? dragStartPoint.X : dragEndPoint.X;
-            dragTop = dragEndPoint.Y - dragStartPoint.Y >= 0 ? dragStartPoint.Y : dragEndPoint.Y;
-            dragSelectBorder.Margin = new Thickness(dragLeft, dragTop, dragSelectBorder.Margin.Right, dragSelectBorder.Margin.Bottom);
+                dragSelectBorder.Width = Math.Abs(dragEndPoint.X - dragStartPoint.X);
+                dragSelectBorder.Height = Math.Abs(dragEndPoint.Y - dragStartPoint.Y);
+
+                double dragLeft = 0, dragTop = 0;
+                dragLeft = dragEndPoint.X - dragStartPoint.X >= 0 ? dragStartPoint.X : dragEndPoint.X;
+                dragTop = dragEndPoint.Y - dragStartPoint.Y >= 0 ? dragStartPoint.Y : dragEndPoint.Y;
+                dragSelectBorder.Margin = new Thickness(dragLeft, dragTop, dragSelectBorder.Margin.Right, dragSelectBorder.Margin.Bottom);
+            });
         }
 
         /// <summary>
-        /// 缩略图列表按下任意键
+        /// 选中拖选框和缩略图交叉区域中的缩略图并删除拖选框
         /// </summary>
-        private void ImgList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private async void DragSelected(MouseButtonEventArgs e)
         {
-            //不是左键取消拖选框
-            if (canDrag && e.ChangedButton != MouseButton.Left) { CancelDrawBox(); }
+            if (canDrag && dragSelectBorder != null && (dragSelectBorder.Width > 10 || dragSelectBorder.Height > 10) && imgPanel.Children.Count > 0)
+            {
+                e.Handled = true;
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    UIElementCollection imgcs = imgPanel.Children;
+                    Point dragEndPoint = e.GetPosition(imgListPanel);
+                    Rect dragRect = new Rect(dragStartPoint, dragEndPoint);
+
+                    foreach (ImgControl imgc in imgcs)
+                    {
+                        Point imgcPoint = imgc.TranslatePoint(new Point(), imgListPanel);
+                        Rect imgcRect = new Rect(imgcPoint.X, imgcPoint.Y, imgc.Width, imgc.Height);
+
+                        if (dragRect.IntersectsWith(imgcRect))
+                        {
+                            imgc.SetChecked(dragIsCtrl ? !imgc.IsChecked : true);
+                        }
+                    }
+                });
+            }
+            CancelDrawBox();
+            if (catchMouse) { catchMouse = false; imgListPanel.ReleaseMouseCapture(); }
         }
 
         /// <summary>
         /// 清空多选
         /// </summary>
-        private void ClearDrawSelected()
+        private async void ClearDrawSelected()
         {
-            dragIsClear = true;
-            UIElementCollection imgcs = imgPanel.Children;
-            foreach (ImgControl imgc in imgcs)
+            await Dispatcher.InvokeAsync(() =>
             {
-                if (imgc.IsChecked)
+                dragIsClear = true;
+                UIElementCollection imgcs = imgPanel.Children;
+                foreach (ImgControl imgc in imgcs)
                 {
-                    imgc.SetChecked(false);
+                    if (imgc.IsChecked)
+                    {
+                        imgc.SetChecked(false);
+                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -3054,16 +3222,40 @@ namespace MoeLoaderDelta
         /// </summary>
         private void CancelDrawBox()
         {
-            if (dragSelectBorder != null)
+            if (imgListPanel.Children.Contains(dragSelectBorder))
             {
+                dragSelectBorder.Width = dragSelectBorder.Height = 0;
                 imgListPanel.Children.Remove(dragSelectBorder);
-                dragSelectBorder = null;
             }
             canDrag = dragIsClear = false;
         }
+
+        /// <summary>
+        /// 拖选时判断鼠标位置自动滚动滚动条
+        /// </summary>
+        private async void DragMoveScroll(MouseEventArgs e)
+        {
+            await Dispatcher.InvokeAsync(() =>
+            {
+                const int offset = 10;
+                double maxY = Math.Abs(imgListBg.ActualHeight - offset);
+                Point mousePoint = e.GetPosition(imgListBg);
+
+                if (mousePoint.Y < offset)
+                {
+                    scrList.MoveScroll(Math.Abs(mousePoint.Y - offset) / scrList.SpeedFactor);
+                }
+                else if (mousePoint.Y > maxY)
+                {
+                    double test = (maxY - mousePoint.Y - offset) / scrList.SpeedFactor;
+                    scrList.MoveScroll(test);
+                }
+            });
+        }
+
         #endregion ============
 
-        #region 线程延迟执行翻页
+        #region 延迟执行翻页
         /// <summary>
         /// 线程延迟执行翻页
         /// </summary>

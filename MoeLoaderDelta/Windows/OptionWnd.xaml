@@ -5,8 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Window"
-    Width="400"
-    Height="522"
+    Width="430"
+    Height="628"
     Closed="Window_Closed"
     Icon="../m.ico"
     ResizeMode="NoResize"
@@ -17,7 +17,7 @@
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="165" />
-            <!--<RowDefinition Height="70"/>-->
+            <RowDefinition Height="110" />
             <RowDefinition Height="185" />
             <RowDefinition Height="90" />
             <RowDefinition Height="40" />
@@ -28,8 +28,6 @@
             Margin="5,8,5,2"
             Header="显示设置">
             <Grid>
-                <!--<CheckBox x:Name="chkAero" HorizontalAlignment="Left" Content="启用Aero效果 (重启程序生效)" IsEnabled="False" Margin="10,13,0,0" VerticalAlignment="Top"/>-->
-                <!--<CheckBox x:Name="chkPos" HorizontalAlignment="Left" Content="关闭时记住窗口大小" Margin="10,39,0,0" VerticalAlignment="Top"/>-->
                 <TextBlock
                     x:Name="textBlock"
                     Margin="10,13,0,0"
@@ -141,13 +139,14 @@
                     <ComboBoxItem>填充</ComboBoxItem>
                 </ComboBox>
                 <TextBlock
+                    x:Name="TextBlockBgHelp"
                     Margin="0,76,4,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Cursor="Help"
                     FontSize="14"
                     FontWeight="Bold"
-                    MouseDown="TextBlock_MouseDown_1"
+                    MouseDown="TextBlockHelp_MouseDown"
                     Text="?"
                     TextDecorations="Underline" />
                 <TextBlock
@@ -167,54 +166,120 @@
             </Grid>
         </GroupBox>
         <GroupBox
-            Grid.Row="2"
+            Grid.Row="1"
             Margin="5,2"
-            Header="代理设置">
+            Header="偏好设置">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width=".5*" />
-                    <ColumnDefinition Width="1*" />
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
-                <RadioButton
-                    x:Name="rtNoProxy"
-                    Margin="10,11,0,0"
-                    Checked="ChkProxy_Click"
-                    Content="不使用代理"
-                    IsChecked="True" />
-                <RadioButton
-                    x:Name="rtSystem"
-                    Grid.Column="1"
-                    Margin="0,11,0,0"
-                    Checked="ChkProxy_Click"
-                    Content="使用IE代理" />
-                <RadioButton
-                    x:Name="rtCustom"
-                    Grid.Row="1"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="18" />
+                </Grid.ColumnDefinitions>
+                <CheckBox
+                    x:Name="ChkAutoOpenDownloadPanl"
                     Grid.ColumnSpan="2"
-                    Margin="10,5,0,0"
-                    Checked="ChkProxy_Click"
-                    Content="自定义" />
-                <TextBox
-                    x:Name="txtProxy"
-                    Grid.Row="1"
-                    Grid.ColumnSpan="2"
-                    Width="120"
-                    Height="20"
-                    Margin="80,5,20,0"
+                    Margin="10,2,0,0"
                     HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    IsEnabled="False"
-                    Text="127.0.0.1:1080"
-                    TextWrapping="NoWrap" />
+                    VerticalAlignment="Center"
+                    Content="下载时显示下载列表"
+                    ToolTip="添加下载时自动打开下载列表" />
+                <CheckBox
+                    x:Name="ChkClearDownloadSelected"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Margin="45,2,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Content="下载后清空选择"
+                    ToolTip="点击下载后自动取消已选择的缩略图" />
+
+                <TextBlock
+                    x:Name="TextBlockScrollSpeed"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="10,0,5,0"
+                    VerticalAlignment="Center"
+                    Text="缩略图滚动条速度" />
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Text="快" />
+                <Slider
+                    Name="SliderScrollSpeed"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="3"
+                    MaxHeight="16"
+                    Margin="16,0,3,0"
+                    FontSize="12"
+                    IsMoveToPointEnabled="True"
+                    Maximum="12"
+                    Minimum="1"
+                    Style="{StaticResource DoubleSliderStyle}" />
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="4"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Text="慢" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="10,0,5,0"
+                    VerticalAlignment="Center"
+                    Text="下载列表显示方式" />
+                <RadioButton
+                    x:Name="RBDownPanlModeML"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="0,0,5,0"
+                    VerticalAlignment="Center"
+                    Content="推动占位"
+                    GroupName="DownPanlMode" />
+                <RadioButton
+                    x:Name="RBDownPanlModeMLDA"
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Content="覆盖自动"
+                    GroupName="DownPanlMode" />
+                <RadioButton
+                    x:Name="RBDownPanlModeMLDB"
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Content="覆盖手动"
+                    GroupName="DownPanlMode"
+                    IsChecked="True" />
+                <TextBlock
+                    x:Name="TextBlockHelpDownPanlMode"
+                    Grid.Row="2"
+                    Grid.Column="4"
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Cursor="Help"
+                    FontWeight="Bold"
+                    MouseDown="TextBlockHelp_MouseDown"
+                    Text="?"
+                    TextDecorations="Underline" />
             </Grid>
         </GroupBox>
 
         <GroupBox
-            Grid.Row="1"
+            Grid.Row="2"
             Margin="5,2"
             Header="下载设置">
             <Grid>
@@ -311,7 +376,7 @@
                     Cursor="Help"
                     FontSize="14"
                     FontWeight="Bold"
-                    MouseDown="TextNameHelp_MouseDown"
+                    MouseDown="TextBlockHelp_MouseDown"
                     Text="?"
                     TextDecorations="Underline" />
                 <Button
@@ -372,6 +437,52 @@
                     ToolTip="插入 文件名裁剪符 格式" />
             </Grid>
         </GroupBox>
+        <GroupBox
+            Grid.Row="3"
+            Margin="5,2"
+            Header="代理设置">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width=".5*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <RadioButton
+                    x:Name="rtNoProxy"
+                    Margin="10,11,0,0"
+                    Checked="ChkProxy_Click"
+                    Content="不使用代理"
+                    IsChecked="True" />
+                <RadioButton
+                    x:Name="rtSystem"
+                    Grid.Column="1"
+                    Margin="0,11,0,0"
+                    Checked="ChkProxy_Click"
+                    Content="使用IE代理" />
+                <RadioButton
+                    x:Name="rtCustom"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Margin="10,5,0,0"
+                    Checked="ChkProxy_Click"
+                    Content="自定义" />
+                <TextBox
+                    x:Name="txtProxy"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Width="120"
+                    Height="20"
+                    Margin="80,5,20,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    IsEnabled="False"
+                    Text="127.0.0.1:1080"
+                    TextWrapping="NoWrap" />
+            </Grid>
+        </GroupBox>
         <TextBlock
             x:Name="txtUrl"
             Margin="0,0,6,0"
@@ -384,7 +495,7 @@
             Text="关于 MoeLoader Δ"
             TextDecorations="Underline" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
             Margin="0,0,96,6"
@@ -394,7 +505,7 @@
             Content="确定"
             IsDefault="True" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
             Margin="0,0,10,6"
@@ -404,7 +515,7 @@
             Content="取消"
             IsCancel="True" />
         <Button
-            Grid.Row="3"
+            Grid.Row="4"
             Width="75"
             Height="27"
             Margin="10,0,0,6"

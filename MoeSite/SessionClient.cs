@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.91
+ * version 1.93
  * by YIU
  * Create               20170106
- * Last Change     20200517
+ * Last Change     20200810
  */
 
 using System;
@@ -58,6 +58,8 @@ namespace MoeLoaderDelta
             request.Timeout = shc.Timeout;
             request.KeepAlive = shc.KeepAlive;
             request.UserAgent = shc.UserAgent;
+            request.PreAuthenticate = !string.IsNullOrWhiteSpace(shc.Get("Authorization"));
+            request.AuthenticationLevel = System.Net.Security.AuthenticationLevel.MutualAuthRequested;
             request.CookieContainer = string.IsNullOrWhiteSpace(shc.Get("Cookie")) ? CookieContainer : request.CookieContainer;
             request.AllowAutoRedirect = shc.AllowAutoRedirect;
             request.AutomaticDecompression = shc.AutomaticDecompression;
@@ -123,40 +125,33 @@ namespace MoeLoaderDelta
             string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse response = null;
-            try
-            {
-                SetHeader(request, url, proxy, shc);
 
-                response = (HttpWebResponse)request.GetResponse();
-                //更新Cookie
-                m_Cookie = request.CookieContainer ?? m_Cookie;
-                string sc = response.Headers["Set-Cookie"];
-                if (!string.IsNullOrWhiteSpace(sc))
-                {
-                    m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
-                }
-                Stream rspStream = response.GetResponseStream();
-                StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
-                ret = sr.ReadToEnd();
-                sr.Close();
-                rspStream.Close();
-            }
-            catch (Exception e)
+            SetHeader(request, url, proxy, shc);
+
+            response = (HttpWebResponse)request.GetResponse();
+            //更新Cookie
+            m_Cookie = request.CookieContainer ?? m_Cookie;
+            string sc = response.Headers["Set-Cookie"];
+            if (!string.IsNullOrWhiteSpace(sc))
             {
-                ret = e.Message;
+                m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
             }
-            finally
+            Stream rspStream = response.GetResponseStream();
+            StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
+            ret = sr.ReadToEnd();
+            sr.Close();
+            rspStream.Close();
+
+            if (response != null)
             {
-                if (response != null)
-                {
-                    response.Close();
-                }
-                if (request != null)
-                {
-                    request.Abort();
-                    request = null;
-                }
+                response.Close();
             }
+            if (request != null)
+            {
+                request.Abort();
+                request = null;
+            }
+
             return ret;
         }
 

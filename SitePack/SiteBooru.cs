@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
-using System.Windows.Forms;
 using System.Xml;
 
 namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 200524
+    /// Last 200811
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -28,26 +27,7 @@ namespace SitePack
         protected SessionHeadersCollection shc = new SessionHeadersCollection();
 
         private Dictionary<string, string> siteLoginUser = new Dictionary<string, string>();
-
-        private string siteINI;
-        private string SiteINI
-        {
-            get => siteINI; set => siteINI = string.Format($"{SiteManager.SitePacksPath}{{0}}.ini", value);
-        }
-        /// <summary>
-        /// 读写站点设置
-        /// </summary>
-        /// <param name="section">项名</param>
-        /// <param name="key">键名</param>
-        /// <param name="save">写配置</param>
-        /// <param name="value">写入值</param>
-        /// <returns></returns>
-        private string SiteConfig(string section, string key, bool save = false, string value = null)
-        {
-            return save
-                ? SiteManager.WritePrivateProfileString(section, key, value, SiteINI).ToSafeString()
-                : SiteManager.GetPrivateProfileString(section, key, SiteINI);
-        }
+        private Dictionary<string, string> siteLoginCookie = new Dictionary<string, string>();
 
         /// <summary>
         /// Booru Site
@@ -66,19 +46,16 @@ namespace SitePack
         {
             Url = url;
             this.siteName = siteName;
+            this.shortName = shortName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
-            SiteINI = this.shortName = shortName;
             this.referer = referer;
             this.needMinus = needMinus;
             this.srcType = srcType;
             this.loginUrl = loginUrl;
             SetHeaders(srcType);
-            if (string.IsNullOrWhiteSpace(SiteConfig("Login", "Cookie")))
-            {
-                SiteConfig("Login", "Cookie", true, string.Empty);
-            }
             siteLoginUser.Add(shortName, null);
+            siteLoginCookie.Add(shortName, null);
         }
 
         /// <summary>
@@ -98,15 +75,16 @@ namespace SitePack
         {
             Url = url;
             this.siteName = siteName;
+            this.shortName = shortName;
             this.siteUrl = siteUrl;
             this.tagUrl = tagUrl;
-            SiteINI = this.shortName = shortName;
             referer = shc.Referer;
             this.needMinus = needMinus;
             this.srcType = srcType;
             this.shc = shc;
             this.loginUrl = loginUrl;
             siteLoginUser.Add(shortName, null);
+            siteLoginCookie.Add(shortName, null);
         }
 
         public override string SiteUrl => siteUrl;
@@ -115,13 +93,18 @@ namespace SitePack
         public override string ShortType => shortType;
         public override string Referer => referer;
         public override string SubReferer => ShortName;
-        public override string LoginURL => SiteManager.SiteLoginType.Custom.ToSafeString();
-        public override bool LoginSite { get => IsLoginSite; set => IsLoginSite = value; }
+        public override string LoginURL => SiteManager.SiteLoginType.Cookie.ToSafeString();
+        public override bool LoginSiteIsLogged => IsLoginSite;
         public override string LoginUser => siteLoginUser[shortName] ?? base.LoginUser;
+        public override string LoginPwd { get => loginPwd; set => loginPwd = value; }
+        public override string LoginHelpUrl => "https://docs.qq.com/doc/DWWhUcHlzbE9aeXZE?pub=1";
 
         private static bool IsLoginSite, IsRunLogin;
-        private static string cookie = string.Empty;
+        private static string loginPwd = string.Empty;
 
+        /// <summary>
+        /// 设置访问Headers
+        /// </summary>
         private void SetHeaders(BooruProcessor.SourceType srcType)
         {
             shc.Referer = referer;
@@ -132,6 +115,9 @@ namespace SitePack
             SetHeaderType(srcType);
         }
 
+        /// <summary>
+        /// 设置访问Accept
+        /// </summary>
         private void SetHeaderType(BooruProcessor.SourceType srcType)
         {
             switch (srcType)
@@ -148,13 +134,21 @@ namespace SitePack
             }
         }
 
+        /// <summary>
+        /// 获取源码
+        /// </summary>
+        /// <param name="page">页数</param>
+        /// <param name="count">获取数</param>
+        /// <param name="keyWord">标签</param>
+        /// <param name="proxy">代理</param>
+        /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             #region Auto login
-            IsRunLogin = true;
-            LoginCall(proxy);
-            if (!string.IsNullOrWhiteSpace(cookie)) { shc.Set("Cookie", cookie); }
-            IsRunLogin = false;
+            if (!IsLoginSite)
+            {
+                LoginCall(new LoginSiteArgs() { Cookie = siteLoginCookie[shortName] });
+            }
             #endregion
 
             string url, pagestr;
@@ -196,12 +190,18 @@ namespace SitePack
             return Sweb.Get(url, proxy, shc);
         }
 
+        /// <summary>
+        /// 获取图片列表
+        /// </summary>
         public override List<Img> GetImages(string pageString, IWebProxy proxy)
         {
             BooruProcessor nowSession = new BooruProcessor(srcType);
             return nowSession.ProcessPage(siteUrl, shortName, Url, pageString);
         }
 
+        /// <summary>
+        /// 获取相关标签
+        /// </summary>
         public override List<TagItem> GetTags(string word, IWebProxy proxy)
         {
             List<TagItem> re = new List<TagItem>();
@@ -269,37 +269,35 @@ namespace SitePack
             return re;
         }
 
-        public override bool LoginCall(IWebProxy proxy)
+        /// <summary>
+        /// 调用登录
+        /// </summary>
+        public override void LoginCall(LoginSiteArgs loginArgs)
         {
-            if (!string.IsNullOrWhiteSpace(loginUrl))
-            {
-                if (IsRunLogin)
-                {
-                    if (!IsLoginSite) { CookieLogin(proxy, true); }
-                }
-                else
-                {
-                    CookieLogin(proxy, false, true);
-                }
-            }
-            else if (!IsRunLogin)
-            {
-                MessageBox.Show("暂不支持登录", SiteName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            return IsLoginSite;
+            if (string.IsNullOrWhiteSpace(loginUrl) || IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.Cookie)) { return; }
+            siteLoginCookie[shortName] = loginArgs.Cookie;
+            CookieLogin();
         }
 
         /// <summary>
         /// 用本地Cookie登录
         /// </summary>
-        /// <param name="callBack">判断是否回调</param>
-        /// <param name="call">以调用方式登录</param>
-        private bool CookieLogin(IWebProxy proxy, bool callBack = false, bool call = false)
+        private void CookieLogin()
         {
+            IsRunLogin = true;
             IsLoginSite = false;
 
-            bool result = IsLoginSite;
-            string tmp_cookie = SiteConfig("Login", "Cookie"), loggedFlags;
+            if (string.IsNullOrWhiteSpace(siteLoginCookie[shortName]))
+            {
+                siteLoginCookie[shortName] = SiteManager.SiteConfig(shortName, new SiteConfigArgs()
+                {
+                    Section = "Login",
+                    Key = "Cookie"
+                });
+            }
+
+            string tmp_cookie = siteLoginCookie[shortName], loggedFlags;
+            if (string.IsNullOrWhiteSpace(tmp_cookie)) { IsRunLogin = false; return; }
 
             switch (shortName)
             {
@@ -309,94 +307,69 @@ namespace SitePack
                     loggedFlags = string.Empty; break;
             }
 
-            if (string.IsNullOrWhiteSpace(tmp_cookie) || call)
-            {
-                if (!callBack || call)
-                {
-                    DialogResult mdr = MessageBox.Show("需要查看登录教程吗？", ShortName,
-                          MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                    if (mdr == DialogResult.Yes)
-                    {
-                        System.Diagnostics.Process.Start("https://docs.qq.com/doc/DWWhUcHlzbE9aeXZE?pub=1");
-                        return IsLoginSite;
-                    }
-                    else if (mdr == DialogResult.Cancel) { return IsLoginSite; }
-
-                    System.Diagnostics.Process.Start(siteINI);
-                    System.Diagnostics.Process.Start(loginUrl);
-
-                    if (MessageBox.Show("请把登录后的Cookie复制\r\n"
-                        + "粘贴到打开的记事本中Cookie=后面\r\n"
-                        + "然后保存并关闭记事本，再点击确定按钮",
-                        ShortName, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
-                    {
-                        //登录后回调一次
-                        CookieLogin(proxy, true);
-                    }
-                }
-                return IsLoginSite;
-            }
-
             try
             {
+                bool result = false;
                 string pageString = string.Empty,
                     oldAccept = shc.Accept,
                     oldContentType = shc.ContentType;
 
+                shc.Timeout = shc.Timeout * 2;
+                shc.Set("Cookie", tmp_cookie);
+                shc.Accept = SessionHeadersValue.AcceptDefault;
+                shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+                pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
+                shc.Accept = oldAccept;
+                shc.ContentType = oldContentType;
+                result = !string.IsNullOrWhiteSpace(pageString);
+                if (!result) { SiteManager.EchoErrLog(siteName, "登录失败 站点没有响应", true); }
+
                 if (!string.IsNullOrWhiteSpace(loggedFlags))
                 {
-                    shc.Timeout = shc.Timeout * 2;
-                    shc.Set("Cookie", tmp_cookie);
-                    shc.Accept = SessionHeadersValue.AcceptDefault;
-                    shc.ContentType = SessionHeadersValue.ContentTypeAuto;
-                    pageString = Sweb.Get(SiteUrl, proxy, shc);
-                    shc.Accept = oldAccept;
-                    shc.ContentType = oldContentType;
-                    result = !string.IsNullOrWhiteSpace(pageString);
-
-                    if (result)
+                    string[] LFlagsArray = loggedFlags.Split('|');
+                    foreach (string Flag in LFlagsArray)
                     {
-                        string[] LFlagsArray = loggedFlags.Split('|');
-                        foreach (string Flag in LFlagsArray)
-                        {
-                            result &= pageString.Contains(Flag);
-                        }
+                        result &= pageString.Contains(Flag);
                     }
                 }
-                else if (!string.IsNullOrWhiteSpace(tmp_cookie)) { result = true; }
 
                 if (result)
                 {
                     IsLoginSite = result;
-                    cookie = tmp_cookie;
-                    string loginUser = string.Empty;
+                    siteLoginUser[shortName] = LoginUser;
+                    siteLoginCookie[shortName] = tmp_cookie;
+                    SiteManager.SiteConfig(shortName, new SiteConfigArgs()
+                    {
+                        Section = "Login",
+                        Key = "Cookie",
+                        Value = tmp_cookie
+                    }, SiteManager.SiteConfigType.Change);
 
                     switch (shortName)
                     {
                         case "donmai":
                             Regex rx = new Regex("data-current-user-name=\"(.*?)\"", RegexOptions.IgnoreCase);
                             GroupCollection group = rx.Match(pageString).Groups;
-
-                            if (group.Count > 1) { loginUser = group[1].Value; }
-                            siteLoginUser[shortName] = $"{loginUser} 已登录";
+                            if (group.Count > 1) { siteLoginUser[shortName] = group[1].Value; }
                             break;
-                        default:
-                            siteLoginUser[shortName] = "已登录"; break;
                     }
-
                 }
                 else
                 {
-                    siteLoginUser[shortName] = null;
+                    siteLoginUser[shortName] = siteLoginCookie[shortName] = null;
                     result = IsLoginSite = false;
                 }
-            }
-            catch
-            {
-                SiteManager.EchoErrLog(SiteName, "用户登录失败 ");
-            }
 
-            return result;
+            }
+            catch (Exception e)
+            {
+                IsLoginSite = false;
+                siteLoginUser[shortName] = siteLoginCookie[shortName] = null;
+                string msg = $"登录失败{Environment.NewLine}{e.Message}";
+                SiteManager.EchoErrLog(SiteName,msg,true );
+                SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Error);
+            }
+            finally { IsRunLogin = false; }
         }
 
     }

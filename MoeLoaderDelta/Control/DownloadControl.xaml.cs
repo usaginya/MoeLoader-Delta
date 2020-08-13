@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoeLoaderDelta.Control.Toast;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static MoeLoaderDelta.Control.Toast.ToastBoxNotification;
 
 namespace MoeLoaderDelta
 {
@@ -802,12 +804,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MainWindow.MainW.Control_Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", Control.Toast.MsgType.Success, 2500);
+                    MainWindow.MainW.Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", MsgType.Success);
                 }
             }
             catch (Exception ex)
             {
-                MainWindow.MainW.Control_Toast.Show("保存失败:\r\n" + ex.Message, Control.Toast.MsgType.Error, 3600);
+                MainWindow.MainW.Toast.Show("保存失败:\r\n" + ex.Message, MsgType.Error);
             }
         }
         /// <summary>
@@ -857,12 +859,12 @@ namespace MoeLoaderDelta
                             repeat++;
                     }
                     File.AppendAllText(saveFileDialog1.FileName, text);
-                    MainWindow.MainW.Control_Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", Control.Toast.MsgType.Success, 2500);
+                    MainWindow.MainW.Toast.Show("成功保存 " + success + " 个地址\r\n" + repeat + " 个地址已在列表中", MsgType.Success);
                 }
             }
             catch (Exception ex)
             {
-                MainWindow.MainW.Control_Toast.Show("保存失败:\r\n" + ex.Message, Control.Toast.MsgType.Error, 3600);
+                MainWindow.MainW.Toast.Show("保存失败:\r\n" + ex.Message, MsgType.Error);
             }
         }
         /// <summary>
@@ -1342,7 +1344,7 @@ namespace MoeLoaderDelta
                         if (File.Exists(dcitem.LocalName))
                             System.Diagnostics.Process.Start(dcitem.LocalName);
                         else
-                            MainWindow.MainW.Control_Toast.Show("无法打开文件！可能已被更名、删除或移动", Control.Toast.MsgType.Error);
+                            MainWindow.MainW.Toast.Show("无法打开文件！可能已被更名、删除或移动", MsgType.Error);
                         break;
                     case DLStatus.Cancel:
                     case DLStatus.Failed:
@@ -1374,7 +1376,7 @@ namespace MoeLoaderDelta
             DownloadItem dlItem = (DownloadItem)((Grid)sender).DataContext;
             if (isMouseSelect && dlItem != null && e.LeftButton == MouseButtonState.Pressed)
             {
-                if(dlList.SelectionMode == SelectionMode.Extended) { dlList.SelectionMode = SelectionMode.Multiple; }
+                if (dlList.SelectionMode == SelectionMode.Extended) { dlList.SelectionMode = SelectionMode.Multiple; }
                 dlItem.IsSelected = true;
             }
         }

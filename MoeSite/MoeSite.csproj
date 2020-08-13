@@ -49,6 +49,14 @@
       <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="INIFileParser, Version=2.5.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="LZ4">
+      <HintPath>..\lib\LZ4.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
@@ -57,6 +65,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
@@ -68,6 +77,8 @@
   <ItemGroup>
     <Compile Include="BooruProcessor.cs" />
     <Compile Include="CookiesHelper.cs" />
+    <Compile Include="Helpers\AESHelper.cs" />
+    <Compile Include="Helpers\MachineInfo.cs" />
     <Compile Include="ImageSite.cs" />
     <Compile Include="Img.cs" />
     <Compile Include="MyWebClient.cs">
@@ -78,6 +89,9 @@
     <Compile Include="SiteManager.cs" />
     <Compile Include="ViewedID.cs" />
     <Compile Include="AbstractImageSite.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

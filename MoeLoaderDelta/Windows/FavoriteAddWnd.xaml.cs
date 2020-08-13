@@ -1,4 +1,5 @@
 ﻿using MoeLoaderDelta.Control;
+using MoeLoaderDelta.Control.Toast;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,12 +12,13 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static MoeLoaderDelta.Control.Toast.ToastBoxNotification;
 
 namespace MoeLoaderDelta.Windows
 {
     /// <summary>
     /// FavoriteAddWnd.xaml 的交互逻辑
-    /// Last: 2020-7-29
+    /// Last: 2020-8-9
     /// </summary>
     public partial class FavoriteAddWnd : Window
     {
@@ -166,7 +168,7 @@ namespace MoeLoaderDelta.Windows
         {
             if (editSite == null)
             {
-                MainWindow.MainW.Control_Toast.Show("当前没有站点可以新建收藏目录", Toast.MsgType.Warning);
+                MainWindow.MainW.Toast.Show("当前没有站点可以新建收藏目录", MsgType.Warning);
                 return;
             }
             if (inputWnd != null && inputWnd.IsLoaded)
@@ -193,11 +195,11 @@ namespace MoeLoaderDelta.Windows
             if (!DirItems.Any(n => n == favDirName))
             {
                 DirItems.Add(favDirName);
-                MainWindow.MainW.Control_Toast.Show($"新建 {favDirName} 收藏目录完成", Toast.MsgType.Success);
+                MainWindow.MainW.Toast.Show($"新建 {favDirName} 收藏目录完成", MsgType.Success);
             }
             else
             {
-                MainWindow.MainW.Control_Toast.Show($"已存在同名收藏目录 {favDirName}", Toast.MsgType.Warning);
+                MainWindow.MainW.Toast.Show($"已存在同名收藏目录 {favDirName}", MsgType.Warning);
             }
             ComboBoxFavDir.SelectedItem = favDirName;
         }
@@ -209,7 +211,7 @@ namespace MoeLoaderDelta.Windows
         {
             if (editSite == null)
             {
-                MainWindow.MainW.Control_Toast.Show("当前没有站点，不能收藏新的标签", Toast.MsgType.Warning, 2000);
+                MainWindow.MainW.Toast.Show("当前没有站点，不能收藏新的标签", MsgType.Warning);
                 return;
             }
 
@@ -220,24 +222,24 @@ namespace MoeLoaderDelta.Windows
                     result = TreeViewModel.AddOrEdit(editSite, null, ComboBoxFavDir.SelectedItem.ToSafeString(), TextBoxOriginal.Text, TextBoxMark.Text, false, true);
                     switch (result)
                     {
-                        case 1: MainWindow.MainW.Control_Toast.Show("新标签已收藏", Toast.MsgType.Success); break;
-                        case 3: MainWindow.MainW.Control_Toast.Show("已有重复的标签在收藏目录中", Toast.MsgType.Warning, 1800); return;
-                        default: MainWindow.MainW.Control_Toast.Show("新标签收藏失败", Toast.MsgType.Error); return;
+                        case 1: MainWindow.MainW.Toast.Show("新标签已收藏", MsgType.Success); break;
+                        case 3: MainWindow.MainW.Toast.Show("已有重复的标签在收藏目录中", MsgType.Warning); return;
+                        default: MainWindow.MainW.Toast.Show("新标签收藏失败", MsgType.Error); return;
                     }
                     break;
 
                 case AddMode.EditDir:
                     if (string.IsNullOrWhiteSpace(TextBoxMark.Text))
                     {
-                        MainWindow.MainW.Control_Toast.Show("新的名称不能是空的", Toast.MsgType.Warning);
+                        MainWindow.MainW.Toast.Show("新的名称不能是空的", MsgType.Warning);
                         return;
                     }
                     result = TreeViewModel.AddOrEdit(editSite, ComboBoxFavDir.Tag.ToSafeString(), ComboBoxFavDir.Tag.ToSafeString(),
                         TextBoxOriginal.Text, TextBoxMark.Text, false, false, true);
                     switch (result)
                     {
-                        case 1: MainWindow.MainW.Control_Toast.Show("收藏目录改名完成", Toast.MsgType.Success); break;
-                        default: MainWindow.MainW.Control_Toast.Show("收藏目录改名失败", Toast.MsgType.Error); return;
+                        case 1: MainWindow.MainW.Toast.Show("收藏目录改名完成", MsgType.Success); break;
+                        default: MainWindow.MainW.Toast.Show("收藏目录改名失败", MsgType.Error); return;
                     }
                     break;
 
@@ -246,9 +248,9 @@ namespace MoeLoaderDelta.Windows
                         TextBoxOriginal.Text, TextBoxMark.Text, false, true);
                     switch (result)
                     {
-                        case 1: MainWindow.MainW.Control_Toast.Show("收藏标签已更新", Toast.MsgType.Success); break;
-                        case 3: MainWindow.MainW.Control_Toast.Show("已有重复的标签在收藏目录中", Toast.MsgType.Warning, 1800); return;
-                        default: MainWindow.MainW.Control_Toast.Show("收藏标签更新失败", Toast.MsgType.Error); return;
+                        case 1: MainWindow.MainW.Toast.Show("收藏标签已更新", MsgType.Success); break;
+                        case 3: MainWindow.MainW.Toast.Show("已有重复的标签在收藏目录中", MsgType.Warning); return;
+                        default: MainWindow.MainW.Toast.Show("收藏标签更新失败", MsgType.Error); return;
                     }
                     break;
             }

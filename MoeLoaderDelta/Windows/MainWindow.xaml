@@ -19,9 +19,6 @@
     Deactivated="Window_Deactivated_1"
     Drop="Window_Drop"
     Loaded="Window_Loaded"
-    MouseDoubleClick="Window_MouseDoubleClick_1"
-    MouseDown="Window_MouseDown_1"
-    MouseMove="Window_MouseMove"
     PreviewKeyDown="Window_KeyDown"
     ResizeMode="CanResizeWithGrip"
     StateChanged="Window_StateChanged_1"
@@ -30,7 +27,10 @@
     WindowStyle="None"
     mc:Ignorable="d">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" ResizeBorderThickness="10" />
+        <WindowChrome
+            CaptionHeight="{Binding ElementName=bdDecorate, Path=Height}"
+            GlassFrameThickness="0"
+            ResizeBorderThickness="10" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <Style TargetType="{x:Type local:MainWindow}">
@@ -838,28 +838,29 @@
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
-
-                <Button
-                    Margin="0,0,68,0"
-                    Click="Min_Click"
-                    Style="{StaticResource sysbtn}" />
-                <Rectangle Style="{StaticResource min}" />
-                <Button
-                    Margin="0,0,34,0"
-                    Click="Max_Click"
-                    Style="{StaticResource sysbtn}" />
-                <Rectangle Style="{StaticResource max}" />
-                <Button
-                    Margin="0,0,0,0"
-                    Click="Close_Click"
-                    Style="{StaticResource sysbtn}"
-                    ToolTip="按住Ctrl不保存这次设置" />
-                <Rectangle Style="{StaticResource close}" />
-                <Rectangle
-                    x:Name="maxBtn"
-                    Fill="{StaticResource maxB}"
-                    Style="{DynamicResource max}" />
-                <Rectangle Style="{StaticResource min}" />
+                <Grid WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button
+                        Margin="0,0,68,0"
+                        Click="Min_Click"
+                        Style="{StaticResource sysbtn}" />
+                    <Rectangle Style="{StaticResource min}" />
+                    <Button
+                        Margin="0,0,34,0"
+                        Click="Max_Click"
+                        Style="{StaticResource sysbtn}" />
+                    <Rectangle Style="{StaticResource max}" />
+                    <Button
+                        Margin="0,0,0,0"
+                        Click="Close_Click"
+                        Style="{StaticResource sysbtn}"
+                        ToolTip="按住Ctrl不保存这次设置" />
+                    <Rectangle Style="{StaticResource close}" />
+                    <Rectangle
+                        x:Name="maxBtn"
+                        Fill="{StaticResource maxB}"
+                        Style="{DynamicResource max}" />
+                    <Rectangle Style="{StaticResource min}" />
+                </Grid>
                 <Grid Margin="0,35,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="341*" />
@@ -876,7 +877,11 @@
                             BorderBrush="#4C000000"
                             CornerRadius="0">
 
-                            <Grid x:Name="imgLstBg">
+                            <Grid
+                                x:Name="imgListBg"
+                                MouseMove="ImgList_MouseMove"
+                                PreviewMouseDown="ImgList_PreviewMouseDown"
+                                PreviewMouseUp="ImgList_PreviewMouseUp">
                                 <local2:SmoothScrollViewer
                                     x:Name="scrList"
                                     Margin="0,1,0,1"
@@ -1012,7 +1017,6 @@
                                                         Checked="Itmx5_Checked"
                                                         Header="1920x1080 以上(_5)"
                                                         IsCheckable="True" />
-                                                    <!--<MenuItem x:Name="itmx40" Header="1920x1080 以上(_6)" IsCheckable="True" Checked="itmx5_Checked"/>-->
                                                 </MenuItem>
                                                 <Separator />
                                                 <MenuItem
@@ -1023,7 +1027,8 @@
                                                     x:Name="itmxExplicit"
                                                     Click="ItmxExplicit_Click"
                                                     Header="过滤限制级图片(_E)"
-                                                    IsCheckable="True" />
+                                                    IsCheckable="True"
+                                                    IsChecked="True" />
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem
@@ -1031,19 +1036,14 @@
                                                 Click="ItmLoginSite_Click"
                                                 Header="{Binding Loginuser}"
                                                 IsEnabled="False"
-                                                ToolTip="点击打开登录页面" />
+                                                ToolTip="打开登录窗口" />
                                             <MenuItem
                                                 x:Name="itmOpenSite"
                                                 Click="ItmOpenSite_Click"
                                                 Header="访问站点主页(_W)" />
                                         </ContextMenu>
                                     </local2:SmoothScrollViewer.ContextMenu>
-                                    <Grid
-                                        x:Name="imgListPanel"
-                                        PreviewMouseDown="ImgList_PreviewMouseDown"
-                                        PreviewMouseLeftButtonDown="ImgList_MouseLeftButtonDown"
-                                        PreviewMouseLeftButtonUp="ImgList_MouseLeftButtonUp"
-                                        PreviewMouseMove="ImgList_MouseMove">
+                                    <Grid x:Name="imgListPanel">
                                         <WrapPanel x:Name="imgPanel" Margin="20,0,30,0" />
                                     </Grid>
                                 </local2:SmoothScrollViewer>
@@ -1088,7 +1088,8 @@
                             Height="30"
                             Margin="0,-10,10,0"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                             <Grid.RenderTransform>
                                 <TransformGroup>
                                     <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
@@ -1404,16 +1405,10 @@
                 </Border>
             </Grid>
             <Grid
-                Margin="0,0,0,190"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Panel.ZIndex="500">
-                <local2:Toast x:Name="Control_Toast" />
-            </Grid>
-            <Grid
                 Margin="0,7,130,0"
                 HorizontalAlignment="Right"
-                VerticalAlignment="Top">
+                VerticalAlignment="Top"
+                WindowChrome.IsHitTestVisibleInChrome="True">
                 <TextBlock
                     x:Name="txtSetting"
                     Margin="0"

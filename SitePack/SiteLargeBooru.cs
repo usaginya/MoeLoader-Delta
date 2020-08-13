@@ -2,11 +2,6 @@
 {
     public class SiteLargeBooru : SiteBooru
     {
-        private const int LWIDTH = 300;
-        private const int LHEIGHT = 300;
-
-        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(LWIDTH, LHEIGHT); } }
-
         public SiteLargeBooru(
             string siteUrl,
             string Url,
