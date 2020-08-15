@@ -388,10 +388,10 @@ namespace MoeLoaderDelta
         {
             MessageBox.Show(this, MainWindow.ProgramName + " Ver" + MainWindow.ProgramVersion
                 + $"{Environment.NewLine}{Environment.NewLine}"
-                + "Email: esonice@gmail.com{Environment.NewLine}Site: http://moeloader.sinaapp.com/"
+                + $"Email: esonice@gmail.com{Environment.NewLine}Site: http://moeloader.sinaapp.com/"
                 + $"{Environment.NewLine}MoeLoader ©2008-2013 esonic All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 + $"Δ Version by YIU{Environment.NewLine}"
-                + "Email: degdod@qq.com{Environment.NewLine}Site: http://usaginya.lofter.com/"
+                + $"Email: degdod@qq.com{Environment.NewLine}Site: http://usaginya.lofter.com/"
                 + $"{Environment.NewLine}MoeLoader Δ ©2016-2020"
                 + $" Moekai All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
