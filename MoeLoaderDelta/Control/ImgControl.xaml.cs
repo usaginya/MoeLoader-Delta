@@ -14,7 +14,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// Interaction logic for ImgControl.xaml
     /// 缩略图面板中的图片用户控件
-    /// Last change 200810
+    /// Last change 200816
     /// </summary>
     public partial class ImgControl : UserControl
     {
@@ -125,7 +125,9 @@ namespace MoeLoaderDelta
             txtDesc.Inlines.Add(type + " " + Image.Author);
             //txtDesc.Inlines.Add(new LineBreak());
             txtDesc.Inlines.Add(" " + Image.FileSize);
-            txtDesc.ToolTip = $"{Image.Id} {Image.Desc}\r\n{(string.IsNullOrWhiteSpace(Image.Author) ? string.Empty : "[投稿者] " + Image.Author)} \r\n{type} {Image.FileSize} {Image.Date}";
+            txtDesc.ToolTip = $"{Image.Id} {Image.Desc}{Environment.NewLine}"
+                + $"{(string.IsNullOrWhiteSpace(Image.Author) ? string.Empty : $"[投稿者] {Image.Author}")}{Environment.NewLine}"
+                + $"{type} {Image.FileSize} {Image.Date}";
             //txtDesc.Inlines.Add(new LineBreak());
             //txtDesc.Inlines.Add("评分: " + img.Score);
             //txtDesc.Inlines.Add(new LineBreak());
@@ -303,7 +305,7 @@ namespace MoeLoaderDelta
         /// <param name="isChecked"></param>
         public bool SetChecked(bool isChecked)
         {
-            if (!isDetailSucc || !imgLoaded) { return false; }
+            if (!isDetailSucc || !LayoutRoot.IsEnabled) { return false; }
             //chk.IsChecked = isChecked;
             Chk_Checked(isChecked);
             return true;
