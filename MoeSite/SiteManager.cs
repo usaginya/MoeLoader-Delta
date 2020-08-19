@@ -16,7 +16,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200811
+    /// Last 20200814
     /// </summary>
     public class SiteManager
     {
@@ -297,8 +297,12 @@ namespace MoeLoaderDelta
                     if (string.IsNullOrWhiteSpace(siteConfig.Section) || string.IsNullOrWhiteSpace(siteConfig.Key)) { return string.Empty; }
                     if (string.IsNullOrWhiteSpace(iniData.GetKey(siteConfig.Section)))
                     {
-                        LoadSiteConfig(siteShortName);
-                        iniData = inis[siteShortName];
+                        try
+                        {
+                            LoadSiteConfig(siteShortName);
+                            iniData = inis[siteShortName];
+                        }
+                        catch { }
                     }
                     return iniData[siteConfig.Section][siteConfig.Key] ?? string.Empty;
             }

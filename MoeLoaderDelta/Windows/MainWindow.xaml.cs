@@ -1172,8 +1172,6 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 将某个图片加入下载队列
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Img_imgDLed(object sender, EventArgs e)
         {
             int index = (int)sender;
@@ -1203,15 +1201,13 @@ namespace MoeLoaderDelta
                 toggleDownload.IsChecked = true;
                 ToggleDownload_Click(null, null);
             }
-            else
+            else 
             { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
         /// <summary>
         /// 缩略图被选中
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         void Img_checkedChanged(object sender, EventArgs e)
         {
             int preid = selected.Count == 0 ? -1 : selected[selected.Count - 1];
@@ -1292,7 +1288,7 @@ namespace MoeLoaderDelta
 
             //只要有下一页就显示翻页按钮
             if (HaveNextPage)
-                UpdatePreNextEnable(1);
+            { UpdatePreNextEnable(1); }
         }
 
         /// <summary>
@@ -1302,24 +1298,21 @@ namespace MoeLoaderDelta
         private void Fetcher_PreListLoaded(object sender, EventArgs e)
         {
             //按照结果更新翻页按钮状态
-            Dispatcher.Invoke(
-                new Action(
-                    delegate
-                    {
-                        //防止多次设置按钮状态
-                        bool tmphave = HaveNextPage;
-                        HaveNextPage = (int)sender > 0;
-                        //如果搜索结束时才有翻页就显示翻页按钮
-                        if (HaveNextPage && !tmphave && IsLoaded && !isGetting)
-                            UpdatePreNextEnable(1);
-                    }));
+            Dispatcher.InvokeAsync(
+                new Action(() =>
+                {
+                    //防止多次设置按钮状态
+                    bool tmphave = HaveNextPage;
+                    HaveNextPage = (int)sender > 0;
+                    //如果搜索结束时才有翻页就显示翻页按钮
+                    if (HaveNextPage && !tmphave && IsLoaded && !isGetting)
+                    { UpdatePreNextEnable(1); }
+                }));
         }
 
         /// <summary>
         /// 搜索
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count < 1)
@@ -1459,8 +1452,7 @@ namespace MoeLoaderDelta
         private void StartPreLoad()
         {
             PreFetcher.Fetcher.PreListLoaded += Fetcher_PreListLoaded;
-            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum,
-                Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
+            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum,Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
         }
 
         public int MaskInt

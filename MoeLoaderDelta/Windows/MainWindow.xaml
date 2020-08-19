@@ -864,7 +864,7 @@
                 <Grid Margin="0,35,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="341*" />
-                        <ColumnDefinition Width="100*" />
+                        <ColumnDefinition Width="180*" />
                     </Grid.ColumnDefinitions>
                     <Grid
                         x:Name="imgListGrid"

@@ -234,7 +234,7 @@
             Height="20"
             Margin="0"
             VerticalAlignment="Bottom"
-            Background="#1AAB"
+            Background="#7EEF"
             BorderBrush="Black"
             BorderThickness="0"
             CornerRadius="0">
