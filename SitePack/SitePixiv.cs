@@ -953,6 +953,11 @@ namespace SitePack
                 bool result = false;
                 shc.Timeout = shc.Timeout * 2;
                 shc.Set("Cookie", tmp_cookie);
+                shc.Set("sec-fetch-dest", "document");
+                shc.Set("sec-fetch-mode", "navigate");
+                shc.Set("sec-fetch-site", "same-site");
+                shc.Set("sec-fetch-user", "1");
+                shc.Set("upgrade-insecure-requests", "1");
 
                 string pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
                 result = !string.IsNullOrWhiteSpace(pageString);
@@ -987,7 +992,7 @@ namespace SitePack
                 SiteManager.EchoErrLog(SiteName, msg, true);
                 if (!startLogin) { SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Warning); }
             }
-            finally { IsRunLogin = false; }
+            finally { IsRunLogin = startLogin = false; }
         }
 
         /// <summary>
