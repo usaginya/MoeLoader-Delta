@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.91
+ * version 1.94
  * by YIU
  * Create               20170106
- * Last Change     20200517
+ * Last Change     20201017
  */
 
 using System;
@@ -24,9 +24,9 @@ namespace MoeLoaderDelta
 
         private static string[] UAs = new string[]
         {
-            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/53.0.1271.64 Safari/537.21",
-            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_2 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Mobile/15A421",
+            "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
             };
 
         /// <summary>
@@ -46,7 +46,8 @@ namespace MoeLoaderDelta
         public SessionClient()
         {
             ServicePointManager.DefaultConnectionLimit = 768;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
         }
         //#############################   Header   #################################################
         private HttpWebRequest SetHeader(HttpWebRequest request, string url, IWebProxy proxy, SessionHeadersCollection shc)
@@ -58,6 +59,8 @@ namespace MoeLoaderDelta
             request.Timeout = shc.Timeout;
             request.KeepAlive = shc.KeepAlive;
             request.UserAgent = shc.UserAgent;
+            request.PreAuthenticate = !string.IsNullOrWhiteSpace(shc.Get("Authorization"));
+            request.AuthenticationLevel = System.Net.Security.AuthenticationLevel.MutualAuthRequested;
             request.CookieContainer = string.IsNullOrWhiteSpace(shc.Get("Cookie")) ? CookieContainer : request.CookieContainer;
             request.AllowAutoRedirect = shc.AllowAutoRedirect;
             request.AutomaticDecompression = shc.AutomaticDecompression;
@@ -120,43 +123,37 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
+            GC.Collect(1, GCCollectionMode.Forced);
             string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse response = null;
-            try
-            {
-                SetHeader(request, url, proxy, shc);
 
-                response = (HttpWebResponse)request.GetResponse();
-                //更新Cookie
-                m_Cookie = request.CookieContainer ?? m_Cookie;
-                string sc = response.Headers["Set-Cookie"];
-                if (!string.IsNullOrWhiteSpace(sc))
-                {
-                    m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
-                }
-                Stream rspStream = response.GetResponseStream();
-                StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
-                ret = sr.ReadToEnd();
-                sr.Close();
-                rspStream.Close();
-            }
-            catch (Exception e)
+            SetHeader(request, url, proxy, shc);
+
+            response = (HttpWebResponse)request.GetResponse();
+            //更新Cookie
+            m_Cookie = request.CookieContainer ?? m_Cookie;
+            string sc = response.Headers["Set-Cookie"];
+            if (!string.IsNullOrWhiteSpace(sc))
             {
-                ret = e.Message;
+                m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
             }
-            finally
+            Stream rspStream = response.GetResponseStream();
+            StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
+            ret = sr.ReadToEnd();
+            sr.Close();
+            rspStream.Close();
+
+            if (response != null)
             {
-                if (response != null)
-                {
-                    response.Close();
-                }
-                if (request != null)
-                {
-                    request.Abort();
-                    request = null;
-                }
+                response.Close();
             }
+            if (request != null)
+            {
+                request.Abort();
+                request = null;
+            }
+
             return ret;
         }
 
@@ -182,6 +179,7 @@ namespace MoeLoaderDelta
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, int rwtimeout, SessionHeadersCollection shc)
         {
+            GC.Collect(1, GCCollectionMode.Forced);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             WebResponse reponse = null;
             try
@@ -293,6 +291,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc, ref WebHeaderCollection responeHeaders)
         {
+            GC.Collect(1, GCCollectionMode.Forced);
             HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
             HttpWebResponse response = null;
 
@@ -573,9 +572,9 @@ namespace MoeLoaderDelta
     public static class SessionHeadersValue
     {
         /// <summary>
-        /// text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+        /// text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
         /// </summary>
-        public static string AcceptDefault = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
+        public static string AcceptDefault = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
 
         /// <summary>
         /// text/html
@@ -598,9 +597,9 @@ namespace MoeLoaderDelta
         public static string AcceptAppXml = "application/xml";
 
         /// <summary>
-        /// gzip, deflate
+        /// gzip, deflate, br
         /// </summary>
-        public static string AcceptEncodingGzip = "gzip, deflate";
+        public static string AcceptEncodingGzip = "gzip, deflate, br";
 
         /// <summary>
         /// Automatic recognition

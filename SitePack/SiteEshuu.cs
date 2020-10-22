@@ -62,10 +62,7 @@ namespace SitePack
             }
         }
 
-        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(250, 200); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(180, 180); } }
-
-        private int type = 1;
+        private readonly int type = 1;
         /// <summary>
         /// e-shuushuu.net site
         /// </summary>
@@ -88,9 +85,11 @@ namespace SitePack
         {
             string url = SiteUrl + "/?page=" + page;
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
+            MyWebClient web = new MyWebClient
+            {
+                Proxy = proxy,
+                Encoding = Encoding.UTF8
+            };
 
             if (keyWord.Length > 0)
             {
@@ -191,10 +190,12 @@ namespace SitePack
             if (type == 4) return re;
 
             string url = SiteUrl + "/httpreq.php?mode=tag_search&tags=" + word + "&type=" + type;
-            MyWebClient web = new MyWebClient();
-            web.Timeout = 8;
-            web.Proxy = proxy;
-            web.Encoding = Encoding.UTF8;
+            MyWebClient web = new MyWebClient
+            {
+                Timeout = 8,
+                Proxy = proxy,
+                Encoding = Encoding.UTF8
+            };
 
             string txt = web.DownloadString(url);
 

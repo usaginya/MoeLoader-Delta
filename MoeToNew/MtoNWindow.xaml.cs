@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 20170510       by YIU
-    /// Last 20180808
+    /// Last 20200802
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -47,7 +47,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 需要更新的文件表信息
         /// </summary>
-        private string UpdateFilesInfo = "";
+        private string UpdateFilesInfo = string.Empty;
 
         /// <summary>
         /// 更新文件暂存目录
@@ -62,7 +62,15 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 更新信息地址
         /// </summary>
-        private const string updateInfoUrl = "https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/update.json";
+        private string[] updateInfoUrl ={
+            "https://gitee.com/YIU/mkAppUpInfo/raw/master/MoeLoader-Delta/update.json",
+            "https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/update.json"
+        };
+
+        /// <summary>
+        /// 无限进度状态
+        /// </summary>
+        private bool unlimitedProgress = false;
 
 
         public MtoNWindow()
@@ -142,13 +150,17 @@ namespace MoeLoaderDelta
         {
 
             #region 取更新信息
-            MyWebClient web = new MyWebClient();
-            web.Proxy = WebRequest.DefaultWebProxy;
-            string updatejson = web.DownloadString(updateInfoUrl);
+            MyWebClient web = new MyWebClient { Proxy = WebRequest.DefaultWebProxy };
+            string updatejson = null;
+            foreach (string upInfoUrl in updateInfoUrl)
+            {
+                updatejson = web.DownloadString(upInfoUrl);
+                if (!string.IsNullOrWhiteSpace(updatejson)) { break; }
+            }
             #endregion
 
             #region 匹配文件并添加到更新列表
-            string localFile = "";
+            string localFile = string.Empty;
 
             if (string.IsNullOrWhiteSpace(updatejson))
                 return false;
@@ -238,12 +250,14 @@ namespace MoeLoaderDelta
             try
             {
                 string nowDy = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = nowDy + "MoeLoaderDelta.exe";
-                psi.UseShellExecute = false;
-                psi.WorkingDirectory = nowDy;
-                psi.CreateNoWindow = true;
-                psi.Arguments = arg;
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = nowDy + "MoeLoaderDelta.exe",
+                    UseShellExecute = false,
+                    WorkingDirectory = nowDy,
+                    CreateNoWindow = true,
+                    Arguments = arg
+                };
                 Process.Start(psi);
             }
             catch { }
@@ -294,8 +308,10 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ReplaceNewFile()
         {
-            List<string> exculde = new List<string>();
-            exculde.Add(UpdateAppName);
+            List<string> exculde = new List<string>
+            {
+                UpdateAppName
+            };
             DataHelpers.MoveFolder(updateTmpPath, ".", exculde);
         }
 
@@ -366,7 +382,7 @@ namespace MoeLoaderDelta
 
                             //响应长度
                             double reslength = res.ContentLength;
-                            if (reslength < 1) throw new Exception("获取文件长度失败，请检查网络是否正常");
+                            unlimitedProgress = reslength < 1;
 
                             string tmpDLPath = updateTmpPath + "\\" + RepairPath(nowDLfile.Path);
                             if (!Directory.Exists(tmpDLPath))
@@ -386,7 +402,10 @@ namespace MoeLoaderDelta
                             ThreadPool.QueueUserWorkItem((o) =>
                             {
                                 byte[] buffer = new byte[1024];
-                                double progressBarValue = 0; //进度预置
+                                //进度预置
+                                double progressBarValue = 0;
+                                //无限进度调和
+                                if (unlimitedProgress) { reslength += buffer.Length; }
 
                                 DateTime last = DateTime.Now;
                                 int realReadLen = str.Read(buffer, 0, buffer.Length);

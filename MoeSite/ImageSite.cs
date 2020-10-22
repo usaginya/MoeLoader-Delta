@@ -21,7 +21,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// 图片站点的接口
     /// </summary>
-    public interface ImageSite
+    public interface IMageSite
     {
         /// <summary>
         /// 站点URL，用于打开该站点主页。eg. http://yande.re
@@ -66,14 +66,9 @@ namespace MoeLoaderDelta
         string LoginURL { get; }
 
         /// <summary>
-        /// 由界面传递给站点登录动作
+        /// 获取站点是否已登录
         /// </summary>
-        bool LoginSite { get; set; }
-
-        /// <summary>
-        /// 由界面传递给站点登录动作 int
-        /// </summary>
-        int LoginSiteInt { get; set; }
+        bool LoginSiteIsLogged { get; }
 
         /// <summary>
         /// 当前登录站点的用户
@@ -81,9 +76,14 @@ namespace MoeLoaderDelta
         string LoginUser { get; set; }
 
         /// <summary>
-        /// 当前登录站点的蜜码
+        /// 当前登录站点的密码，Get只用于判断是否有密码，不可用于获取原密码
         /// </summary>
-        string LoginPwd { set; }
+        string LoginPwd { get; set; }
+
+        /// <summary>
+        /// 站点登录帮助链接
+        /// </summary>
+        string LoginHelpUrl { get; }
 
         /// <summary>
         /// 是否支持设置单页数量，若为false则单页数量不可修改
@@ -116,17 +116,6 @@ namespace MoeLoaderDelta
         bool IsSupportTag { get; }
 
         /// <summary>
-        /// 大缩略图尺寸
-        /// </summary>
-        System.Drawing.Point LargeImgSize { get; }
-
-        /// <summary>
-        /// 小缩略图尺寸
-        /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
-        /// </summary>
-        System.Drawing.Point SmallImgSize { get; }
-
-        /// <summary>
         /// 该站点在站点列表中是否可见
         /// 提示：若该站点默认不希望被看到可以设为false，当满足一定条件时（例如存在某个文件）再显示
         /// </summary>
@@ -150,7 +139,7 @@ namespace MoeLoaderDelta
         /// <param name="keyWord">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>图片信息列表</returns>
-        List<Img> GetImages(int page, int count, string keyWord, System.Net.IWebProxy proxy);
+        List<Img> GetImages(int page, int count, string keyWord, IWebProxy proxy);
 
         /// <summary>
         /// 获取页面的源代码，例如HTML
@@ -160,7 +149,7 @@ namespace MoeLoaderDelta
         /// <param name="keyWord">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>页面源代码</returns>
-        string GetPageString(int page, int count, string keyWord, System.Net.IWebProxy proxy);
+        string GetPageString(int page, int count, string keyWord, IWebProxy proxy);
 
         /// <summary>
         /// 从页面源代码获取图片列表
@@ -168,7 +157,7 @@ namespace MoeLoaderDelta
         /// <param name="pageString">页面源代码</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>图片信息列表</returns>
-        List<Img> GetImages(string pageString, System.Net.IWebProxy proxy);
+        List<Img> GetImages(string pageString, IWebProxy proxy);
 
         /// <summary>
         /// 获取关键词自动提示列表
@@ -176,7 +165,7 @@ namespace MoeLoaderDelta
         /// <param name="word">关键词</param>
         /// <param name="proxy">全局的代理设置，进行网络操作时请使用该代理</param>
         /// <returns>提示列表项集合</returns>
-        List<TagItem> GetTags(string word, System.Net.IWebProxy proxy);
+        List<TagItem> GetTags(string word, IWebProxy proxy);
 
         /// <summary>
         /// 图片过滤
@@ -192,10 +181,9 @@ namespace MoeLoaderDelta
         List<Img> FilterImg(List<Img> imgs, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, bool showExplicit, bool updateViewed);
 
         /// <summary>
-        /// 登录站点方法
+        /// 传递登录信息登录站点
         /// </summary>
-        /// <param name="proxy">代理</param>
-        /// <returns></returns>
-        bool LoginCall(IWebProxy proxy);
+        /// <param name="loginArgs">登录信息</param>
+        void LoginCall(LoginSiteArgs loginArgs);
     }
 }

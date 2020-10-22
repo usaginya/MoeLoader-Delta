@@ -23,10 +23,6 @@ namespace MoeLoaderDelta
     public partial class PreviewWnd : Window
     {
         private MainWindow mainW;
-        //自定义数据类型
-        //id   index
-        private Dictionary<int, int> imgs = new Dictionary<int, int>();
-        private Dictionary<int, Img> descs = new Dictionary<int, Img>();
 
         //主窗口缩略图索引
         internal Dictionary<int, int> oriIndex = new Dictionary<int, int>();
@@ -37,37 +33,13 @@ namespace MoeLoaderDelta
         #region === GetSet封装 ===
         public int SelectedId
         {
-            get
-            {
-                return selectedId;
-            }
-
-            set
-            {
-                selectedId = value;
-            }
+            get => selectedId;
+            set => selectedId = value;
         }
 
-        public Dictionary<int, int> Imgs
-        {
-            get
-            {
-                return imgs;
-            }
+        public Dictionary<int, int> Imgs { get; set; } = new Dictionary<int, int>();
 
-            set
-            {
-                imgs = value;
-            }
-        }
-
-        public Dictionary<int, Img> Descs
-        {
-            get
-            {
-                return descs;
-            }
-        }
+        public Dictionary<int, Img> Descs { get; } = new Dictionary<int, Img>();
         #endregion
 
         public PreviewWnd(MainWindow mainW)
@@ -84,7 +56,9 @@ namespace MoeLoaderDelta
             KeyDown += new KeyEventHandler(Window_KeyDown);
         }
 
-        void MainWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        public PreviewWnd() { }
+
+        private void MainWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             try
             {
@@ -101,11 +75,11 @@ namespace MoeLoaderDelta
         /// <param name="needReferer"></param>
         public void AddPreview(Img img, int parentIndex, string needReferer)
         {
-            if (!imgs.ContainsKey(img.Id))
+            if (!Imgs.ContainsKey(img.Id))
             {
-                imgs.Add(img.Id, index++);
+                Imgs.Add(img.Id, index++);
                 oriIndex.Add(img.Id, parentIndex);
-                descs.Add(img.Id, img);
+                Descs.Add(img.Id, img);
                 //添加预览图分页按钮
                 ToggleButton btn = new ToggleButton
                 {
@@ -140,7 +114,7 @@ namespace MoeLoaderDelta
                         {
                             int offX = (int)(ea.GetPosition(LayoutRoot).X) - preMX;
                             int offY = (int)(ea.GetPosition(LayoutRoot).Y) - preMY;
-                            ScrollViewer sc = (imgGrid.Children[imgs[selectedId]] as ScrollViewer);
+                            ScrollViewer sc = (imgGrid.Children[Imgs[selectedId]] as ScrollViewer);
                             sc.ScrollToHorizontalOffset(sc.HorizontalOffset - offX);
                             sc.ScrollToVerticalOffset(sc.VerticalOffset - offY);
                         }
@@ -184,17 +158,17 @@ namespace MoeLoaderDelta
         /// 切换预览图操作
         /// </summary>
         /// <param name="id">预览ID</param>
-        private void SwitchPreview(int id)
+        public void SwitchPreview(int id)
         {
             if (selectedId != id)
             {
-                if (selectedId != 0 && imgs.ContainsKey(selectedId))
+                if (selectedId != 0 && Imgs.ContainsKey(selectedId))
                 {
-                    (btns.Children[imgs[selectedId]] as ToggleButton).IsChecked = false;
+                    (btns.Children[Imgs[selectedId]] as ToggleButton).IsChecked = false;
 
                     //(imgGrid.Children[imgs[selectedId]] as Image).Opacity = 0;
                     //(imgGrid.Children[imgs[selectedId]] as Image).BeginStoryboard(FindResource("imgClose") as Storyboard);
-                    ScrollViewer tempPreview = (imgGrid.Children[imgs[selectedId]] as ScrollViewer);
+                    ScrollViewer tempPreview = (imgGrid.Children[Imgs[selectedId]] as ScrollViewer);
                     Storyboard sb = new Storyboard();
                     DoubleAnimationUsingKeyFrames frames = new DoubleAnimationUsingKeyFrames();
                     Storyboard.SetTargetProperty(frames, new PropertyPath(UIElement.OpacityProperty));
@@ -204,8 +178,8 @@ namespace MoeLoaderDelta
                     sb.Begin(tempPreview);
                 }
                 selectedId = id;
-                (btns.Children[imgs[selectedId]] as ToggleButton).IsChecked = true;
-                ScrollViewer tempPreview1 = (imgGrid.Children[imgs[selectedId]] as ScrollViewer);
+                (btns.Children[Imgs[selectedId]] as ToggleButton).IsChecked = true;
+                ScrollViewer tempPreview1 = (imgGrid.Children[Imgs[selectedId]] as ScrollViewer);
                 tempPreview1.Visibility = Visibility.Visible;
                 tempPreview1.BeginStoryboard(FindResource("imgShow") as Storyboard);
                 ChangePreBtnText();
@@ -214,31 +188,31 @@ namespace MoeLoaderDelta
                 ////////////////////////////////////////////
 
                 desc.Text = "";
-                if (descs[selectedId].OriginalUrl == descs[selectedId].SampleUrl)
+                if (Descs[selectedId].OriginalUrl == Descs[selectedId].SampleUrl)
                 {
                     desc.Inlines.Add("原图与预览图相同");
                     desc.Inlines.Add(new LineBreak());
                 }
-                desc.Inlines.Add("描述: " + descs[selectedId].Id + " " + descs[selectedId].Desc);
+                desc.Inlines.Add("描述: " + Descs[selectedId].Id + " " + Descs[selectedId].Desc);
                 desc.Inlines.Add(new LineBreak());
-                desc.Inlines.Add("作者: " + descs[selectedId].Author);
+                desc.Inlines.Add("作者: " + Descs[selectedId].Author);
                 desc.Inlines.Add(new LineBreak());
                 try
                 {
-                    string fileType = descs[selectedId].OriginalUrl.Substring(descs[selectedId].OriginalUrl.LastIndexOf('.') + 1);
+                    string fileType = Descs[selectedId].OriginalUrl.Substring(Descs[selectedId].OriginalUrl.LastIndexOf('.') + 1);
                     desc.Inlines.Add("类型: " + BooruProcessor.FormattedImgUrl("", fileType.ToUpper()));
                 }
                 catch { }
-                desc.Inlines.Add(" 大小: " + descs[selectedId].FileSize);
-                desc.Inlines.Add(" 尺寸: " + descs[selectedId].Dimension);
+                desc.Inlines.Add(" 大小: " + Descs[selectedId].FileSize);
+                desc.Inlines.Add(" 尺寸: " + Descs[selectedId].Dimension);
                 //desc.Inlines.Add(new LineBreak());
-                desc.Inlines.Add(" 评分: " + descs[selectedId].Score);
+                desc.Inlines.Add(" 评分: " + Descs[selectedId].Score);
                 desc.Inlines.Add(new LineBreak());
-                desc.Inlines.Add("时间: " + descs[selectedId].Date);
-                if (descs[selectedId].Source.Length > 0)
+                desc.Inlines.Add("时间: " + Descs[selectedId].Date);
+                if (Descs[selectedId].Source.Length > 0)
                 {
                     desc.Inlines.Add(new LineBreak());
-                    desc.Inlines.Add("来源: " + descs[selectedId].Source);
+                    desc.Inlines.Add("来源: " + Descs[selectedId].Source);
                 }
             }
         }
@@ -275,30 +249,30 @@ namespace MoeLoaderDelta
         {
             //close
             int oriId = selectedId;
-            int imgc = imgs.Count;
+            int imgc = Imgs.Count;
 
-            PreviewImg pi = (imgGrid.Children[imgs[oriId]] as ScrollViewer).Content as PreviewImg;
+            PreviewImg pi = (imgGrid.Children[Imgs[oriId]] as ScrollViewer).Content as PreviewImg;
             pi.StopLoadImg(oriId, "");
 
             //移除按钮和预览图
-            btns.Children.Remove(btns.Children[imgs[oriId]]);
-            imgGrid.Children.Remove(imgGrid.Children[imgs[oriId]]);
+            btns.Children.Remove(btns.Children[Imgs[oriId]]);
+            imgGrid.Children.Remove(imgGrid.Children[Imgs[oriId]]);
 
-            if (imgc > 0) index = imgs[oriId];
+            if (imgc > 0) index = Imgs[oriId];
 
             //删除关闭数据
-            imgs.Remove(oriId);
-            descs.Remove(oriId);
+            Imgs.Remove(oriId);
+            Descs.Remove(oriId);
             oriIndex.Remove(oriId);
 
-            imgc = imgs.Count;
+            imgc = Imgs.Count;
             if (imgc > 0)
             {
                 //更新数组索引值
                 for (int i = index; i < imgc; i++)
                 {
-                    int newindex = imgs[(int)((ToggleButton)btns.Children[i]).Content];
-                    imgs[(int)((ToggleButton)btns.Children[i]).Content] = --newindex;
+                    int newindex = Imgs[(int)((ToggleButton)btns.Children[i]).Content];
+                    Imgs[(int)((ToggleButton)btns.Children[i]).Content] = --newindex;
                 }
 
                 //切换预览图
@@ -326,7 +300,7 @@ namespace MoeLoaderDelta
         private void Window_Closed(object sender, EventArgs e)
         {
             //清理预览图组数据
-            foreach (int iid in imgs.Values)
+            foreach (int iid in Imgs.Values)
             {
                 PreviewImg pi = (imgGrid.Children[iid] as ScrollViewer).Content as PreviewImg;
                 var dicSort = from pireq in pi.Reqs orderby pireq.Value descending select pireq;
@@ -334,8 +308,8 @@ namespace MoeLoaderDelta
                     req.Value.Abort();
                 pi.Reqs.Clear();
             }
-            imgs.Clear();
-            descs.Clear();
+            Imgs.Clear();
+            Descs.Clear();
             oriIndex.Clear();
             imgGrid.Children.Clear();
             mainW.previewFrm = null;
@@ -363,13 +337,13 @@ namespace MoeLoaderDelta
         {
             try
             {
-                if (!((imgGrid.Children[imgs[selectedId]] as ScrollViewer).Content as PreviewImg).ImgLoaded)
+                if (!((imgGrid.Children[Imgs[selectedId]] as ScrollViewer).Content as PreviewImg).ImgLoaded)
                 {
                     ShowMessage("图片尚未加载完毕", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return "";
                 }
 
-                PreviewImg pimg = (PreviewImg)((ScrollViewer)imgGrid.Children[imgs[selectedId]]).Content;
+                PreviewImg pimg = (PreviewImg)((ScrollViewer)imgGrid.Children[Imgs[selectedId]]).Content;
                 switch (pimg.ImgType)
                 {
                     case "bmp":
@@ -411,7 +385,7 @@ namespace MoeLoaderDelta
             try
             {
                 //取当前预览内容、类型、保存路径
-                PreviewImg pimg = (PreviewImg)((ScrollViewer)imgGrid.Children[imgs[selectedId]]).Content;
+                PreviewImg pimg = (PreviewImg)((ScrollViewer)imgGrid.Children[Imgs[selectedId]]).Content;
 
                 bool novprew = false;
                 string ttype = pimg.ImgType;
@@ -475,25 +449,25 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        public void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            if (!((imgGrid.Children[imgs[selectedId]] as ScrollViewer).Content as PreviewImg).ImgLoaded)
+            if (!((imgGrid.Children[Imgs[selectedId]] as ScrollViewer).Content as PreviewImg).ImgLoaded)
             {
-                ShowMessage("图片尚未加载完毕", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MainWindow.MainW.Toast.Show("图片尚未加载完毕");
             }
             else
             {
-                PreviewImg img = (imgGrid.Children[imgs[selectedId]] as ScrollViewer).Content as PreviewImg;
+                PreviewImg img = (imgGrid.Children[Imgs[selectedId]] as ScrollViewer).Content as PreviewImg;
                 if (img.isZoom)
                 {
-                    (imgGrid.Children[imgs[selectedId]] as ScrollViewer).HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-                    (imgGrid.Children[imgs[selectedId]] as ScrollViewer).VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                    (imgGrid.Children[Imgs[selectedId]] as ScrollViewer).HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+                    (imgGrid.Children[Imgs[selectedId]] as ScrollViewer).VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
                     img.ImgZoom(false, false);
                 }
                 else
                 {
-                    (imgGrid.Children[imgs[selectedId]] as ScrollViewer).HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                    (imgGrid.Children[imgs[selectedId]] as ScrollViewer).VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                    (imgGrid.Children[Imgs[selectedId]] as ScrollViewer).HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                    (imgGrid.Children[Imgs[selectedId]] as ScrollViewer).VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
                     img.ImgZoom(false);
                 }
             }
@@ -508,7 +482,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].SampleUrl);
+                Clipboard.SetText(Descs[selectedId].SampleUrl);
             }
             catch (Exception) { }
         }
@@ -522,7 +496,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].OriginalUrl);
+                Clipboard.SetText(Descs[selectedId].OriginalUrl);
             }
             catch (Exception) { }
         }
@@ -536,7 +510,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].Source.Replace("\n", ""));
+                Clipboard.SetText(Descs[selectedId].Source.Replace("\n", ""));
             }
             catch (Exception) { }
         }
@@ -550,7 +524,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].Desc.Replace("\n", ""));
+                Clipboard.SetText(Descs[selectedId].Desc.Replace("\n", ""));
             }
             catch (Exception) { }
         }
@@ -564,8 +538,8 @@ namespace MoeLoaderDelta
         {
             try
             {
-                if (descs[selectedId].DetailUrl.Length > 0)
-                    System.Diagnostics.Process.Start(descs[selectedId].DetailUrl);
+                if (Descs[selectedId].DetailUrl.Length > 0)
+                    System.Diagnostics.Process.Start(Descs[selectedId].DetailUrl);
             }
             catch (Exception) { }
         }
@@ -579,7 +553,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                Clipboard.SetText(descs[selectedId].JpegUrl);
+                Clipboard.SetText(Descs[selectedId].JpegUrl);
             }
             catch (Exception) { }
         }
@@ -602,7 +576,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private string GetSelectPreviewImgFileName()
         {
-            string dest = Uri.UnescapeDataString(descs[selectedId].SampleUrl.Substring(descs[selectedId].SampleUrl.LastIndexOf('/') + 1));
+            string dest = Uri.UnescapeDataString(Descs[selectedId].SampleUrl.Substring(Descs[selectedId].SampleUrl.LastIndexOf('/') + 1));
             dest = DownloadControl.ReplaceInvalidPathChars(dest);
             return dest;
         }
@@ -669,11 +643,11 @@ namespace MoeLoaderDelta
         /// <param name="next">0上一个 非0下一个</param>
         private void SwitchNearPreview(int next)
         {
-            if (imgs.Count > 0)
+            if (Imgs.Count > 0)
             {
                 bool isact = false;
-                int nowprew = imgs[selectedId];
-                int lestprew = imgs.Count - 1;
+                int nowprew = Imgs[selectedId];
+                int lestprew = Imgs.Count - 1;
 
                 if (next > 0 && nowprew < lestprew) //有下一个
                 {
@@ -698,9 +672,9 @@ namespace MoeLoaderDelta
 
                 if (isact)
                 {
-                    foreach (int id in imgs.Keys)
+                    foreach (int id in Imgs.Keys)
                     {
-                        if (imgs[id] == nowprew)
+                        if (Imgs[id] == nowprew)
                         {
                             nowprew = id;
                             break;

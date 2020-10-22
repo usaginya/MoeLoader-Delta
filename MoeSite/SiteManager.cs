@@ -1,9 +1,14 @@
-﻿using System;
+﻿using IniParser;
+using IniParser.Model;
+using IniParser.Parser;
+using LZ4;
+using MoeLoaderDelta.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,41 +16,99 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200517
+    /// Last 20200814
     /// </summary>
     public class SiteManager
     {
         /// <summary>
-        /// 站点登录类型 用于LoginURL
-        /// FillIn 弹出账号填写窗口、填写内容被填充到站点属性LoginUser 和 LoginPwd
-        /// Cookie 用于P站之类的
+        /// 站点登录类型 用于判断调用登录方式 登录参数保存到LoginSiteArgs
+        /// FillIn      弹出账号填写窗口
+        /// Cookie 登录
         /// </summary>
         public enum SiteLoginType { FillIn, Cookie }
 
-        private static List<ImageSite> sites = new List<ImageSite>();
-        private static SiteManager instance;
+        /// <summary>
+        /// 站点保存方式类型
+        /// Change 修改配置
+        /// Save      保存配置
+        /// </summary>
+        public enum SiteConfigType { Read, Change, Save }
+
+        #region 事件代理
+        /// <summary>
+        /// 显示Toast消息
+        /// </summary>
+        public static ShowToastMsgDelegate showToastMsgDelegate;
+        public delegate void ShowToastMsgDelegate(string msg, MsgType msgType);
+
+        /// <summary>
+        /// 获取当前网络代理
+        /// </summary>
+        public static GetNetProxyDelegate getNetPorxyDelegate;
+        public delegate IWebProxy GetNetProxyDelegate();
+        #endregion
+
+        /// <summary>
+        /// Toast消息类型
+        /// </summary>
+        public enum MsgType { Info, Success, Warning, Error }
 
         /// <summary>
         /// 参数共享传递
         /// </summary>
-        public static IWebProxy Mainproxy { get; set; }
+        public static IWebProxy MainProxy { get; set; }
         public static string RunPath { get; set; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static string SitePacksPath { get; set; } = $"{RunPath}\\SitePacks\\";
 
-        private SiteManager()
+        /// <summary>
+        /// 初始化aesKey
+        /// </summary>
+        private static readonly string aesKey = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{MachineInfo.GetBLOSSerialNumber()}${MachineInfo.GetCPUSerialNumber()}"));
+
+        /// <summary>
+        /// ini配置文件解析
+        /// </summary>
+        private static FileIniDataParser iniParser;
+        /// <summary>
+        /// ini配置数据库 SiteShortName, IniData
+        /// </summary>
+        private static Dictionary<string, IniData> inis = new Dictionary<string, IniData>();
+
+        /// <summary>
+        /// 站点集合
+        /// </summary>
+        public List<IMageSite> Sites { get; } = new List<IMageSite>();
+
+        /// <summary>
+        /// 站点定义管理者
+        /// </summary>
+        public static SiteManager Instance { get; } = new SiteManager();
+
+        private SiteManager() { }
+
+        /// <summary>
+        /// 初始化加载站点
+        /// </summary>
+        public void Initialize()
         {
+            //设置加载站点配置解析
+            IniDataParser iniDataParser = new IniDataParser();
+            iniDataParser.Configuration.AllowCreateSectionsOnFly
+                = iniDataParser.Configuration.AllowDuplicateKeys
+                = iniDataParser.Configuration.AllowDuplicateSections
+                = iniDataParser.Configuration.SkipInvalidLines
+                = true;
+            iniParser = new FileIniDataParser(iniDataParser);
 
-            string[] dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories);
-
+            string[] dlls = { };
+            try { dlls = Directory.GetFiles(SitePacksPath, "SitePack*.dll", SearchOption.AllDirectories); } catch { }
             #region 保证有基本站点包路径
             if (dlls.Length < 1)
             {
-                List<string> dlll = new List<string>();
                 string basisdll = SitePacksPath + "SitePack.dll";
-
                 if (File.Exists(basisdll))
                 {
-                    dlll.Add(basisdll);
+                    List<string> dlll = new List<string> { basisdll };
                     dlls = dlll.ToArray();
                 }
             }
@@ -58,7 +121,7 @@ namespace MoeLoaderDelta
                     byte[] assemblyBuffer = File.ReadAllBytes(dll);
                     Type type = Assembly.Load(assemblyBuffer).GetType("SitePack.SiteProvider", true, false);
                     MethodInfo methodInfo = type.GetMethod("SiteList");
-                    sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { Mainproxy }) as List<ImageSite>);
+                    Sites.AddRange(methodInfo.Invoke(Activator.CreateInstance(type), new object[] { MainProxy }) as List<IMageSite>);
                 }
                 catch (Exception ex)
                 {
@@ -68,99 +131,49 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 站点定义管理者
+        /// 调用主窗口显示Toast消息
         /// </summary>
-        public static SiteManager Instance
+        /// <param name="msg">消息</param>
+        /// <param name="msgType">类型</param>
+        public static void ShowToastMsg(string msg, MsgType msgType = MsgType.Info)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new SiteManager();
-                }
-                return instance;
-            }
+            if (showToastMsgDelegate == null) { return; }
+            showToastMsgDelegate(msg, msgType);
         }
 
         /// <summary>
-        /// 站点集合
+        /// 调用当前网络代理
         /// </summary>
-        public List<ImageSite> Sites => sites;
-
-        /// <summary>
-        /// 站点登录处理 通过IE
-        /// </summary>
-        /// <param name="imageSite">站点</param>
-        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
-        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
-        /// <param name="Sweb">站点内部SessionClient</param>
-        /// <param name="shc">站点内部SessionHeadersCollection</param>
-        /// <param name="PageString">返回验证登录时的页面HTML</param>
-        /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc, ref string pageString)
+        public static IWebProxy GetWebProxy()
         {
-            string tmp_cookie = CookiesHelper.GetIECookies(imageSite.SiteUrl);
-            bool result = !string.IsNullOrWhiteSpace(tmp_cookie) && tmp_cookie.Length > 3;
-
-            if (result)
-            {
-                shc.Timeout = shc.Timeout * 2;
-                shc.Set("Cookie", tmp_cookie);
-                try
-                {
-                    pageString = Sweb.Get(imageSite.SiteUrl, Mainproxy, shc);
-                    result = !string.IsNullOrWhiteSpace(pageString);
-
-                    if (result && LoggedFlags != null)
-                    {
-                        string[] LFlagsArray = LoggedFlags.Split('|');
-                        foreach (string Flag in LFlagsArray)
-                        {
-                            result &= pageString.Contains(Flag);
-                        }
-                    }
-
-                    cookie = result ? tmp_cookie : cookie;
-                }
-                catch
-                {
-                    //有cookie访问时发生超时之类的错误 还是作为用户登录状态 返回true
-                    cookie = string.Empty;
-                }
-            }
-
-            return result;
+            if (getNetPorxyDelegate == null) { return new WebProxy(); }
+            return getNetPorxyDelegate();
         }
 
         /// <summary>
-        /// 站点登录处理 通过IE
+        /// 调用站点登录
         /// </summary>
-        /// <param name="imageSite">站点</param>
-        /// <param name="cookie">站点内部cookie, 将返回登录后的cookie, 登录失败为string.Empty</param>
-        /// <param name="LoggedFlags">登录成功页面验证字符, 多个字符用|分隔; 无需验证请置null</param>
-        /// <param name="Sweb">站点内部SessionClient</param>
-        /// <param name="shc">站点内部SessionHeadersCollection</param>
-        /// <returns></returns>
-        public static bool LoginSite(ImageSite imageSite, ref string cookie, string LoggedFlags, ref SessionClient Sweb, ref SessionHeadersCollection shc)
+        /// <param name="site">站点</param>
+        /// <param name="loginArgs">登录参数</param>
+        public static void LoginSiteCall(IMageSite site, LoginSiteArgs loginArgs)
         {
-            string NullPageString = string.Empty;
-            return LoginSite(imageSite, ref cookie, LoggedFlags, ref Sweb, ref shc, ref NullPageString);
+            try { site.LoginCall(loginArgs); } catch { }
         }
 
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
-        /// <param name="SiteShortName">站点短名</param>
+        /// <param name="siteName">站点短名</param>
         /// <param name="ex">错误信息</param>
         /// <param name="extra_info">附加错误信息</param>
-        /// <param name="NoShow">不显示信息</param>
-        /// <param name="NoLog">不记录Log</param>
-        public static void EchoErrLog(string SiteShortName, Exception ex = null, string extra_info = null, bool NoShow = false, bool NoLog = false)
+        /// <param name="noShow">不显示信息</param>
+        /// <param name="noLog">不记录Log</param>
+        public static void EchoErrLog(string siteName, Exception ex = null, string extra_info = null, bool noShow = false, bool noLog = false)
         {
             int maxlog = 4096;
             bool exisnull = ex == null;
             string logPath = SitePacksPath + "site_error.log",
-                wstr = "[异常站点]: " + SiteShortName + "\r\n";
+                wstr = "[异常站点]: " + siteName + "\r\n";
             wstr += "[异常时间]: " + DateTime.Now.ToString() + "\r\n";
             wstr += "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
             if (!exisnull)
@@ -170,13 +183,14 @@ namespace MoeLoaderDelta
                 wstr += "[调用堆栈]: " + ex.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + ex.TargetSite + "\r\n";
             }
-            if (!NoLog)
+            if (!noLog)
             {
                 File.AppendAllText(logPath, wstr + "\r\n");
             }
-            if (!NoShow)
+            if (!noShow)
             {
-                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{SiteShortName} 错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.IsNullOrWhiteSpace(extra_info) ? ex.Message : extra_info, $"{siteName} 错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //压缩记录
             long sourceLength = new FileInfo(logPath).Length;
@@ -199,54 +213,119 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 提供站点错误的输出
         /// </summary>
-        /// <param name="SiteShortName">站点短名</param>
+        /// <param name="siteName">站点短名</param>
         /// <param name="extra_info">附加错误信息</param>
-        public static void EchoErrLog(string SiteShortName, string extra_info, bool NoShow = false, bool NoLog = false)
+        public static void EchoErrLog(string siteName, string extra_info, bool noShow = false, bool noLog = false)
         {
-            EchoErrLog(SiteShortName, null, extra_info, NoShow, NoLog);
+            EchoErrLog(siteName, null, extra_info, noShow, noLog);
         }
 
         #region 站点配置文件处理方法
         /// <summary>
-        /// 读INI配置文件 API
+        /// 载入站点配置
         /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="def">缺省值</param>
-        /// <param name="retval">lpReturnedString取得的内容</param>
-        /// <param name="size">lpReturnedString缓冲区的最大字符数</param>
-        /// <param name="filePath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32")]
-        public static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
-
-        /// <summary>
-        /// 写INI配置文件 API
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="val">值</param>
-        /// <param name="filepath">配置文件路径</param>
-        /// <returns></returns>
-        [DllImport("kernel32")]
-        public static extern long WritePrivateProfileString(string section, string key, string val, string filepath);
-
-        /// <summary>
-        /// 读INI配置文件
-        /// </summary>
-        /// <param name="section">节</param>
-        /// <param name="key">项</param>
-        /// <param name="filePath">配置文件路径</param>
-        /// <param name="def">缺省值</param>
-        /// <returns></returns>
-        public static string GetPrivateProfileString(string section, string key, string filePath, string def = null)
+        /// <param name="siteShortName">站点短名</param>
+        public static void LoadSiteConfig(string siteShortName)
         {
-            StringBuilder sb = new StringBuilder(32767);
-            GetPrivateProfileString(section, key, string.Empty, sb, sb.Capacity, filePath);
-            return sb.ToString();
+            if (string.IsNullOrWhiteSpace(siteShortName)) { return; }
+
+            string content = string.Empty, iv = content, siteini = $"{SitePacksPath}{siteShortName}.ini";
+            if (string.IsNullOrWhiteSpace(siteShortName) || inis.Any(d => d.Key == siteShortName)) { return; }
+
+            if (File.Exists(siteini))
+            {
+                //读入并解压
+                content = File.ReadAllText(siteini);
+                if (string.IsNullOrWhiteSpace(content) || content.Length < 7) { return; }
+                content = Encoding.UTF8.GetString(LZ4Codec.Unwrap(Convert.FromBase64String(content)));
+                iv = content.Substring(0, 6);
+                content = AESHelper.AesDecrypt(content.Substring(6), aesKey, iv);
+                //解析并入库
+                IniData iniData = iniParser.Parser.Parse(content);
+                inis.Add(siteShortName, iniData);
+                return;
+            }
+            inis.Add(siteShortName, new IniData());
+        }
+
+        /// <summary>
+        /// 保存站点配置
+        /// </summary>
+        /// <param name="siteShortName">站点短名</param>
+        private static void SaveSiteConfig(string siteShortName)
+        {
+            if (!inis.ContainsKey(siteShortName)) { return; }
+            IniData iniData = inis[siteShortName];
+            if (!iniData.Sections.Any()) { return; }
+            string content = string.Empty, iv = content, siteini = $"{SitePacksPath}{siteShortName}.ini";
+
+            //写出指定站点配置并压缩
+            iniParser.WriteFile(siteini, iniData);
+            content = File.ReadAllText(siteini);
+            iv = RandomRNG(100000, 999999).ToString();
+            content = $"{iv}{AESHelper.AesEncrypt(content, aesKey, iv)}";
+            content = Convert.ToBase64String(LZ4Codec.Wrap(Encoding.UTF8.GetBytes(content)));
+            File.WriteAllText(siteini, content);
+        }
+
+        /// <summary>
+        /// 读取或更改站点设置
+        /// </summary>
+        /// <param name="siteShortName">站点短名</param>
+        /// <param name="siteConfig">设置参数表</param>
+        /// <param name="configType">设置方法</param>
+        public static string SiteConfig(string siteShortName, SiteConfigArgs siteConfig, SiteConfigType configType = SiteConfigType.Read)
+        {
+            if (string.IsNullOrWhiteSpace(siteShortName)) { return string.Empty; }
+
+            IniData iniData = new IniData();
+            if (inis.ContainsKey(siteShortName)) { iniData = inis[siteShortName]; }
+
+            switch (configType)
+            {
+                case SiteConfigType.Change:
+                    if (string.IsNullOrWhiteSpace(siteConfig.Section) || string.IsNullOrWhiteSpace(siteConfig.Key)) { return string.Empty; }
+                    iniData[siteConfig.Section][siteConfig.Key] = siteConfig.Value;
+                    inis[siteShortName] = iniData;
+                    break;
+
+                case SiteConfigType.Save:
+                    SaveSiteConfig(siteShortName);
+                    break;
+
+                default:
+                    if (string.IsNullOrWhiteSpace(siteConfig.Section) || string.IsNullOrWhiteSpace(siteConfig.Key)) { return string.Empty; }
+                    if (string.IsNullOrWhiteSpace(iniData.GetKey(siteConfig.Section)))
+                    {
+                        try
+                        {
+                            LoadSiteConfig(siteShortName);
+                            iniData = inis[siteShortName];
+                        }
+                        catch { }
+                    }
+                    return iniData[siteConfig.Section][siteConfig.Key] ?? string.Empty;
+            }
+            return string.Empty;
         }
         #endregion
 
+        /// <summary>
+        /// 取不重复随机整数
+        /// </summary>
+        /// <param name="minValue">最小整数</param>
+        /// <param name="maxValue">最大整数</param>
+        public static int RandomRNG(int minValue, int maxValue)
+        {
+            if (minValue > maxValue) { maxValue = minValue + 1; }
+            Random rand = new Random(new Func<int>(() =>
+            {
+                byte[] bytes = new byte[4];
+                new System.Security.Cryptography.RNGCryptoServiceProvider().GetBytes(bytes);
+                return BitConverter.ToInt32(bytes, 0);
+            })());
+            return rand.Next(minValue, maxValue);
+        }
     }
 
     /// <summary>
@@ -266,6 +345,44 @@ namespace MoeLoaderDelta
         /// 点击菜单时执行的委托方法
         /// </summary>
         public Delegate SettingAction { get; set; }
+    }
+
+    /// <summary>
+    /// 站点登录参数
+    /// </summary>
+    public class LoginSiteArgs
+    {
+        /// <summary>
+        /// 登录账号
+        /// </summary>
+        public string User { get; set; } = string.Empty;
+        /// <summary>
+        /// 登录密码
+        /// </summary>
+        public string Pwd { get; set; } = string.Empty;
+        /// <summary>
+        /// 登录Cookie
+        /// </summary>
+        public string Cookie { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// 站点设置参数
+    /// </summary>
+    public class SiteConfigArgs
+    {
+        /// <summary>
+        /// 项名
+        /// </summary>
+        public string Section { get; set; }
+        /// <summary>
+        /// 键名
+        /// </summary>
+        public string Key { get; set; }
+        /// <summary>
+        /// 值
+        /// </summary>
+        public string Value { get; set; }
     }
 
 }

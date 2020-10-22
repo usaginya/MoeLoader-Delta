@@ -16,10 +16,10 @@ namespace MoeLoaderDelta
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var item = value as TreeViewItem;
+            TreeViewItem item = value as TreeViewItem;
             if (item == null)
                 return new Thickness(0);
-            int dep = this.GetDepth(item);
+            int dep = GetDepth(item);
             return new Thickness(Length * dep, 0, 0, 0);
         }
 

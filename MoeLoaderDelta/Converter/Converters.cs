@@ -9,32 +9,14 @@ namespace MoeLoaderDelta
     /// </summary>
     public sealed class XConverter
     {
-        public static BooleanToVisibilityConverter BooleanToVisibilityConverter
-        {
-            get { return Singleton<BooleanToVisibilityConverter>.GetInstance(); }
-        }
+        public static BooleanToVisibilityConverter BooleanToVisibilityConverter => Singleton<BooleanToVisibilityConverter>.GetInstance();
 
-        public static TrueToFalseConverter TrueToFalseConverter
-        {
-            get { return Singleton<TrueToFalseConverter>.GetInstance(); }
-        }
+        public static TrueToFalseConverter TrueToFalseConverter => Singleton<TrueToFalseConverter>.GetInstance();
+        public static NullToCollapsedConverter NullToCollapsedConverter => Singleton<NullToCollapsedConverter>.GetInstance();
+        public static ThicknessToDoubleConverter ThicknessToDoubleConverter => Singleton<ThicknessToDoubleConverter>.GetInstance();
+        public static BackgroundToForegroundConverter BackgroundToForegroundConverter => Singleton<BackgroundToForegroundConverter>.GetInstance();
+        public static TreeViewMarginConverter TreeViewMarginConverter => Singleton<TreeViewMarginConverter>.GetInstance();
 
-        public static ThicknessToDoubleConverter ThicknessToDoubleConverter
-        {
-            get { return Singleton<ThicknessToDoubleConverter>.GetInstance(); }
-        }
-        public static BackgroundToForegroundConverter BackgroundToForegroundConverter
-        {
-            get { return Singleton<BackgroundToForegroundConverter>.GetInstance(); }
-        }
-        public static TreeViewMarginConverter TreeViewMarginConverter
-        {
-            get { return Singleton<TreeViewMarginConverter>.GetInstance(); }
-        }
-
-        public static PercentToAngleConverter PercentToAngleConverter
-        {
-            get { return Singleton<PercentToAngleConverter>.GetInstance(); }
-        }
+        public static PercentToAngleConverter PercentToAngleConverter => Singleton<PercentToAngleConverter>.GetInstance();
     }
 }

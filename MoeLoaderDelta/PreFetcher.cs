@@ -8,10 +8,9 @@ namespace MoeLoaderDelta
 {
     class PreFetcher
     {
-        
+
         private PreFetcher() { }
         private static PreFetcher fetcher;
-        private IWebProxy proxy = MainWindow.WebProxy;
         public static PreFetcher Fetcher
         {
             get
@@ -47,10 +46,10 @@ namespace MoeLoaderDelta
         //public string PreFetchUrl { get; set; }
         private int prePage, preCount;
         private string preWord;
-        private ImageSite preSite;
+        private IMageSite preSite;
         private string preFetchedPage;
         //预加载的页面内容
-        public string GetPreFetchedPage(int page, int count, string word, ImageSite site)
+        public string GetPreFetchedPage(int page, int count, string word, IMageSite site)
         {
             if (page == prePage && count == preCount && word == preWord && site == preSite)
             {
@@ -90,18 +89,18 @@ namespace MoeLoaderDelta
         /// <param name="page"></param>
         /// <param name="count"></param>
         /// <param name="word"></param>
-        public void PreFetchPage(int page, int count, string word, ImageSite site)
+        public void PreFetchPage(int page, int count, string word, IMageSite site)
         {
             new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    preFetchedPage = site.GetPageString(page, count, word, proxy);
+                    preFetchedPage = site.GetPageString(page, count, word, MainWindow.WebProxy);
                     prePage = page;
                     preCount = count;
                     preWord = word;
                     preSite = site;
-                    List<Img> imgs = site.GetImages(preFetchedPage, proxy);
+                    List<Img> imgs = site.GetImages(preFetchedPage, MainWindow.WebProxy);
 
                     //获得所有图片列表后反馈得到的数量
                     PreListLoaded(imgs.Count, null);
@@ -109,11 +108,13 @@ namespace MoeLoaderDelta
                         return;
 
                     SessionClient sweb = new SessionClient();
-                    SessionHeadersCollection shc = new SessionHeadersCollection();
-                    shc.Accept = null;
-                    shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+                    SessionHeadersCollection shc = new SessionHeadersCollection
+                    {
+                        Accept = null,
+                        ContentType = SessionHeadersValue.ContentTypeAuto,
+                        Referer = site.Referer
+                    };
                     shc.Add("Accept-Ranges", "bytes");
-                    shc.Referer = site.Referer;
 
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
                         MainWindow.MainW.LastViewed, MainWindow.MainW.MaskViewed, true, false);
@@ -130,7 +131,7 @@ namespace MoeLoaderDelta
                     int cacheCount = CachedImgCount < imgs.Count ? CachedImgCount : imgs.Count;
                     for (int i = 0; i < cacheCount; i++)
                     {
-                        WebResponse res = sweb.GetWebResponse(imgs[i].PreviewUrl,proxy,9000,shc);
+                        WebResponse res = sweb.GetWebResponse(imgs[i].PreviewUrl, MainWindow.WebProxy, 10000, shc);
                         System.IO.Stream str = res.GetResponseStream();
 
                         if (!preFetchedImg.ContainsKey(imgs[i].PreviewUrl))

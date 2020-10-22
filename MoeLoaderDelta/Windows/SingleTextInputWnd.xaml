@@ -1,0 +1,238 @@
+﻿<Window
+    x:Class="MoeLoaderDelta.Windows.SingleTextInputWnd"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:MoeLoaderDelta.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Window"
+    Width="420"
+    Height="200"
+    MinWidth="420"
+    MinHeight="190"
+    MaxWidth="420"
+    MaxHeight="280"
+    Activated="Window_Activated"
+    AllowsTransparency="True"
+    Closed="Window_Closed"
+    Closing="Window_Closing"
+    Deactivated="Window_Deactivated"
+    Icon="../m.ico"
+    Loaded="Window_Loaded"
+    MouseLeftButtonDown="Window_MouseLeftButtonDown"
+    ResizeMode="CanMinimize"
+    SizeToContent="Height"
+    StateChanged="Window_StateChanged"
+    WindowStartupLocation="CenterOwner"
+    WindowState="Normal"
+    WindowStyle="None"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <Style TargetType="{x:Type local:FavoriteAddWnd}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:FavoriteAddWnd}">
+                        <Grid>
+                            <Rectangle
+                                x:Name="shadowN"
+                                Height="6"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                        <GradientStop Offset="0" Color="#0034A3E0" />
+                                        <GradientStop Offset="1" Color="#6636A3E0" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Rectangle
+                                x:Name="shadowS"
+                                Height="6"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Bottom">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0.5,1" EndPoint="0.5,0">
+                                        <GradientStop Offset="0" Color="#0034A3E0" />
+                                        <GradientStop Offset="1" Color="#6636A3E0" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Rectangle
+                                x:Name="shadowE"
+                                Width="6"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="1,0.5" EndPoint="0,0.5">
+                                        <GradientStop Offset="0" Color="#0034A3E0" />
+                                        <GradientStop Offset="1" Color="#6636A3E0" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Rectangle
+                                x:Name="shadowW"
+                                Width="6"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Stretch">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                        <GradientStop Offset="0" Color="#0034A3E0" />
+                                        <GradientStop Offset="1" Color="#6636A3E0" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <ContentPresenter
+                                x:Name="ContentWnd"
+                                Margin="6"
+                                Content="{TemplateBinding Content}"
+                                SizeChanged="ContentWnd_SizeChanged" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Storyboard x:Key="ClosedStoryboard" Storyboard.TargetName="Window">
+            <DoubleAnimation
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"
+                From="1"
+                To="0"
+                Duration="0:0:.07" />
+            <DoubleAnimation
+                BeginTime="0:0:.07"
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"
+                From="1"
+                To="0"
+                Duration="0:0:.07" />
+            <ColorAnimation
+                Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"
+                To="#0FFF"
+                Duration="0" />
+        </Storyboard>
+        <LinearGradientBrush x:Key="ClosedBrush" StartPoint="0,1" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#FFFF" />
+            <GradientStop Offset="1" Color="#FFFF" />
+            <GradientStop Offset="1" Color="#FFFF" />
+        </LinearGradientBrush>
+    </Window.Resources>
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation
+                        Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[1].Offset"
+                        From="1"
+                        To="0"
+                        Duration="0:0:.08" />
+                    <DoubleAnimation
+                        BeginTime="0:0:.08"
+                        Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Offset"
+                        From="1"
+                        To="0"
+                        Duration="0:0:.08" />
+                    <ColorAnimation
+                        Storyboard.TargetProperty="OpacityMask.(GradientBrush.GradientStops)[2].Color"
+                        To="#FFFF"
+                        Duration="0" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    <Border
+        x:Name="ContainerB"
+        Background="{DynamicResource ColorGridBackground}"
+        BorderBrush="#34A3E0"
+        BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="70" />
+            </Grid.RowDefinitions>
+            <!--#region 标题栏-->
+            <Grid x:Name="grid" Grid.Row="0">
+                <Grid Margin="0,3,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="68" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        x:Name="WindowIcon"
+                        Grid.Column="0"
+                        Width="16"
+                        Height="16"
+                        Margin="8,1,0,0"
+                        HorizontalAlignment="Left"
+                        Source="/MoeLoaderDelta;component/m.ico" />
+                    <TextBlock
+                        x:Name="WindowTitle"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Text="请输入文本"
+                        TextTrimming="WordEllipsis" />
+                    <Grid Grid.Column="2" Margin="0,-3,0,0">
+                        <Button
+                            Margin="0,0,34,0"
+                            Click="Min_Click"
+                            Style="{StaticResource sysbtn}" />
+                        <Rectangle Style="{StaticResource min2}" />
+                        <Button Click="Close_Click" Style="{StaticResource sysbtn}" />
+                        <Rectangle Style="{StaticResource close}" />
+                    </Grid>
+                </Grid>
+            </Grid>
+            <!--#endregion 标题栏-->
+
+            <!--#region  内容-->
+            <StackPanel
+                Grid.Row="1"
+                Margin="28,16"
+                VerticalAlignment="Top"
+                Orientation="Vertical">
+                <TextBlock
+                    x:Name="TextBlockInputInfo"
+                    FontSize="14"
+                    Text="请输入文本"
+                    TextTrimming="WordEllipsis"
+                    TextWrapping="Wrap" />
+                <TextBox
+                    x:Name="TextBoxInputValue"
+                    Margin="0,8,0,0"
+                    FontSize="14"
+                    Style="{StaticResource LightBlueTextBox}" />
+            </StackPanel>
+            <!--#endregion-->
+
+            <!--#region 添加取消按钮-->
+            <Grid Grid.Row="3" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button
+                    x:Name="BtnOK"
+                    Grid.Column="0"
+                    Width="100"
+                    Height="38"
+                    Margin="0,0,20,0"
+                    HorizontalAlignment="Right"
+                    Click="BtnOK_Click"
+                    Content="确定"
+                    FontSize="14"
+                    IsDefault="True" />
+                <Button
+                    x:Name="BtnCancel"
+                    Grid.Column="1"
+                    Width="100"
+                    Height="38"
+                    Margin="20,0,0,0"
+                    HorizontalAlignment="Left"
+                    Click="BtnCancel_Click"
+                    Content="取消"
+                    FontSize="14" />
+            </Grid>
+            <!--#endregion-->
+        </Grid>
+    </Border>
+</Window>

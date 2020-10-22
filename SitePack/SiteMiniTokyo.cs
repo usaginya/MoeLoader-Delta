@@ -48,11 +48,8 @@ namespace SitePack
         //public bool IsSupportPreview { get { return true; } }
         //public bool IsSupportTag { get { return true; } }
 
-        //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(180, 180); } }
-        public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(180, 180); } }
-
         private string[] user = { "miniuser2", "miniuser3" };
-        private string[] pass = { "minipass", "minipass3" };
+        private readonly string[] pass = { "minipass", "minipass3" };
         private Random rand = new Random();
         //scans wallpapers
         private string type;

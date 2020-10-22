@@ -6,13 +6,8 @@ namespace MoeLoaderDelta
     /// <summary>
     /// 抽象图片站点
     /// </summary>
-    public abstract class AbstractImageSite : ImageSite
+    public abstract class AbstractImageSite : IMageSite
     {
-        /// <summary>
-        /// 默认的缩略图宽高
-        /// </summary>
-        private const int PICWIDTH = 150;
-
         /// <summary>
         /// 站点URL，用于打开该站点主页。eg. http://yande.re
         /// </summary>
@@ -88,14 +83,9 @@ namespace MoeLoaderDelta
         public virtual string LoginURL => null;
 
         /// <summary>
-        /// 由界面传递给站点登录动作
+        /// 当前站点是否已登录
         /// </summary>
-        public virtual bool LoginSite { get; set; }
-
-        /// <summary>
-        /// 由界面传递给站点登录动作 int
-        /// </summary>
-        public virtual int LoginSiteInt { get; set; }
+        public virtual bool LoginSiteIsLogged => false;
 
         /// <summary>
         /// 当前登录站点的用户
@@ -108,25 +98,31 @@ namespace MoeLoaderDelta
         private static string loginUser = null;
 
         /// <summary>
-        /// 当前登录站点的蜜码
+        /// 当前登录站点的密码，Get仅用于判断是否有密码，无法取得原始密码
         /// </summary>
-        public virtual string LoginPwd { get; set; }
+        public virtual string LoginPwd
+        {
+            get => string.IsNullOrWhiteSpace(loginPwd) ? string.Empty : "6";
+            set => loginPwd = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+        }
+        private static string loginPwd = null;
+
+        /// <summary>
+        /// 登录帮助链接
+        /// </summary>
+        public virtual string LoginHelpUrl => string.Empty;
+
+        /// <summary>
+        /// 调用登录站点方法
+        /// </summary>
+        /// <param name="loginArgs">登录信息</param>
+        public virtual void LoginCall(LoginSiteArgs loginArgs) { throw new System.NotImplementedException(); }
 
         /// <summary>
         /// 该站点在站点列表中是否可见
         /// 提示：若该站点默认不希望被看到可以设为false，当满足一定条件时（例如存在某个文件）再显示
         /// </summary>
         public virtual bool IsVisible => true;
-
-        /// <summary>
-        /// 大缩略图尺寸
-        /// </summary>
-        public virtual System.Drawing.Point LargeImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
-        /// <summary>
-        /// 小缩略图尺寸
-        /// 若大小缩略图尺寸不同，则可以通过右键菜单中的“使用小缩略”切换显示大小
-        /// </summary>
-        public virtual System.Drawing.Point SmallImgSize => new System.Drawing.Point(PICWIDTH, PICWIDTH);
 
         /// <summary>
         /// 站点扩展设置，用于在站点子菜单加入扩展设置选项
@@ -166,13 +162,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 站点列表中显示的图标
         /// </summary>
-        public virtual System.IO.Stream IconStream
-        {
-            get
-            {
-                return GetType().Assembly.GetManifestResourceStream("SitePack.image." + ShortName + ".ico");
-            }
-        }
+        public virtual System.IO.Stream IconStream => GetType().Assembly.GetManifestResourceStream($"SitePack.image.{ShortName}.ico");
 
         /// <summary>
         /// 获取图片列表
@@ -201,6 +191,7 @@ namespace MoeLoaderDelta
         public virtual List<Img> FilterImg(List<Img> imgs, int maskScore, int maskRes, ViewedID lastViewed, bool maskViewed, bool showExplicit, bool updateViewed)
         {
             List<Img> re = new List<Img>();
+            if (imgs == null) { return re; }
             foreach (Img img in imgs)
             {
                 //标记已阅
@@ -226,13 +217,6 @@ namespace MoeLoaderDelta
             }
             return re;
         }
-
-        /// <summary>
-        /// 调用登录站点方法
-        /// </summary>
-        /// <param name="proxy">代理</param>
-        /// <returns></returns>
-        public virtual bool LoginCall(IWebProxy proxy) { return false; }
         #endregion
     }
 }

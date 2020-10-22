@@ -1,0 +1,49 @@
+﻿<core:NotificationDisplayPart
+    x:Class="MoeLoaderDelta.Control.Toast.ToastBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:core="clr-namespace:ToastNotifications.Core;assembly=ToastNotifications"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <core:NotificationDisplayPart.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/ToastStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </core:NotificationDisplayPart.Resources>
+
+    <Border Background="{Binding Background}" CornerRadius="8">
+        <Grid
+            MaxWidth="360"
+            MaxHeight="145"
+            Margin="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="25" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Rectangle
+                x:Name="Icon"
+                Width="24"
+                Height="24">
+                <Rectangle.Fill>
+                    <VisualBrush Visual="{Binding Icon}" />
+                </Rectangle.Fill>
+            </Rectangle>
+            <TextBlock
+                Grid.Column="1"
+                Margin="6,0"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Foreground="White"
+                Text="{Binding Message}"
+                TextOptions.TextFormattingMode="Display"
+                TextOptions.TextHintingMode="Animated"
+                TextOptions.TextRenderingMode="Auto"
+                TextWrapping="WrapWithOverflow" />
+
+        </Grid>
+    </Border>
+</core:NotificationDisplayPart>

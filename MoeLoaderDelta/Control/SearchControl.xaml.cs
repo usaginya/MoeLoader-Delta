@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Collections.Generic;
 
 namespace MoeLoaderDelta
 {
@@ -19,6 +20,7 @@ namespace MoeLoaderDelta
 
         private SessionState currentSession;
         public event EventHandler Enteded;
+        private Thread WaitAutoComplete;
 
         public SearchControl()
         {
@@ -26,40 +28,32 @@ namespace MoeLoaderDelta
 
             sb = (Storyboard)FindResource("searching");
 
-            txtSearch.ToolTip = "按下Delete键可删除当前的搜索词"
-                + Environment.NewLine + "按下Shift+Delete键可删除全部搜索过的词";
+            txtSearch.ToolTip = "按下Delete键可删除当前的搜索关键词"
+                + Environment.NewLine + "按下Shift+Delete键可删除全部搜索过的关键词";
 
             //sb.Begin(path, true);
             //sb.Pause();
         }
 
-        private ScrollViewer PopupScroll
-        {
-            get
-            {
-                return (ScrollViewer)txtSearch.Template.FindName("PopupScroll", txtSearch);
-            }
-        }
+        /// <summary>
+        /// 文本框最后选中的文本
+        /// </summary>
+        private string lastSelectText = string.Empty;
 
-        public TextBox Textbox
-        {
-            get
-            {
-                return (TextBox)txtSearch.Template.FindName("PART_EditableTextBox", txtSearch);
-            }
-        }
+        /// <summary>
+        /// 最后输入状态 True=0  False>0
+        /// </summary>
+        private int lastInputState = 1;
 
+        private ScrollViewer PopupScroll => (ScrollViewer)txtSearch.Template.FindName("PopupScroll", txtSearch);
+
+        public TextBox Textbox => (TextBox)txtSearch.Template.FindName("PART_EditableTextBox", txtSearch);
+
+        private string textText = string.Empty;
         public string Text
         {
-            get
-            {
-                if (Textbox.Text == (string)Textbox.Tag) return "";
-                else return Textbox.Text;
-            }
-            private set
-            {
-                Textbox.Text = value;
-            }
+            get => textText == (string)Textbox.Tag ? string.Empty : textText;
+            set => Textbox.Text = textText = value;
         }
 
         private LinkedList<string> usedItems = new LinkedList<string>();
@@ -111,7 +105,7 @@ namespace MoeLoaderDelta
 
         private void ShowUsedItems()
         {
-            if (SiteManager.Instance.Sites.Count > 0 && !SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
+            if (SiteManager.Instance.Sites.Count > 0 && !SiteManager.Instance.Sites[MainWindow.MainW.comboBoxIndex].IsSupportTag)
             {
                 txtSearch.Items.Add(new SearchItem() { Name = "该站点无关键词自动提示", Count = null, Enabled = false });
             }
@@ -125,82 +119,88 @@ namespace MoeLoaderDelta
 
         private void PART_EditableTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            //try
-            //{
+            Text = Textbox.Text;
+            lastInputState = lastInputState > 1 ? lastInputState : 0;
             txtSearch.Items.Clear();
             ShowUsedItems();
             txtSearch.IsDropDownOpen = true;
+            Textbox.ToolTip = Text.Length > 18
+                ? Text + Environment.NewLine + Environment.NewLine + txtSearch.ToolTip
+                : txtSearch.ToolTip;
 
-            TextBox tbox = (TextBox)sender;
-            string word = tbox.Text;
+            (sender as TextBox).Foreground = Text == (string)Textbox.Tag
+                ? new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA))
+                : new SolidColorBrush(Colors.Black);
 
-            if (word == (string)tbox.Tag)
+            //auto hint when site support, wait for 1 second to run
+            if (WaitAutoComplete != null) { try { WaitAutoComplete.Abort(); } catch { } }
+            WaitAutoComplete = new Thread(() =>
             {
-                (sender as TextBox).Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
-            }
-            else
-            {
-                (sender as TextBox).Foreground = new SolidColorBrush(Colors.Black);
-            }
-
-            //auto hint when site support
-            if (SiteManager.Instance.Sites.Count > 0 && SiteManager.Instance.Sites[MainWindow.comboBoxIndex].IsSupportTag)
-            {
-                if (word.Trim().Length == 0 || word == (string)tbox.Tag) return;
-
-                if (currentSession != null)
-                    currentSession.IsStop = true;
-
-                if (path.Visibility != Visibility.Visible)
+                Thread.Sleep(1000);
+                Dispatcher.Invoke(new Action(() =>
                 {
-                    path.Visibility = Visibility.Visible;
-
-                    sb.Stop();
-                    sb.Begin();
-                }
-                currentSession = new SessionState();
-
-                (new System.Threading.Thread(new System.Threading.ParameterizedThreadStart((o) =>
-                {
-                    try
+                    if (SiteManager.Instance.Sites.Count > 0 && SiteManager.Instance.Sites[MainWindow.MainW.comboBoxIndex].IsSupportTag)
                     {
-                        string[] parts = word.Split(' ');
-                        if (parts != null && parts.Length > 0)
-                        {
-                            //last word
-                            word = parts[parts.Length - 1];
-                        }
-                        word = Uri.EscapeDataString(word);
+                        if (Text.Trim().Length == 0 || Text == (string)Textbox.Tag) { return; }
 
-                        List<TagItem> tagList = SiteManager.Instance.Sites[MainWindow.comboBoxIndex].GetTags(word, MainWindow.WebProxy);
-                        if (!(o as SessionState).IsStop)
+                        if (currentSession != null)
+                            currentSession.IsStop = true;
+
+                        if (path.Visibility != Visibility.Visible)
                         {
-                            Dispatcher.Invoke(new UIdelegate((tagl) =>
+                            path.Visibility = Visibility.Visible;
+
+                            sb.Stop();
+                            sb.Begin();
+                        }
+                        currentSession = new SessionState();
+
+                        new Thread(new ParameterizedThreadStart((o) =>
+                        {
+                            try
                             {
-                                txtSearch.Items.Clear();
-                                List<TagItem> tags = tagl as List<TagItem>;
-                                foreach (TagItem node in tags)
+                                string word = string.Empty;
+                                Dispatcher.Invoke(new Action(() => { word = Text; }));
+                                string[] parts = word.Split(' ');
+                                if (parts != null && parts.Length > 0)
                                 {
-                                    txtSearch.Items.Add(new SearchItem() { Name = node.Name, Count = node.Count });
+                                    //last word
+                                    word = parts[parts.Length - 1];
                                 }
-                                ShowUsedItems();
-                            }), tagList);
-                        }
-                    }
-                    catch (Exception) { }
-                    finally
-                    {
-                        if (!(o as SessionState).IsStop)
-                        {
-                            Dispatcher.Invoke(new VoidDel(delegate ()
+                                word = Uri.EscapeDataString(word);
+
+                                List<TagItem> tagList = SiteManager.Instance.Sites[MainWindow.MainW.comboBoxIndex].GetTags(word, MainWindow.WebProxy);
+                                if (!(o as SessionState).IsStop)
+                                {
+                                    Dispatcher.Invoke(new UIdelegate((tagl) =>
+                                    {
+                                        txtSearch.Items.Clear();
+                                        List<TagItem> tags = tagl as List<TagItem>;
+                                        foreach (TagItem node in tags)
+                                        {
+                                            txtSearch.Items.Add(new SearchItem() { Name = node.Name, Count = node.Count });
+                                        }
+                                        ShowUsedItems();
+                                    }), tagList);
+                                }
+                            }
+                            catch (Exception) { }
+                            finally
                             {
-                                path.Visibility = Visibility.Hidden;
-                                sb.Stop();
-                            }));
-                        }
+                                if (!(o as SessionState).IsStop)
+                                {
+                                    Dispatcher.Invoke(new VoidDel(delegate ()
+                                    {
+                                        path.Visibility = Visibility.Hidden;
+                                        sb.Stop();
+                                    }));
+                                }
+                            }
+                        })).Start(currentSession);
                     }
-                }))).Start(currentSession);
-            }
+                }));
+            });
+            WaitAutoComplete.Start();
         }
 
         internal class SearchItem
@@ -251,7 +251,7 @@ namespace MoeLoaderDelta
             TextBox tbox = (TextBox)sender;
             if (tbox.Text == (string)tbox.Tag)
             {
-                tbox.Text = "";
+                tbox.Text = string.Empty;
                 tbox.Foreground = new SolidColorBrush(Colors.Black);
             }
         }
@@ -264,15 +264,58 @@ namespace MoeLoaderDelta
                 tbox.Text = (string)tbox.Tag;
                 tbox.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
             }
+            lastSelectText = tbox.SelectedText;
         }
 
-        private void txtSearch_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        /// <summary>
+        /// 关键词下拉列表选中
+        /// </summary>
+        private void TxtSearch_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (txtSearch.SelectedIndex > -1)
-                txtSearch.Text = txtSearch.Items[txtSearch.SelectedIndex].ToString();
+            {
+                string selectedText = txtSearch.Items[txtSearch.SelectedIndex].ToString();
+
+                if (!string.IsNullOrWhiteSpace(Text))
+                {
+                    if (!string.IsNullOrEmpty(lastSelectText))
+                    {
+                        // 替换选择的关键词
+                        Text = Text.Replace(lastSelectText, selectedText);
+                        return;
+                    }
+                    else if (lastInputState < 1)
+                    {
+                        // 替换最后一个输入的关键词
+                        lastInputState = 2;
+                        string[] parts = Text.Split(' ');
+                        string newWord = string.Empty;
+                        foreach (string word in parts)
+                        {
+                            if (word == parts.Last())
+                            {
+                                newWord += selectedText;
+                                Text = newWord;
+                                lastInputState = 1;
+                                return;
+                            }
+                            newWord += word + " ";
+                        }
+                    }
+                    else if (Text.LastIndexOf(' ') == Text.Length - 1 || Text.LastIndexOf('"') == Text.Length - 1)
+                    {
+                        // 如果关键词最后为空格或双引号则追加
+                        if (Text.LastIndexOf('"') == Text.Length - 1) { selectedText = " "; }
+                        Text += selectedText;
+                        return;
+                    }
+                }
+                // 以上条件都为False则完全覆盖
+                Text = selectedText;
+            }
         }
 
-        private void txtSearch_DropDownOpened(object sender, EventArgs e)
+        private void TxtSearch_DropDownOpened(object sender, EventArgs e)
         {
             txtSearch.Items.Clear();
             ShowUsedItems();
@@ -286,13 +329,13 @@ namespace MoeLoaderDelta
                 {
                     usedItems.Clear();
                     txtSearch.IsDropDownOpen = false;
-                    Text = "";
+                    Text = string.Empty;
                 }
                 else if (usedItems.Contains(Text))
                 {
                     usedItems.Remove(Text);
                     txtSearch.IsDropDownOpen = false;
-                    Text = "";
+                    Text = string.Empty;
                 }
             }
             else if (e.Key == Key.Enter)

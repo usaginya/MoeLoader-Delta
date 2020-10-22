@@ -31,12 +31,10 @@ namespace SitePack
         //public bool IsSupportTag { get { return true; } }
         //public override string Referer { get { return "http://www.zerochan.net/"; } }
 
-        public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(240, 240); } }
-
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private string[] user = { "zerouser1" };
-        private string[] pass = { "zeropass" };
+        private readonly string[] pass = { "zeropass" };
         private string cookie = "", beforeWord = "", beforeUrl = "";
         private Random rand = new Random();
 
