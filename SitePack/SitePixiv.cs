@@ -309,14 +309,21 @@ namespace SitePack
                     string id, SampleUrl, detailUrl;
                     detailUrl = id = SampleUrl = string.Empty;
 
-                    //Root->body->illustManga->data->illustId
+                    //Root->body->illustManga->data->id
                     JObject jobj = JObject.Parse(pageString);
                     JArray jArray = (JArray)jobj["body"]["illustManga"]["data"];
                     foreach (JObject jobjPicInfo in jArray)
                     {
-                        id = jobjPicInfo["illustId"].ToSafeString();
-                        SampleUrl = jobjPicInfo["url"].ToSafeString();
+
+                        id = jobjPicInfo["id"].ToSafeString();
+                        if(string.IsNullOrEmpty(id))
+                            throw new Exception($"没有找到对应的图片id。");
                         detailUrl = SiteUrl + "/artworks/" + id;
+
+                        SampleUrl = jobjPicInfo["url"].ToSafeString();
+                        if(string.IsNullOrEmpty(SampleUrl))
+                            throw new Exception($"没有找到对应的图片url。");
+                        
                         Img img = GenerateImg(detailUrl, SampleUrl, id);
                         if (img != null) imgs.Add(img);
                     }
