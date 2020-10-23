@@ -23,6 +23,7 @@ namespace SitePack
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.Pid));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.PidPlus));
             sites.Add(new SitePixiv(SitePixiv.PixivSrcType.ExtStteing_0));
+            sites.Add(new SitePixiv(SitePixiv.PixivSrcType.ExtStteing_1));
 
             sites.Add(new SiteLargeBooru(
                 "https://yande.re",

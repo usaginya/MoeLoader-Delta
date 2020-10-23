@@ -361,6 +361,7 @@ namespace MoeLoaderDelta
                     {
                         Icon = site.ExtendedSettings[extindex].Enable ? ExtSiteIconOn : ExtSiteIconOff,
                         Header = site.ExtendedSettings[extindex].Title,
+                        ToolTip = site.ToolTip,
                         DataContext = index++,
                         Tag = extindex++
                     };
@@ -1201,7 +1202,7 @@ namespace MoeLoaderDelta
                 toggleDownload.IsChecked = true;
                 ToggleDownload_Click(null, null);
             }
-            else 
+            else
             { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
@@ -1452,7 +1453,7 @@ namespace MoeLoaderDelta
         private void StartPreLoad()
         {
             PreFetcher.Fetcher.PreListLoaded += Fetcher_PreListLoaded;
-            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum,Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
+            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
         }
 
         public int MaskInt
