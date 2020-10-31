@@ -1973,9 +1973,11 @@ namespace MoeLoaderDelta
                     }
                     else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
                     {
-                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie");
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie", null, true);
                         inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
                         inputWnd.ShowDialog();
+                        loginSiteArgs.Cookie = Regex.Replace(loginSiteArgs.Cookie, @"^\s*\n", string.Empty, RegexOptions.Multiline).TrimEnd();
+                        loginSiteArgs.Cookie = Regex.Match(loginSiteArgs.Cookie, @"^*.+$").Value;
                         if (string.IsNullOrWhiteSpace(loginSiteArgs.Cookie)) { return; }
                         SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
@@ -1995,20 +1997,20 @@ namespace MoeLoaderDelta
             {
                 if (string.IsNullOrWhiteSpace(loginSiteArgs.User))
                 {
-                    string siteuser = e.ToStringArray()[0];
+                    string siteuser = e.GetArg(0);
                     if (string.IsNullOrWhiteSpace(siteuser)) { siteuser = string.Empty; }
                     loginSiteArgs.User = siteuser;
                 }
                 else
                 {
-                    string sitepwd = e.ToStringArray()[0];
+                    string sitepwd = e.GetArg(0);
                     if (string.IsNullOrWhiteSpace(sitepwd)) { sitepwd = string.Empty; }
                     loginSiteArgs.Pwd = sitepwd;
                 }
             }
             else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
             {
-                string cookie = e.ToStringArray()[0];
+                string cookie = e.GetArg(0);
                 if (string.IsNullOrWhiteSpace(cookie)) { cookie = string.Empty; }
                 loginSiteArgs.Cookie = cookie;
             }

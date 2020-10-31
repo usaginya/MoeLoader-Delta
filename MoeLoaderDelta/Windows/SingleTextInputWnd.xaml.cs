@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +13,7 @@ namespace MoeLoaderDelta.Windows
 {
     /// <summary>
     /// SingleTextInputWnd.xaml 的交互逻辑
-    /// Last 2020-7-22
+    /// Last 2020-10-31
     /// </summary>
     public partial class SingleTextInputWnd : Window
     {
@@ -42,10 +42,11 @@ namespace MoeLoaderDelta.Windows
         /// <param name="windowIcon">窗口图标、路径为项目主目录下的图片、如: Images/ico.png</param>
         /// <param name="inputInfo">输入提示信息</param>
         /// <param name="inputDefaultValue">输入框默认内容</param>
+        /// <param name="isMulitline">是否多行输入</param>
         public SingleTextInputWnd(Window owner = null, string windowTitle = null,
-            string windowIcon = null, string inputInfo = null, string inputDefaultValue = null)
+            string windowIcon = null, string inputInfo = null, string inputDefaultValue = null, bool isMulitline = false)
         {
-            OnWindowCreate(owner, windowTitle, windowIcon, inputInfo, inputDefaultValue);
+            OnWindowCreate(owner, windowTitle, windowIcon, inputInfo, inputDefaultValue, isMulitline);
         }
 
         /// <summary>
@@ -54,22 +55,31 @@ namespace MoeLoaderDelta.Windows
         /// <param name="owner">父窗口</param>
         /// <param name="inputInfo">输入提示信息</param>
         /// <param name="inputDefaultValue">输入框默认内容</param>
-        public SingleTextInputWnd(Window owner = null, string inputInfo = null, string inputDefaultValue = null)
+        /// <param name="isMulitline">是否多行输入</param>
+        public SingleTextInputWnd(Window owner = null, string inputInfo = null, string inputDefaultValue = null, bool isMulitline = false)
         {
-            OnWindowCreate(owner, null, null, inputInfo, inputDefaultValue);
+            OnWindowCreate(owner, null, null, inputInfo, inputDefaultValue, isMulitline);
         }
 
         /// <summary>
-        /// 创建窗口数据
+        /// 创建输入窗口
         /// </summary>
+        /// <param name="owner">父窗口</param>
+        /// <param name="windowTitle">标题</param>
+        /// <param name="windowIcon">图标</param>
+        /// <param name="inputInfo">输入提示信息</param>
+        /// <param name="inputDefaultValue">输入框默认内容</param>
+        /// <param name="isMulitline">是否多行输入</param>
         private void OnWindowCreate(Window owner = null, string windowTitle = null,
-            string windowIcon = null, string inputInfo = null, string inputDefaultValue = null)
+            string windowIcon = null, string inputInfo = null, string inputDefaultValue = null, bool isMulitline = false)
         {
             InitializeComponent();
             Owner = owner;
             Title = WindowTitle.Text = windowTitle ?? Title;
             TextBlockInputInfo.Text = inputInfo ?? TextBlockInputInfo.Text;
             TextBoxInputValue.Text = inputDefaultValue ?? TextBoxInputValue.Text;
+            TextBoxInputValue.TextWrapping = isMulitline ? TextWrapping.Wrap : TextWrapping.NoWrap;
+            TextBoxInputValue.AcceptsReturn = isMulitline;
 
             if (string.IsNullOrWhiteSpace(windowIcon)) { return; }
             BitmapImage ico = new BitmapImage(new Uri($"pack://application:,,,/{windowIcon}"));
@@ -254,7 +264,7 @@ namespace MoeLoaderDelta.Windows
     /// </summary>
     public class SingleTextInputEventArgs : EventArgs
     {
-        private StringBuilder _arg = new StringBuilder();
+        private List<string> _arg = new List<string>();
         public SingleTextInputEventArgs() { }
 
         /// <summary>
@@ -262,15 +272,15 @@ namespace MoeLoaderDelta.Windows
         /// </summary>
         public void Add(string str)
         {
-            _arg.Append($"{str} ");
+            _arg.Add(str);
         }
-        public override string ToString()
+
+        /// <summary>
+        /// 获取参数
+        /// </summary>
+        public string GetArg(int index)
         {
-            return _arg.ToString();
-        }
-        public string[] ToStringArray()
-        {
-            return _arg.ToString().Split(' ');
+            return (index < 0 || index >= _arg.Count) ? string.Empty : _arg[index];
         }
     }
 }
