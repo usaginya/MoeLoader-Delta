@@ -1,5 +1,4 @@
 ﻿using MoeLoaderDelta.Control;
-using MoeLoaderDelta.Control.Toast;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,7 +17,7 @@ namespace MoeLoaderDelta.Windows
 {
     /// <summary>
     /// FavoriteAddWnd.xaml 的交互逻辑
-    /// Last: 2020-8-9
+    /// Last: 2020-10-31
     /// </summary>
     public partial class FavoriteAddWnd : Window
     {
@@ -189,7 +188,7 @@ namespace MoeLoaderDelta.Windows
         /// </summary>
         private void AddFavDirToCombBox(object sender, SingleTextInputEventArgs args)
         {
-            string favDirName = args.ToStringArray()[0];
+            string favDirName = args.GetArg(0);
             if (string.IsNullOrWhiteSpace(favDirName)) { return; }
 
             if (!DirItems.Any(n => n == favDirName))

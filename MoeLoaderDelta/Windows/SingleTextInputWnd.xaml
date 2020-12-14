@@ -11,7 +11,7 @@
     MinWidth="420"
     MinHeight="190"
     MaxWidth="420"
-    MaxHeight="280"
+    MaxHeight="300"
     Activated="Window_Activated"
     AllowsTransparency="True"
     Closed="Window_Closed"
@@ -198,9 +198,11 @@
                     TextWrapping="Wrap" />
                 <TextBox
                     x:Name="TextBoxInputValue"
+                    MaxHeight="125"
                     Margin="0,8,0,0"
                     FontSize="14"
-                    Style="{StaticResource LightBlueTextBox}" />
+                    Style="{StaticResource LightBlueTextBox}"
+                    VerticalScrollBarVisibility="Auto" />
             </StackPanel>
             <!--#endregion-->
 

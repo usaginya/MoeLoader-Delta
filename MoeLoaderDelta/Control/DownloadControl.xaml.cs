@@ -1,5 +1,4 @@
-﻿using MoeLoaderDelta.Control.Toast;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -434,7 +433,7 @@ namespace MoeLoaderDelta
                 /////////开始写入文件
                 str = res.GetResponseStream();
                 byte[] bytes = new byte[5120];
-                fs = new FileStream(task.SaveLocation + DLEXT, FileMode.Create);
+                fs = new FileStream(task.SaveLocation + DLEXT, FileMode.Create, FileAccess.Write, FileShare.Delete);
 
                 int bytesReceived = 0;
                 DateTime last = DateTime.Now;
@@ -516,6 +515,7 @@ namespace MoeLoaderDelta
 
                 try
                 {
+                    if (fs != null) { fs.Close(); }
                     File.Delete(task.SaveLocation + DLEXT);
                     DelDLItemNullDirector(item);
                 }
@@ -539,6 +539,7 @@ namespace MoeLoaderDelta
                             NumFail++;
                             try
                             {
+                                if (fs != null) { fs.Close(); }
                                 File.Delete(task.SaveLocation + DLEXT);
                                 DelDLItemNullDirector(item);
                             }
@@ -547,6 +548,7 @@ namespace MoeLoaderDelta
                         else
                         {
                             //修改后缀名
+                            if (fs != null) { fs.Close(); }
                             File.Move(task.SaveLocation + DLEXT, task.SaveLocation);
 
                             item.Progress = 100.0;
@@ -573,7 +575,8 @@ namespace MoeLoaderDelta
         {
             try
             {
-                File.AppendAllText(SaveLocation + "\\moedl_error.log", content + "\r\n");
+                File.AppendAllText(SaveLocation + "\\moedl_error.log",
+                    $"{DateTime.Now.ToSafeString()}{Environment.NewLine}{content}{Environment.NewLine}");
             }
             catch { }
         }
