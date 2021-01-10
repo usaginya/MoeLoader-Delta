@@ -361,6 +361,7 @@ namespace MoeLoaderDelta
                     {
                         Icon = site.ExtendedSettings[extindex].Enable ? ExtSiteIconOn : ExtSiteIconOff,
                         Header = site.ExtendedSettings[extindex].Title,
+                        ToolTip = site.ToolTip,
                         DataContext = index++,
                         Tag = extindex++
                     };
@@ -1201,7 +1202,7 @@ namespace MoeLoaderDelta
                 toggleDownload.IsChecked = true;
                 ToggleDownload_Click(null, null);
             }
-            else 
+            else
             { Toast.Show($"选择的图片已添加到下载列表 →", MsgType.Success); }
         }
 
@@ -1452,7 +1453,7 @@ namespace MoeLoaderDelta
         private void StartPreLoad()
         {
             PreFetcher.Fetcher.PreListLoaded += Fetcher_PreListLoaded;
-            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum,Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
+            PreFetcher.Fetcher.PreFetchPage(realPage + 1, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
         }
 
         public int MaskInt
@@ -1972,9 +1973,11 @@ namespace MoeLoaderDelta
                     }
                     else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
                     {
-                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie");
+                        inputWnd = new SingleTextInputWnd(this, inputTitle, null, "输入Cookie", null, true);
                         inputWnd.InputResultEvent += new SingleTextInputWnd.InputValueHandler(LoginInputEvent);
                         inputWnd.ShowDialog();
+                        loginSiteArgs.Cookie = Regex.Replace(loginSiteArgs.Cookie, @"^\s*\n", string.Empty, RegexOptions.Multiline).TrimEnd();
+                        loginSiteArgs.Cookie = Regex.Match(loginSiteArgs.Cookie, @"^*.+$").Value;
                         if (string.IsNullOrWhiteSpace(loginSiteArgs.Cookie)) { return; }
                         SiteManager.LoginSiteCall(site, loginSiteArgs);
                     }
@@ -1994,20 +1997,20 @@ namespace MoeLoaderDelta
             {
                 if (string.IsNullOrWhiteSpace(loginSiteArgs.User))
                 {
-                    string siteuser = e.ToStringArray()[0];
+                    string siteuser = e.GetArg(0);
                     if (string.IsNullOrWhiteSpace(siteuser)) { siteuser = string.Empty; }
                     loginSiteArgs.User = siteuser;
                 }
                 else
                 {
-                    string sitepwd = e.ToStringArray()[0];
+                    string sitepwd = e.GetArg(0);
                     if (string.IsNullOrWhiteSpace(sitepwd)) { sitepwd = string.Empty; }
                     loginSiteArgs.Pwd = sitepwd;
                 }
             }
             else if (LoginURL == SiteManager.SiteLoginType.Cookie.ToSafeString())
             {
-                string cookie = e.ToStringArray()[0];
+                string cookie = e.GetArg(0);
                 if (string.IsNullOrWhiteSpace(cookie)) { cookie = string.Empty; }
                 loginSiteArgs.Cookie = cookie;
             }

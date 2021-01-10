@@ -39,6 +39,12 @@ namespace SitePack
         {
             shc.Timeout = 18000;
             sitePrefix = prefix;
+
+            if (sitePrefix == "idol")
+            {
+                ua = "SCChannelApp/3.2 (Android; idol)";
+            }
+
             CookieRestore();
         }
 
@@ -57,12 +63,7 @@ namespace SitePack
                 IsLoginSite = false;
                 prevSitePrefix = sitePrefix;
             }
-
-            if (sitePrefix == "idol")
-            {
-                ua = "SCChannelApp/3.2 (Android; idol)";
-            }
-
+            
             //Fix date:
             try
             {
@@ -78,6 +79,10 @@ namespace SitePack
                 }
             }
             catch { }
+
+            //对获取数添加限制
+            if (count >= 40)
+                count = 40;
 
             if (!IsLoginSite)
             {
@@ -193,6 +198,8 @@ namespace SitePack
                     if (jobj.Property("token_type") != null)
                     {
                         authorization = $"{jobj["token_type"]} {jobj["access_token"]} ";
+                        //在请求头中添加登录关键信息Authorization
+                        shc.Add(HttpRequestHeader.Authorization, authorization);
                     }
 
                     if (string.IsNullOrWhiteSpace(authorization))
@@ -256,6 +263,8 @@ namespace SitePack
                         else
                         {
                             cookie = $"{subdomain }.sankaku;{cookie}";
+                            //在请求头中添加cookie
+                            shc.Add(HttpRequestHeader.Cookie, cookie);
                         }
 
                         pageurl = $"{loginhost}/post/index.json?login={nowUser}&password_hash={temppass}" +

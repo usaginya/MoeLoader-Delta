@@ -9,19 +9,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
-using System.Windows.Forms;
 
 namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 200811
+    /// Last change 2001023
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
     {
         //标签, 完整标签, 作者id, 日榜, 周榜, 月榜, 作品id, 作品id及相关作品, 扩展设置0
-        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid, PidPlus, ExtStteing_0 }
+        public enum PixivSrcType { Tag, TagFull, Author, Day, Week, Month, Pid, PidPlus, ExtStteing_0, ExtStteing_1 }
 
         public override string SiteUrl { get { return "https://www.pixiv.net"; } }
         public override string SiteName
@@ -44,6 +43,8 @@ namespace SitePack
                     return "www.pixiv.net [IllustId+]";
                 else if (srcType == PixivSrcType.ExtStteing_0)
                     return "ExtStteing_0";
+                else if (srcType == PixivSrcType.ExtStteing_1)
+                    return "ExtStteing_1";
                 return "www.pixiv.net [Tag]";
             }
         }
@@ -65,6 +66,10 @@ namespace SitePack
                     return "搜索作品ID";
                 else if (srcType == PixivSrcType.PidPlus)
                     return "按作品ID搜索相关作品";
+                else if (srcType == PixivSrcType.ExtStteing_0)
+                    return "使用pixiv.cat第三方服务提高获取稳定性";
+                else if (srcType == PixivSrcType.ExtStteing_1)
+                    return $"忽略图片下载完成时完整性验证以解决下载未完成的问题";
                 return "最新作品 & 搜索标签";
             }
         }
@@ -134,7 +139,7 @@ namespace SitePack
         private const string pixivCat = "i.pixiv.cat";
         private const string extSettingOff = "0";
         private const string extSettingOn = "1";
-        private static bool enableThirdParty = false;
+        private static bool enableThirdParty = false, isNoVerify = false;
         private List<SiteExtendedSetting> extendedSettings = new List<SiteExtendedSetting>();
         private delegate void delegateExtSetting();
 
@@ -165,14 +170,28 @@ namespace SitePack
 
             ExtendedSettings = new List<SiteExtendedSetting>();
             SiteExtendedSetting ses;
+            string cfgValue;
+
             #region 第三方站点服务选项设置
-            string cfgValue = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "EnableThirdParty" });
+            cfgValue = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "EnableThirdParty" });
             enableThirdParty = !string.IsNullOrWhiteSpace(cfgValue) && cfgValue.Trim() != extSettingOff;
             ses = new SiteExtendedSetting()
             {
                 Title = "使用pixiv.cat服务下载图片",
                 Enable = enableThirdParty,
                 SettingAction = new delegateExtSetting(ExtSetting_EnableThirdParty)
+            };
+            ExtendedSettings.Add(ses);
+            #endregion
+
+            #region 忽略长度验证
+            cfgValue = SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "isNoVerify" });
+            isNoVerify = !string.IsNullOrWhiteSpace(cfgValue) && cfgValue.Trim() != extSettingOff;
+            ses = new SiteExtendedSetting()
+            {
+                Title = "忽略完整性验证",
+                Enable = isNoVerify,
+                SettingAction = new delegateExtSetting(ExtSetting_isNoVerify)
             };
             ExtendedSettings.Add(ses);
             #endregion
@@ -316,14 +335,14 @@ namespace SitePack
                     {
 
                         id = jobjPicInfo["id"].ToSafeString();
-                        if(string.IsNullOrEmpty(id))
+                        if (string.IsNullOrEmpty(id))
                             throw new Exception($"没有找到对应的图片id。");
                         detailUrl = SiteUrl + "/artworks/" + id;
 
                         SampleUrl = jobjPicInfo["url"].ToSafeString();
-                        if(string.IsNullOrEmpty(SampleUrl))
+                        if (string.IsNullOrEmpty(SampleUrl))
                             throw new Exception($"没有找到对应的图片url。");
-                        
+
                         Img img = GenerateImg(detailUrl, SampleUrl, id);
                         if (img != null) imgs.Add(img);
                     }
@@ -932,6 +951,9 @@ namespace SitePack
                 newOrigUrlList = null;
             }
             #endregion
+
+            //忽略长度检查
+            img.NoVerify = isNoVerify;
             return img;
         }
 
@@ -1017,20 +1039,28 @@ namespace SitePack
         }
 
         /// <summary>
+        /// 扩展设置忽略完整性验证
+        /// </summary>
+        private void ExtSetting_isNoVerify()
+        {
+            const int ExtSettingId = 1;
+            string isEnable = ExtendedSettings.Count > 0 ? (ExtendedSettings[ExtSettingId].Enable ? extSettingOff : extSettingOn) : extSettingOff;
+
+            if (string.IsNullOrWhiteSpace(isEnable)) { return; }
+            isNoVerify = isEnable.Trim() != extSettingOff;
+            ExtendedSettings[ExtSettingId].Enable = isNoVerify;
+            SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Cfg", Key = "isNoVerify", Value = isEnable }, SiteManager.SiteConfigType.Change);
+        }
+
+        /// <summary>
         /// 取第三方站点服务图链
         /// </summary>
         /// <param name="imgUrl">原始图片地址</param>
         /// <returns></returns>
         private string ThirdPrtyUrl(string imgUrl)
         {
-            //随机数取16%概率使用原地址、减轻pixiv.cat服务器压力
-            return enableThirdParty && SiteManager.RandomRNG(1, 100) > 16 ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
+            //随机数取10%概率使用原地址、减轻pixiv.cat服务器压力
+            return enableThirdParty && SiteManager.RandomRNG(1, 100) > 10 ? Regex.Replace(imgUrl, @"i\.[a-zA-Z]+\.net", pixivCat) : imgUrl;
         }
-
-        private void ShowMessage(string text)
-        {
-            MessageBox.Show(text, ShortName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-        }
-
     }
 }
