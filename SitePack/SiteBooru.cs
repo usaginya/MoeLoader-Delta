@@ -84,7 +84,10 @@ namespace SitePack
             this.shc = shc;
             this.loginUrl = loginUrl;
             siteLoginUser.Add(shortName, null);
-            siteLoginCookie.Add(shortName, null);
+            if (string.IsNullOrEmpty(shc.Get("Cookie")))
+                siteLoginCookie.Add(shortName, null);
+            else
+                siteLoginCookie.Add(shortName, shc.Get("Cookie"));
         }
 
         public override string SiteUrl => siteUrl;
@@ -180,11 +183,8 @@ namespace SitePack
                     break;
             }
 
-            if (count > 0)
-                url = string.Format(Url, pagestr, count, keyWord);
-            else
-                url = string.Format(Url, pagestr, keyWord);
-
+            url = (count > 0) ?  string.Format(Url, pagestr, count, keyWord) : string.Format(Url, pagestr, keyWord);
+            
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
             return Sweb.Get(url, proxy, shc);
