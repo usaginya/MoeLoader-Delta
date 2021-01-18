@@ -26,6 +26,7 @@ namespace MoeLoaderDelta
         public int Id { get; set; }
         public bool NoVerify { get; set; }
         public string SearchWord { get; set; }
+        public int SiteIntfcIndex { get; set; }
 
         /// <summary>
         /// 是否选中
@@ -139,7 +140,7 @@ namespace MoeLoaderDelta
         /// <param name="localName">本地路径文件名</param>
         /// <param name="localfileName">本地文件名</param>
         /// <param name="id">作品ID</param>
-        public DownloadItem(string fileName, string url, string host, string author, string localName, string localfileName, int id, bool? noVerify, string searchWord)
+        public DownloadItem(string fileName, string url, string host, string author, string localName, string localfileName, int id, bool? noVerify, string searchWord, int siteIntfcIndex)
         {
             FileName = fileName;
             Size = "N/A";
@@ -153,6 +154,7 @@ namespace MoeLoaderDelta
             Id = id;
             NoVerify = noVerify != null ? (bool)noVerify : false;
             SearchWord = searchWord;
+            SiteIntfcIndex = siteIntfcIndex;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

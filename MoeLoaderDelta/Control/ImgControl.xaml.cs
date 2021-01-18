@@ -45,6 +45,7 @@ namespace MoeLoaderDelta
             this.site = site;
             Image = img;
             this.index = index;
+            shc = site.SiteHeaders;
             shc.Add("Accept-Ranges", "bytes");
             shc.Accept = null;
             shc.Referer = site.Referer;

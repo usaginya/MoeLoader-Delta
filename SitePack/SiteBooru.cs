@@ -25,6 +25,7 @@ namespace SitePack
         protected BooruProcessor.SourceType srcType;
         protected SessionClient Sweb = new SessionClient();
         protected SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
 
         private Dictionary<string, string> siteLoginUser = new Dictionary<string, string>();
         private Dictionary<string, string> siteLoginCookie = new Dictionary<string, string>();

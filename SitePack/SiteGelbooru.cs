@@ -17,6 +17,7 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         private APImode apiMode = APImode.NULL;
         public override string SiteUrl { get { return "https://gelbooru.com"; } }
         public override string SiteName { get { return "gelbooru.com"; } }

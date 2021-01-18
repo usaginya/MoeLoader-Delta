@@ -132,6 +132,7 @@ namespace SitePack
         private static string tempPage = null;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         private readonly PixivSrcType srcType = PixivSrcType.Author;
         private string referer = "https://www.pixiv.net/";
         private string LoginUrl => "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=";
