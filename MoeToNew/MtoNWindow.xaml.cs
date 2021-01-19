@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 20170510       by YIU
-    /// Last 20200802
+    /// Last 20210120
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -148,7 +148,6 @@ namespace MoeLoaderDelta
         /// <returns>是否有更新</returns>
         private bool CreateUpdate()
         {
-
             #region 取更新信息
             MyWebClient web = new MyWebClient { Proxy = WebRequest.DefaultWebProxy };
             string updatejson = null;
@@ -169,7 +168,7 @@ namespace MoeLoaderDelta
             if (UpdateInfo == null)
                 return false;
 
-            foreach (MoeUpdateFile upfile in UpdateInfo.files)
+            foreach (MoeUpdateFile upfile in UpdateInfo.Files)
             {
                 localFile = RepairPath(upfile.Path) + upfile.Name;
                 if (upfile.State == "up" || string.IsNullOrWhiteSpace(upfile.State))

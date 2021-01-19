@@ -18,7 +18,7 @@ namespace MoeLoaderDelta
         {
             try
             {
-                return (new JavaScriptSerializer()).Deserialize<MoeUpdateItem>(upjson);
+                return new JavaScriptSerializer().Deserialize<MoeUpdateItem>(upjson);
             }
             catch
             {
@@ -38,10 +38,10 @@ namespace MoeLoaderDelta
         private string info;
         public string Info
         {
-            get { return string.IsNullOrWhiteSpace(info) ? "" : Regex.Unescape(info); }
+            get { return string.IsNullOrWhiteSpace(info) ? string.Empty : Regex.Unescape(info); }
             set { info = value; }
         }
-        public List<MoeUpdateFile> files { get; set; }
+        public List<MoeUpdateFile> Files { get; set; }
     }
 
     /// <summary>
@@ -52,36 +52,36 @@ namespace MoeLoaderDelta
         private string path, name, ver, state, url, md5;
         public string Path
         {
-            get { return string.IsNullOrWhiteSpace(path) ? "" : Regex.Unescape(path); }
-            set { path = value; }
+            get => string.IsNullOrWhiteSpace(path) ? string.Empty : Regex.Unescape(path);
+            set => path = value;
         }
         public string Name
         {
-            get { return string.IsNullOrWhiteSpace(name) ? "" : Regex.Unescape(name); }
-            set { name = value; }
+            get => string.IsNullOrWhiteSpace(name) ? string.Empty : Regex.Unescape(name);
+            set => name = value;
         }
         public string Ver
         {
-            get { return string.IsNullOrWhiteSpace(ver) ? "" : ver; }
-            set { ver = value; }
+            get => string.IsNullOrWhiteSpace(ver) ? string.Empty : ver;
+            set => ver = value;
         }
         /// <summary>
         /// 状态 up:下载  del:删除
         /// </summary>
         public string State
         {
-            get { return string.IsNullOrWhiteSpace(state) ? "" : state.ToLower(); }
-            set { state = value; }
+            get => string.IsNullOrWhiteSpace(state) ? string.Empty : state.ToLower();
+            set => state = value;
         }
         public string Url
         {
-            get { return string.IsNullOrWhiteSpace(url) ? "" : Regex.Unescape(url); }
-            set { url = value; }
+            get => string.IsNullOrWhiteSpace(url) ? string.Empty : Regex.Unescape(url);
+            set => url = value;
         }
         public string MD5
         {
-            get { return string.IsNullOrWhiteSpace(md5) ? "" : md5.Trim(); }
-            set { md5 = value; }
+            get => string.IsNullOrWhiteSpace(md5) ? string.Empty : md5.Trim();
+            set => md5 = value;
         }
     }
 }
