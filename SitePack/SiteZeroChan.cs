@@ -33,6 +33,7 @@ namespace SitePack
 
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders { get { return shc; } }
         private string[] user = { "zerouser1" };
         private readonly string[] pass = { "zeropass" };
         private string cookie = "", beforeWord = "", beforeUrl = "";

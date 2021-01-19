@@ -11,6 +11,7 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         private const string Cookieflag = "atfbooru=t;";
         private static string cookie = string.Empty, nowUser = cookie;
         private static bool IsLoginSite = false, IsRunLogin = IsLoginSite, onceLogin = true;

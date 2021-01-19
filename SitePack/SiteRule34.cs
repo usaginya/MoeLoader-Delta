@@ -18,6 +18,7 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         public override string ShortName { get { return "rule34"; } }
         private Rule34srcType srcType = Rule34srcType.Filter;
         public enum Rule34srcType { Filter, Full }

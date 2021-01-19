@@ -25,6 +25,7 @@ namespace SitePack
         protected BooruProcessor.SourceType srcType;
         protected SessionClient Sweb = new SessionClient();
         protected SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
 
         private Dictionary<string, string> siteLoginUser = new Dictionary<string, string>();
         private Dictionary<string, string> siteLoginCookie = new Dictionary<string, string>();
@@ -84,7 +85,10 @@ namespace SitePack
             this.shc = shc;
             this.loginUrl = loginUrl;
             siteLoginUser.Add(shortName, null);
-            siteLoginCookie.Add(shortName, null);
+            if (string.IsNullOrEmpty(shc.Get("Cookie")))
+                siteLoginCookie.Add(shortName, null);
+            else
+                siteLoginCookie.Add(shortName, shc.Get("Cookie"));
         }
 
         public override string SiteUrl => siteUrl;
@@ -180,11 +184,8 @@ namespace SitePack
                     break;
             }
 
-            if (count > 0)
-                url = string.Format(Url, pagestr, count, keyWord);
-            else
-                url = string.Format(Url, pagestr, keyWord);
-
+            url = (count > 0) ?  string.Format(Url, pagestr, count, keyWord) : string.Format(Url, pagestr, keyWord);
+            
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
             return Sweb.Get(url, proxy, shc);
