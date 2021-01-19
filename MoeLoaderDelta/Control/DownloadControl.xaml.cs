@@ -25,7 +25,9 @@ namespace MoeLoaderDelta
         public int id;
         public bool noVerify;
         public string searchWord;
-        public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id, bool noVerify)
+        //当前下载对象的站点接口检索号
+        public int siteIntfcIndex;
+        public MiniDownloadItem(string file, string url, string host, string author, string localName, string localfileName, int id, bool noVerify, int siteIntfcIndex)
         {
             //原始后缀名
             string ext = string.Empty;
@@ -50,6 +52,7 @@ namespace MoeLoaderDelta
             this.id = id;
             this.noVerify = noVerify;
             this.searchWord = MainWindow.SearchWordPu;
+            this.siteIntfcIndex = siteIntfcIndex;
         }
     }
 
@@ -74,6 +77,7 @@ namespace MoeLoaderDelta
             public bool IsStop { set; get; }
             public string NeedReferer { get; set; }
             public bool NoVerify { get; set; }
+            public SessionHeadersCollection SiteHeaders { get; set; }
 
             /// <summary>
             /// 下载任务
@@ -81,13 +85,15 @@ namespace MoeLoaderDelta
             /// <param name="url">目标地址</param>
             /// <param name="saveLocation">保存位置</param>
             /// <param name="referer">是否需要伪造Referer</param>
-            public DownloadTask(string url, string saveLocation, string referer, bool noVerify)
+            /// <param name="shc">指定请求头</param>
+            public DownloadTask(string url, string saveLocation, string referer, bool noVerify, SessionHeadersCollection shc)
             {
                 SaveLocation = saveLocation;
                 Url = url;
                 NeedReferer = referer;
                 NoVerify = noVerify;
                 IsStop = false;
+                SiteHeaders = shc;
             }
         }
         public ObservableCollection<DownloadItem> DownloadItems { get; } = new ObservableCollection<DownloadItem>();
@@ -191,8 +197,10 @@ namespace MoeLoaderDelta
                       {
                           downloadItemsDic.Remove(item.url);
                       }*/
-                    DownloadItem itm = new DownloadItem(fileName, item.url, item.host, item.author, item.localName, item.localfileName, item.id, item.noVerify, item.searchWord);
-
+                    DownloadItem itm = new DownloadItem(
+                        fileName, item.url, item.host, item.author, item.localName, 
+                        item.localfileName, item.id, item.noVerify, item.searchWord, item.siteIntfcIndex
+                        );
                     downloadItemsDic.Add(item.url, itm);
                     DownloadItems.Add(itm);
                     NumLeft++;
@@ -214,7 +222,8 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 添加下载通用
         /// </summary>
-        /// <param name="items"></param>
+        /// <param name="items">下载物</param>
+        /// <param name="site">站点接口</param>
         public void AddDownload(IEnumerable<MiniDownloadItem> items)
         {
             AddDownload(items, DLWorkMode.Retry);
@@ -353,7 +362,9 @@ namespace MoeLoaderDelta
 
                         DownloadItems[DownloadItems.Count - NumLeft].StatusE = DLStatus.DLing;
 
-                        DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify);
+                        SessionHeadersCollection shc = new SessionHeadersCollection();
+                        shc = SiteManager.Instance.Sites[dlitem.SiteIntfcIndex].SiteHeaders;
+                        DownloadTask task = new DownloadTask(url, file, MainWindow.IsNeedReferer(url), dlitem.NoVerify, shc);
                         webs.Add(url, task);
 
                         //异步下载开始
@@ -379,6 +390,7 @@ namespace MoeLoaderDelta
             FileStream fs = null;
             Stream str = null;
             SessionHeadersCollection shc = new SessionHeadersCollection();
+            shc = task.SiteHeaders;
             SessionClient sc = new SessionClient();
             System.Net.WebResponse res = null;
             double downed = 0;
@@ -792,7 +804,7 @@ namespace MoeLoaderDelta
 
                         if (!isexists)
                         {
-                            //url|文件名|域名|上传者|ID(用于判断重复)|免文件校验
+                            //url|文件名|域名|上传者|ID(用于判断重复)|免文件校验|下载对象的站点接口检索号
                             text += i.Url
                                 + "|" + i.LocalFileName
                                 + "|" + i.Host
@@ -800,6 +812,7 @@ namespace MoeLoaderDelta
                                 + "|" + i.Id
                                 + "|" + (i.NoVerify ? 'v' : 'x')
                                 + "|" + i.SearchWord
+                                + "|" + i.SiteIntfcIndex
                                 + "\r\n";
                             success++;
                         }
@@ -929,7 +942,7 @@ namespace MoeLoaderDelta
                             downloadItemsDic.Remove(item.Url);
                             AddDownload(new MiniDownloadItem[] {
                                 new MiniDownloadItem(item.FileName, item.Url, item.Host, item.Author, item.LocalName, item.LocalFileName,
-                                item.Id, item.NoVerify)
+                                item.Id, item.NoVerify, item.SiteIntfcIndex)
                             }, dlworkmode);
                         }
                         break;
@@ -1270,6 +1283,25 @@ namespace MoeLoaderDelta
                     //搜索时关键词
                     if (parts.Length > 6 && parts[6].Trim().Length > 0)
                         di.searchWord = parts[6];
+
+                    //下载对象的站点接口检索号
+                    if (parts.Length > 7 && parts[7].Trim().Length > 0)
+                    {
+                        try
+                        {
+                            di.siteIntfcIndex = int.Parse(parts[7]);
+                        }
+                        catch
+                        {
+                            //设为默认站点接口检索号
+                            di.siteIntfcIndex = 10;
+                        }
+                    }
+                    else
+                    {
+                        //设为默认站点接口检索号
+                        di.siteIntfcIndex = 10;
+                    }
 
                     items.Add(di);
                 }

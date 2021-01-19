@@ -122,6 +122,11 @@ namespace MoeLoaderDelta
         bool IsVisible { get; }
 
         /// <summary>
+        /// 该站点的请求头
+        /// </summary>
+        SessionHeadersCollection SiteHeaders { get; }
+
+        /// <summary>
         /// 站点列表中显示的图标
         /// </summary>
         System.IO.Stream IconStream { get; }

@@ -28,6 +28,7 @@ namespace SitePack
 
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         private static string authorization = string.Empty, nowUser = authorization, nowPwd = authorization;
         private static bool IsLoginSite = false, IsRunLogin = IsLoginSite, onceLogin = true;
 

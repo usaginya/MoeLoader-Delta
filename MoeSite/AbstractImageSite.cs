@@ -125,6 +125,19 @@ namespace MoeLoaderDelta
         public virtual bool IsVisible => true;
 
         /// <summary>
+        /// 该站点的请求头
+        /// </summary>
+        public virtual SessionHeadersCollection SiteHeaders
+        {
+            get
+            {
+                SessionHeadersCollection shc = new SessionHeadersCollection();
+                return shc;
+            }
+
+        }
+
+        /// <summary>
         /// 站点扩展设置，用于在站点子菜单加入扩展设置选项
         /// </summary>
         public virtual List<SiteExtendedSetting> ExtendedSettings { get; set; }

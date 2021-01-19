@@ -16,6 +16,7 @@ namespace SitePack
         private SiteBooru booru;
         private SessionClient Sweb = new SessionClient();
         private SessionHeadersCollection shc = new SessionHeadersCollection();
+        public override SessionHeadersCollection SiteHeaders => shc;
         private static bool IsLoginSite = false, IsRunLogin = IsLoginSite;
         private string sitePrefix, temppass, tempappkey, ua, pageurl;
         private static string cookie = string.Empty, authorization = cookie, nowUser = cookie, nowPwd = cookie, prevSitePrefix = cookie;

@@ -114,6 +114,8 @@ namespace MoeLoaderDelta
                         ContentType = SessionHeadersValue.ContentTypeAuto,
                         Referer = site.Referer
                     };
+
+                    shc = site.SiteHeaders;
                     shc.Add("Accept-Ranges", "bytes");
 
                     imgs = site.FilterImg(imgs, MainWindow.MainW.MaskInt, MainWindow.MainW.MaskRes,
