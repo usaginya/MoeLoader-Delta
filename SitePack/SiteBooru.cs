@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 200811
+    /// Last 210120
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -184,8 +184,8 @@ namespace SitePack
                     break;
             }
 
-            url = (count > 0) ?  string.Format(Url, pagestr, count, keyWord) : string.Format(Url, pagestr, keyWord);
-            
+            url = (count > 0) ? string.Format(Url, pagestr, count, keyWord) : string.Format(Url, pagestr, keyWord);
+
             url = keyWord.Length < 1 ? url.Substring(0, url.Length - 6) : url;
 
             return Sweb.Get(url, proxy, shc);
@@ -217,15 +217,23 @@ namespace SitePack
                 // [{"id":null,"name":"idolmaster_cinderella_girls","post_count":54050,"category":3,"antecedent_name":"cinderella_girls"},
                 // {"id":null,"name":"cirno","post_count":24486,"category":4,"antecedent_name":null}]
 
-                object[] jsonobj = (new JavaScriptSerializer()).DeserializeObject(url) as object[];
+                object[] jsonobj = new JavaScriptSerializer().DeserializeObject(url) as object[];
 
                 foreach (Dictionary<string, object> o in jsonobj)
                 {
-                    string name = "", count = "";
+                    string name = string.Empty, count = string.Empty;
                     if (o.ContainsKey("name"))
+                    {
                         name = o["name"].ToString();
+                    }
+                    else if (o.ContainsKey("value"))
+                    {
+                        name = o["value"].ToString();
+                    }
+
                     if (o.ContainsKey("post_count"))
-                        count = o["post_count"].ToString();
+                    { count = o["post_count"].ToString(); }
+
                     re.Add(new TagItem()
                     {
                         Name = name,
@@ -367,7 +375,7 @@ namespace SitePack
                 IsLoginSite = false;
                 siteLoginUser[shortName] = siteLoginCookie[shortName] = null;
                 string msg = $"登录失败{Environment.NewLine}{e.Message}";
-                SiteManager.EchoErrLog(SiteName,msg,true );
+                SiteManager.EchoErrLog(SiteName, msg, true);
                 SiteManager.ShowToastMsg(msg, SiteManager.MsgType.Error);
             }
             finally { IsRunLogin = false; }

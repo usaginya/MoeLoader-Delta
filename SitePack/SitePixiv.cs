@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 2001023
+    /// Last change 210119
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -455,16 +455,16 @@ namespace SitePack
                     //相关作品json信息
                     string relatePicJson = tempPage;
                     string tempuid = string.Empty;
-                    //ROOT ->body -> recommendMethods
-                    List<string> rmsList = new List<string>();//recommendMethods 数据
+                    //ROOT ->body -> nextIds
+                    List<string> rmsList = new List<string>();//nextIds 数据
                     if (!string.IsNullOrWhiteSpace(relatePicJson))
                     {
                         JObject JOdata = JObject.Parse(relatePicJson);
-                        JToken JTillusts, JTrecommend;
+                        JToken JTillusts, JTnextids;
                         if (!string.IsNullOrWhiteSpace(JOdata["body"].ToString()))
                         {
                             JTillusts = ((JObject)JOdata["body"])["illusts"];
-                            JTrecommend = ((JObject)JOdata["body"])["recommendMethods"];
+                            JTnextids = ((JObject)JOdata["body"])["nextIds"];
 
                             // get userid
                             if (((JArray)JTillusts).Count > 0)
@@ -473,9 +473,9 @@ namespace SitePack
                             }
 
                             // recommendMethods
-                            foreach (JProperty jp in JTrecommend)
+                            foreach (string  nid in JTnextids)
                             {
-                                rmsList.Add(jp.Name);
+                                rmsList.Add(nid);
                             }
                         }
                     }
@@ -1006,7 +1006,12 @@ namespace SitePack
                     Regex rx = new Regex("pixivId\":\"(.*?)\",", RegexOptions.IgnoreCase);
                     GroupCollection group = rx.Match(pageString).Groups;
                     if (group.Count > 1) { nowUser = group[1].Value; }
-                    SiteManager.SiteConfig(ShortName, new SiteConfigArgs() { Section = "Login", Key = "Cookie", Value = cookie }, SiteManager.SiteConfigType.Change);
+                    SiteManager.SiteConfig(ShortName, new SiteConfigArgs()
+                    {
+                        Section = "Login",
+                        Key = "Cookie",
+                        Value = cookie
+                    }, SiteManager.SiteConfigType.Change);
                 }
                 else
                 {
