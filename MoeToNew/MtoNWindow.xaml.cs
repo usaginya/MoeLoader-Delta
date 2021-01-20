@@ -159,7 +159,9 @@ namespace MoeLoaderDelta
             #endregion
 
             #region 匹配文件并添加到更新列表
-            string localFile = string.Empty;
+            string localPath = string.Empty,
+                newPath = string.Empty,
+                localFile = string.Empty;
 
             if (string.IsNullOrWhiteSpace(updatejson))
                 return false;
@@ -170,7 +172,9 @@ namespace MoeLoaderDelta
 
             foreach (MoeUpdateFile upfile in UpdateInfo.Files)
             {
-                localFile = RepairPath(upfile.Path) + upfile.Name;
+                localPath = RepairPath(upfile.Path);
+                newPath = RepairPath(upfile.NewPath);
+                localFile = localPath + upfile.Name;
                 if (upfile.State == "up" || string.IsNullOrWhiteSpace(upfile.State))
                 {
                     if (string.IsNullOrWhiteSpace(localFile) || string.IsNullOrWhiteSpace(upfile.Url))
@@ -183,6 +187,11 @@ namespace MoeLoaderDelta
                 else if (upfile.State == "del" && File.Exists(localFile))
                 {
                     UpdateFilesInfo += "- " + localFile + "[br]";
+                    UpdateFiles.Add(upfile);
+                }
+                else if (upfile.State == "mov" && Directory.Exists(localPath))
+                {
+                    UpdateFilesInfo += $"{localPath} >> {newPath} [br]";
                     UpdateFiles.Add(upfile);
                 }
             }
