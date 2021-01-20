@@ -64,7 +64,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private string[] updateInfoUrl ={
             "https://gitee.com/YIU/mkAppUpInfo/raw/master/MoeLoader-Delta/update.json",
-            "https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/update.json"
+            "https://cdn.jsdelivr.net/gh/usaginya/mkAppUpInfo@master/MoeLoader-Delta/update.json"
         };
 
         /// <summary>

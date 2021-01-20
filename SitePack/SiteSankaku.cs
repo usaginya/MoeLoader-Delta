@@ -52,11 +52,6 @@ namespace SitePack
         /// <summary>
         /// 取页面源码 来自官方APP处理方式
         /// </summary>
-        /// <param name="page"></param>
-        /// <param name="count"></param>
-        /// <param name="keyWord"></param>
-        /// <param name="proxy"></param>
-        /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             if (prevSitePrefix != sitePrefix)
