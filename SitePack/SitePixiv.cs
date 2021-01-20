@@ -473,7 +473,7 @@ namespace SitePack
                             }
 
                             // recommendMethods
-                            foreach (string  nid in JTnextids)
+                            foreach (string nid in JTnextids)
                             {
                                 rmsList.Add(nid);
                             }
@@ -989,7 +989,7 @@ namespace SitePack
                 shc.Set("sec-fetch-user", "1");
                 shc.Set("upgrade-insecure-requests", "1");
 
-                string pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
+                string pageString = Sweb.Get(SiteUrl, SiteManager.MainProxy, shc);
                 result = !string.IsNullOrWhiteSpace(pageString);
                 if (!result) { SiteManager.EchoErrLog(SiteName, "登录失败 站点没有响应", true); }
 

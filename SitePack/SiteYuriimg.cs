@@ -212,7 +212,7 @@ namespace SitePack
                 string post = JsonConvert.SerializeObject(user);
 
                 //Post登录取Authorization
-                post = Sweb.Post(loginUrl, post, SiteManager.GetWebProxy(), shc);
+                post = Sweb.Post(loginUrl, post, SiteManager.MainProxy, shc);
                 if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
                 {
                     IsRunLogin = false;

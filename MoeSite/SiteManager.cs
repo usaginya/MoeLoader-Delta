@@ -16,7 +16,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20200814
+    /// Last 20210120
     /// </summary>
     public class SiteManager
     {
@@ -40,12 +40,6 @@ namespace MoeLoaderDelta
         /// </summary>
         public static ShowToastMsgDelegate showToastMsgDelegate;
         public delegate void ShowToastMsgDelegate(string msg, MsgType msgType);
-
-        /// <summary>
-        /// 获取当前网络代理
-        /// </summary>
-        public static GetNetProxyDelegate getNetPorxyDelegate;
-        public delegate IWebProxy GetNetProxyDelegate();
         #endregion
 
         /// <summary>
@@ -63,7 +57,8 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 初始化aesKey
         /// </summary>
-        private static readonly string aesKey = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{MachineInfo.GetBLOSSerialNumber()}${MachineInfo.GetCPUSerialNumber()}"));
+        private static readonly string aesKey = Convert.ToBase64String
+            (Encoding.UTF8.GetBytes($"{MachineInfo.GetBLOSSerialNumber()}${MachineInfo.GetCPUSerialNumber()}"));
 
         /// <summary>
         /// ini配置文件解析
@@ -139,15 +134,6 @@ namespace MoeLoaderDelta
         {
             if (showToastMsgDelegate == null) { return; }
             showToastMsgDelegate(msg, msgType);
-        }
-
-        /// <summary>
-        /// 调用当前网络代理
-        /// </summary>
-        public static IWebProxy GetWebProxy()
-        {
-            if (getNetPorxyDelegate == null) { return new WebProxy(); }
-            return getNetPorxyDelegate();
         }
 
         /// <summary>

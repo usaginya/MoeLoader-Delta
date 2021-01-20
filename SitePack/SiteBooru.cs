@@ -329,7 +329,7 @@ namespace SitePack
                 shc.Set("Cookie", tmp_cookie);
                 shc.Accept = SessionHeadersValue.AcceptDefault;
                 shc.ContentType = SessionHeadersValue.ContentTypeAuto;
-                pageString = Sweb.Get(SiteUrl, SiteManager.GetWebProxy(), shc);
+                pageString = Sweb.Get(SiteUrl, SiteManager.MainProxy, shc);
                 shc.Accept = oldAccept;
                 shc.ContentType = oldContentType;
                 result = !string.IsNullOrWhiteSpace(pageString);
