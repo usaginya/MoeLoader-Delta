@@ -283,7 +283,9 @@ namespace SitePack
         /// </summary>
         public override void LoginCall(LoginSiteArgs loginArgs)
         {
-            if (string.IsNullOrWhiteSpace(loginUrl) || IsRunLogin || string.IsNullOrWhiteSpace(loginArgs.Cookie)) { return; }
+            if (string.IsNullOrWhiteSpace(loginUrl) || IsRunLogin)
+            { return; }
+
             siteLoginCookie[shortName] = loginArgs.Cookie;
             CookieLogin();
         }

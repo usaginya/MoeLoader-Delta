@@ -263,7 +263,7 @@ namespace MoeLoaderDelta
         }
         private void RunMoeLoader()
         {
-            RunMoeLoader("");
+            RunMoeLoader(string.Empty);
         }
 
         /// <summary>
