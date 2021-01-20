@@ -49,7 +49,7 @@ namespace MoeLoaderDelta
     /// </summary>
     public class MoeUpdateFile
     {
-        private string path, name, ver, state, url, md5;
+        private string path, name, ver, state, url, md5, newpath;
         public string Path
         {
             get => string.IsNullOrWhiteSpace(path) ? string.Empty : Regex.Unescape(path);
@@ -66,7 +66,7 @@ namespace MoeLoaderDelta
             set => ver = value;
         }
         /// <summary>
-        /// 状态 up:下载  del:删除
+        /// 状态 up:下载  del:删除 mov:移动
         /// </summary>
         public string State
         {
@@ -82,6 +82,14 @@ namespace MoeLoaderDelta
         {
             get => string.IsNullOrWhiteSpace(md5) ? string.Empty : md5.Trim();
             set => md5 = value;
+        }
+        /// <summary>
+        /// 移动到新路径
+        /// </summary>
+        public string NewPath
+        {
+            get => string.IsNullOrWhiteSpace(newpath) ? string.Empty : Regex.Unescape(newpath);
+            set => newpath = value;
         }
     }
 }

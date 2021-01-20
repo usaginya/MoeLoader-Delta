@@ -127,16 +127,16 @@ namespace MoeLoaderDelta.Helpers
             {
                 return "源目录不存在";
             }
-            return "";
+            return string.Empty;
         }
         /// <summary>
         /// 移动文件夹中的所有文件夹与文件到另一个文件夹
         /// </summary>
         /// <param name="sourcePath">源文件夹</param>
         /// <param name="destPath">目标文件夹</param>
-        public static void MoveFolder(string sourcePath, string destPath)
+        public static string MoveFolder(string sourcePath, string destPath)
         {
-            MoveFolder(sourcePath, destPath, null);
+            return MoveFolder(sourcePath, destPath, null);
         }
     }
 }

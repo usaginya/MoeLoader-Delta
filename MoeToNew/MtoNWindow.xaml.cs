@@ -352,12 +352,29 @@ namespace MoeLoaderDelta
                             }
                             catch { }
                             #endregion
+                            break;
 
-                            Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
+                        case "mov":
+                            #region 移动信息显示
+                            Dispatcher.Invoke(new Action(delegate
+                            {
+                                pbSingleTxt.Text = "移动 " + nowDLfile.Name;
+                                pbSingleSpeed.Visibility = pbSingleVal.Visibility = Visibility.Hidden;
+                            }));
                             Thread.Sleep(666);
+                            #endregion
 
-                            //处理下一个文件
-                            DownloadFile(FileListCount, ++FileListIndex);
+                            #region 移动文件到新目录
+                            string moveinfo = DataHelpers.MoveFolder(nowDLfile.Path, nowDLfile.NewPath);
+                            if (!string.IsNullOrWhiteSpace(moveinfo))
+                            {
+                                Dispatcher.Invoke(new Action(delegate
+                                {
+                                    pbSingleTxt.Text = moveinfo;
+                                }));
+                                Thread.Sleep(666);
+                            }
+                            #endregion
                             break;
 
                         default:
@@ -435,12 +452,6 @@ namespace MoeLoaderDelta
                                 }
                                 str.Close();
                                 fileStr.Close();
-
-                                Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
-                                Thread.Sleep(666);
-
-                                //下载完成一个文件后回调下载下一个
-                                DownloadFile(FileListCount, ++FileListIndex);
                             }, null);
                             #endregion
                             break;
@@ -455,6 +466,14 @@ namespace MoeLoaderDelta
                         pbTotal.Value++;
                     }));
                     Thread.Sleep(666);
+                }
+                finally
+                {
+                    Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
+                    Thread.Sleep(666);
+
+                    //回调处理下一个文件
+                    DownloadFile(FileListCount, ++FileListIndex);
                 }
             }
 
