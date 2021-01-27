@@ -172,7 +172,8 @@ namespace MoeLoaderDelta
                 {
                     if (!rInvalidChar.Equals('<') && txtPattern.Text.Contains(rInvalidChar.ToSafeString()))
                     {
-                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符",
+                            MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                         txtPattern.SelectAll();
                         txtPattern.Focus();
                         return;
@@ -200,7 +201,8 @@ namespace MoeLoaderDelta
                 }
                 if (!right)
                 {
-                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式",
+                        MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                     txtProxy.SelectAll();
                     txtProxy.Focus();
                     return;

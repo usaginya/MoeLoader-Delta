@@ -1,13 +1,15 @@
 ﻿/*
- * version 1.94
+ * version 1.95
  * by YIU
  * Create               20170106
- * Last Change     20201017
+ * Last Change     20210120
  */
 
+using Brotli;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -72,6 +74,66 @@ namespace MoeLoaderDelta
             return request;
         }
         //##############################################################################
+        //######################   Encode Decode  ############################################
+        /// <summary>
+        /// 读取编码的Stream，返回字符串结果
+        /// </summary>
+        /// <param name="webResponse">HttpWebResponse</param>
+        /// <param name="encoding">指定编码</param>
+        /// <returns>字符串结果</returns>
+        private string EncodeStreamReader(HttpWebResponse webResponse, Encoding encoding)
+        {
+            string strReader = string.Empty;
+            string contentEncoding = webResponse.ContentEncoding.ToLower();
+
+            using (Stream stream = webResponse.GetResponseStream())
+            {
+                if (contentEncoding.Contains("gzip"))
+                {
+                    using (GZipStream zipStream = new GZipStream(stream, CompressionMode.Decompress))
+                    {
+                        using (StreamReader reader = new StreamReader(zipStream, encoding))
+                        {
+                            strReader = reader.ReadToEnd();
+                        }
+                    }
+                }
+                else if (contentEncoding.Contains("br"))
+                {
+                    using (BrotliStream bs = new BrotliStream(stream, CompressionMode.Decompress))
+                    {
+                        using (MemoryStream msOutput = new MemoryStream())
+                        {
+                            bs.CopyTo(msOutput);
+                            msOutput.Seek(0, SeekOrigin.Begin);
+                            using (StreamReader reader = new StreamReader(msOutput))
+                            {
+                                strReader = reader.ReadToEnd();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (StreamReader reader = new StreamReader(stream, encoding))
+                    {
+                        strReader = reader.ReadToEnd();
+                    }
+                }
+            }
+            return strReader;
+        }
+
+        /// <summary>
+        /// 读取编码的Stream，返回字符串结果，Encoding.Default
+        /// </summary>
+        /// <param name="webResponse">HttpWebResponse</param>
+        /// <returns>字符串结果</returns>
+        private string EncodeStreamReader(HttpWebResponse webResponse, string contentEncoding)
+        {
+            return EncodeStreamReader(webResponse, Encoding.Default);
+        }
+        //##############################################################################
         //#############################   GET   #################################################
         /// <summary>
         /// Get访问,便捷
@@ -123,7 +185,7 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
-            GC.Collect(1, GCCollectionMode.Forced);
+            GC.Collect(1, GCCollectionMode.Optimized);
             string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse response = null;
@@ -138,11 +200,8 @@ namespace MoeLoaderDelta
             {
                 m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
             }
-            Stream rspStream = response.GetResponseStream();
-            StreamReader sr = new StreamReader(rspStream, Encoding.GetEncoding(pageEncoding));
-            ret = sr.ReadToEnd();
-            sr.Close();
-            rspStream.Close();
+
+            ret = EncodeStreamReader(response, Encoding.GetEncoding(pageEncoding));
 
             if (response != null)
             {
@@ -289,7 +348,8 @@ namespace MoeLoaderDelta
         /// <param name="pageEncoding">编码</param>
         /// <param name="shc">Headers</param>
         /// <returns></returns>
-        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc, ref WebHeaderCollection responeHeaders)
+        public string Post(string url, string postData, IWebProxy proxy, string pageEncoding,
+            SessionHeadersCollection shc, ref WebHeaderCollection responeHeaders)
         {
             GC.Collect(1, GCCollectionMode.Forced);
             HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
@@ -317,15 +377,7 @@ namespace MoeLoaderDelta
                     m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
                 }
                 responeHeaders = request.Headers;
-                Stream responseStream = response.GetResponseStream();
-                string resData = string.Empty;
-
-                using (StreamReader resSR = new StreamReader(responseStream, Encoding.GetEncoding(pageEncoding)))
-                {
-                    resData = resSR.ReadToEnd();
-                    resSR.Close();
-                    responseStream.Close();
-                }
+                string resData = EncodeStreamReader(response, Encoding.GetEncoding(pageEncoding));
                 return resData;
             }
             catch (Exception e)

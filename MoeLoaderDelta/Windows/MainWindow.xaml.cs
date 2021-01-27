@@ -129,7 +129,7 @@ namespace MoeLoaderDelta
         private bool funcBtnShown = false;
 
         //缩略图大小
-        private int thumbSize = 300;
+        private int thumbSize = 250;
 
         //收藏按钮长按事件任务
         private Thread fav_thread;
@@ -520,7 +520,6 @@ namespace MoeLoaderDelta
 
             #region 事件绑定
             SiteManager.showToastMsgDelegate = ShowToastMsg;
-            SiteManager.getNetPorxyDelegate = GetWebProxy;
             #endregion
         }
 
@@ -542,29 +541,17 @@ namespace MoeLoaderDelta
         }
 
         /// <summary>
-        /// 调取当前网络代理
-        /// </summary>
-        /// <returns></returns>
-        private IWebProxy GetWebProxy()
-        {
-            return WebProxy;
-        }
-
-        /// <summary>
         /// 更新菜单中登录站点的用户名
         /// </summary>
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
-            IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
+            IMageSite site = null;
             if (SiteManager.Instance.Sites.Count > 0)
             {
+                site = SiteManager.Instance.Sites[comboBoxIndex];
                 itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(site.LoginURL);
-            }
-
-            if (itmLoginSite.IsEnabled && site.LoginSiteIsLogged)
-            {
-                tmp_user = site.LoginUser;
+                tmp_user = (itmLoginSite.IsEnabled && site.LoginSiteIsLogged) ? site.LoginUser : tmp_user;
             }
             loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : $"{tmp_user}已登录";
         }
@@ -2359,7 +2346,7 @@ namespace MoeLoaderDelta
                         }
                         string fileName = GenFileName(dlimg, oriUrls[c]);
                         string domain = SiteManager.Instance.Sites[nowSelectedIndex].ShortName;
-                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify,nowSelectedIndex));
+                        urls.Add(new MiniDownloadItem(fileName, oriUrls[c], domain, dlimg.Author, string.Empty, string.Empty, dlimg.Id, dlimg.NoVerify, nowSelectedIndex));
                     }
                     if (ClearDownloadSelected)
                     { ((ImgControl)imgPanel.Children[i]).SetChecked(false); }

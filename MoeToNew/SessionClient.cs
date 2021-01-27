@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.8
+ * version 1.81
  * by YIU
  * Create               20170106
- * Last Change     20180527
+ * Last Change     20210120
  */
 
 using System;
@@ -29,15 +29,10 @@ namespace MoeLoaderDelta
             "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_2 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Mobile/15A421",
             };
 
-        private static string defUA = UAs[new Random().Next(0, UAs.Length - 1)];
-
         /// <summary>
         /// 提供UA
         /// </summary>
-        public static string DefUA
-        {
-            get { return defUA; }
-        }
+        public static string DefUA { get; } = UAs[new Random().Next(0, UAs.Length - 1)];
 
         /// <summary>
         /// Cookie集合
@@ -107,8 +102,10 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, string UA)
         {
-            SessionHeadersCollection shc = new SessionHeadersCollection();
-            shc.UserAgent = UA;
+            SessionHeadersCollection shc = new SessionHeadersCollection
+            {
+                UserAgent = UA
+            };
             return Get(url, proxy, pageEncoding, shc);
         }
 
@@ -122,13 +119,13 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
-            string ret = "";
+            string ret = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse reponse = null;
             try
             {
                 SetHeader(request, url, proxy, shc);
-
+                request.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
                 reponse = (HttpWebResponse)request.GetResponse();
                 m_Cookie = request.CookieContainer;
                 Stream rspStream = reponse.GetResponseStream();
@@ -196,10 +193,12 @@ namespace MoeLoaderDelta
         /// <returns>WebResponse</returns>
         public WebResponse GetWebResponse(string url, IWebProxy proxy, string referer)
         {
-            SessionHeadersCollection shc = new SessionHeadersCollection();
-            shc.Referer = referer;
-            shc.Timeout = 20000;
-            shc.ContentType = SessionHeadersValue.ContentTypeAuto;
+            SessionHeadersCollection shc = new SessionHeadersCollection
+            {
+                Referer = referer,
+                Timeout = 20000,
+                ContentType = SessionHeadersValue.ContentTypeAuto
+            };
             return GetWebResponse(url, proxy, shc.Timeout, shc);
         }
 
@@ -225,7 +224,7 @@ namespace MoeLoaderDelta
         }
 
         //########################################################################################
-
+        /*
         //#############################   POST   #################################################
         /// <summary>
         /// Post访问,便捷
@@ -296,7 +295,7 @@ namespace MoeLoaderDelta
                 response = (HttpWebResponse)request.GetResponse();
                 m_Cookie = request.CookieContainer;//访问后更新Cookie
                 Stream responseStream = response.GetResponseStream();
-                string resData = "";
+                string resData = string.Empty;
 
                 using (StreamReader resSR = new StreamReader(responseStream, Encoding.GetEncoding(pageEncoding)))
                 {
@@ -311,7 +310,7 @@ namespace MoeLoaderDelta
                 return e.Message;
             }
         }
-
+        */
         //########################################################################################
         //#############################   Cookies   #################################################
         /// <summary>
@@ -431,7 +430,7 @@ namespace MoeLoaderDelta
         /// <returns></returns>
         private static string _GetCookieValue(CookieContainer cc)
         {
-            return _GetCookieValue("", cc, 0);
+            return _GetCookieValue(string.Empty, cc, 0);
         }
 
         /// <summary>
@@ -459,7 +458,7 @@ namespace MoeLoaderDelta
                         foreach (Cookie c1 in colCookies) lstCookies.Add(c1);
                 }
 
-                string ret = "", uri = "";
+                string ret = string.Empty, uri = string.Empty;
                 switch (mode)
                 {
                     default:
@@ -468,7 +467,7 @@ namespace MoeLoaderDelta
                             if (uri != cookie.Domain)
                             {
                                 uri = cookie.Domain;
-                                ret += string.IsNullOrWhiteSpace(ret) ? "" : "$";
+                                ret += string.IsNullOrWhiteSpace(ret) ? string.Empty : "$";
                                 ret += uri + ";";
                             }
 

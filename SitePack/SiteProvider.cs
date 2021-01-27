@@ -40,7 +40,7 @@ namespace SitePack
             sites.Add(new SiteBooru(
                     "https://danbooru.donmai.us",
                     "https://danbooru.donmai.us/posts.json?page={0}&limit={1}&tags={2}",
-                    "https://danbooru.donmai.us/tags/autocomplete.json?search%5Bname_matches%5D={0}",
+                    "https://danbooru.donmai.us/autocomplete.json?search%5Bquery%5D={0}&search%5Btype%5D=tag_query&limit=10",
                     "danbooru.donmai.us", "donmai", "https://danbooru.donmai.us/", false, BooruProcessor.SourceType.JSON,
                     "https://danbooru.donmai.us/login"));
 
