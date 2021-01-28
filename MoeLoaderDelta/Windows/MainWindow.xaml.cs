@@ -30,6 +30,7 @@ namespace MoeLoaderDelta
     public delegate void VoidDel();
 
     internal enum ProxyType { System, Custom, None }
+    internal enum LoadConfigType { All, ViewIds }
 
     internal class SessionState
     {
@@ -202,7 +203,8 @@ namespace MoeLoaderDelta
         internal static ProxyType ProxyType { get; set; }
 
         public static string SearchWordPu => DownloadControl.ReplaceInvalidPathChars(SearchWord);
-        WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
+
+        private WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
 
         #region Public Functions
         /// <summary>
@@ -241,7 +243,7 @@ namespace MoeLoaderDelta
                 if (ProxyType == ProxyType.Custom)
                 {
                     if (Proxy.Length > 0)
-                        return new WebProxy(Proxy, true);
+                    { return new WebProxy(Proxy, true); }
                 }
                 else if (ProxyType == ProxyType.None)
                 {
@@ -277,8 +279,22 @@ namespace MoeLoaderDelta
             brush.GradientStops.Add(new GradientStop(Color.FromArgb(255, 0, 0, 0), 1));
             Window.OpacityMask = brush;
 
-            /////////////////////////////////////// init image site list //////////////////////////////////
+            /////////////////////////  Before loading settings //////////////////////////////////
+            Proxy = "127.0.0.1:1080";
+            ProxyType = ProxyType.System;
+            bossKey = System.Windows.Forms.Keys.F9;
+
+            LoadConfig();
+
+            MainW = this;
+
             SiteManager.MainProxy = WebProxy;
+
+            //删除上次临时目录
+            DelTempDirectory();
+            ////////////////////////////////////////////////////////////////////////////////////////////
+
+            /////////////////////// Loding image site list //////////////////////////////////
             Dictionary<string, MenuItem> dicSites = new Dictionary<string, MenuItem>();
             ObservableCollection<FrameworkElement> tempSites = new ObservableCollection<FrameworkElement>();
 
@@ -435,27 +451,17 @@ namespace MoeLoaderDelta
             //comboBox1.ItemsSource = tempSites;
             //comboBox1.SelectedIndex = 0;
             /////////////////////////////////////////////////////////////////////////////////////////////
-            /********************  Binding Control Data ***************************/
+
+            /////////////////////////  Binding Control Data /////////////////////////
             itmLoginSite.DataContext = loginsitedata;
             UpdateLoginInfo();
-            /******************************************************************/
+            ////////////////////////////////////////////////////////////////////////////////////////////
 
-
+            ///////////////////////// After loading settings //////////////////////////////////
             viewedIds = new Dictionary<string, ViewedID>(SiteManager.Instance.Sites.Count);
-
-            Proxy = "127.0.0.1:1080";
-            ProxyType = ProxyType.System;
-            bossKey = System.Windows.Forms.Keys.F9;
-
-            LoadConfig();
-
-            MainW = this;
-
-            //删除上次临时目录
-            DelTempDirectory();
-
-            //载入标签收藏、必须在MainW后
+            LoadConfig(LoadConfigType.ViewIds);
             LoadFavorite();
+            ////////////////////////////////////////////////////////////////////////////////////////////
         }
 
         /// <summary>
@@ -553,7 +559,8 @@ namespace MoeLoaderDelta
                 itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(site.LoginURL);
                 tmp_user = (itmLoginSite.IsEnabled && site.LoginSiteIsLogged) ? site.LoginUser : tmp_user;
             }
-            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) ? "登录站点" : $"{tmp_user}已登录";
+            const string c_nologin = "登录站点";
+            loginsitedata.Loginuser = string.IsNullOrWhiteSpace(tmp_user) || tmp_user.Contains(c_nologin) ? c_nologin : $"{tmp_user}已登录";
         }
 
         /// <summary>
@@ -662,7 +669,8 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 载入配置
         /// </summary>
-        private void LoadConfig()
+        /// <paramref name="loadType">载入类型</paramref>
+        private void LoadConfig(LoadConfigType loadType = LoadConfigType.All)
         {
             string configFile = $"{ProgramRunPath}\\Moe_config.ini";
 
@@ -673,177 +681,186 @@ namespace MoeLoaderDelta
                 {
                     string[] lines = File.ReadAllLines(configFile);
 
-                    if (Regex.IsMatch(lines[0], @"^[+-]?\d*$"))
+                    switch (loadType)
                     {
-                        downloadC.NumOnce = lines[0].ToSafeInt();
-                        downloadC.NumOnce = downloadC.NumOnce < 1 ? 2 : downloadC.NumOnce;
-                    }
-                    else
-                    {
-                        downloadC.NumOnce = 2;
-                    }
+                        case LoadConfigType.ViewIds:
 
-                    if (lines[1] != "." && Directory.Exists(lines[1]))
-                    { DownloadControl.SaveLocation = lines[1]; }
-
-                    if (lines[2].Contains(';'))
-                    {
-                        string[] parts = lines[2].Split(';');
-                        //itmJpg.IsChecked = parts[0].Equals("1");
-                        addressType = (AddressType)Enum.Parse(typeof(AddressType), parts[0]);
-
-                        if (parts.Length > 1)
-                        {
-                            int tpart = parts[1].ToSafeInt();
-                            downloadC.IsSscSave = tpart > 1;
-                            downloadC.IsSaSave = tpart > 0 && tpart < 3;
-                        }
-                        if (parts.Length > 2)
-                        {
-                            if (Regex.IsMatch(parts[2], @"^[+-]?\d*$"))
+                            for (int i = 3; i < lines.Length; i++)
                             {
-                                numOfLoading = parts[2].ToSafeInt();
-                                if (numOfLoading < 4) { numOfLoading = 5; }
+                                if (lines[i].Trim().Length < 1) { break; }
+
+                                if (lines[i].Contains(':'))
+                                {
+                                    string[] parts = lines[i].Trim().Split(':');
+                                    viewedIds[parts[0]] = new ViewedID();
+                                    viewedIds[parts[0]].AddViewedRange(parts[1]);
+                                    continue;
+                                }
+                                //向前兼容
+                                if (i - 3 >= SiteManager.Instance.Sites.Count)
+                                { break; }
+                                else if (SiteManager.Instance.Sites.Count > 0)
+                                {
+                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
+                                    viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
+                                }
                             }
-                        }
+                            break;
 
-                        if (parts.Length > 3)
-                        { itmMaskViewed.IsChecked = parts[3].Equals("1"); }
-
-                        if (parts.Length > 4)
-                        {
-                            string[] words = parts[4].Split('|');
-                            foreach (string word in words)
+                        default:
+                            if (Regex.IsMatch(lines[0], @"^[+-]?\d*$"))
                             {
-                                searchControl.LoadUsedItems(word);
-                            }
-                        }
-
-                        if (parts.Length > 5)
-                        { Proxy = parts[5]; }
-
-                        if (parts.Length > 6)
-                        {
-                            bossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), parts[6]);
-                        }
-                        if (parts.Length > 7)
-                        {
-                            thumbSize = parts[7].ToSafeInt();
-                            thumbSize = thumbSize < 150 ? 150 : thumbSize > 500 ? 500 : thumbSize;
-                        }
-                        if (parts.Length > 8)
-                        {
-                            ProxyType = (ProxyType)Enum.Parse(typeof(ProxyType), parts[8]);
-                        }
-                        if (parts.Length > 9)
-                        {
-                            string[] posItem = parts[9].Split(',');
-                            Size pos = new Size(posItem[0].ToSafeInt(), posItem[1].ToSafeInt());
-                            if (pos.Width > MinWidth && pos.Height > MinHeight)
-                            {
-                                Width = pos.Width;
-                                Height = pos.Height;
-                            }
-                        }
-                        if (parts.Length > 10)
-                        {
-                            togglePram.IsChecked = parts[10].Equals("1");
-                            if (togglePram.IsChecked.Value)
-                            {
-                                togglePram.ToolTip = "显示搜索设定";
+                                downloadC.NumOnce = lines[0].ToSafeInt();
+                                downloadC.NumOnce = downloadC.NumOnce < 1 ? 2 : downloadC.NumOnce;
                             }
                             else
                             {
-                                grdParam.Width = 479;
-                                grdParam.Opacity = 1;
-                                togglePram.ToolTip = (string)togglePram.Tag;
+                                downloadC.NumOnce = 2;
                             }
-                        }
-                        if (parts.Length > 11)
-                        {
-                            PreFetcher.CachedImgCount = parts[11].ToSafeInt();
-                        }
-                        if (parts.Length > 12)
-                        {
-                            downloadC.IsSepSave = parts[12].Equals("1");
-                        }
-                        if (parts.Length > 13)
-                        {
-                            itmxExplicit.IsChecked = parts[13].Equals("1");
-                            showExplicit = !itmxExplicit.IsChecked;
-                        }
 
-                        if (parts.Length > 14)
-                        { namePatter = parts[14]; }
+                            if (lines[1] != "." && Directory.Exists(lines[1]))
+                            { DownloadControl.SaveLocation = lines[1]; }
 
-                        if (parts.Length > 15)
-                        { txtNum.Text = parts[15]; }
-
-                        if (parts.Length > 16)
-                        {
-                            bgSt = (Stretch)Enum.Parse(typeof(Stretch), parts[16]);
-                        }
-                        if (parts.Length > 17)
-                        {
-                            bgHe = (AlignmentX)Enum.Parse(typeof(AlignmentX), parts[17]);
-                        }
-                        if (parts.Length > 18)
-                        {
-                            bgVe = (AlignmentY)Enum.Parse(typeof(AlignmentY), parts[18]);
-                        }
-                        if (parts.Length > 19)
-                        {
-                            bgOp = parts[19].ToSafeDouble();
-                        }
-                        if (parts.Length > 20)
-                        {
-                            scrList.SpeedFactor = parts[20].ToSafeDouble();
-                        }
-                        if (parts.Length > 21)
-                        {
-                            Array dpms = Enum.GetValues(typeof(DownPanlMode));
-                            foreach (int dpm in dpms)
+                            if (lines[2].Contains(';'))
                             {
-                                if (dpm.ToSafeString() == parts[21])
+                                string[] parts = lines[2].Split(';');
+                                //itmJpg.IsChecked = parts[0].Equals("1");
+                                addressType = (AddressType)Enum.Parse(typeof(AddressType), parts[0]);
+
+                                if (parts.Length > 1)
                                 {
-                                    DownPanlModeValue = (DownPanlMode)Enum.ToObject(typeof(DownPanlMode), parts[21].ToSafeInt());
-                                    break;
+                                    int tpart = parts[1].ToSafeInt();
+                                    downloadC.IsSscSave = tpart > 1;
+                                    downloadC.IsSaSave = tpart > 0 && tpart < 3;
+                                }
+                                if (parts.Length > 2)
+                                {
+                                    if (Regex.IsMatch(parts[2], @"^[+-]?\d*$"))
+                                    {
+                                        numOfLoading = parts[2].ToSafeInt();
+                                        if (numOfLoading < 4) { numOfLoading = 5; }
+                                    }
+                                }
+
+                                if (parts.Length > 3)
+                                { itmMaskViewed.IsChecked = parts[3].Equals("1"); }
+
+                                if (parts.Length > 4)
+                                {
+                                    string[] words = parts[4].Split('|');
+                                    foreach (string word in words)
+                                    {
+                                        searchControl.LoadUsedItems(word);
+                                    }
+                                }
+
+                                if (parts.Length > 5)
+                                { Proxy = parts[5]; }
+
+                                if (parts.Length > 6)
+                                {
+                                    bossKey = (System.Windows.Forms.Keys)Enum.Parse(typeof(System.Windows.Forms.Keys), parts[6]);
+                                }
+                                if (parts.Length > 7)
+                                {
+                                    thumbSize = parts[7].ToSafeInt();
+                                    thumbSize = thumbSize < 150 ? 150 : thumbSize > 500 ? 500 : thumbSize;
+                                }
+                                if (parts.Length > 8)
+                                {
+                                    ProxyType = (ProxyType)Enum.Parse(typeof(ProxyType), parts[8]);
+                                }
+                                if (parts.Length > 9)
+                                {
+                                    string[] posItem = parts[9].Split(',');
+                                    Size pos = new Size(posItem[0].ToSafeInt(), posItem[1].ToSafeInt());
+                                    if (pos.Width > MinWidth && pos.Height > MinHeight)
+                                    {
+                                        Width = pos.Width;
+                                        Height = pos.Height;
+                                    }
+                                }
+                                if (parts.Length > 10)
+                                {
+                                    togglePram.IsChecked = parts[10].Equals("1");
+                                    if (togglePram.IsChecked.Value)
+                                    {
+                                        togglePram.ToolTip = "显示搜索设定";
+                                    }
+                                    else
+                                    {
+                                        grdParam.Width = 479;
+                                        grdParam.Opacity = 1;
+                                        togglePram.ToolTip = (string)togglePram.Tag;
+                                    }
+                                }
+                                if (parts.Length > 11)
+                                {
+                                    PreFetcher.CachedImgCount = parts[11].ToSafeInt();
+                                }
+                                if (parts.Length > 12)
+                                {
+                                    downloadC.IsSepSave = parts[12].Equals("1");
+                                }
+                                if (parts.Length > 13)
+                                {
+                                    itmxExplicit.IsChecked = parts[13].Equals("1");
+                                    showExplicit = !itmxExplicit.IsChecked;
+                                }
+
+                                if (parts.Length > 14)
+                                { namePatter = parts[14]; }
+
+                                if (parts.Length > 15)
+                                { txtNum.Text = parts[15]; }
+
+                                if (parts.Length > 16)
+                                {
+                                    bgSt = (Stretch)Enum.Parse(typeof(Stretch), parts[16]);
+                                }
+                                if (parts.Length > 17)
+                                {
+                                    bgHe = (AlignmentX)Enum.Parse(typeof(AlignmentX), parts[17]);
+                                }
+                                if (parts.Length > 18)
+                                {
+                                    bgVe = (AlignmentY)Enum.Parse(typeof(AlignmentY), parts[18]);
+                                }
+                                if (parts.Length > 19)
+                                {
+                                    bgOp = parts[19].ToSafeDouble();
+                                }
+                                if (parts.Length > 20)
+                                {
+                                    scrList.SpeedFactor = parts[20].ToSafeDouble();
+                                }
+                                if (parts.Length > 21)
+                                {
+                                    Array dpms = Enum.GetValues(typeof(DownPanlMode));
+                                    foreach (int dpm in dpms)
+                                    {
+                                        if (dpm.ToSafeString() == parts[21])
+                                        {
+                                            DownPanlModeValue = (DownPanlMode)Enum.ToObject(typeof(DownPanlMode), parts[21].ToSafeInt());
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (parts.Length > 22)
+                                {
+                                    AutoOpenDownloadPanl = parts[22].ToSafeInt() > 0;
+                                }
+                                if (parts.Length > 23)
+                                {
+                                    ClearDownloadSelected = parts[23].ToSafeInt() > 0;
                                 }
                             }
-                        }
-                        if (parts.Length > 22)
-                        {
-                            AutoOpenDownloadPanl = parts[22].ToSafeInt() > 0;
-                        }
-                        if (parts.Length > 23)
-                        {
-                            ClearDownloadSelected = parts[23].ToSafeInt() > 0;
-                        }
-                    }
-                    else
-                    {
-                        addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
-                    }
+                            else
+                            {
+                                addressType = (AddressType)Enum.Parse(typeof(AddressType), lines[2].Trim());
+                            }
 
-                    for (int i = 3; i < lines.Length; i++)
-                    {
-                        if (lines[i].Trim().Length < 1) { break; }
-
-                        if (lines[i].Contains(':'))
-                        {
-                            string[] parts = lines[i].Trim().Split(':');
-                            viewedIds[parts[0]] = new ViewedID();
-                            viewedIds[parts[0]].AddViewedRange(parts[1]);
-                            continue;
-                        }
-                        //向前兼容
-                        if (i - 3 >= SiteManager.Instance.Sites.Count)
-                        { break; }
-                        else if (SiteManager.Instance.Sites.Count > 0)
-                        {
-                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName] = new ViewedID();
-                            viewedIds[SiteManager.Instance.Sites[i - 3].ShortName].AddViewedRange(lines[i].Trim());
-                        }
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -851,6 +868,9 @@ namespace MoeLoaderDelta
                     Toast.Show($"读取配置文件失败{Environment.NewLine}{ex.Message}", MsgType.Error);
                 }
             }
+
+            if (loadType != LoadConfigType.All)
+            { return; }
 
             switch (addressType)
             {
@@ -867,6 +887,7 @@ namespace MoeLoaderDelta
                     itmTypeSmall.IsChecked = true;
                     break;
             }
+
         }
         /// <summary>
         /// 获取子控件

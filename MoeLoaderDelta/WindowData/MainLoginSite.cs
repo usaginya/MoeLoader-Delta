@@ -2,7 +2,7 @@
 
 namespace MoeLoaderDelta.WindowData
 {
-    class MainLoginSite : INotifyPropertyChanged
+    internal class MainLoginSite : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private string loc_loginuser;

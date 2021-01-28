@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.95
+ * version 1.96
  * by YIU
  * Create               20170106
- * Last Change     20210120
+ * Last Change     20210129
  */
 
 using Brotli;
@@ -72,6 +72,19 @@ namespace MoeLoaderDelta
             request.ServicePoint.ConnectionLimit = int.MaxValue;
 
             return request;
+        }
+        //##############################################################################
+        //###################### General ################################################
+        /// <summary>
+        /// 强制IPV4请求
+        /// </summary>
+        /// <param name="request">HttpWebRequest</param>
+        private void ForceIpv4Request(HttpWebRequest request)
+        {
+            request.ServicePoint.BindIPEndPointDelegate = (servicePoint, remoteEndPoint, retryCount) =>
+            {
+                return remoteEndPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : null;
+            };
         }
         //##############################################################################
         //######################   Encode Decode  ############################################
@@ -191,6 +204,7 @@ namespace MoeLoaderDelta
             HttpWebResponse response = null;
 
             SetHeader(request, url, proxy, shc);
+            ForceIpv4Request(request);
 
             response = (HttpWebResponse)request.GetResponse();
             //更新Cookie
@@ -359,6 +373,7 @@ namespace MoeLoaderDelta
             try
             {
                 SetHeader(request, url, proxy, shc);
+                ForceIpv4Request(request);
 
                 request.Method = "POST";
                 request.CookieContainer = m_Cookie;//设置上次访问页面的Cookie 保持Session
@@ -410,10 +425,11 @@ namespace MoeLoaderDelta
                 req.Method = "HEAD";
 
                 SetHeader(req, uri, proxy, shc);
+                ForceIpv4Request(req);
 
                 res = (HttpWebResponse)req.GetResponse();
 
-                return (res.StatusCode == HttpStatusCode.OK);
+                return res.StatusCode == HttpStatusCode.OK;
             }
             catch
             {
