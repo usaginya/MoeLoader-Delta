@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -21,11 +20,6 @@ namespace MoeLoaderDelta
         private List<int> viewingIds = new List<int>();
 
         /// <summary>
-        /// 曾经浏览过的最大的id
-        /// </summary>
-        private int viewedBiggestId;
-
-        /// <summary>
         /// 是否曾经浏览过
         /// </summary>
         /// <param name="id"></param>
@@ -43,11 +37,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 曾经浏览过的最大的id
         /// </summary>
-        public int ViewedBiggestId
-        {
-            get { return viewedBiggestId; }
-            //set { viewedBiggestId = value; }
-        }
+        public int ViewedBiggestId { get; private set; }
 
         /// <summary>
         /// 本次正在浏览的id
@@ -84,11 +74,11 @@ namespace MoeLoaderDelta
                     last = start + range;
                     //for (int i = 0; i <= range; i++)
                     //{
-                        //viewedIds.Add(start + i);
+                    //viewedIds.Add(start + i);
                     //viewedIds.Add(new IdRange(start, range));
 
-                    if (viewedBiggestId < start + range)
-                        viewedBiggestId = start + range;
+                    if (ViewedBiggestId < start + range)
+                        ViewedBiggestId = start + range;
                     //}
                 }
             }
@@ -97,7 +87,7 @@ namespace MoeLoaderDelta
                 //向前兼容配置文件
                 int id = int.Parse(rangeStr);
                 viewedIds.Add(new IdRange(0, id, true));
-                viewedBiggestId = id;
+                ViewedBiggestId = id;
             }
         }
 

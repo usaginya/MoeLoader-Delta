@@ -393,8 +393,8 @@ namespace MoeLoaderDelta
                 + $"Email: esonice@gmail.com{Environment.NewLine}Site: http://moeloader.sinaapp.com/"
                 + $"{Environment.NewLine}MoeLoader ©2008-2013 esonic All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 + $"Δ Version by YIU{Environment.NewLine}"
-                + $"Email: degdod@qq.com{Environment.NewLine}Site: http://usaginya.lofter.com/"
-                + $"{Environment.NewLine}MoeLoader Δ ©2016-2020"
+                + $"Email: degdod@qq.com{Environment.NewLine}Site: https://yiu.moest.top/"
+                + $"{Environment.NewLine}MoeLoader Δ ©2016-2021"
                 + $" Moekai All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
