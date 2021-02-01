@@ -52,11 +52,6 @@ namespace SitePack
         /// <summary>
         /// 取页面源码 来自官方APP处理方式
         /// </summary>
-        /// <param name="page"></param>
-        /// <param name="count"></param>
-        /// <param name="keyWord"></param>
-        /// <param name="proxy"></param>
-        /// <returns></returns>
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             if (prevSitePrefix != sitePrefix)
@@ -64,7 +59,7 @@ namespace SitePack
                 IsLoginSite = false;
                 prevSitePrefix = sitePrefix;
             }
-            
+
             //Fix date:
             try
             {
@@ -184,7 +179,7 @@ namespace SitePack
                     shc.ContentType = SessionHeadersValue.AcceptAppJson;
                     Sweb.CookieContainer = null;
 
-                    post = Sweb.Post(loginhost + "/auth/token", post, SiteManager.GetWebProxy(), shc);
+                    post = Sweb.Post(loginhost + "/auth/token", post, SiteManager.MainProxy, shc);
                     if (string.IsNullOrWhiteSpace(post) || !post.Contains("{"))
                     {
                         IsRunLogin = false;
@@ -249,7 +244,7 @@ namespace SitePack
                         shc.UserAgent = ua;
                         shc.Accept = SessionHeadersValue.AcceptAppJson;
                         shc.ContentType = SessionHeadersValue.ContentTypeFormUrlencoded;
-                        post = Sweb.Post($"{loginhost}/user/authenticate.json", post, SiteManager.GetWebProxy(), shc);
+                        post = Sweb.Post($"{loginhost}/user/authenticate.json", post, SiteManager.MainProxy, shc);
                         cookie = Sweb.GetURLCookies(loginhost);
 
                         if (!cookie.Contains("sankakucomplex_session") || string.IsNullOrWhiteSpace(cookie))

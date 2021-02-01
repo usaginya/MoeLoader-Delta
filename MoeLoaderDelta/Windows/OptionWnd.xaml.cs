@@ -172,7 +172,8 @@ namespace MoeLoaderDelta
                 {
                     if (!rInvalidChar.Equals('<') && txtPattern.Text.Contains(rInvalidChar.ToSafeString()))
                     {
-                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(this, "文件命名格式不正确，不能含有 \\ / : * ? \" > | 等路径不支持的字符",
+                            MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                         txtPattern.SelectAll();
                         txtPattern.Focus();
                         return;
@@ -200,7 +201,8 @@ namespace MoeLoaderDelta
                 }
                 if (!right)
                 {
-                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式", MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "代理地址格式不正确，应类似于 127.0.0.1:1080 形式",
+                        MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                     txtProxy.SelectAll();
                     txtProxy.Focus();
                     return;
@@ -391,8 +393,8 @@ namespace MoeLoaderDelta
                 + $"Email: esonice@gmail.com{Environment.NewLine}Site: http://moeloader.sinaapp.com/"
                 + $"{Environment.NewLine}MoeLoader ©2008-2013 esonic All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 + $"Δ Version by YIU{Environment.NewLine}"
-                + $"Email: degdod@qq.com{Environment.NewLine}Site: http://usaginya.lofter.com/"
-                + $"{Environment.NewLine}MoeLoader Δ ©2016-2020"
+                + $"Email: degdod@qq.com{Environment.NewLine}Site: https://yiu.moest.top/"
+                + $"{Environment.NewLine}MoeLoader Δ ©2016-2021"
                 + $" Moekai All rights reserved.{Environment.NewLine}{Environment.NewLine}"
                 , MainWindow.ProgramName + " - About", MessageBoxButton.OK, MessageBoxImage.Information);
         }

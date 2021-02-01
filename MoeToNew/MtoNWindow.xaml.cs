@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 20170510       by YIU
-    /// Last 20200802
+    /// Last 20210120
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -64,7 +64,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private string[] updateInfoUrl ={
             "https://gitee.com/YIU/mkAppUpInfo/raw/master/MoeLoader-Delta/update.json",
-            "https://raw.githubusercontent.com/usaginya/mkAppUpInfo/master/MoeLoader-Delta/update.json"
+            "https://cdn.jsdelivr.net/gh/usaginya/mkAppUpInfo@master/MoeLoader-Delta/update.json"
         };
 
         /// <summary>
@@ -148,7 +148,6 @@ namespace MoeLoaderDelta
         /// <returns>是否有更新</returns>
         private bool CreateUpdate()
         {
-
             #region 取更新信息
             MyWebClient web = new MyWebClient { Proxy = WebRequest.DefaultWebProxy };
             string updatejson = null;
@@ -160,7 +159,9 @@ namespace MoeLoaderDelta
             #endregion
 
             #region 匹配文件并添加到更新列表
-            string localFile = string.Empty;
+            string localPath = string.Empty,
+                newPath = string.Empty,
+                localFile = string.Empty;
 
             if (string.IsNullOrWhiteSpace(updatejson))
                 return false;
@@ -169,9 +170,11 @@ namespace MoeLoaderDelta
             if (UpdateInfo == null)
                 return false;
 
-            foreach (MoeUpdateFile upfile in UpdateInfo.files)
+            foreach (MoeUpdateFile upfile in UpdateInfo.Files)
             {
-                localFile = RepairPath(upfile.Path) + upfile.Name;
+                localPath = RepairPath(upfile.Path);
+                newPath = RepairPath(upfile.NewPath);
+                localFile = localPath + upfile.Name;
                 if (upfile.State == "up" || string.IsNullOrWhiteSpace(upfile.State))
                 {
                     if (string.IsNullOrWhiteSpace(localFile) || string.IsNullOrWhiteSpace(upfile.Url))
@@ -184,6 +187,11 @@ namespace MoeLoaderDelta
                 else if (upfile.State == "del" && File.Exists(localFile))
                 {
                     UpdateFilesInfo += "- " + localFile + "[br]";
+                    UpdateFiles.Add(upfile);
+                }
+                else if (upfile.State == "mov" && Directory.Exists(localPath))
+                {
+                    UpdateFilesInfo += $"{localPath} >> {newPath} [br]";
                     UpdateFiles.Add(upfile);
                 }
             }
@@ -264,7 +272,7 @@ namespace MoeLoaderDelta
         }
         private void RunMoeLoader()
         {
-            RunMoeLoader("");
+            RunMoeLoader(string.Empty);
         }
 
         /// <summary>
@@ -353,12 +361,29 @@ namespace MoeLoaderDelta
                             }
                             catch { }
                             #endregion
+                            break;
 
-                            Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
+                        case "mov":
+                            #region 移动信息显示
+                            Dispatcher.Invoke(new Action(delegate
+                            {
+                                pbSingleTxt.Text = "移动 " + nowDLfile.Name;
+                                pbSingleSpeed.Visibility = pbSingleVal.Visibility = Visibility.Hidden;
+                            }));
                             Thread.Sleep(666);
+                            #endregion
 
-                            //处理下一个文件
-                            DownloadFile(FileListCount, ++FileListIndex);
+                            #region 移动文件到新目录
+                            string moveinfo = DataHelpers.MoveFolder(nowDLfile.Path, nowDLfile.NewPath);
+                            if (!string.IsNullOrWhiteSpace(moveinfo))
+                            {
+                                Dispatcher.Invoke(new Action(delegate
+                                {
+                                    pbSingleTxt.Text = moveinfo;
+                                }));
+                                Thread.Sleep(666);
+                            }
+                            #endregion
                             break;
 
                         default:
@@ -436,12 +461,6 @@ namespace MoeLoaderDelta
                                 }
                                 str.Close();
                                 fileStr.Close();
-
-                                Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
-                                Thread.Sleep(666);
-
-                                //下载完成一个文件后回调下载下一个
-                                DownloadFile(FileListCount, ++FileListIndex);
                             }, null);
                             #endregion
                             break;
@@ -456,6 +475,14 @@ namespace MoeLoaderDelta
                         pbTotal.Value++;
                     }));
                     Thread.Sleep(666);
+                }
+                finally
+                {
+                    Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
+                    Thread.Sleep(666);
+
+                    //回调处理下一个文件
+                    DownloadFile(FileListCount, ++FileListIndex);
                 }
             }
 
