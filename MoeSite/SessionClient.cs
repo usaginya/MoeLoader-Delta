@@ -47,6 +47,7 @@ namespace MoeLoaderDelta
 
         public SessionClient()
         {
+            ServicePointManager.Expect100Continue = true;
             ServicePointManager.DefaultConnectionLimit = 768;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
@@ -198,36 +199,44 @@ namespace MoeLoaderDelta
         /// <returns>网页内容</returns>
         public string Get(string url, IWebProxy proxy, string pageEncoding, SessionHeadersCollection shc)
         {
-            GC.Collect(1, GCCollectionMode.Optimized);
-            string ret = string.Empty;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            HttpWebResponse response = null;
-
-            SetHeader(request, url, proxy, shc);
-            ForceIpv4Request(request);
-
-            response = (HttpWebResponse)request.GetResponse();
-            //更新Cookie
-            m_Cookie = request.CookieContainer ?? m_Cookie;
-            string sc = response.Headers["Set-Cookie"];
-            if (!string.IsNullOrWhiteSpace(sc))
+            try
             {
-                m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
+                GC.Collect(1, GCCollectionMode.Optimized);
+                string ret = string.Empty;
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebResponse response = null;
+
+                SetHeader(request, url, proxy, shc);
+                ForceIpv4Request(request);
+
+                response = (HttpWebResponse)request.GetResponse();
+                //更新Cookie
+                m_Cookie = request.CookieContainer ?? m_Cookie;
+                string sc = response.Headers["Set-Cookie"];
+                if (!string.IsNullOrWhiteSpace(sc))
+                {
+                    m_Cookie.Add(new Uri(url), CookiesHelper.GetCookiesByHeader(sc));
+                }
+
+                ret = EncodeStreamReader(response, Encoding.GetEncoding(pageEncoding));
+
+                if (response != null)
+                {
+                    response.Close();
+                }
+                if (request != null)
+                {
+                    request.Abort();
+                    request = null;
+                }
+
+                return ret;
             }
-
-            ret = EncodeStreamReader(response, Encoding.GetEncoding(pageEncoding));
-
-            if (response != null)
+            catch (WebException webExcp)
             {
-                response.Close();
+                EchoErrLog(webExcp, "Get访问");
+                return webExcp.Message;
             }
-            if (request != null)
-            {
-                request.Abort();
-                request = null;
-            }
-
-            return ret;
         }
 
         /// <summary>
@@ -629,7 +638,53 @@ namespace MoeLoaderDelta
                 return e.Message;
             }
         }
+        /// <summary>
+        /// 提供站点错误的输出
+        /// </summary>
+        /// <param name="ex">错误信息</param>
+        /// <param name="extra_info">附加错误信息</param>
+        /// <param name="noLog">不记录Log</param>
+        public static void EchoErrLog(WebException webExcp = null, string extra_info = null, bool noLog = false)
+        {
+            int maxlog = 4096;
+            bool exisnull = webExcp == null;
+            string logPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\moesc_error.log";
+            string wstr = "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
+            if (!exisnull)
+            {
+                wstr += (string.IsNullOrWhiteSpace(extra_info) ? string.Empty : " | ") + webExcp.Message + "\r\n";
+                wstr += "[异常对象]: " + webExcp.Source + "\r\n";
+                wstr += "[调用堆栈]: " + webExcp.StackTrace.Trim() + "\r\n";
+                wstr += "[触发方法]: " + webExcp.TargetSite + "\r\n";
 
+                HttpWebResponse rsp = (HttpWebResponse)webExcp.Response;
+                if (rsp != null)
+                {
+                    wstr += "[请求返回]: " + rsp.Server + " - " + rsp.StatusCode + " - " + rsp.StatusCode + "\r\n" + rsp.Headers;
+                    rsp.Close();
+                }
+            }
+            if (!noLog)
+            {
+                File.AppendAllText(logPath, wstr + "\r\n");
+            }
+            //压缩记录
+            long sourceLength = new FileInfo(logPath).Length;
+            if (sourceLength > maxlog)
+            {
+                byte[] buffer = new byte[maxlog];
+                using (FileStream fs = new FileStream(logPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    int newleng = (int)sourceLength - maxlog;
+                    newleng = newleng > maxlog ? maxlog : newleng;
+                    fs.Seek(newleng, SeekOrigin.Begin);
+                    fs.Read(buffer, 0, maxlog);
+                    fs.Seek(0, SeekOrigin.Begin);
+                    fs.SetLength(0);
+                    fs.Write(buffer, 0, maxlog);
+                }
+            }
+        }
     }
 
     //########################################################################################
