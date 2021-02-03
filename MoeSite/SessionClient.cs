@@ -93,20 +93,20 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="ex">错误信息</param>
         /// <param name="extra_info">附加错误信息</param>
-        /// <param name="noLog">不记录Log</param>
-        public static void EchoErrLog(WebException webExcp = null, string extra_info = null, bool noLog = false)
+        public static void EchoErrLog(WebException webExcp = null, string extra_info = null, string url = "")
         {
             int maxlog = 8192;
             bool exisnull = webExcp == null;
             string logPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\moesc_error.log";
-            string wstr = "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
+            string wstr = string.Empty;
             if (!exisnull)
             {
+                wstr = "[异常时间]: " + DateTime.Now.ToString() + "\r\n";
+                wstr += "[异常信息]: " + extra_info + "\r\n";
                 wstr += (string.IsNullOrWhiteSpace(extra_info) ? string.Empty : " | ") + webExcp.Message + "\r\n";
-                wstr += "[异常对象]: " + webExcp.Source + "\r\n";
+                wstr += "[请求域名]: " + new Uri(url).Host + "\r\n";
                 wstr += "[调用堆栈]: " + webExcp.StackTrace.Trim() + "\r\n";
                 wstr += "[触发方法]: " + webExcp.TargetSite + "\r\n";
-                wstr += $"[异常详细]:{Environment.NewLine}{webExcp.ToString()}{Environment.NewLine}";
 
                 HttpWebResponse rsp = (HttpWebResponse)webExcp.Response;
                 if (rsp != null)
@@ -114,11 +114,10 @@ namespace MoeLoaderDelta
                     wstr += "[请求返回]: " + rsp.Server + " - " + rsp.StatusCode + " - " + rsp.StatusCode + "\r\n" + rsp.Headers;
                     rsp.Close();
                 }
+
+                wstr += $"[异常详细]:{Environment.NewLine}{webExcp.ToString()}{Environment.NewLine}";
             }
-            if (!noLog)
-            {
-                File.AppendAllText(logPath, wstr + "\r\n");
-            }
+            File.AppendAllText(logPath, wstr + "\r\n");
             //压缩记录
             long sourceLength = new FileInfo(logPath).Length;
             if (sourceLength > maxlog)
@@ -283,7 +282,7 @@ namespace MoeLoaderDelta
             }
             catch (WebException webExcp)
             {
-                EchoErrLog(webExcp, "SessionClient Get Error");
+                EchoErrLog(webExcp, "SessionClient Get Error", url);
                 return webExcp.Message;
             }
         }
@@ -455,7 +454,7 @@ namespace MoeLoaderDelta
             }
             catch (WebException webExcp)
             {
-                EchoErrLog(webExcp, "SessionClient Post Error");
+                EchoErrLog(webExcp, "SessionClient Post Error", url);
                 return webExcp.Message;
             }
             finally
