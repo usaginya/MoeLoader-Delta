@@ -52,12 +52,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 是否为调试模式
         /// </summary>
-        private bool isDebug => File.Exists(logFile);
-
-        /// <summary>
-        /// 调试记录文件路径
-        /// </summary>
-        private const string logFile = "\\mtndebug.txt";
+        private bool IsDebug => File.Exists("\\mtndebug.txt");
 
         /// <summary>
         /// 更新文件暂存目录
@@ -176,9 +171,9 @@ namespace MoeLoaderDelta
                 localFile = string.Empty;
 
             if (string.IsNullOrWhiteSpace(updatejson))
-                return false;
+            { return false; }
 
-            UpdateInfo = new MoeUpdateInfo().GetMoeUpdateInfo(updatejson);
+            UpdateInfo = new MoeUpdateInfo().GetMoeUpdateInfo(updatejson, IsDebug);
             if (UpdateInfo == null)
             { return false; }
 
@@ -566,10 +561,6 @@ namespace MoeLoaderDelta
             UpdateState = -1;
             KillMoeLoader();
             RunMoeLoader(haveUpdate ? string.Empty : noUpdateRunMLD);
-            if (isDebug)
-            {
-                File.Delete(logFile);
-            }
             Process.GetCurrentProcess().Kill();
         }
 
