@@ -41,7 +41,7 @@ namespace MoeLoaderDelta
         /// </summary>
         private void EchoErrLog(Exception ex, string jsonOrigin)
         {
-            string logPath = "\\mtndebug.txt", wstr = string.Empty;
+            string logPath = "mtndebug.txt", wstr = string.Empty;
             if (ex != null)
             {
                 wstr = "[异常时间]: " + DateTime.Now.ToString() + "\r\n" + ex.Message + "\r\n";

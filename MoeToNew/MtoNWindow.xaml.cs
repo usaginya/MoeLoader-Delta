@@ -52,7 +52,7 @@ namespace MoeLoaderDelta
         /// <summary>
         /// 是否为调试模式
         /// </summary>
-        private bool IsDebug => File.Exists("\\mtndebug.txt");
+        private bool IsDebug => File.Exists("mtndebug.txt");
 
         /// <summary>
         /// 更新文件暂存目录
