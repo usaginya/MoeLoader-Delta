@@ -156,7 +156,7 @@ namespace MoeLoaderDelta
         /// <param name="noLog">不记录Log</param>
         public static void EchoErrLog(string siteName, Exception ex = null, string extra_info = null, bool noShow = false, bool noLog = false)
         {
-            int maxlog = 4096;
+            int maxlog = 8192;
             bool exisnull = ex == null;
             string logPath = SitePacksPath + "site_error.log",
                 wstr = "[异常站点]: " + siteName + "\r\n";

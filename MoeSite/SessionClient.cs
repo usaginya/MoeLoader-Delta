@@ -49,7 +49,7 @@ namespace MoeLoaderDelta
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.DefaultConnectionLimit = 768;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
         }
         //#############################   Header   #################################################
@@ -96,7 +96,7 @@ namespace MoeLoaderDelta
         /// <param name="noLog">不记录Log</param>
         public static void EchoErrLog(WebException webExcp = null, string extra_info = null, bool noLog = false)
         {
-            int maxlog = 4096;
+            int maxlog = 8192;
             bool exisnull = webExcp == null;
             string logPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\moesc_error.log";
             string wstr = "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
