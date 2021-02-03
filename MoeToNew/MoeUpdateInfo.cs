@@ -52,7 +52,11 @@ namespace MoeLoaderDelta
             }
             wstr += $"[更新信息数据]{Environment.NewLine}{jsonOrigin}";
             File.WriteAllText(logPath, wstr);
-            Path.ChangeExtension(logPath, "log");
+            try
+            {
+                File.Move(logPath, Path.ChangeExtension(logPath, "log"));
+            }
+            catch { }
         }
     }
 
