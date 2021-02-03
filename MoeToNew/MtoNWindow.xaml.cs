@@ -15,7 +15,7 @@ namespace MoeLoaderDelta
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// 20170510       by YIU
-    /// Last 20210120
+    /// Last 20210203
     /// </summary>
     public partial class MtoNWindow : Window
     {
@@ -50,6 +50,16 @@ namespace MoeLoaderDelta
         private string UpdateFilesInfo = string.Empty;
 
         /// <summary>
+        /// 是否为调试模式
+        /// </summary>
+        private bool isDebug => File.Exists(logFile);
+
+        /// <summary>
+        /// 调试记录文件路径
+        /// </summary>
+        private const string logFile = "\\mtndebug.txt";
+
+        /// <summary>
         /// 更新文件暂存目录
         /// </summary>
         private const string updateTmpPath = "NewMoeLoader";
@@ -72,7 +82,9 @@ namespace MoeLoaderDelta
         /// </summary>
         private bool unlimitedProgress = false;
 
-
+        /// <summary>
+        /// 主入口
+        /// </summary>
         public MtoNWindow()
         {
             InitializeComponent();
@@ -166,9 +178,9 @@ namespace MoeLoaderDelta
             if (string.IsNullOrWhiteSpace(updatejson))
                 return false;
 
-            UpdateInfo = (new MoeUpdateInfo()).GetMoeUpdateInfo(updatejson);
+            UpdateInfo = new MoeUpdateInfo().GetMoeUpdateInfo(updatejson);
             if (UpdateInfo == null)
-                return false;
+            { return false; }
 
             foreach (MoeUpdateFile upfile in UpdateInfo.Files)
             {
@@ -178,16 +190,24 @@ namespace MoeLoaderDelta
                 if (upfile.State == "up" || string.IsNullOrWhiteSpace(upfile.State))
                 {
                     if (string.IsNullOrWhiteSpace(localFile) || string.IsNullOrWhiteSpace(upfile.Url))
-                        continue;
+                    { continue; }
                     if (DataHelpers.GetMD5Hash(localFile) == upfile.MD5 || DataHelpers.GetMD5Hash(updateTmpPath + "\\" + localFile) == upfile.MD5)
-                        continue;
+                    { continue; }
                     UpdateFilesInfo += "+ " + localFile + " - Ver " + upfile.Ver + "  (" + upfile.MD5 + ")[br]";
                     UpdateFiles.Add(upfile);
                 }
-                else if (upfile.State == "del" && File.Exists(localFile))
+                else if (upfile.State == "del")
                 {
-                    UpdateFilesInfo += "- " + localFile + "[br]";
-                    UpdateFiles.Add(upfile);
+                    if (File.Exists(localFile))
+                    {
+                        UpdateFilesInfo += $"- {localFile}[br]";
+                        UpdateFiles.Add(upfile);
+                    }
+                    else if (Directory.Exists(localPath))
+                    {
+                        UpdateFilesInfo += $"- {localPath}[br]";
+                        UpdateFiles.Add(upfile);
+                    }
                 }
                 else if (upfile.State == "mov" && Directory.Exists(localPath))
                 {
@@ -349,15 +369,24 @@ namespace MoeLoaderDelta
                             }));
                             #endregion
 
-                            #region 删除指定文件
+                            #region 删除指定文件或目录
                             string nowPath = RepairPath(nowDLfile.Path);
-                            File.Delete(nowPath + nowDLfile.Name);
                             try
                             {
+                                if (string.IsNullOrWhiteSpace(nowDLfile.Name))
+                                {
+                                    //删除目录
+                                    Directory.Delete(nowPath, true);
+                                }
+                                else
+                                {
+                                    //删除文件
+                                    File.Delete(nowPath + nowDLfile.Name);
+                                }
                                 //删除空目录
                                 DirectoryInfo di = new DirectoryInfo(nowPath);
                                 if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                                    Directory.Delete(nowPath);
+                                { Directory.Delete(nowPath); }
                             }
                             catch { }
                             #endregion
@@ -536,7 +565,11 @@ namespace MoeLoaderDelta
         {
             UpdateState = -1;
             KillMoeLoader();
-            RunMoeLoader(haveUpdate ? "" : noUpdateRunMLD);
+            RunMoeLoader(haveUpdate ? string.Empty : noUpdateRunMLD);
+            if (isDebug)
+            {
+                File.Delete(logFile);
+            }
             Process.GetCurrentProcess().Kill();
         }
 
@@ -547,9 +580,10 @@ namespace MoeLoaderDelta
         private string RepairPath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
-                return path;
+            { return path; }
             path = path.Replace("/", @"\");
-            path = (path.Substring(path.Length - 1, 1) == @"\" ? path : path + @"\");
+            path = path.Substring(path.Length - 1, 1) == @"\" ? path : path + @"\";
+            path = path.Substring(0, 2) == ".." ? path.Substring(2) : path;
             return path.Replace(@"\\", @"\");
         }
     }

@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.96
+ * version 1.97
  * by YIU
  * Create               20170106
- * Last Change     20210129
+ * Last Change     20210203
  */
 
 using Brotli;
@@ -86,6 +86,55 @@ namespace MoeLoaderDelta
             {
                 return remoteEndPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : null;
             };
+        }
+
+        /// <summary>
+        /// 提供错误的输出
+        /// </summary>
+        /// <param name="ex">错误信息</param>
+        /// <param name="extra_info">附加错误信息</param>
+        /// <param name="noLog">不记录Log</param>
+        public static void EchoErrLog(WebException webExcp = null, string extra_info = null, bool noLog = false)
+        {
+            int maxlog = 4096;
+            bool exisnull = webExcp == null;
+            string logPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\moesc_error.log";
+            string wstr = "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
+            if (!exisnull)
+            {
+                wstr += (string.IsNullOrWhiteSpace(extra_info) ? string.Empty : " | ") + webExcp.Message + "\r\n";
+                wstr += "[异常对象]: " + webExcp.Source + "\r\n";
+                wstr += "[调用堆栈]: " + webExcp.StackTrace.Trim() + "\r\n";
+                wstr += "[触发方法]: " + webExcp.TargetSite + "\r\n";
+                wstr += $"[异常详细]:{Environment.NewLine}{webExcp.ToString()}{Environment.NewLine}";
+
+                HttpWebResponse rsp = (HttpWebResponse)webExcp.Response;
+                if (rsp != null)
+                {
+                    wstr += "[请求返回]: " + rsp.Server + " - " + rsp.StatusCode + " - " + rsp.StatusCode + "\r\n" + rsp.Headers;
+                    rsp.Close();
+                }
+            }
+            if (!noLog)
+            {
+                File.AppendAllText(logPath, wstr + "\r\n");
+            }
+            //压缩记录
+            long sourceLength = new FileInfo(logPath).Length;
+            if (sourceLength > maxlog)
+            {
+                byte[] buffer = new byte[maxlog];
+                using (FileStream fs = new FileStream(logPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    int newleng = (int)sourceLength - maxlog;
+                    newleng = newleng > maxlog ? maxlog : newleng;
+                    fs.Seek(newleng, SeekOrigin.Begin);
+                    fs.Read(buffer, 0, maxlog);
+                    fs.Seek(0, SeekOrigin.Begin);
+                    fs.SetLength(0);
+                    fs.Write(buffer, 0, maxlog);
+                }
+            }
         }
         //##############################################################################
         //######################   Encode Decode  ############################################
@@ -234,7 +283,7 @@ namespace MoeLoaderDelta
             }
             catch (WebException webExcp)
             {
-                EchoErrLog(webExcp, "Get访问");
+                EchoErrLog(webExcp, "SessionClient Get Error");
                 return webExcp.Message;
             }
         }
@@ -404,9 +453,10 @@ namespace MoeLoaderDelta
                 string resData = EncodeStreamReader(response, Encoding.GetEncoding(pageEncoding));
                 return resData;
             }
-            catch (Exception e)
+            catch (WebException webExcp)
             {
-                return e.Message;
+                EchoErrLog(webExcp, "SessionClient Post Error");
+                return webExcp.Message;
             }
             finally
             {
@@ -636,53 +686,6 @@ namespace MoeLoaderDelta
             catch (Exception e)
             {
                 return e.Message;
-            }
-        }
-        /// <summary>
-        /// 提供站点错误的输出
-        /// </summary>
-        /// <param name="ex">错误信息</param>
-        /// <param name="extra_info">附加错误信息</param>
-        /// <param name="noLog">不记录Log</param>
-        public static void EchoErrLog(WebException webExcp = null, string extra_info = null, bool noLog = false)
-        {
-            int maxlog = 4096;
-            bool exisnull = webExcp == null;
-            string logPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\moesc_error.log";
-            string wstr = "[异常信息]: " + extra_info + (exisnull ? "\r\n" : string.Empty);
-            if (!exisnull)
-            {
-                wstr += (string.IsNullOrWhiteSpace(extra_info) ? string.Empty : " | ") + webExcp.Message + "\r\n";
-                wstr += "[异常对象]: " + webExcp.Source + "\r\n";
-                wstr += "[调用堆栈]: " + webExcp.StackTrace.Trim() + "\r\n";
-                wstr += "[触发方法]: " + webExcp.TargetSite + "\r\n";
-
-                HttpWebResponse rsp = (HttpWebResponse)webExcp.Response;
-                if (rsp != null)
-                {
-                    wstr += "[请求返回]: " + rsp.Server + " - " + rsp.StatusCode + " - " + rsp.StatusCode + "\r\n" + rsp.Headers;
-                    rsp.Close();
-                }
-            }
-            if (!noLog)
-            {
-                File.AppendAllText(logPath, wstr + "\r\n");
-            }
-            //压缩记录
-            long sourceLength = new FileInfo(logPath).Length;
-            if (sourceLength > maxlog)
-            {
-                byte[] buffer = new byte[maxlog];
-                using (FileStream fs = new FileStream(logPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-                {
-                    int newleng = (int)sourceLength - maxlog;
-                    newleng = newleng > maxlog ? maxlog : newleng;
-                    fs.Seek(newleng, SeekOrigin.Begin);
-                    fs.Read(buffer, 0, maxlog);
-                    fs.Seek(0, SeekOrigin.Begin);
-                    fs.SetLength(0);
-                    fs.Write(buffer, 0, maxlog);
-                }
             }
         }
     }

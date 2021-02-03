@@ -194,7 +194,6 @@ namespace MoeLoaderDelta
                     fs.Write(buffer, 0, maxlog);
                 }
             }
-
         }
         /// <summary>
         /// 提供站点错误的输出
