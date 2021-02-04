@@ -30,7 +30,7 @@ namespace MoeLoaderDelta.Control.Toast
         /// <summary>
         /// 释放Toast
         /// </summary>
-        public void Dispose() { notifier?.Dispose(); }
+        public void Dispose() { try { notifier?.Dispose(); } catch { } }
 
         /// <summary>
         /// 显示消息

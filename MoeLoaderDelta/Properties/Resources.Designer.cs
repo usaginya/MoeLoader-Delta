@@ -63,7 +63,7 @@ namespace MoeLoaderDelta.Properties {
         /// <summary>
         ///   查找类似 &lt;?xml version=&quot;1.0&quot;?&gt;
         ///&lt;configuration&gt;
-        ///&lt;startup useLegacyV2RuntimeActivationPolicy=&quot;true&quot;&gt;&lt;supportedRuntime version=&quot;v4.0&quot; sku=&quot;.NETFramework,Version=v4.5.1&quot;/&gt;&lt;/startup&gt;
+        ///&lt;startup useLegacyV2RuntimeActivationPolicy=&quot;true&quot;&gt;&lt;supportedRuntime version=&quot;v4.0&quot; sku=&quot;.NETFramework,Version=v4.8&quot;/&gt;&lt;/startup&gt;
         ///  &lt;runtime&gt;
         ///    &lt;gcConcurrent enabled=&quot;true&quot; /&gt;
         ///    &lt;assemblyBinding xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot;&gt;

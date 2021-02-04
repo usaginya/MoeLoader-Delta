@@ -2976,7 +2976,7 @@ namespace MoeLoaderDelta
             Toast.Dispose();
             GC.Collect(2, GCCollectionMode.Optimized);
             GC.WaitForPendingFinalizers();
-            Environment.Exit(0);
+            System.Diagnostics.Process.GetCurrentProcess().Kill();
         }
 
         /// <summary>

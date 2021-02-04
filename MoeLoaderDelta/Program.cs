@@ -64,9 +64,6 @@ namespace MoeLoaderDelta
                     {
                         ReplaceUpdateApp();
                         DelRedundantFile();
-                        System.Net.ServicePointManager.DefaultConnectionLimit = 100;
-                        System.Net.ServicePointManager.Expect100Continue = false;
-                        System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
                         SplashScreen splashScreen = new SplashScreen("images/slash.png");
                         splashScreen.Show(true);
@@ -79,7 +76,7 @@ namespace MoeLoaderDelta
                     else
                     {
                         //从更新程序启动
-                        Thread.Sleep(666);
+                        Thread.Sleep(999);
                         Process.Start(UpdateAppEXEName);
                         Process.GetCurrentProcess().Kill();
                     }
@@ -93,7 +90,7 @@ namespace MoeLoaderDelta
             {
                 try
                 {
-                    File.WriteAllText("moe_fatal.txt", ex.ToString());
+                    File.WriteAllText("moe_fatal.txt", $"{DateTime.Now}{Environment.NewLine}{ex.ToString()}");
                     System.Media.SystemSounds.Asterisk.Play();
                     new ErrForm(ex.ToString()).ShowDialog();
                     Process.GetCurrentProcess().Kill();
@@ -108,7 +105,7 @@ namespace MoeLoaderDelta
             {
                 if (is_debug)
                 {
-                    File.AppendAllText("moe_log.txt", $"{DateTime.Now} {desc}: {e.ToString()} \r\n");
+                    File.AppendAllText("moe_log.txt", $"{DateTime.Now} {desc}{Environment.NewLine}{e.ToString()}{Environment.NewLine}");
                 }
             }
             catch { }
@@ -137,23 +134,21 @@ namespace MoeLoaderDelta
         {
             SystemHelpers.KillProcess(UpdateAppName);
 
-            Thread.Sleep(666);
+            Thread.Sleep(999);
 
             string NewUpdate = updateTmpPath + "\\" + UpdateAppEXEName;
             if (File.Exists(NewUpdate))
             {
-                File.Delete(UpdateAppEXEName);
-                File.Move(NewUpdate, UpdateAppEXEName);
+                try
+                {
+                    File.Delete(UpdateAppEXEName);
+                    File.Move(NewUpdate, UpdateAppEXEName);
+                    DirectoryInfo di = new DirectoryInfo(updateTmpPath);
+                    if (di.GetFiles().Length + di.GetDirectories().Length < 1)
+                    { Directory.Delete(updateTmpPath); }
+                }
+                catch { }
             }
-
-            //删除空目录
-            try
-            {
-                DirectoryInfo di = new DirectoryInfo(updateTmpPath);
-                if (di.GetFiles().Length + di.GetDirectories().Length < 1)
-                    Directory.Delete(updateTmpPath);
-            }
-            catch { }
         }
 
         /// <summary>

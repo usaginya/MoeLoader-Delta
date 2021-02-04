@@ -101,7 +101,7 @@ namespace SitePack
         public override bool LoginSiteIsLogged => IsLoginSite;
         public override string LoginUser => nowUser ?? base.LoginUser;
         public override string LoginPwd { get => nowPwd; set => nowPwd = value; }
-        public override string LoginHelpUrl => "https://docs.qq.com/doc/DWWhUcHlzbE9aeXZE?pub=1";
+        public override string LoginHelpUrl => "https://docs.qq.com/doc/DWWhUcHlzbE9aeXZE?pub=1&dver=2.1.0";
 
         public override bool IsSupportCount  //fixed 20
         {

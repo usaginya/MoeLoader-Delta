@@ -120,7 +120,7 @@
   <data name="exeConfig" xml:space="preserve">
     <value>&lt;?xml version="1.0"?&gt;
 &lt;configuration&gt;
-&lt;startup useLegacyV2RuntimeActivationPolicy="true"&gt;&lt;supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5.1"/&gt;&lt;/startup&gt;
+&lt;startup useLegacyV2RuntimeActivationPolicy="true"&gt;&lt;supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.8"/&gt;&lt;/startup&gt;
   &lt;runtime&gt;
     &lt;gcConcurrent enabled="true" /&gt;
     &lt;assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"&gt;

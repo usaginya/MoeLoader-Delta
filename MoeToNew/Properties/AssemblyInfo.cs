@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Moekai")]
 [assembly: AssemblyProduct("MoeToNew")]
-[assembly: AssemblyCopyright("Copyright © Moekai 2016-2018")]
+[assembly: AssemblyCopyright("Copyright © Moekai 2016-2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

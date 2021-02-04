@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("esonic, Moekai")]
 [assembly: AssemblyProduct("MoeSite")]
-[assembly: AssemblyCopyright("Copyright© esonic 2012, Moekai 2016-2020")]
+[assembly: AssemblyCopyright("Copyright© esonic 2012, Moekai 2016-2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
