@@ -1,7 +1,7 @@
 ---
 name: Bug問題反饋
 about: 说一些发生的错误
-title: ''
+title: "「BUG反馈」"
 labels: 分类 | Bug
 assignees: ''
 
