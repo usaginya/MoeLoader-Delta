@@ -430,7 +430,7 @@ namespace MoeLoaderDelta
                             HttpWebResponse res = (HttpWebResponse)req.GetResponse();
 
                             //响应长度
-                            double reslength = res.ContentLength;
+                            double reslength = res.ContentLength < 1 ? 0 : res.ContentLength;
                             unlimitedProgress = reslength < 1;
 
                             string tmpDLPath = updateTmpPath + "\\" + RepairPath(nowDLfile.Path);
@@ -448,44 +448,57 @@ namespace MoeLoaderDelta
                             //限制线程最大数
                             ThreadPool.SetMaxThreads(2, 2);
 
-                            ThreadPool.QueueUserWorkItem((o) =>
-                            {
-                                byte[] buffer = new byte[1024];
+                            _ = ThreadPool.QueueUserWorkItem((o) =>
+                              {
+                                  byte[] buffer = new byte[1024];
                                 //进度预置
                                 double progressBarValue = 0;
-                                //无限进度调和
-                                if (unlimitedProgress) { reslength += buffer.Length; }
 
-                                DateTime last = DateTime.Now;
-                                int realReadLen = str.Read(buffer, 0, buffer.Length);
-                                double downed = realReadLen;
-                                double speed = -1;
+                                  DateTime last = DateTime.Now;
+                                  int realReadLen = str.Read(buffer, 0, buffer.Length);
+                                  double downed = realReadLen;
+                                  double speed = -1;
 
-                                while (realReadLen > 0 && UpdateState == 1)
-                                {
-                                    fileStr.Write(buffer, 0, realReadLen);
-                                    progressBarValue += realReadLen;
+                                  while (realReadLen > 0 && UpdateState == 1)
+                                  {
+                                      fileStr.Write(buffer, 0, realReadLen);
+                                      progressBarValue += realReadLen;
 
-                                    try
-                                    {
-                                        DateTime now = DateTime.Now;
-                                        if ((now - last).TotalSeconds > 0.2)
-                                        {
-                                            speed = downed / (now - last).TotalSeconds;
-                                            downed = 0;
-                                            last = now;
-                                        }
+                                      try
+                                      {
+                                          DateTime now = DateTime.Now;
+                                          if ((now - last).TotalSeconds > 0.2)
+                                          {
+                                              speed = downed / (now - last).TotalSeconds;
+                                              downed = 0;
+                                              last = now;
+                                          }
 
-                                        pbSingle.Dispatcher.BeginInvoke(new ProgressBarDelegate(RefreshDownload), progressBarValue / reslength, speed);
+                                          //无限进度调和
+                                          if  (unlimitedProgress && realReadLen>1023) {
+                                              reslength += 2048;
+                                          }
+                                          else
+                                          {
+                                              reslength = progressBarValue;
+                                          }
 
-                                        realReadLen = str.Read(buffer, 0, buffer.Length);
-                                        downed += realReadLen;
-                                    }
-                                    catch { }
-                                }
-                                str.Close();
-                                fileStr.Close();
-                            }, null);
+                                          pbSingle.Dispatcher.BeginInvoke(new ProgressBarDelegate(RefreshDownload), progressBarValue / reslength, speed);
+
+                                          realReadLen = str.Read(buffer, 0, buffer.Length);
+                                          downed += realReadLen;
+                                      }
+                                      catch { }
+                                  }
+                                  str.Close();
+                                  fileStr.Close();
+
+                                  Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
+                                  Thread.Sleep(666);
+
+                                //回调处理下一个文件
+                                DownloadFile(FileListCount, ++FileListIndex);
+                              }, null);
                             #endregion
                             break;
                     }
@@ -500,19 +513,10 @@ namespace MoeLoaderDelta
                     }));
                     Thread.Sleep(666);
                 }
-                finally
-                {
-                    Dispatcher.Invoke(new Action(delegate { pbTotal.Value++; }));
-                    Thread.Sleep(666);
-
-                    //回调处理下一个文件
-                    DownloadFile(FileListCount, ++FileListIndex);
-                }
             }
-
-            #region 更新结束
-            if (FileListIndex >= FileListCount && UpdateState == 1)
+            else if (FileListIndex >= FileListCount && UpdateState == 1)
             {
+                //更新结束
                 Dispatcher.Invoke(new Action(delegate
                 {
                     UpdateState = 2;
@@ -523,7 +527,7 @@ namespace MoeLoaderDelta
                     btnN.Content = "退出更新";
                 }));
             }
-            #endregion
+
         }
         /// <summary>
         /// 按顺序下载更新列表中的文件
