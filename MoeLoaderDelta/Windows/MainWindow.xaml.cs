@@ -166,12 +166,24 @@ namespace MoeLoaderDelta
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         private const string NoFoundMsg = "没有找到图片喔~";
         internal string namePatter = DefaultPatter;
+        
 
         internal double bgOp = 0.5;
         internal ImageBrush bgImg = null;
         internal Stretch bgSt = Stretch.None;
         internal AlignmentX bgHe = AlignmentX.Right;
         internal AlignmentY bgVe = AlignmentY.Bottom;
+
+        //Get SecurityProtocolType
+        internal static int securityTypeId = 2;
+        internal static Dictionary<int, SecurityProtocolType> securityTypes = new Dictionary<int, SecurityProtocolType>{
+            {0, SecurityProtocolType.SystemDefault},
+            {1, SecurityProtocolType.Tls11 | SecurityProtocolType.Tls},
+            {2, SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls},
+            {3, SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls},
+            {4, SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls}
+        };
+        internal static SecurityProtocolType SecurityType => securityTypes[securityTypeId];
 
         public BitmapImage ExtSiteIconOff;
         public BitmapImage ExtSiteIconOn;
@@ -289,6 +301,7 @@ namespace MoeLoaderDelta
             MainW = this;
 
             SiteManager.MainProxy = WebProxy;
+            SiteManager.SecurityType = SecurityType;
 
             //删除上次临时目录
             DelTempDirectory();
@@ -497,7 +510,7 @@ namespace MoeLoaderDelta
             {
                 siteMenu.Header += " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
             }
-            siteMenu.Icon = (SelectedSite.Parent as MenuItem).Header.ToString() == SelectedSite.Header.ToString()
+            siteMenu.Icon = (SelectedSite.Parent as MenuItem).Header.ToSafeString() == SelectedSite.Header.ToSafeString()
                 ? SelectedSite.Icon : (SelectedSite.Parent as MenuItem).Icon;
             //functionality support check
             itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].LoginURL);
@@ -853,6 +866,11 @@ namespace MoeLoaderDelta
                                 if (parts.Length > 23)
                                 {
                                     ClearDownloadSelected = parts[23].ToSafeInt() > 0;
+                                }
+                                if (parts.Length > 24)
+                                {
+                                    securityTypeId = parts[24].ToSafeInt();
+                                    securityTypeId = securityTypeId < 0 ? 0 : securityTypeId > 4 ? 4 : securityTypeId;
                                 }
                             }
                             else
@@ -2422,8 +2440,8 @@ namespace MoeLoaderDelta
                 for (int i = 0; i < resc; i++)
                 {
                     result = mc[i];
-                    imgpPatter = result.Groups["all"].ToString();
-                    zerofill = int.Parse(result.Groups["zf"].ToString());
+                    imgpPatter = result.Groups["all"].ToSafeString();
+                    zerofill = int.Parse(result.Groups["zf"].ToSafeString());
                     if (string.IsNullOrWhiteSpace(img.ImgP))
                         file = file.Replace(imgpPatter, "0".PadLeft(zerofill, '0'));
                     else
@@ -2492,7 +2510,7 @@ namespace MoeLoaderDelta
             //杂字过滤
             timeStr = Regex.Replace(timeStr, @"[^\d|>]", "<");
             //取时间区域
-            timeStr = Regex.Match(timeStr, @"\d[\d|<|>]+[<|>]+\d+").ToString();
+            timeStr = Regex.Match(timeStr, @"\d[\d|<|>]+[<|>]+\d+").ToSafeString();
             //缩减重复字符
             timeStr = Regex.Replace(timeStr, "<+", "<");
             timeStr = Regex.Replace(timeStr, ">+", ">");
@@ -2786,23 +2804,22 @@ namespace MoeLoaderDelta
             if (txt.Text.Length == 0) return;
             try
             {
-                num = int.Parse(txtNum.Text);
-                page = int.Parse(txtPage.Text);
+                num = txtNum.Text.ToSafeInt();
+                page = txtPage.Text.ToSafeInt();
 
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
+                txtNum.Text = num.ToSafeString();
+                txtPage.Text = page.ToSafeString();
             }
-            catch (NullReferenceException) { }
             catch (FormatException)
             {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
+                txtNum.Text = num.ToSafeString();
+                txtPage.Text = page.ToSafeString();
             }
+            catch (Exception) { }
         }
 
         private void TxtPage_LostFocus(object sender, RoutedEventArgs e)
         {
-            TextBox txt = sender as TextBox;
             try
             {
                 num = int.Parse(txtNum.Text);
@@ -2811,39 +2828,39 @@ namespace MoeLoaderDelta
                 num = num > 0 ? (num > 600 ? 600 : num) : 1;
                 page = page > 0 ? (page > 99999 ? 99999 : page) : 1;
 
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
+                txtNum.Text = num.ToSafeString();
+                txtPage.Text = page.ToSafeString();
             }
-            catch (NullReferenceException) { }
             catch (FormatException)
             {
-                txtNum.Text = num.ToString();
-                txtPage.Text = page.ToString();
+                txtNum.Text = num.ToSafeString();
+                txtPage.Text = page.ToSafeString();
             }
+            catch (Exception) { }
         }
 
         private void PageUp_Click(object sender, RoutedEventArgs e)
         {
             if (page < 99999)
-                txtPage.Text = (page + 1).ToString();
+                txtPage.Text = (page + 1).ToSafeString();
         }
 
         private void PageDown_Click(object sender, RoutedEventArgs e)
         {
             if (page > 1)
-                txtPage.Text = (page - 1).ToString();
+                txtPage.Text = (page - 1).ToSafeString();
         }
 
         private void NumUp_Click(object sender, RoutedEventArgs e)
         {
             if (num < 600)
-                txtNum.Text = (num + 1).ToString();
+                txtNum.Text = (num + 1).ToSafeString();
         }
 
         private void NumDown_Click(object sender, RoutedEventArgs e)
         {
             if (num > 1)
-                txtNum.Text = (num - 1).ToString();
+                txtNum.Text = (num - 1).ToSafeString();
         }
         #endregion
 
@@ -2959,7 +2976,8 @@ namespace MoeLoaderDelta
                         + scrList.SpeedFactor + qm
                         + (int)DownPanlModeValue + qm
                         + (AutoOpenDownloadPanl ? "1" : "0") + qm
-                        + (ClearDownloadSelected ? "1" : "0") + Environment.NewLine;
+                        + (ClearDownloadSelected ? "1" : "0") + qm
+                        + securityTypeId.ToSafeString() + Environment.NewLine;
 
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {

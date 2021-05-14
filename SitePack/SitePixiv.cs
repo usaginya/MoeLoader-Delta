@@ -14,7 +14,7 @@ namespace SitePack
 {
     /// <summary>
     /// PIXIV
-    /// Last change 210119
+    /// Last change 210514
     /// </summary>
 
     public class SitePixiv : AbstractImageSite
@@ -130,8 +130,8 @@ namespace SitePack
         private string keyWord = null;
         private static string cookie = string.Empty, nowUser = null, nowPwd = nowUser;
         private static string tempPage = null;
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         private readonly PixivSrcType srcType = PixivSrcType.Author;
         private string referer = "https://www.pixiv.net/";

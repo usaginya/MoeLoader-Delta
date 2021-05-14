@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// yuriimg.com
-    /// Last change 200811
+    /// Last change 210514
     /// </summary>
     public class SiteYuriimg : AbstractImageSite
     {
@@ -26,8 +26,8 @@ namespace SitePack
         public override string LoginPwd { get => nowPwd; set => nowPwd = value; }
         public override bool LoginSiteIsLogged => IsLoginSite;
 
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         private static string authorization = string.Empty, nowUser = authorization, nowPwd = authorization;
         private static bool IsLoginSite = false, IsRunLogin = IsLoginSite, onceLogin = true;

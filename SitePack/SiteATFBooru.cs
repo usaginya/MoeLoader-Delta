@@ -8,8 +8,8 @@ namespace SitePack
 {
     class SiteATFBooru : AbstractImageSite
     {
-        private SiteBooru booru;
-        private SessionClient Sweb = new SessionClient();
+        private  SiteBooru booru;
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
         private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         private const string Cookieflag = "atfbooru=t;";

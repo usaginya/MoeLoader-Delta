@@ -14,8 +14,8 @@ namespace SitePack
     public class SiteSankaku : AbstractImageSite
     {
         private SiteBooru booru;
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         private static bool IsLoginSite = false, IsRunLogin = IsLoginSite;
         private string sitePrefix, temppass, tempappkey, ua, pageurl;
@@ -102,7 +102,6 @@ namespace SitePack
             shc.ContentType = SessionHeadersValue.AcceptAppJson;
             string json = Sweb.Get(url, proxy, shc);
             object[] array = (new JavaScriptSerializer()).DeserializeObject(json) as object[];
-            string name = "", count = "";
 
             if (array.Count() > 1)
             {
@@ -111,8 +110,8 @@ namespace SitePack
                     int i = 2;
                     foreach (object names in array[1] as object[])
                     {
-                        name = names.ToString();
-                        count = array[i].ToString();
+                        string name = names.ToString();
+                        string count = array[i].ToString();
                         i++;
                         re.Add(new TagItem() { Name = name, Count = count });
                     }

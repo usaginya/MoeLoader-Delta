@@ -4,9 +4,7 @@ using System.Net;
 using MoeLoaderDelta;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Xml;
 
 namespace SitePack
 {
@@ -16,7 +14,7 @@ namespace SitePack
         /// kawaiinyan.com
         /// by ulrevenge
         /// ver 1.0
-        /// last change 180417
+        /// last change 210514
         /// </summary>
 
         //Tags|Min size,px Orientation Portrait Landscape
@@ -66,14 +64,14 @@ namespace SitePack
         }
 
         private KawaiiSrcType srcType = KawaiiSrcType.TagPxO;
-        private SessionClient Sweb = new SessionClient();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
         public override string GetPageString(int page, int count, string keyWord, IWebProxy proxy)
         {
             //https://kawaiinyan.com/new.json?tags=&size=&orient=
             //https://kawaiinyan.com/new.json?tags=&size=&orient=l
             //https://kawaiinyan.com/new.json?tags=&size=&orient=p
             //https://kawaiinyan.com/new.json?tags=&size=&orient=l&page=2
-            string tag = null, px = null, url = null;
+            string tag = null, px = null;
             if (keyWord.Contains("|"))
             {
                 tag = keyWord.Split('|')[0];
@@ -84,7 +82,7 @@ namespace SitePack
             else
                 tag = keyWord;
 
-            url = SiteUrl + "/new.json?tags=" + tag + "&size=" + px;
+            string url = SiteUrl + "/new.json?tags=" + tag + "&size=" + px;
             if (srcType == KawaiiSrcType.TagPxO)
                 url += "&orient=&page=" + page;
             else if (srcType == KawaiiSrcType.TagPxP)

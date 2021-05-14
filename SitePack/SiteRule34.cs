@@ -1,14 +1,10 @@
 ﻿using MoeLoaderDelta;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 
 namespace SitePack
 {
@@ -16,8 +12,8 @@ namespace SitePack
     {
         private string filterTag;
         private SiteBooru booru;
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         public override string ShortName { get { return "rule34"; } }
         private Rule34srcType srcType = Rule34srcType.Filter;

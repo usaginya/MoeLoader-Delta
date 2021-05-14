@@ -27,7 +27,7 @@ namespace MoeLoaderDelta
         private bool imgLoaded = false;
         public bool IsChecked { get; private set; } = false;
 
-        private SessionClient Sweb = new SessionClient();
+        private SessionClient Sweb = new SessionClient(MainWindow.SecurityType);
         private SessionHeadersCollection shc = new SessionHeadersCollection();
         private HttpWebRequest req;
         private WebResponse res;

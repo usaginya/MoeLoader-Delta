@@ -1,8 +1,8 @@
 ﻿/*
- * version 1.97
+ * version 1.98
  * by YIU
  * Create               20170106
- * Last Change     20210203
+ * Last Change     20210514
  */
 
 using Brotli;
@@ -45,11 +45,15 @@ namespace MoeLoaderDelta
             set => m_Cookie = value ?? new CookieContainer();
         }
 
-        public SessionClient()
+        /// <summary>
+        /// 构造此类
+        /// </summary>
+        /// <param name="spType">安全协议类型 SecurityProtocolType</param>
+        public SessionClient(SecurityProtocolType spType = SecurityProtocolType.SystemDefault)
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.DefaultConnectionLimit = 768;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            ServicePointManager.SecurityProtocol = spType;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
         }
         //#############################   Header   #################################################

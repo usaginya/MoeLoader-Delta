@@ -27,8 +27,8 @@ namespace MoeLoaderDelta.Control
         //图片信息结构
         private Img img;
         //网络请求组
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(MainWindow.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         //容错加载次数
         private int reTryCount = 0;
 

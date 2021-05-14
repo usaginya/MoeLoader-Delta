@@ -107,7 +107,7 @@ namespace MoeLoaderDelta
                     if (imgs.Count < 1)
                         return;
 
-                    SessionClient sweb = new SessionClient();
+                    SessionClient sweb = new SessionClient(MainWindow.SecurityType);
                     SessionHeadersCollection shc = new SessionHeadersCollection
                     {
                         Accept = null,

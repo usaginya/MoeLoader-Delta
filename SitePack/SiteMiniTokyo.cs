@@ -48,18 +48,17 @@ namespace SitePack
         //public bool IsSupportPreview { get { return true; } }
         //public bool IsSupportTag { get { return true; } }
 
-        private string[] user = { "miniuser2", "miniuser3" };
+        private readonly string[] user = { "miniuser2", "miniuser3" };
         private readonly string[] pass = { "minipass", "minipass3" };
-        private Random rand = new Random();
+        private readonly Random rand = new Random();
         //scans wallpapers
         private string type;
         private string cookie;
 
         private const string WALL = "wallpapers";
         private const string SCAN = "scans";
-
-        SessionClient Sweb = new SessionClient();
-        SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
 
         /// <summary>
         /// minitokyo site

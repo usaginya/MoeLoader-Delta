@@ -10,13 +10,13 @@ namespace SitePack
 {
     /// <summary>
     /// Gelbooru.com
-    /// Fixed 200819
+    /// Fixed 210514
     /// </summary>
     class SiteGelbooru : AbstractImageSite
     {
         private SiteBooru booru;
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
         private APImode apiMode = APImode.NULL;
         public override string SiteUrl { get { return "https://gelbooru.com"; } }

@@ -16,7 +16,7 @@ namespace MoeLoaderDelta
         private MainWindow main;
         private bool isSaved = false;
         private double oldBgOp = 0;
-        private System.Windows.Forms.Keys keysBackup = MainWindow.BossKey;
+        private readonly System.Windows.Forms.Keys keysBackup = MainWindow.BossKey;
 
         public OptionWnd(MainWindow main)
         {
@@ -55,18 +55,19 @@ namespace MoeLoaderDelta
             }
             SliderScrollSpeed.Value = Math.Round(MainWindow.MainW.scrList.SpeedFactor, 2);
 
-            txtBossKey.Text = MainWindow.BossKey.ToString();
+            txtBossKey.Text = MainWindow.BossKey.ToSafeString();
             MainWindow.BossKey = System.Windows.Forms.Keys.None;
             txtPattern.Text = main.namePatter;
             ChkProxy_Click(null, null);
-            txtCount.Text = PreFetcher.CachedImgCount.ToString();
-            txtParal.Text = main.downloadC.NumOnce.ToString();
+            txtCount.Text = PreFetcher.CachedImgCount.ToSafeString();
+            txtParal.Text = main.downloadC.NumOnce.ToSafeString();
             chkSepSave.IsChecked = main.downloadC.IsSepSave;
             chkSscSave.IsChecked = main.downloadC.IsSscSave;
             chkSaSave.IsChecked = main.downloadC.IsSaSave;
             txtSaveLocation.Text = DownloadControl.SaveLocation;
             ChkAutoOpenDownloadPanl.IsChecked = MainWindow.AutoOpenDownloadPanl;
             ChkClearDownloadSelected.IsChecked = MainWindow.ClearDownloadSelected;
+            Combox_Security.SelectedIndex = MainWindow.securityTypeId;
 
             #region ---- bgSelect ----
             if (main.bgSt == Stretch.None)
@@ -122,6 +123,12 @@ namespace MoeLoaderDelta
                 + $"<!< 裁剪符号【注意裁剪符号 <!< 只能有一个】{Environment.NewLine}"
                 + $"表示从 <!< 左边所有名称进行过长裁剪、避免路径过长问题{Environment.NewLine}"
                + "建议把裁剪符号写在 标签%tag 或 描述%desc 后面";
+
+            TextBlockHelp_Security.ToolTip = $"改变验证方式会影响获取的结果是否成功{Environment.NewLine}如果有 SSL/TLS 黄色提示可以尝试改变{Environment.NewLine}{Environment.NewLine}"
+                + $"系统默认 - 验证方式由系统决定{Environment.NewLine}优先使用 TLS 1.1 - 优先级为 TLS 1.1 > TLS 1.0{Environment.NewLine}"
+                + $"优先使用 TLS 1.2 - 优先级为 TLS 1.2 > 优先使用 TLS 1.1{Environment.NewLine}优先使用 TLS 1.3 - 优先级为 TLS 1.3 > 优先使用 TLS 1.2{Environment.NewLine}"
+                + $"优先使用 TLS 1.2 - 优先级为 TLS 1.2 > 优先使用 TLS 1.1{Environment.NewLine}优先使用 TLS 1.3 - 优先级为 TLS 1.3 > 优先使用 TLS 1.2{Environment.NewLine}"
+                + $"优先使用 SSL 3.0 - 优先级为 SSL 3.0 > 优先使用 TLS 1.3";
             #endregion
 
             #region 文件名规则格式按钮绑定
@@ -293,6 +300,8 @@ namespace MoeLoaderDelta
             MainWindow.AutoOpenDownloadPanl = ChkAutoOpenDownloadPanl.IsChecked.Value;
             MainWindow.ClearDownloadSelected = ChkClearDownloadSelected.IsChecked.Value;
 
+            SetSecurityType();
+
             isSaved = true;
             Close();
         }
@@ -310,7 +319,7 @@ namespace MoeLoaderDelta
             //default
             txtProxy.Text = "127.0.0.1:1080";
             txtPattern.Text = MainWindow.DefaultPatter;
-            txtBossKey.Text = System.Windows.Forms.Keys.F9.ToString();
+            txtBossKey.Text = System.Windows.Forms.Keys.F9.ToSafeString();
             rtNoProxy.IsChecked = true;
             txtCount.Text = "6";
             ChkProxy_Click(null, null);
@@ -322,6 +331,7 @@ namespace MoeLoaderDelta
             SliderScrollSpeed.Value = 2.3;
             RBDownPanlModeMLDB.IsChecked = true;
             txtSaveLocation.Text = "MoeLoaderGallery";
+            Combox_Security.SelectedIndex = 2;
             ChkAutoOpenDownloadPanl.IsChecked = ChkClearDownloadSelected.IsChecked = true;
         }
 
@@ -330,7 +340,7 @@ namespace MoeLoaderDelta
             if (e.Key != Key.System && e.Key != Key.LeftAlt && e.Key != Key.LeftCtrl && e.Key != Key.LeftShift && e.Key != Key.Tab
                 && e.Key != Key.RightAlt && e.Key != Key.RightCtrl && e.Key != Key.RightShift && e.Key != Key.LWin && e.Key != Key.RWin)
             {
-                txtBossKey.Text = ((System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key)).ToString();
+                txtBossKey.Text = ((System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key)).ToSafeString();
                 e.Handled = true;
             }
         }
@@ -362,27 +372,27 @@ namespace MoeLoaderDelta
         {
             int value = int.Parse(txtCount.Text);
             if (value < 20)
-                txtCount.Text = (value + 1).ToString();
+                txtCount.Text = (value + 1).ToSafeString();
         }
 
         private void PageDown_Click(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtCount.Text);
             if (value > 1)
-                txtCount.Text = (value - 1).ToString();
+                txtCount.Text = (value - 1).ToSafeString();
         }
         private void PageUp_Click1(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtParal.Text);
             if (value < 20)
-                txtParal.Text = (value + 1).ToString();
+                txtParal.Text = (value + 1).ToSafeString();
         }
 
         private void PageDown_Click1(object sender, RoutedEventArgs e)
         {
             int value = int.Parse(txtParal.Text);
             if (value > 1)
-                txtParal.Text = (value - 1).ToString();
+                txtParal.Text = (value - 1).ToSafeString();
         }
         #endregion
 
@@ -418,7 +428,8 @@ namespace MoeLoaderDelta
 
         private void TextBlockHelp_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(this, ((TextBlock)sender).ToolTip.ToString(), MainWindow.ProgramName, MessageBoxButton.OK, MessageBoxImage.Information);
+            _ = MessageBox.Show(this, ((TextBlock)sender).ToolTip.ToSafeString(), MainWindow.ProgramName,
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>
@@ -448,6 +459,19 @@ namespace MoeLoaderDelta
             txtPattern.SelectionStart = selectstart + format.Length;
             txtPattern.Focus();
         }
+
+        #region 请求验证方式
+        private void TextBlockHelp_Security_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _ = MessageBox.Show(this, ((TextBlock)sender).ToolTip.ToSafeString(), MainWindow.ProgramName,
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void SetSecurityType()
+        {
+            MainWindow.securityTypeId = Combox_Security.SelectedIndex;
+        }
+        #endregion
 
         private void Window_Closed(object sender, EventArgs e)
         {

@@ -10,7 +10,7 @@ namespace SitePack
 {
     /// <summary>
     /// Booru系站点
-    /// Last 210120
+    /// Last 210514
     /// </summary>
     public class SiteBooru : AbstractImageSite
     {
@@ -23,7 +23,7 @@ namespace SitePack
         protected string siteName, shortName, shortType, referer, loginUrl;
         protected bool needMinus;
         protected BooruProcessor.SourceType srcType;
-        protected SessionClient Sweb = new SessionClient();
+        protected SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
         protected SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders => shc;
 

@@ -31,13 +31,13 @@ namespace SitePack
         //public bool IsSupportTag { get { return true; } }
         //public override string Referer { get { return "http://www.zerochan.net/"; } }
 
-        private SessionClient Sweb = new SessionClient();
-        private SessionHeadersCollection shc = new SessionHeadersCollection();
+        private readonly SessionClient Sweb = new SessionClient(SiteManager.SecurityType);
+        private readonly SessionHeadersCollection shc = new SessionHeadersCollection();
         public override SessionHeadersCollection SiteHeaders { get { return shc; } }
-        private string[] user = { "zerouser1" };
+        private readonly string[] user = { "zerouser1" };
         private readonly string[] pass = { "zeropass" };
-        private string cookie = "", beforeWord = "", beforeUrl = "";
-        private Random rand = new Random();
+        private string cookie = string.Empty, beforeWord = string.Empty, beforeUrl = string.Empty;
+        private readonly Random rand = new Random();
 
         /// <summary>
         /// zerochan.net site

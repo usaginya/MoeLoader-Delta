@@ -391,7 +391,7 @@ namespace MoeLoaderDelta
             Stream str = null;
             SessionHeadersCollection shc = new SessionHeadersCollection();
             shc = task.SiteHeaders;
-            SessionClient sc = new SessionClient();
+            SessionClient sc = new SessionClient(MainWindow.SecurityType);
             System.Net.WebResponse res = null;
             double downed = 0;
             DownloadItem item = downloadItemsDic[task.Url];

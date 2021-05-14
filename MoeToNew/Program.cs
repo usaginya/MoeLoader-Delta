@@ -43,7 +43,7 @@ namespace MoeLoaderDelta
         {
             string runpath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\";
             if (!File.Exists(runpath + necessaryDll))
-                File.WriteAllBytes(runpath + necessaryDll, Properties.Resources.HtmlTextBlockDLL);
+                File.WriteAllBytes(runpath + necessaryDll, MoeToNew.Properties.Resources.HtmlTextBlockDLL);
         }
     }
 }

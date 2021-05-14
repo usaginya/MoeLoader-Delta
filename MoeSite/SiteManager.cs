@@ -16,7 +16,7 @@ namespace MoeLoaderDelta
 {
     /// <summary>
     /// 管理站点定义
-    /// Last 20210120
+    /// Last 20210514
     /// </summary>
     public class SiteManager
     {
@@ -53,6 +53,7 @@ namespace MoeLoaderDelta
         public static IWebProxy MainProxy { get; set; }
         public static string RunPath { get; set; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static string SitePacksPath { get; set; } = $"{RunPath}\\SitePacks\\";
+        public static SecurityProtocolType SecurityType { get; set; }
 
         /// <summary>
         /// 初始化aesKey
