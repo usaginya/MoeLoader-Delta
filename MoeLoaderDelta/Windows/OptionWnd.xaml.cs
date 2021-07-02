@@ -127,7 +127,6 @@ namespace MoeLoaderDelta
             TextBlockHelp_Security.ToolTip = $"改变验证方式会影响获取的结果是否成功{Environment.NewLine}如果有 SSL/TLS 黄色提示可以尝试改变{Environment.NewLine}{Environment.NewLine}"
                 + $"系统默认 - 验证方式由系统决定{Environment.NewLine}优先使用 TLS 1.1 - 优先级为 TLS 1.1 > TLS 1.0{Environment.NewLine}"
                 + $"优先使用 TLS 1.2 - 优先级为 TLS 1.2 > 优先使用 TLS 1.1{Environment.NewLine}优先使用 TLS 1.3 - 优先级为 TLS 1.3 > 优先使用 TLS 1.2{Environment.NewLine}"
-                + $"优先使用 TLS 1.2 - 优先级为 TLS 1.2 > 优先使用 TLS 1.1{Environment.NewLine}优先使用 TLS 1.3 - 优先级为 TLS 1.3 > 优先使用 TLS 1.2{Environment.NewLine}"
                 + $"优先使用 SSL 3.0 - 优先级为 SSL 3.0 > 优先使用 TLS 1.3";
             #endregion
 

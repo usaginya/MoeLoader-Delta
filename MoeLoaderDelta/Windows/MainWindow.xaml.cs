@@ -166,8 +166,8 @@ namespace MoeLoaderDelta
         internal const string DefaultPatter = "[%site_%id_%author]%desc<!<_%imgp[5]";
         private const string NoFoundMsg = "没有找到图片喔~";
         internal string namePatter = DefaultPatter;
-        
 
+        internal int lastSite = 0;
         internal double bgOp = 0.5;
         internal ImageBrush bgImg = null;
         internal Stretch bgSt = Stretch.None;
@@ -423,7 +423,8 @@ namespace MoeLoaderDelta
             #region 站点加载自检
             if (SiteManager.Instance.Sites.Count > 0)
             {
-                SelectedSite = (MenuItem)tempSites[0];
+                comboBoxIndex = SiteManager.Instance.Sites.Count > lastSite ? lastSite : 0;
+                SelectedSite = (MenuItem)tempSites[comboBoxIndex];
                 siteMenu.ItemsSource = tempSites;
                 siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
                 if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
@@ -457,7 +458,7 @@ namespace MoeLoaderDelta
                         System.Diagnostics.Process.GetCurrentProcess().Kill();
                     }
                 }
-                for (int i = 0; i < 2; i++) { MessageBox.Show("站点加载失败 (QAQ )", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning); }
+                MessageBox.Show("站点加载失败 (QAQ )", ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             #endregion
 
@@ -505,6 +506,7 @@ namespace MoeLoaderDelta
 
             SelectedSite = sender as MenuItem;
             comboBoxIndex = (int)SelectedSite.DataContext;
+            lastSite = comboBoxIndex;
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
             {
@@ -662,7 +664,7 @@ namespace MoeLoaderDelta
             Uri uri = new Uri(url);
             List<IMageSite> ISites = SiteManager.Instance.Sites;
 
-            foreach (IMageSite site in SiteManager.Instance.Sites)
+            foreach (IMageSite site in ISites)
             {
                 if (site.SubReferer != null)
                 {
@@ -871,6 +873,10 @@ namespace MoeLoaderDelta
                                 {
                                     securityTypeId = parts[24].ToSafeInt();
                                     securityTypeId = securityTypeId < 0 ? 0 : securityTypeId > 4 ? 4 : securityTypeId;
+                                }
+                                if (parts.Length > 25)
+                                {
+                                    lastSite = parts[25].ToSafeInt();
                                 }
                             }
                             else
@@ -1242,18 +1248,19 @@ namespace MoeLoaderDelta
             int id = (int)sender;
             if (selected.Contains(id))
                 selected.Remove(id);
-            else selected.Add(id);
+            else
+                selected.Add(id);
             if (previewFrm != null)
                 previewFrm.ChangePreBtnText();
 
             if (IsShiftDown())
             {
                 //批量选择
+                int sum = imgPanel.Children.Count;
                 for (int i = preid + 1; i < id; i++)
                 {
-                    bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
-                    if (enabled && !selected.Contains(i))
-                        selected.Add(i);
+                    if (i >= sum) { break; }
+                    ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                     if (previewFrm != null)
                         previewFrm.ChangePreBtnText();
                 }
@@ -1788,11 +1795,12 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ItmSelectInverse_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < imgs.Count; i++)
+            int sum = imgPanel.Children.Count;
+            for (int i = 0; i < sum; i++)
             {
                 ImgControl imgc = (ImgControl)imgPanel.Children[i];
-
                 imgc.SetChecked(!selected.Contains(i));
+
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
             }
@@ -1804,11 +1812,10 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ItmSelectAll_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < imgs.Count; i++)
+            int sum = imgPanel.Children.Count;
+            for (int i = 0; i < sum; i++)
             {
-                bool enabled = ((ImgControl)imgPanel.Children[i]).SetChecked(true);
-                if (enabled && !selected.Contains(i))
-                    selected.Add(i);
+                ((ImgControl)imgPanel.Children[i]).SetChecked(true);
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
             }
@@ -1820,11 +1827,10 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ItmUnSelectAll_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < imgs.Count; i++)
+            int sum = imgPanel.Children.Count;
+            for (int i = 0; i < sum; i++)
             {
                 ((ImgControl)imgPanel.Children[i]).SetChecked(false);
-                if (selected.Contains(i))
-                    selected.Remove(i);
                 if (previewFrm != null)
                     previewFrm.ChangePreBtnText();
             }
@@ -1836,7 +1842,8 @@ namespace MoeLoaderDelta
         /// </summary>
         private void ItmReload_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < imgs.Count; i++)
+            int sum = imgPanel.Children.Count;
+            for (int i = 0; i < sum; i++)
             {
                 ((ImgControl)imgPanel.Children[i]).RetryLoad();
             }
@@ -2977,7 +2984,8 @@ namespace MoeLoaderDelta
                         + (int)DownPanlModeValue + qm
                         + (AutoOpenDownloadPanl ? "1" : "0") + qm
                         + (ClearDownloadSelected ? "1" : "0") + qm
-                        + securityTypeId.ToSafeString() + Environment.NewLine;
+                        + securityTypeId.ToSafeString() + qm
+                        + lastSite.ToSafeString() + Environment.NewLine;
 
                     foreach (KeyValuePair<string, ViewedID> id in viewedIds)
                     {
