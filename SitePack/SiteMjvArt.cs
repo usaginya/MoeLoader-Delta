@@ -9,23 +9,24 @@ namespace SitePack
 {
     public class SiteMjvArt : AbstractImageSite
     {
-        public override string SiteUrl { get { return "https://anime-pictures.net"; } }
-        public override string SiteName { get { return "anime-pictures.net"; } }
-        public override string ShortName { get { return "mjv-art"; } }
+        public override string SiteUrl => "https://anime-pictures.net";
+        public override string SiteName => "anime-pictures.net";
+        public override string ShortName => "mjv-art";
         //public string Referer { get { return null; } }
 
-        public override bool IsSupportCount { get { return false; } } //fixed 60
-        public override bool IsSupportScore { get { return false; } }
+        public override bool IsSupportCount => false;  //fixed 60
+        public override bool IsSupportScore => false;
         //public bool IsSupportRes { get { return true; } }
         //public bool IsSupportPreview { get { return true; } }
         //public bool IsSupportTag { get { return true; } }
 
         //public override System.Drawing.Point LargeImgSize { get { return new System.Drawing.Point(150, 150); } }
         //public override System.Drawing.Point SmallImgSize { get { return new System.Drawing.Point(150, 150); } }
-        private string[] user = { "mjvuser1" };
-        private string[] pass = { "mjvpass" };
+        private readonly string[] user = { "mjvuser1" };
+        private readonly string[] pass = { "mjvpass" };
         private string sessionId;
-        private Random rand = new Random();
+        private readonly Random rand = new Random();
+        private readonly string defaultUA = SessionClient.DefUA;
 
         /// <summary>
         /// mjv-art.org site
@@ -41,8 +42,10 @@ namespace SitePack
             //http://mjv-art.org/pictures/view_posts/0?lang=en
             string url = SiteUrl + "/pictures/view_posts/" + (page - 1) + "?lang=en";
 
-            MyWebClient web = new MyWebClient();
-            web.Proxy = proxy;
+            MyWebClient web = new MyWebClient
+            {
+                Proxy = proxy
+            };
             web.Headers["Cookie"] = sessionId;
             web.Encoding = Encoding.UTF8;
 
@@ -86,7 +89,7 @@ namespace SitePack
                 int index = Regex.Match(title, @"\d+").Index;
 
                 string dimension = title.Substring(index);
-                string tags = "";
+                string tags = string.Empty;
                 //if (title.IndexOf(' ', index) > -1)
                 //{
                 //dimension = title.Substring(index, title.IndexOf(' ', index) - index);
@@ -109,7 +112,7 @@ namespace SitePack
 
             string url = SiteUrl + "/pictures/autocomplete_tag";
             System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-            req.UserAgent = SessionClient.DefUA;
+            req.UserAgent = defaultUA;
             req.Proxy = proxy;
             req.Headers["Cookie"] = sessionId;
             req.Timeout = 8000;
@@ -176,8 +179,10 @@ namespace SitePack
             img.DownloadDetail = new DetailHandler((i, p) =>
             {
                 //retrieve details
-                MyWebClient web = new MyWebClient();
-                web.Proxy = p;
+                MyWebClient web = new MyWebClient
+                {
+                    Proxy = p
+                };
                 web.Headers["Cookie"] = sessionId;
                 web.Encoding = Encoding.UTF8;
                 string page = web.DownloadString(i.DetailUrl);
@@ -204,19 +209,23 @@ namespace SitePack
                 //retrieve img node
                 HtmlNode imgnode = doc.DocumentNode.SelectSingleNode("//div[@id='big_preview_cont']");
                 string jpgUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a").Attributes["href"].Value);
-                string previewUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("a/picture/source/img").Attributes["src"].Value);
+                string previewUrl = FormattedImgUrl(SiteUrl, imgnode.SelectSingleNode("//img[@id='big_preview']").Attributes["src"].Value);
 
-                i.Tags = imgnode.SelectSingleNode("a/picture/source/img").Attributes["alt"].Value;
+                i.Tags = imgnode.SelectSingleNode("//img[@id='big_preview']").Attributes["alt"].Value;
                 StringBuilder sb = new StringBuilder(i.Tags);
                 sb.Replace("\n", " ");
                 sb.Replace("\t", " ");
+                sb.Replace("\t", " ");
                 Regex rx = new Regex("Anime.*with");
                 if (rx.IsMatch(sb.ToString()))
-                    i.Tags = rx.Replace(sb.ToString(), "").Trim();
+                {
+                    i.Tags = rx.Replace(sb.ToString(), string.Empty).Trim();
+                }
+                i.Tags = new Regex(@"\s+").Replace(i.Tags, " ");
 
                 try
                 {
-                    i.Author = doc.DocumentNode.SelectSingleNode("//div[@id='cont']/div[2]/div[1]/div[1]/a/span").InnerText;
+                    i.Author = doc.DocumentNode.SelectSingleNode("//meta[@itemprop='author']").Attributes["content"].Value;
                 }
                 catch
                 {
@@ -245,7 +254,7 @@ namespace SitePack
                 int index = rand.Next(0, user.Length);
                 //http://mjv-art.org/login/submit
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(SiteUrl + "/login/submit");
-                req.UserAgent = SessionClient.DefUA;
+                req.UserAgent = defaultUA;
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";
@@ -276,7 +285,7 @@ namespace SitePack
             catch (System.Net.WebException)
             {
                 //throw new Exception("自动登录失败");
-                sessionId = "";
+                sessionId = string.Empty;
             }
         }
 

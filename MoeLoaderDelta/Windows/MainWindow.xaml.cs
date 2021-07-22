@@ -111,7 +111,7 @@ namespace MoeLoaderDelta
         internal PreviewWnd previewFrm;
         internal ToastBoxWork Toast = new ToastBoxWork();
 
-        private LoginSiteArgs loginSiteArgs = new LoginSiteArgs();
+        private readonly LoginSiteArgs loginSiteArgs = new LoginSiteArgs();
         private SessionState currentSession;
         private bool isGetting = false;
 
@@ -121,9 +121,9 @@ namespace MoeLoaderDelta
         private AddressType addressType = AddressType.Ori;
 
         //已加载完毕的图像索引
-        private List<int> loaded = new List<int>();
+        private readonly List<int> loaded = new List<int>();
         //未加载完毕的
-        private LinkedList<int> unloaded = new LinkedList<int>();
+        private readonly LinkedList<int> unloaded = new LinkedList<int>();
 
         internal bool showExplicit = true;
         private bool naviMoved = false;
@@ -216,7 +216,7 @@ namespace MoeLoaderDelta
 
         public static string SearchWordPu => DownloadControl.ReplaceInvalidPathChars(SearchWord);
 
-        private WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
+        private readonly WindowData.MainLoginSite loginsitedata = new WindowData.MainLoginSite();
 
         #region Public Functions
         /// <summary>
@@ -416,6 +416,7 @@ namespace MoeLoaderDelta
                 {
                     menuItem = menuItem.Items[0] as MenuItem;
                 }
+                if (menuItem.DataContext == null) { menuItem.DataContext = tempSites.Count; }
                 tempSites.Add(menuItem);
             }
             #endregion
@@ -423,16 +424,11 @@ namespace MoeLoaderDelta
             #region 站点加载自检
             if (SiteManager.Instance.Sites.Count > 0)
             {
+                siteMenu.ItemsSource = tempSites;
                 comboBoxIndex = SiteManager.Instance.Sites.Count > lastSite ? lastSite : 0;
                 SelectedSite = (MenuItem)tempSites[comboBoxIndex];
-                siteMenu.ItemsSource = tempSites;
-                siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
-                if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
-                {
-                    siteMenu.Header += " " + SiteManager.Instance.Sites[comboBoxIndex].ShortType;
-                }
-                siteMenu.Icon = SelectedSite.Icon;
-                siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].ShortName;
+                SelectedSite.Tag = comboBoxIndex;
+                MenuItem_Click(SelectedSite, null);
             }
             else
             {
@@ -503,10 +499,15 @@ namespace MoeLoaderDelta
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (SiteManager.Instance.Sites.Count < 1) { return; }
-
             SelectedSite = sender as MenuItem;
             comboBoxIndex = (int)SelectedSite.DataContext;
             lastSite = comboBoxIndex;
+            if (SelectedSite.Items.Count > 0)
+            {
+                lastSite = (int?)SelectedSite.Tag ?? 0;
+                SelectedSite = SelectedSite.Items[lastSite - comboBoxIndex] as MenuItem;
+                comboBoxIndex = lastSite;
+            }
             siteMenu.Header = SiteManager.Instance.Sites[comboBoxIndex].ShortName;
             if (!string.IsNullOrWhiteSpace(SiteManager.Instance.Sites[comboBoxIndex].ShortType))
             {
@@ -567,10 +568,9 @@ namespace MoeLoaderDelta
         private void UpdateLoginInfo()
         {
             string tmp_user = null;
-            IMageSite site = null;
             if (SiteManager.Instance.Sites.Count > 0)
             {
-                site = SiteManager.Instance.Sites[comboBoxIndex];
+                IMageSite site = SiteManager.Instance.Sites[comboBoxIndex];
                 itmLoginSite.IsEnabled = !string.IsNullOrWhiteSpace(site.LoginURL);
                 tmp_user = (itmLoginSite.IsEnabled && site.LoginSiteIsLogged) ? site.LoginUser : tmp_user;
             }
@@ -918,16 +918,14 @@ namespace MoeLoaderDelta
         /// </summary>
         public List<T> GetChildObjects<T>(DependencyObject obj) where T : FrameworkElement
         {
-            DependencyObject child = null;
             List<T> childList = new List<T>();
 
             for (int i = 0; i <= VisualTreeHelper.GetChildrenCount(obj) - 1; i++)
             {
-                child = VisualTreeHelper.GetChild(obj, i);
-
-                if (child is T)
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T t)
                 {
-                    childList.Add((T)child);
+                    childList.Add(t);
                 }
                 childList.AddRange(GetChildObjects<T>(child));
             }
@@ -1116,25 +1114,8 @@ namespace MoeLoaderDelta
             if (sender == null)
             {
                 currentSession.IsStop = true;
-                statusText.Text = "加载完毕，得到 0 张图片";
-
-                txtGet.Text = "搜索";
-                btnGet.ToolTip = btnGet.Tag as string;
-                isGetting = false;
-                imgGet.Source = new BitmapImage(new Uri("/Images/search.png", UriKind.Relative));
-
-                logo.Stop();
-                bgLoading.Visibility = Visibility.Hidden;
-                //itmThunder.IsEnabled = false;
-                //itmLst.IsEnabled = false;
-
-                itmSelectInverse.IsEnabled = false;
-                itmSelectAll.IsEnabled = false;
-                itmUnSelectAll.IsEnabled = false;
-                itmReload.IsEnabled = false;
-                //重新读取RToolStripMenuItem.Enabled = false;
-
                 imgPanel.Children.Clear();
+                DocumentCompleted();
                 Toast.Show(NoFoundMsg);
             }
             else
@@ -1168,7 +1149,7 @@ namespace MoeLoaderDelta
                 itmReload.IsEnabled = true;
                 //重新读取RToolStripMenuItem.Enabled = true;
 
-                if (imgs.Count == 0)
+                if (imgs.Count < 1)
                 {
                     DocumentCompleted();
                     Toast.Show(NoFoundMsg);
@@ -1298,7 +1279,7 @@ namespace MoeLoaderDelta
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void Img_ImgLoaded(object sender, EventArgs e)
+        private void Img_ImgLoaded(object sender, EventArgs e)
         {
             loaded.Add((int)sender);
 
@@ -1367,6 +1348,7 @@ namespace MoeLoaderDelta
                     naviMoved = true;
                 }
 
+                if (imgs != null) { imgs.Clear(); }
                 isGetting = true;
                 HaveNextPage = false;
                 txtGet.Text = "停止";
@@ -1419,6 +1401,7 @@ namespace MoeLoaderDelta
                         //prefetch
                         string pageString = PreFetcher.Fetcher.GetPreFetchedPage(
                             realPage, realNum, Uri.EscapeDataString(SearchWord), SiteManager.Instance.Sites[nowSelectedIndex]);
+
                         imgList = !string.IsNullOrWhiteSpace(pageString)
                             ? SiteManager.Instance.Sites[nowSelectedIndex].GetImages(pageString, WebProxy)
                             : SiteManager.Instance.Sites[nowSelectedIndex].GetImages(realPage, realNum, Uri.EscapeDataString(SearchWord), WebProxy);
@@ -1517,7 +1500,11 @@ namespace MoeLoaderDelta
             get
             {
                 bool mask = false;
-                Dispatcher.Invoke(new VoidDel(delegate { mask = itmMaskViewed.IsChecked && SearchWord.Length == 0; })); return mask;
+                _ = Dispatcher.Invoke(new VoidDel(delegate
+                  {
+                      mask = itmMaskViewed.IsChecked;
+                  }));
+                return mask;
             }
         }
         public ViewedID LastViewed
@@ -1608,6 +1595,9 @@ namespace MoeLoaderDelta
                     itmUnSelectAll.IsEnabled =
                     itmReload.IsEnabled = false;
             }
+
+            //尝试预加载
+            if (!HaveNextPage) { StartPreLoad(); }
 
         }
 

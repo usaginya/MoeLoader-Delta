@@ -2,7 +2,7 @@
  * version 1.98
  * by YIU
  * Create               20170106
- * Last Change     20210514
+ * Last Change     20210722
  */
 
 using Brotli;
@@ -24,7 +24,7 @@ namespace MoeLoaderDelta
     {
         private static CookieContainer m_Cookie = new CookieContainer();
 
-        private static string[] UAs = new string[]
+        private static readonly string[] UAs = new string[]
         {
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36",
@@ -190,15 +190,6 @@ namespace MoeLoaderDelta
             return strReader;
         }
 
-        /// <summary>
-        /// 读取编码的Stream，返回字符串结果，Encoding.Default
-        /// </summary>
-        /// <param name="webResponse">HttpWebResponse</param>
-        /// <returns>字符串结果</returns>
-        private string EncodeStreamReader(HttpWebResponse webResponse, string contentEncoding)
-        {
-            return EncodeStreamReader(webResponse, Encoding.Default);
-        }
         //##############################################################################
         //#############################   GET   #################################################
         /// <summary>

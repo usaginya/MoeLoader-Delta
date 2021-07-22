@@ -8,7 +8,7 @@ namespace SitePack
 {
     public class SiteEshuu : AbstractImageSite
     {
-        public override string SiteUrl { get { return "http://e-shuushuu.net"; } }
+        public override string SiteUrl => "http://e-shuushuu.net";
         public override string SiteName
         {
             get
@@ -35,7 +35,7 @@ namespace SitePack
                 else return "搜索角色";
             }
         }
-        public override string ShortName { get { return "e-shu"; } }
+        public override string ShortName => "e-shu";
         public override string ShortType
         {
             get
@@ -50,19 +50,13 @@ namespace SitePack
             }
         }
 
-        public override bool IsSupportCount { get { return false; } } //fixed 15
-        public override bool IsSupportScore { get { return false; } }
+        public override bool IsSupportCount => false;  //fixed 15
+        public override bool IsSupportScore => false;
 
-        public override bool IsVisible
-        {
-            get
-            {
-                if (type == 1) return true;
-                else return false;
-            }
-        }
+        public override bool IsVisible => type == 1;
 
         private readonly int type = 1;
+        private readonly string defaultUA = SessionClient.DefUA;
         /// <summary>
         /// e-shuushuu.net site
         /// </summary>
@@ -111,7 +105,7 @@ namespace SitePack
 
                 //e-shuushuu需要将关键词转换为tag id，然后进行搜索
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
-                req.UserAgent = SessionClient.DefUA;
+                req.UserAgent = defaultUA;
                 req.Proxy = proxy;
                 req.Timeout = 8000;
                 req.Method = "POST";

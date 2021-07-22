@@ -9,7 +9,7 @@ namespace MoeLoaderDelta.WindowData
 
         public string Loginuser
         {
-            get { return loc_loginuser; }
+            get => loc_loginuser;
             set
             {
                 loc_loginuser = $"{value}(_L)";

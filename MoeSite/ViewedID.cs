@@ -147,14 +147,14 @@ namespace MoeLoaderDelta
                     else if (temp[i] != last)
                     {
                         //遇到不连续点且非重复
-                        sb.Append((last - lastTrim) + "," + range + ";");
+                        sb.Append($"{last - lastTrim},{range};");
                         lastTrim = last + range;
                         last = temp[i];
                         range = 0;
                     }
                 }
 
-                return firstPart.Start + "," + firstPart.Range + ";" + sb.ToString() + (last - lastTrim) + "," + range;
+                return $"{firstPart.Start},{firstPart.Range};{sb}{last - lastTrim},{range}";
             }
             else if (temp.Count == 1)
             {
@@ -191,8 +191,8 @@ namespace MoeLoaderDelta
 
             public IdRange(int start, int range, bool isFirst)
             {
-                this.Start = start;
-                this.Range = range;
+                Start = start;
+                Range = range;
                 this.isFirst = isFirst;
             }
 

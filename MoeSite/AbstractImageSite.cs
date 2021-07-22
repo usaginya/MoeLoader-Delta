@@ -219,7 +219,7 @@ namespace MoeLoaderDelta
 
                 int res = img.Width * img.Height;
                 //score filter & resolution filter & explicit filter
-                if (IsSupportScore && img.Score <= maskScore || IsSupportRes && res < maskRes || !showExplicit && img.IsExplicit)
+                if ((IsSupportScore && img.Score <= maskScore) || (IsSupportRes && res < maskRes) || (!showExplicit && img.IsExplicit))
                 {
                     continue;
                 }
