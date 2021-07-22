@@ -428,7 +428,7 @@ namespace MoeLoaderDelta
                 comboBoxIndex = SiteManager.Instance.Sites.Count > lastSite ? lastSite : 0;
                 SelectedSite = (MenuItem)tempSites[comboBoxIndex];
                 SelectedSite.Tag = comboBoxIndex;
-                MenuItem_Click(SelectedSite, null);
+                MenuItemSiteChange(SelectedSite, init: true);
             }
             else
             {
@@ -498,6 +498,17 @@ namespace MoeLoaderDelta
         /// </summary>
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
+            MenuItemSiteChange(sender, e);
+        }
+
+        /// <summary>
+        /// 站点菜单列表被选择事件
+        /// </summary>
+        /// <param name="sender">菜单对象</param>
+        /// <param name="e">路由事件</param>
+        /// <param name="init">是否为初始化过程</param>
+        private void MenuItemSiteChange(object sender, RoutedEventArgs e = null, bool init = false)
+        {
             if (SiteManager.Instance.Sites.Count < 1) { return; }
             SelectedSite = sender as MenuItem;
             comboBoxIndex = (int)SelectedSite.DataContext;
@@ -520,6 +531,8 @@ namespace MoeLoaderDelta
             stackPanel1.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportCount;
             itmMaskScore.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportScore;
             itmMaskRes.IsEnabled = SiteManager.Instance.Sites[comboBoxIndex].IsSupportRes;
+            //初始化时更新状态栏当前站点
+            if (init) { siteText.Text = "当前站点 " + SiteManager.Instance.Sites[comboBoxIndex].SiteName; }
             UpdateLoginInfo();
         }
 
